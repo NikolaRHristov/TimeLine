@@ -4,17 +4,11 @@ import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
 import { fail } from "../../../Cli/Parser/Output/Failure.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
+import { EventKind } from "../../../Model/Event/Event.ts";
 import { stringify } from "../../../Output/Json/Json.ts";
 
 /** The event kinds the site's Event collection accepts. */
-export const EVENT_KINDS = [
-	"scrape.started",
-	"scrape.finished",
-	"bookmark.added",
-	"bookmark.removed",
-	"list.assigned",
-	"list.removed",
-] as const;
+export const EVENT_KINDS = EventKind;
 
 export const Definition: CommandDefinition = {
 	path: ["event", "append"],

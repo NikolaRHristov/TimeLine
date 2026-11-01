@@ -1,0 +1,97 @@
+---
+/**
+ * Every published post, grouped by the list it was filed into and then by the
+ * account that wrote it.
+ *
+ * A post can belong to more than one list, so it can appear under more than one
+ * heading - the grouping is a view, not a copy. Posts with no list yet are
+ * under `Unsorted`, which is where stage 3 leaves everything it has not decided.
+ */
+import { getCollection } from "astro:content";
+
+import Base from "@Layout/Base.astro";
+
+const bookmarks = await getCollection("Bookmark");
+
+const newestFirst = [...bookmarks].sort((left, right) =>
+	(right.data.postedAt ?? right.data.firstSeenAt).localeCompare(left.data.postedAt ?? left.data.firstSeenAt),
+);
+
+type Entry = (typeof newestFirst)[number];
+
+const grouped = new Map<string, Map<string, Entry[]>>();
+for (const entry of newestFirst) {
+	const lists = entry.data.lists.length > 0 ? entry.data.lists : ["Unsorted"];
+	for (const list of lists) {
+		const authors = grouped.get(list) ?? new Map<string, Entry[]>();
+		grouped.set(list, authors);
+		const handle = entry.data.author.handle;
+		const bucket = authors.get(handle) ?? [];
+		bucket.push(entry);
+		authors.set(handle, bucket);
+	}
+}
+
+const order = ["AI", "UI", "CODE", "Unsorted"];
+const sections = [...grouped].sort(([left], [right]) => {
+	const leftIndex = order.indexOf(left);
+	const rightIndex = order.indexOf(right);
+	return (leftIndex === -1 ? order.length : leftIndex) - (rightIndex === -1 ? order.length : rightIndex);
+});
+
+const total = bookmarks.length;
+const excerpt = (text: string): string => (text.length > 180 ? `${text.slice(0, 180).trimEnd()}…` : text);
+---
+
+<Base Title="Bookmarks" Description={`${total} saved posts, grouped by list and author.`}>
+	<main class="container mx-auto max-w-3xl px-6 py-10">
+		<header class="mb-10">
+			<h1 class="text-2xl font-semibold">Bookmarks</h1>
+			<p class="mt-1 text-sm text-neutral-600">
+				{total} saved {total === 1 ? "post" : "posts"}, grouped by list and author.
+			</p>
+		</header>
+
+		{
+			sections.map(([list, authors]) => (
+				<section class="mb-12">
+					<h2 class="mb-4 border-b border-neutral-200 pb-2 text-lg font-semibold">{list}</h2>
+					{[...authors]
+						.sort(([left], [right]) => left.localeCompare(right))
+						.map(([handle, entries]) => (
+							<div class="mb-8">
+								<h3 class="mb-2 text-sm font-medium text-neutral-700">
+									@{handle} <span class="font-normal text-neutral-500">({entries.length})</span>
+								</h3>
+								<ul class="space-y-3">
+									{entries.map((entry) => (
+										<li class="leading-snug">
+											<a class="underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-900" href={`/Bookmark/${entry.id}/`}>
+												{excerpt(entry.data.text)}
+											</a>
+											<span class="ml-2 whitespace-nowrap text-xs text-neutral-500">
+												{entry.data.postedAt ? entry.data.postedAt.slice(0, 10) : entry.data.firstSeenAt.slice(0, 10)}
+											</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						))}
+				</section>
+			))
+		}
+
+		{
+			total === 0 && (
+				<p class="text-sm text-neutral-600">
+					Nothing published yet. Scrape into the shadow store, then run
+					<code class="mx-1 rounded bg-neutral-100 px-1">store publish</code>.
+				</p>
+			)
+		}
+
+		<footer class="mt-12 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
+			<a class="underline" href="/Activity/">Activity</a>
+		</footer>
+	</main>
+</Base>

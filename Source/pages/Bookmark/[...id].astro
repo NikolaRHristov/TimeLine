@@ -1,0 +1,109 @@
+---
+/**
+ * One published post.
+ *
+ * The page shows what the archive knows and says so: `firstSeenAt` is the first
+ * scrape that observed the post, which is the earliest moment this pipeline can
+ * vouch for. The interface never exposes when the post was saved, so the page
+ * must not present that timestamp as one.
+ */
+import { getCollection } from "astro:content";
+
+import Base from "@Layout/Base.astro";
+
+export async function getStaticPaths() {
+	const bookmarks = await getCollection("Bookmark");
+	return bookmarks.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { author, media, metrics } = entry.data;
+
+const images = media.filter((item) => item.kind === "image");
+const links = media.filter((item) => item.kind === "link");
+
+const day = (value: string): string => value.slice(0, 10);
+const measured = [
+	["replies", metrics.replies],
+	["reposts", metrics.reposts],
+	["likes", metrics.likes],
+	["views", metrics.views],
+].filter(([, value]) => typeof value === "number") as [string, number][];
+---
+
+<Base Title={`${author.name} on X`} Description={entry.data.text.slice(0, 160)}>
+	<main class="container mx-auto max-w-3xl px-6 py-10">
+		<nav class="mb-8 text-sm">
+			<a class="underline decoration-neutral-300 underline-offset-2" href="/Bookmark/">← Bookmarks</a>
+		</nav>
+
+		<article>
+			<header class="mb-4 flex flex-wrap items-baseline gap-x-2">
+				<h1 class="text-lg font-semibold">{author.name}</h1>
+				<span class="text-sm text-neutral-600">@{author.handle}</span>
+				{author.verified && <span class="text-sm text-neutral-500" title="Verified account">✓</span>}
+				{entry.data.postedAt && (
+					<time class="ml-auto text-xs text-neutral-500" datetime={entry.data.postedAt}>
+						posted {day(entry.data.postedAt)}
+					</time>
+				)}
+			</header>
+
+			<p class="whitespace-pre-wrap text-base leading-relaxed">{entry.data.text}</p>
+
+			{
+				images.length > 0 && (
+					<div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+						{images.map((item) => (
+							<img
+								class="h-auto w-full rounded border border-neutral-200"
+								src={item.url}
+								alt=""
+								loading="lazy"
+								referrerpolicy="no-referrer"
+							/>
+						))}
+					</div>
+				)
+			}
+
+			{
+				links.length > 0 && (
+					<ul class="mt-6 space-y-1 text-sm">
+						{links.map((item) => (
+							<li class="truncate">
+								<a class="underline decoration-neutral-300 underline-offset-2" href={item.url} rel="noopener noreferrer nofollow">
+									{item.url}
+								</a>
+							</li>
+						))}
+					</ul>
+				)
+			}
+
+			{
+				measured.length > 0 && (
+					<dl class="mt-8 flex flex-wrap gap-x-6 gap-y-1 border-t border-neutral-200 pt-4 text-sm">
+						{measured.map(([label, value]) => (
+							<div class="flex gap-1">
+								<dt class="text-neutral-500">{label}</dt>
+								<dd class="font-medium">{value.toLocaleString("en")}</dd>
+							</div>
+						))}
+					</dl>
+				)
+			}
+		</article>
+
+		<footer class="mt-10 space-y-1 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
+			<p>
+				<a class="underline" href={entry.data.url} rel="noopener noreferrer">Open on X</a>
+			</p>
+			<p>
+				Saved at or after {day(entry.data.firstSeenAt)} - the first time this archive saw the post. The
+				interface does not expose the moment it was saved.
+			</p>
+			<p>Last read {day(entry.data.scrapedAt)}.</p>
+		</footer>
+	</main>
+</Base>

@@ -1,5 +1,6 @@
 import type { Post } from "../../Model/Post/Post.ts";
-import type { ShadowPost, Source } from "../Model/Model.ts";
+import type { Source } from "../../Model/Source/Source.ts";
+import type { ShadowPost } from "../Model/Model.ts";
 
 export type MergeResult = {
 	/** The record as it should now be written. */

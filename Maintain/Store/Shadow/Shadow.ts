@@ -24,6 +24,8 @@ export type ShadowStore = {
 	all(): ShadowPost[];
 	/** Append one line to `Observation.jsonl`. */
 	observe(entry: ObservationEntry): void;
+	/** How many lines `Observation.jsonl` holds; 0 when it was never written. */
+	observationCount(): number;
 	/** Write one event file and return its path. */
 	event(kind: EventKind, subject: string, payload?: Record<string, unknown>, at?: string): string;
 	/** Every event about `subject`, oldest first. */
@@ -126,6 +128,16 @@ export function open(directory: string): ShadowStore {
 					reason: error instanceof Error ? error.message : String(error),
 				});
 			}
+		},
+
+		observationCount(): number {
+			let raw: string;
+			try {
+				raw = readFileSync(join(directory, "Observation.jsonl"), "utf8");
+			} catch {
+				return 0;
+			}
+			return raw.split("\n").filter((line) => line.trim() !== "").length;
 		},
 
 		event(kind: EventKind, subject: string, payload: Record<string, unknown> = {}, at?: string): string {

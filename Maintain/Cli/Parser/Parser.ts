@@ -103,12 +103,17 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 		values[rawName] = parseValue(definition, raw);
 	}
 
-	for (const definition of command.options) {
-		if (definition.required === true && values[definition.name] === undefined) {
-			throw fail("usage", `--${definition.name} is required`, {
-				command: command.path.join(" "),
-				options: command.options.map((item) => `--${item.name}`),
-			});
+	// `--help` and `--schema` describe a command rather than run it, so they must
+	// not demand its arguments: a command with a required option has to be able
+	// to document itself before the caller knows what to pass.
+	if (values.help !== true && values.schema !== true) {
+		for (const definition of command.options) {
+			if (definition.required === true && values[definition.name] === undefined) {
+				throw fail("usage", `--${definition.name} is required`, {
+					command: command.path.join(" "),
+					options: command.options.map((item) => `--${item.name}`),
+				});
+			}
 		}
 	}
 
