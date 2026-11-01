@@ -36,6 +36,16 @@ collections + Zod, CDP 1.3 over `ws://127.0.0.1:<port>`.
 - **One JSON object per command.** `--json` is the default when stdout is not
   a TTY. Human tables are a rendering of the same object, never a second code
   path.
+- **Never steal focus.** The person is typing in the same browser. CDP does not
+  need the foreground: `Runtime.evaluate`, DOM reads, `el.click()` and
+  programmatic scrolling all work on a background tab, and `Page.navigate`
+  retargets a tab without activating it. What must never appear in this
+  tooling: `Page.bringToFront`, `Target.activateTarget`, and `PUT /json/new`
+  (which opens and can activate a tab - use `Target.createTarget` with
+  `background: true`, or navigate a tab that already exists). Background tabs
+  are throttled, so a lazy-loading feed needs
+  `Emulation.setFocusEmulationEnabled` plus `Page.setWebLifecycleState`
+  (`active`) to keep timers alive without touching the OS focus.
 - **Dry-run first.** Every mutating command (`like`, `bookmark`, `list add`)
   supports `--dry-run` and prints the resolved target before acting.
 - **Idempotent ingest.** Re-running the scrape must not duplicate a post:
