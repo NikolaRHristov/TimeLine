@@ -13,6 +13,10 @@ node Maintain/Index.ts <group> <command> [options] [--json] [--schema] [--dry-ru
 JSON Schema (draft 2020-12) instead of running it. `--help` renders the same
 table the parser was built from.
 
+Every command speaks through a **transport**: CDP is primary and the only one
+that may mutate; `--transport view` answers read commands from the shadow store
+with identical JSON shapes. See `Reference/Transport.md`.
+
 ## Environment
 
 | Variable | Default | Meaning |
