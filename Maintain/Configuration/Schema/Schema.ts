@@ -14,12 +14,16 @@ export type Configuration = {
 	cdp: { host: string; port: number };
 	profile: string;
 	lists: Partial<Record<ListSlug, ListConfiguration>>;
-	routes: { bookmarks: string };
+	/** One route per ingest source. `likes` needs `profile` to be known. */
+	routes: { bookmarks: string; likes: string; history: string };
 	content: { root: string };
+	storage: { shadow: string };
 };
 
 export const DEFAULT_BOOKMARKS = "https://x.com/i/bookmarks";
+export const DEFAULT_HISTORY = "https://x.com/i/history";
 export const DEFAULT_CONTENT = "Source/Content";
+export const DEFAULT_SHADOW = "Maintain/Storage/Shadow";
 
 function record(value: unknown): Record<string, unknown> | null {
 	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
@@ -79,12 +83,21 @@ export function validate(value: unknown, source: string): Configuration {
 
 	const routesValue = record(root.routes) ?? {};
 	const contentValue = record(root.content) ?? {};
+	const storageValue = record(root.storage) ?? {};
+	const profile = text(root.profile) ?? "";
 
 	return {
 		cdp,
-		profile: text(root.profile) ?? "",
+		profile,
 		lists,
-		routes: { bookmarks: text(routesValue.bookmarks) ?? DEFAULT_BOOKMARKS },
+		routes: {
+			bookmarks: text(routesValue.bookmarks) ?? DEFAULT_BOOKMARKS,
+			// The likes route is the account's own profile, so it follows `profile`
+			// rather than a second key that could drift from it.
+			likes: text(routesValue.likes) ?? (profile === "" ? "" : `https://x.com/${profile}/likes`),
+			history: text(routesValue.history) ?? DEFAULT_HISTORY,
+		},
 		content: { root: text(contentValue.root) ?? DEFAULT_CONTENT },
+		storage: { shadow: text(storageValue.shadow) ?? DEFAULT_SHADOW },
 	};
 }

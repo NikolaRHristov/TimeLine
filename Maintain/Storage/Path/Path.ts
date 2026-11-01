@@ -1,11 +1,8 @@
 import { resolve } from "node:path";
 import { optional, root } from "../../Configuration/Load/Load.ts";
+import { DEFAULT_CONTENT, DEFAULT_SHADOW } from "../../Configuration/Schema/Schema.ts";
 
-/** Where the archive lives when nothing else says otherwise. */
-export const DEFAULT_SHADOW = "Maintain/Storage/Shadow";
-
-/** Where the site's collections live when nothing else says otherwise. */
-export const DEFAULT_CONTENT = "Source/Content";
+export { DEFAULT_CONTENT, DEFAULT_SHADOW };
 
 function absolute(path: string): string {
 	return resolve(root(), path);
