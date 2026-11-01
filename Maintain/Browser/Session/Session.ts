@@ -42,6 +42,24 @@ export async function attach(tab: Tab, options: { timeout?: number } = {}): Prom
 	const client = await connect(tab.webSocketDebuggerUrl, { timeout: options.timeout });
 
 	/**
+	 * Load accounting, for `navigate` and `reload`. A navigation's URL is not
+	 * the signal that it finished: `/i/bookmarks` redirects to `/i/history`, so
+	 * waiting for the requested prefix would always time out. A load event is
+	 * the page saying it has arrived, wherever it landed.
+	 */
+	let loads = 0;
+	let pageDomain = false;
+	try {
+		await client.send("Page.enable");
+		client.on("Page.loadEventFired", () => {
+			loads += 1;
+		});
+		pageDomain = true;
+	} catch {
+		pageDomain = false;
+	}
+
+	/**
 	 * Network activity, for `waitForIdle`. A click resolves in the DOM long
 	 * before the request behind it has left the browser; closing the tab in
 	 * between throws that request away.
@@ -67,15 +85,30 @@ export async function attach(tab: Tab, options: { timeout?: number } = {}): Prom
 			return evaluate<T>(client, expression);
 		},
 		async navigate(url: string): Promise<boolean> {
+			const before = loads;
 			await client.send("Page.navigate", { url });
-			return session.waitFor(
-				`document.readyState === "complete" && location.href.indexOf(${JSON.stringify(url)}) === 0`,
-				{ timeout: 20_000, interval: 200 },
-			);
+			if (pageDomain === true) {
+				const deadline = Date.now() + 20_000;
+				while (Date.now() < deadline) {
+					if (loads > before) return true;
+					await sleep(100);
+				}
+				return false;
+			}
+			return session.waitFor(`document.readyState === "complete"`, { timeout: 20_000, interval: 200 });
 		},
 		async reload(): Promise<boolean> {
 			lastActivity = Date.now();
+			const before = loads;
 			await client.send("Page.reload", { ignoreCache: false });
+			if (pageDomain === true) {
+				const deadline = Date.now() + 20_000;
+				while (Date.now() < deadline) {
+					if (loads > before) return true;
+					await sleep(100);
+				}
+				return false;
+			}
 			return session.waitFor(`document.readyState === "complete"`, { timeout: 20_000, interval: 200 });
 		},
 		async waitForIdle(idleOptions: IdleOptions = {}): Promise<boolean> {

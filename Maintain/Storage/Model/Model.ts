@@ -1,16 +1,7 @@
 import type { Author } from "../../Model/Author/Author.ts";
 import type { ListSlug } from "../../Model/List/List.ts";
 import type { Media, Metrics } from "../../Model/Post/Post.ts";
-
-/**
- * The three channels a post can be seen through.
- *
- * They are observations, not kinds of record: a post liked and bookmarked is
- * one record with two observations.
- */
-export const Source = ["bookmark", "like", "history"] as const;
-
-export type Source = (typeof Source)[number];
+import type { Source } from "../../Model/Source/Source.ts";
 
 /**
  * `shadow` is the default - archived and never published. `public` has a file
