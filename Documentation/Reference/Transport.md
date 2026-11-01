@@ -31,10 +31,10 @@ export interface Transport {
 }
 ```
 
-| Transport | Path | `mutable` | Backed by |
-|---|---|---|---|
-| `cdp` | `Maintain/Transport/Cdp/` | `true` | `GET /json/list` + the tab's `webSocketDebuggerUrl` |
-| `view` | `Maintain/Transport/View/` | `false` | `Maintain/Storage/Shadow/` (posts, observations, index) |
+| Transport | Path                       | `mutable` | Backed by                                               |
+| --------- | -------------------------- | --------- | ------------------------------------------------------- |
+| `cdp`     | `Maintain/Transport/Cdp/`  | `true`    | `GET /json/list` + the tab's `webSocketDebuggerUrl`     |
+| `view`    | `Maintain/Transport/View/` | `false`   | `Maintain/Storage/Shadow/` (posts, observations, index) |
 
 Commands never import a transport directly. They receive one:
 
@@ -61,13 +61,13 @@ export default async function run(context: CommandContext) {
 
 ## What each transport may answer
 
-| Command | `cdp` | `view` |
-|---|---|---|
-| `tab list`, `tab focus` | yes | `{error:"unsupported-transport"}` |
-| `post extract` | yes (live DOM) | yes (shadow record, `source:"shadow"`) |
-| `post like`, `post bookmark` | yes | refused |
-| `page list open`, `page list member add` | yes | refused |
-| `store status`, `store publish`, `store hide` | file-only, transport-agnostic | same |
+| Command                                       | `cdp`                         | `view`                                 |
+| --------------------------------------------- | ----------------------------- | -------------------------------------- |
+| `tab list`, `tab focus`                       | yes                           | `{error:"unsupported-transport"}`      |
+| `post extract`                                | yes (live DOM)                | yes (shadow record, `source:"shadow"`) |
+| `post like`, `post bookmark`                  | yes                           | refused                                |
+| `page list open`, `page list member add`      | yes                           | refused                                |
+| `store status`, `store publish`, `store hide` | file-only, transport-agnostic | same                                   |
 
 `store *` commands are filesystem operations and ignore `--transport`.
 
@@ -82,10 +82,10 @@ export default async function run(context: CommandContext) {
 
 ## Claim → test
 
-| Claim | Test |
-|---|---|
-| View is read-only | `maintain post like --id X --transport view` → `read-only-transport`, exit 2 |
-| Read shapes match | `post extract --id X` vs `--transport view` differ only in `source` |
-| No silent fallback | stop the browser, `tab list` → `cdp-unreachable` (not an empty list) |
-| View needs no browser | `post extract --id X --transport view` succeeds with the debug port closed |
-| Commands stay transport-blind | `grep -rn "Transport/Cdp" Maintain/Command` returns nothing |
+| Claim                         | Test                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| View is read-only             | `maintain post like --id X --transport view` → `read-only-transport`, exit 2 |
+| Read shapes match             | `post extract --id X` vs `--transport view` differ only in `source`          |
+| No silent fallback            | stop the browser, `tab list` → `cdp-unreachable` (not an empty list)         |
+| View needs no browser         | `post extract --id X --transport view` succeeds with the debug port closed   |
+| Commands stay transport-blind | `grep -rn "Transport/Cdp" Maintain/Command` returns nothing                  |

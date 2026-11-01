@@ -19,36 +19,36 @@ with identical JSON shapes. See `Reference/Transport.md`.
 
 ## Environment
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `MAINTAIN_CDP_PORT` | `9222` | Port of the browser's debugging endpoint |
-| `MAINTAIN_CONFIG` | `Maintain/Configuration/Local/Configuration.local.json` | Identifier map |
-| `MAINTAIN_STORAGE` | `Maintain/Storage/Shadow` | Shadow store root |
+| Variable            | Default                                                 | Meaning                                  |
+| ------------------- | ------------------------------------------------------- | ---------------------------------------- |
+| `MAINTAIN_CDP_PORT` | `9222`                                                  | Port of the browser's debugging endpoint |
+| `MAINTAIN_CONFIG`   | `Maintain/Configuration/Local/Configuration.local.json` | Identifier map                           |
+| `MAINTAIN_STORAGE`  | `Maintain/Storage/Shadow`                               | Shadow store root                        |
 
-Missing config exits 2 with `{error:"no-config", expected:"<path>"}`. No
-command reads identifiers from argv.
+Missing config exits 2 with `{error:"no-config", expected:"<path>"}`. No command
+reads identifiers from argv.
 
 ## Commands
 
-| Command | Options | Result |
-|---|---|---|
-| `tab list` | - | `{tabs:[{id,title,url,active}]}` |
-| `tab focus` | `--id` | `{focused:true,id}` |
-| `post extract` | `--tab`, `--index` | `{post:{id,url,author,text,postedAt,media,metrics}}` |
-| `post like` | `--url` \| `--tab --index`, `--dry-run` | `{liked:true,post:{id,url},was:bool}` |
-| `post like remove` | same | `{liked:false,…}` |
-| `post bookmark add` | same | `{bookmarked:true,…}` |
-| `post bookmark remove` | same | `{bookmarked:false,…}` |
-| `page bookmarks open` | `--tab` | `{navigated:true,url,count}` |
-| `page bookmarks scrape` | `--limit`, `--max-idle`, `--tab` | `{source,scraped,new,updated,events}` |
-| `page list open` | `--name AI\|UI\|CODE` | `{navigated:true,slug,url}` |
-| `page list member add` | `--name`, `--handle`, `--dry-run` | `{added:true,handle,list}` |
-| `store scrape` | `--source bookmark\|like\|history`, `--limit`, `--max-idle`, `--tab` | `{source,scraped,new,updated,events}` |
-| `store publish` | `--id` \| `--source` \| `--since` \| `--all` | `{published,unchanged,hidden}` |
-| `store hide` | `--id` | `{hidden:true,id,removed,unchanged}` |
-| `store status` | - | `{shadow:{…},public:{…}}` |
-| `event append` | `--kind`, `--subject`, `--payload` | `{written:true,path}` |
-| `event tail` | `--follow`, `--dir shadow\|public`, `--since`, `--interval` | `{directory,count,events}` or JSON lines |
+| Command                 | Options                                                              | Result                                               |
+| ----------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- |
+| `tab list`              | -                                                                    | `{tabs:[{id,title,url,active}]}`                     |
+| `tab focus`             | `--id`                                                               | `{focused:true,id}`                                  |
+| `post extract`          | `--tab`, `--index`                                                   | `{post:{id,url,author,text,postedAt,media,metrics}}` |
+| `post like`             | `--url` \| `--tab --index`, `--dry-run`                              | `{liked:true,post:{id,url},was:bool}`                |
+| `post like remove`      | same                                                                 | `{liked:false,…}`                                    |
+| `post bookmark add`     | same                                                                 | `{bookmarked:true,…}`                                |
+| `post bookmark remove`  | same                                                                 | `{bookmarked:false,…}`                               |
+| `page bookmarks open`   | `--tab`                                                              | `{navigated:true,url,count}`                         |
+| `page bookmarks scrape` | `--limit`, `--max-idle`, `--tab`                                     | `{source,scraped,new,updated,events}`                |
+| `page list open`        | `--name AI\|UI\|CODE`                                                | `{navigated:true,slug,url}`                          |
+| `page list member add`  | `--name`, `--handle`, `--dry-run`                                    | `{added:true,handle,list}`                           |
+| `store scrape`          | `--source bookmark\|like\|history`, `--limit`, `--max-idle`, `--tab` | `{source,scraped,new,updated,events}`                |
+| `store publish`         | `--id` \| `--source` \| `--since` \| `--all`                         | `{published,unchanged,hidden}`                       |
+| `store hide`            | `--id`                                                               | `{hidden:true,id,removed,unchanged}`                 |
+| `store status`          | -                                                                    | `{shadow:{…},public:{…}}`                            |
+| `event append`          | `--kind`, `--subject`, `--payload`                                   | `{written:true,path}`                                |
+| `event tail`            | `--follow`, `--dir shadow\|public`, `--since`, `--interval`          | `{directory,count,events}` or JSON lines             |
 
 `--tab` takes a target id from `tab list` or its zero-based index in that list.
 A tab a browser extension currently holds a debugger on is never selected:
@@ -63,11 +63,11 @@ reports `was:true` instead of toggling back.
 A saved post and a post that is safe to show the world are different facts, so
 ingest writes to an archive and publishing is a separate, explicit step.
 
-| Source | Route | What it is |
-|---|---|---|
-| `bookmark` | `/i/bookmarks` | posts saved explicitly |
-| `like` | `/<handle>/likes` | posts liked, including old likes not saved |
-| `history` | `/i/history` | the container page, walked tab by tab |
+| Source     | Route             | What it is                                 |
+| ---------- | ----------------- | ------------------------------------------ |
+| `bookmark` | `/i/bookmarks`    | posts saved explicitly                     |
+| `like`     | `/<handle>/likes` | posts liked, including old likes not saved |
+| `history`  | `/i/history`      | the container page, walked tab by tab      |
 
 `/i/bookmarks` redirects to `/i/history`, which presents `Bookmarks` and `Likes`
 as tabs; `history` follows those tabs, so it is the union of the other two.
@@ -131,14 +131,18 @@ node Maintain/Index.ts page list open --name AI
 Every failure is one object, exit 2, no stack trace on stdout:
 
 ```json
-{"error":"no-tab","detail":"no tab matched url prefix","candidates":[{"id":123,"url":"…"}]}
+{
+	"error": "no-tab",
+	"detail": "no tab matched url prefix",
+	"candidates": [{ "id": 123, "url": "…" }]
+}
 ```
 
-Known codes: `no-config`, `no-tab`, `no-post`, `rate-limited`,
-`schema-invalid`, `cdp-unreachable`, `cdp-error`, `io-error`, `usage`,
-`internal`. A code is a contract; the `detail` string is not. `--help` and
-`--schema` are rendered from the same table the parser matches against, so a
-command cannot drift from its own documentation.
+Known codes: `no-config`, `no-tab`, `no-post`, `rate-limited`, `schema-invalid`,
+`cdp-unreachable`, `cdp-error`, `io-error`, `usage`, `internal`. A code is a
+contract; the `detail` string is not. `--help` and `--schema` are rendered from
+the same table the parser matches against, so a command cannot drift from its
+own documentation.
 
 ## Tests
 
@@ -154,6 +158,5 @@ in `Documentation/Plan/Bookmark-Pipeline.md` is the checklist.
 ## Why one file per command
 
 A command's path states its domain - `Command/Post/Bookmark/Add.ts`. When the
-site renames a control, exactly one file changes, and the diff names the
-domain. Shared behaviour lives in `Browser/`, `Store/` and `Cli/`; commands
-stay thin.
+site renames a control, exactly one file changes, and the diff names the domain.
+Shared behaviour lives in `Browser/`, `Store/` and `Cli/`; commands stay thin.

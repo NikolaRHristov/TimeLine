@@ -26,49 +26,49 @@ collections + Zod, CDP 1.3 over `ws://127.0.0.1:<port>`.
 
 ## Constraints
 
-- **No new runtime dependencies.** Node 22.23 ships `fetch` and `WebSocket`;
-  a CDP client needs nothing else. Do not add `puppeteer` or `playwright` -
-  they bundle a second browser and break the "drive *my* tabs" requirement.
+- **No new runtime dependencies.** Node 22.23 ships `fetch` and `WebSocket`; a
+  CDP client needs nothing else. Do not add `puppeteer` or `playwright` - they
+  bundle a second browser and break the "drive _my_ tabs" requirement.
 - **Anonymised documentation.** No handles, list ids, profile paths, session
   tokens, extension ids or cookies in any tracked file. Identifiers live in
   `Maintain/Configuration/Local/Configuration.local.json` (gitignored) and are
   referenced in docs as `<LIST_AI>`, `<LIST_UI>`, `<LIST_CODE>`.
-- **One JSON object per command.** `--json` is the default when stdout is not
-  a TTY. Human tables are a rendering of the same object, never a second code
+- **One JSON object per command.** `--json` is the default when stdout is not a
+  TTY. Human tables are a rendering of the same object, never a second code
   path.
 - **Never steal focus.** The person is typing in the same browser. CDP does not
   need the foreground: `Runtime.evaluate`, DOM reads, `el.click()` and
   programmatic scrolling all work on a background tab, and `Page.navigate`
-  retargets a tab without activating it. What must never appear in this
-  tooling: `Page.bringToFront`, `Target.activateTarget`, and `PUT /json/new`
-  (which opens and can activate a tab - use `Target.createTarget` with
-  `background: true`, or navigate a tab that already exists). Background tabs
-  are throttled, so a lazy-loading feed needs
-  `Emulation.setFocusEmulationEnabled` plus `Page.setWebLifecycleState`
-  (`active`) to keep timers alive without touching the OS focus.
+  retargets a tab without activating it. What must never appear in this tooling:
+  `Page.bringToFront`, `Target.activateTarget`, and `PUT /json/new` (which opens
+  and can activate a tab - use `Target.createTarget` with `background: true`, or
+  navigate a tab that already exists). Background tabs are throttled, so a
+  lazy-loading feed needs `Emulation.setFocusEmulationEnabled` plus
+  `Page.setWebLifecycleState` (`active`) to keep timers alive without touching
+  the OS focus.
 - **A scrape opens its own tab.** Reusing a tab the person already has open
   moves their window under them; so does `PUT /json/new`, which creates a tab
   the browser then brings forward. `store scrape` therefore calls
   `Target.createTarget` with `background: true` on the browser-level websocket,
-  drives that tab, and closes it in a `finally`. The tab set is identical
-  before and after a run - that equality is the test.
+  drives that tab, and closes it in a `finally`. The tab set is identical before
+  and after a run - that equality is the test.
 - **Dry-run first.** Every mutating command (`like`, `bookmark`, `list add`)
   supports `--dry-run` and prints the resolved target before acting.
-- **Idempotent ingest.** Re-running the scrape must not duplicate a post:
-  posts are keyed by status id, events are keyed by `(kind, subject, at)`.
+- **Idempotent ingest.** Re-running the scrape must not duplicate a post: posts
+  are keyed by status id, events are keyed by `(kind, subject, at)`.
 
 ## Verified environment
 
-| Fact | Value | Probe |
-|---|---|---|
-| Node | v22.23.0 | `node --version` |
-| npm | 10.9.8 | `npm --version` |
+| Fact         | Value                                                                       | Probe                                        |
+| ------------ | --------------------------------------------------------------------------- | -------------------------------------------- |
+| Node         | v22.23.0                                                                    | `node --version`                             |
+| npm          | 10.9.8                                                                      | `npm --version`                              |
 | CDP endpoint | `http://127.0.0.1:9222` answers `/json/version` with `Chrome/156.0.8078.80` | `curl -s http://127.0.0.1:9222/json/version` |
-| Browser | Brave, `--remote-debugging-port=9222`, real profile with the site's tabs | `ps ax \| grep -- --remote-debugging-port` |
-| Site root | `srcDir ./Source`, `publicDir ./Public`, `outDir ./Target`, dev port 9999 | `astro.config.ts` |
-| Content dir | does not exist yet (`Source/Content` absent) | `ls Source` |
+| Browser      | Brave, `--remote-debugging-port=9222`, real profile with the site's tabs    | `ps ax \| grep -- --remote-debugging-port`   |
+| Site root    | `srcDir ./Source`, `publicDir ./Public`, `outDir ./Target`, dev port 9999   | `astro.config.ts`                            |
+| Content dir  | does not exist yet (`Source/Content` absent)                                | `ls Source`                                  |
 
-CDP is a *separate* channel from the extension's debugger. Driving a tab over
+CDP is a _separate_ channel from the extension's debugger. Driving a tab over
 CDP while the extension holds `chrome.debugger` on the same tab is what detaches
 the extension; the tool layer must therefore never attach to a tab the person
 has attached to Hermes. Resolve targets by URL, and skip the active tab.
@@ -79,23 +79,23 @@ has attached to Hermes. Resolve targets by URL, and skip the active tab.
 
 ### Sources, in the order they get ingested
 
-| Source | Route | What it is |
-|---|---|---|
-| Bookmarks | `/i/bookmarks` | posts saved explicitly |
-| Likes | `/<handle>/likes` | posts liked, including old likes not saved |
-| History | `/i/history` | the account's own activity trail |
+| Source    | Route             | What it is                                 |
+| --------- | ----------------- | ------------------------------------------ |
+| Bookmarks | `/i/bookmarks`    | posts saved explicitly                     |
+| Likes     | `/<handle>/likes` | posts liked, including old likes not saved |
+| History   | `/i/history`      | the account's own activity trail           |
 
 Each source is an independent observation channel over the same post. A post
-liked *and* bookmarked is one record with two observations, never two records.
+liked _and_ bookmarked is one record with two observations, never two records.
 
 ### Two stores
 
 Nothing scraped is public by default.
 
-| Store | Where | Tracked | Contents |
-|---|---|---|---|
+| Store      | Where                      | Tracked         | Contents                                                                                                            |
+| ---------- | -------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------- |
 | **Shadow** | `Maintain/Storage/Shadow/` | no (gitignored) | every observation, raw: post JSON keyed by status id, `Observation.jsonl` append-only log, `Index.json` id→file map |
-| **Public** | `Source/Content/` | yes | only records explicitly promoted, as Astro collection JSON |
+| **Public** | `Source/Content/`          | yes             | only records explicitly promoted, as Astro collection JSON                                                          |
 
 Promotion is a separate, reversible command (`store publish`), so "I would
 rather not have that one on the site" is the default state rather than a
@@ -104,7 +104,8 @@ correction. Shadow rows carry `visibility: "shadow" | "public" | "hidden"`;
 
 Rules:
 
-- Scraping writes **only** to the shadow store. It never touches `Source/Content/`.
+- Scraping writes **only** to the shadow store. It never touches
+  `Source/Content/`.
 - Publishing copies a shadow record into the public collection with
   `publishedAt` and the redactions applied (author handle optional, media URLs
   optional, text trimmed).
@@ -158,25 +159,25 @@ Maintain/
   Test/Select.test.ts
 ```
 
-Deep nesting is deliberate: a command's path states its domain, so the file
-that changes when X renames a button is exactly one file.
+Deep nesting is deliberate: a command's path states its domain, so the file that
+changes when X renames a button is exactly one file.
 
 ### Command contract
 
-| Command | Arguments | `--json` result |
-|---|---|---|
-| `tab list` | - | `{tabs:[{id,title,url,active}]}` |
-| `tab focus` | `--id <n>` | `{focused:true,id}` |
-| `post extract` | `--tab <n>`, `--index <n>` | `{post:{…}}` |
-| `post like` | `--url <u>` \| `--tab <n> --index <n>`, `--dry-run` | `{liked:true,post:{id,url},was:<bool>}` |
-| `post like remove` | same | `{liked:false,…}` |
-| `post bookmark add` | same | `{bookmarked:true,…}` |
-| `post bookmark remove` | same | `{bookmarked:false,…}` |
-| `page bookmarks open` | `--tab <n>`? | `{navigated:true,url,count}` |
-| `page list open` | `--name AI\|UI\|CODE` | `{navigated:true,slug,url}` |
-| `page list member add` | `--name`, `--handle`, `--dry-run` | `{added:true,handle,list}` |
-| `event append` | `--kind`, `--subject`, `--payload <json>` | `{written:true,path}` |
-| `schema` | `[command]` | JSON Schema document |
+| Command                | Arguments                                           | `--json` result                         |
+| ---------------------- | --------------------------------------------------- | --------------------------------------- |
+| `tab list`             | -                                                   | `{tabs:[{id,title,url,active}]}`        |
+| `tab focus`            | `--id <n>`                                          | `{focused:true,id}`                     |
+| `post extract`         | `--tab <n>`, `--index <n>`                          | `{post:{…}}`                            |
+| `post like`            | `--url <u>` \| `--tab <n> --index <n>`, `--dry-run` | `{liked:true,post:{id,url},was:<bool>}` |
+| `post like remove`     | same                                                | `{liked:false,…}`                       |
+| `post bookmark add`    | same                                                | `{bookmarked:true,…}`                   |
+| `post bookmark remove` | same                                                | `{bookmarked:false,…}`                  |
+| `page bookmarks open`  | `--tab <n>`?                                        | `{navigated:true,url,count}`            |
+| `page list open`       | `--name AI\|UI\|CODE`                               | `{navigated:true,slug,url}`             |
+| `page list member add` | `--name`, `--handle`, `--dry-run`                   | `{added:true,handle,list}`              |
+| `event append`         | `--kind`, `--subject`, `--payload <json>`           | `{written:true,path}`                   |
+| `schema`               | `[command]`                                         | JSON Schema document                    |
 
 Every command also accepts `--schema` and prints its own schema instead of
 running. `--help` prints the same table the parser was built from.
@@ -184,9 +185,10 @@ running. `--help` prints the same table the parser was built from.
 ### Tasks
 
 **Task 1.1 - CDP client.** Files: `Browser/Cdp/Client.ts`,
-`Browser/Cdp/Command/Evaluate.ts`. Connect to `ws://127.0.0.1:9222/devtools/page/<id>`,
-send `{id,method,params}`, resolve by id, reject on `error`. Test: evaluate
-`1+1` against a tab and assert `{result:{value:2}}` shape.
+`Browser/Cdp/Command/Evaluate.ts`. Connect to
+`ws://127.0.0.1:9222/devtools/page/<id>`, send `{id,method,params}`, resolve by
+id, reject on `error`. Test: evaluate `1+1` against a tab and assert
+`{result:{value:2}}` shape.
 
 **Task 1.2 - Target discovery.** Files: `Browser/Target/Discovery.ts`,
 `Browser/Target/Select.ts`. `GET /json/list`, filter `type==="page"`, drop
@@ -200,14 +202,14 @@ alternative, and the `--dry-run` flag appears as a boolean property.
 
 **Task 1.4 - Post extraction.** Files: `Browser/Selector/Post.ts`,
 `Command/Post/Extract/Extract.ts`. In-page function returns
-`{id, url, author:{handle,name,verified}, text, postedAt, media:[…],
-metrics:{replies,reposts,likes,views}}` from one `article`. Status id is parsed
-from the `/status/<id>` permalink, never from text.
+`{id, url, author:{handle,name,verified}, text, postedAt, media:[…], metrics:{replies,reposts,likes,views}}`
+from one `article`. Status id is parsed from the `/status/<id>` permalink, never
+from text.
 
 **Task 1.5 - Like / bookmark toggles.** Files:
 `Command/Post/Like/{Like,Remove}.ts`, `Command/Post/Bookmark/{Add,Remove}.ts`,
-`Browser/Selector/Post.ts`. Locate the button by `data-testid`
-(`like`, `unlike`, `bookmark`, `removeBookmark`) with a text fallback; read
+`Browser/Selector/Post.ts`. Locate the button by `data-testid` (`like`,
+`unlike`, `bookmark`, `removeBookmark`) with a text fallback; read
 `aria-pressed` first so a no-op is reported as `was:true` rather than clicked
 twice.
 
@@ -217,9 +219,10 @@ lists resolve slug → id from `Configuration.local.json`, so no list id is ever
 in a command line or a doc.
 
 **Task 1.7 - Config and events.** Files: `Configuration/Load/Load.ts`,
-`Command/Event/Append/Append.ts`. Config is JSON with `{cdp:{port},lists:{AI,UI,CODE},profile}`;
-missing file → `{error:"no-config", expected:"<path>"}` and exit 2, never a
-crash. Events are `Source/Content/Event/<ISO>-<kind>-<subject>.json`.
+`Command/Event/Append/Append.ts`. Config is JSON with
+`{cdp:{port},lists:{AI,UI,CODE},profile}`; missing file →
+`{error:"no-config", expected:"<path>"}` and exit 2, never a crash. Events are
+`Source/Content/Event/<ISO>-<kind>-<subject>.json`.
 
 ---
 
@@ -277,23 +280,23 @@ first-seen timestamp is a defensible lower bound.
 `.astro/types.d.ts` gains the three collection names.
 
 **Task 2.2 - Scrape loop.** Files: `Command/Page/Bookmarks/Scrape/Scrape.ts`.
-Navigate, then repeat: extract every `article` in the viewport, scroll, wait
-for new ids, stop after N scrolls with no new ids (default 3) or `--limit`.
-Writes posts, appends `bookmark.added` for new ids, one `scrape.finished` event
-with counts. Output: `{scraped:<n>, new:<n>, updated:<n>, events:<n>}` - counts
-only, so the caller's context stays small.
+Navigate, then repeat: extract every `article` in the viewport, scroll, wait for
+new ids, stop after N scrolls with no new ids (default 3) or `--limit`. Writes
+posts, appends `bookmark.added` for new ids, one `scrape.finished` event with
+counts. Output: `{scraped:<n>, new:<n>, updated:<n>, events:<n>}` - counts only,
+so the caller's context stays small.
 
 **Task 2.3 - Site pages.** Files: `Source/pages/Bookmark/index.astro`,
-`Source/pages/Bookmark/[...id].astro`, `Source/pages/Activity/index.astro`.
-List page groups by `lists[]` then by author; detail page renders one post;
-activity page is the Event collection in reverse time. All static, no client JS.
+`Source/pages/Bookmark/[...id].astro`, `Source/pages/Activity/index.astro`. List
+page groups by `lists[]` then by author; detail page renders one post; activity
+page is the Event collection in reverse time. All static, no client JS.
 
 **Task 2.4 - Live dev feed.** Files: `Maintain/Command/Event/Tail/Tail.ts`,
 `Source/pages/Activity/index.astro` (dev-only refresh). `event tail` polls the
 Event directory and prints new events as JSON lines; in dev the activity page
 polls a tiny `/Activity/Feed.json` endpoint written by the same command. Pub/sub
-stays file-based: the directory is the broker, so nothing needs a running
-daemon in production.
+stays file-based: the directory is the broker, so nothing needs a running daemon
+in production.
 
 ---
 
@@ -303,14 +306,14 @@ daemon in production.
 tokens and changes the person's lists, so it ships as tools only and waits for
 an explicit start. Building it is in scope; running it is a separate decision.
 
-**Rules first, model second.** For each author, aggregate their bookmarked
-posts into one compact evidence record: handle, top domains linked, keyword
-hits per bucket, 3 shortest post excerpts capped at 200 chars each. Score with
-weighted keyword sets; a score gap above the threshold is decided by rule and
-never reaches a model.
+**Rules first, model second.** For each author, aggregate their bookmarked posts
+into one compact evidence record: handle, top domains linked, keyword hits per
+bucket, 3 shortest post excerpts capped at 200 chars each. Score with weighted
+keyword sets; a score gap above the threshold is decided by rule and never
+reaches a model.
 
-**Model only for ambiguity.** Ambiguous authors are batched - 25 per call -
-into one request that must answer with a JSON array of
+**Model only for ambiguity.** Ambiguous authors are batched - 25 per call - into
+one request that must answer with a JSON array of
 `{handle, list, confidence, reason}`. Response is cached in
 `Source/Content/Author/<handle>.json` with `decision.by:"model"`, so the second
 run reads the file and spends nothing.
@@ -324,9 +327,9 @@ first `{error:"rate-limited"}`. Nothing about stage 3 is automatic without
 
 ### Tasks
 
-**Task 3.1 - Evidence builder.** Files:
-`Command/Author/Evidence/Build.ts`, `Model/Author/Evidence.ts`. Reads Bookmark
-collection JSON, emits one record per author. No model call.
+**Task 3.1 - Evidence builder.** Files: `Command/Author/Evidence/Build.ts`,
+`Model/Author/Evidence.ts`. Reads Bookmark collection JSON, emits one record per
+author. No model call.
 
 **Task 3.2 - Rule classifier.** Files: `Command/Author/Classify/Rules.ts`,
 `Configuration/Rules/Rules.json` (tracked - rules are not secrets). Bucket
@@ -336,21 +339,21 @@ keywords per list, weight domain hits, emit `{handle,list,score,gap}`.
 Batches ambiguous authors, one request, JSON-only reply, validates against the
 same schema, caches decisions.
 
-**Task 3.4 - Apply membership.** Files:
-`Command/Page/List/Member/Add.ts` (shared with stage 1),
-`Command/Author/Distribute/Apply.ts`. Reads decisions, writes
-`Author/<handle>.json`, calls the add command per handle behind `--apply`.
+**Task 3.4 - Apply membership.** Files: `Command/Page/List/Member/Add.ts`
+(shared with stage 1), `Command/Author/Distribute/Apply.ts`. Reads decisions,
+writes `Author/<handle>.json`, calls the add command per handle behind
+`--apply`.
 
 ---
 
 ## Claim → test
 
-| Claim | Test |
-|---|---|
-| CDP is reachable | `curl -s http://127.0.0.1:9222/json/version` → JSON with `Protocol-Version` |
-| CLI parses like clap | `maintain post like --help` lists `--url`, `--tab`, `--dry-run` |
-| Schema is machine-usable | `maintain post like --schema` validates under draft 2020-12 |
-| Like is idempotent | run twice → second prints `{was:true}` and does not toggle |
-| Scrape is idempotent | run twice → second prints `new:0`, post file count unchanged |
-| Docs leak nothing | `grep -rE "@[A-Za-z0-9_]{2,}|/i/lists/[0-9]+" Documentation/` → no hits |
-| Distribution is cheap | second `author classify` run makes zero model calls |
+| Claim                    | Test                                                                        |
+| ------------------------ | --------------------------------------------------------------------------- |
+| CDP is reachable         | `curl -s http://127.0.0.1:9222/json/version` → JSON with `Protocol-Version` |
+| CLI parses like clap     | `maintain post like --help` lists `--url`, `--tab`, `--dry-run`             |
+| Schema is machine-usable | `maintain post like --schema` validates under draft 2020-12                 |
+| Like is idempotent       | run twice → second prints `{was:true}` and does not toggle                  |
+| Scrape is idempotent     | run twice → second prints `new:0`, post file count unchanged                |
+| Docs leak nothing        | `grep -rE "@[A-Za-z0-9_]{2,}                                                | /i/lists/[0-9]+" Documentation/` → no hits |
+| Distribution is cheap    | second `author classify` run makes zero model calls                         |

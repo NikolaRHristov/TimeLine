@@ -6,8 +6,8 @@ author: Hermes Agent
 license: MIT
 platforms: [macos]
 metadata:
-  hermes:
-    tags: [cdp, bookmarks, astro, collections, classification, cli]
+    hermes:
+        tags: [cdp, bookmarks, astro, collections, classification, cli]
 ---
 
 # Timeline Bookmarks
@@ -51,14 +51,15 @@ the operating procedure.
    state first - `data-testid` (`like`/`unlike`, `bookmark`/`removeBookmark`)
    then the aria-label, because the site sets no `aria-pressed` - so a second
    run reports `was:true` and clicks nothing.
-5. **Ingest into the shadow store, then publish deliberately.** `store scrape
-   --source bookmark|like|history` returns `{source,scraped,new,updated,events}`
-   and writes only under `Maintain/Storage/Shadow/`. Re-running must print
-   `new:0`; a rising `new` on a second run means the status-id extraction fell
-   back to text. Nothing reaches `Source/Content/` until `store publish` runs
-   with `--id`, `--source`, `--since` or `--all`. `store status` is the check
-   between the two: `byVisibility.shadow` falling while `public` rises is the
-   only evidence that a publish did what was asked.
+5. **Ingest into the shadow store, then publish deliberately.**
+   `store scrape --source bookmark|like|history` returns
+   `{source,scraped,new,updated,events}` and writes only under
+   `Maintain/Storage/Shadow/`. Re-running must print `new:0`; a rising `new` on
+   a second run means the status-id extraction fell back to text. Nothing
+   reaches `Source/Content/` until `store publish` runs with `--id`, `--source`,
+   `--since` or `--all`. `store status` is the check between the two:
+   `byVisibility.shadow` falling while `public` rises is the only evidence that
+   a publish did what was asked.
 6. **Classify cheaply.** `author classify rules` decides what keywords can
    decide. Only then `author classify infer --batch 25`, which caches every
    answer in `Source/Content/Author/<handle>.json`. A second infer run must make
@@ -92,8 +93,8 @@ The pipeline exists to keep model work out of the loop.
   `--tab`/`--index` drive a tab they already have and leave it open.
 - **Two debuggers, one tab.** The browser extension attaches its own debugger to
   the tab the person handed to Hermes. Attaching over CDP to that same tab
-  detaches the extension and breaks their panel. Resolve targets by url and
-  skip the tab that is currently attached.
+  detaches the extension and breaks their panel. Resolve targets by url and skip
+  the tab that is currently attached.
 - **The archive has no `bookmarkedAt`.** The UI does not expose when a post was
   saved. `firstSeenAt` is the first scrape that observed it, and
   `bookmark.added` events mark the transition; treat both as a lower bound and
@@ -113,10 +114,10 @@ The pipeline exists to keep model work out of the loop.
 - **`/i/history` is a container, not a feed.** It presents `Bookmarks` and
   `Likes` as tabs; the tab `href`s are read from the page and `--source history`
   walks them in turn. `--source bookmark` and `--source like` each read one tab.
-- **Scraping publishes nothing.** Every record lands with
-  `visibility:"shadow"` under `Maintain/Storage/Shadow/`; `Source/Content/`
-  changes only through `store publish`. A scrape that edits the collection is a
-  bug, not a convenience.
+- **Scraping publishes nothing.** Every record lands with `visibility:"shadow"`
+  under `Maintain/Storage/Shadow/`; `Source/Content/` changes only through
+  `store publish`. A scrape that edits the collection is a bug, not a
+  convenience.
 - **Code never lives under `Maintain/Storage/`.** That whole tree is gitignored
   as data, so a `.ts` file dropped there is invisible to git and never commits.
   The store code sits in `Maintain/Store/`; only records go under `Storage/`.
@@ -136,20 +137,20 @@ The pipeline exists to keep model work out of the loop.
 
 ## Claim → test
 
-| Claim | Test |
-|---|---|
-| Browser exposes CDP | `curl -s http://127.0.0.1:9222/json/version` |
-| Command surface is self-describing | `node Maintain/Index.ts post like --schema` |
-| Like is idempotent | run twice; second prints `was:true` |
-| An attached tab is never driven | attach `chrome.debugger` from the extension to one tab, then `post extract --tab <id>` → `no-tab` |
-| Failures are one object | any failing command exits 2 with `{error:<code>,…}` and nothing else on stdout |
-| Scrape is idempotent | run twice; second prints `new:0` and the post count is unchanged |
-| Scrape publishes nothing | after `store scrape`, `git status --short Source/Content` prints nothing |
-| Shadow store is untracked | `git check-ignore -v Maintain/Storage/Shadow/Post/1.json` |
-| Publish is idempotent | publish twice; second prints `unchanged:1` and `shasum -a 256` of the file is unchanged |
-| Hide is durable | `store hide --id X`, then `store scrape`, then `store publish --id X` prints `hidden:1` and writes no file |
-| Collections resolve | `npx astro sync` then `grep Bookmark .astro/content.d.ts` |
-| Site builds | `npx astro build` → `Target/Bookmark/index.html`, `Target/Bookmark/<id>/index.html`, `Target/Activity/index.html` |
-| Save time is not fabricated | the detail page says "Saved at or after"; no field is named `bookmarkedAt` |
-| Classification is cached | second `author classify infer` prints `asked:0` |
-| Docs are anonymised | `grep -rE "/i/lists/[0-9]+|@[A-Za-z0-9_]{2,}" Documentation/` returns nothing |
+| Claim                              | Test                                                                                                              |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Browser exposes CDP                | `curl -s http://127.0.0.1:9222/json/version`                                                                      |
+| Command surface is self-describing | `node Maintain/Index.ts post like --schema`                                                                       |
+| Like is idempotent                 | run twice; second prints `was:true`                                                                               |
+| An attached tab is never driven    | attach `chrome.debugger` from the extension to one tab, then `post extract --tab <id>` → `no-tab`                 |
+| Failures are one object            | any failing command exits 2 with `{error:<code>,…}` and nothing else on stdout                                    |
+| Scrape is idempotent               | run twice; second prints `new:0` and the post count is unchanged                                                  |
+| Scrape publishes nothing           | after `store scrape`, `git status --short Source/Content` prints nothing                                          |
+| Shadow store is untracked          | `git check-ignore -v Maintain/Storage/Shadow/Post/1.json`                                                         |
+| Publish is idempotent              | publish twice; second prints `unchanged:1` and `shasum -a 256` of the file is unchanged                           |
+| Hide is durable                    | `store hide --id X`, then `store scrape`, then `store publish --id X` prints `hidden:1` and writes no file        |
+| Collections resolve                | `npx astro sync` then `grep Bookmark .astro/content.d.ts`                                                         |
+| Site builds                        | `npx astro build` → `Target/Bookmark/index.html`, `Target/Bookmark/<id>/index.html`, `Target/Activity/index.html` |
+| Save time is not fabricated        | the detail page says "Saved at or after"; no field is named `bookmarkedAt`                                        |
+| Classification is cached           | second `author classify infer` prints `asked:0`                                                                   |
+| Docs are anonymised                | `grep -rE "/i/lists/[0-9]+                                                                                        | @[A-Za-z0-9_]{2,}" Documentation/` returns nothing |

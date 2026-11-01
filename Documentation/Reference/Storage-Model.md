@@ -27,38 +27,41 @@ Source/Content/                     # tracked, rendered by Astro
 
 ```json
 {
-  "id": "…",
-  "url": "https://…/status/…",
-  "author": { "handle": "…", "name": "…", "verified": false },
-  "text": "…",
-  "postedAt": "…",
-  "media": [{ "kind": "image", "url": "…" }],
-  "metrics": { "replies": 0, "reposts": 0, "likes": 0, "views": 0 },
-  "observations": [{ "source": "bookmark", "at": "…" }, { "source": "like", "at": "…" }],
-  "firstSeenAt": "…",
-  "lastScrapedAt": "…",
-  "visibility": "shadow",
-  "lists": []
+	"id": "…",
+	"url": "https://…/status/…",
+	"author": { "handle": "…", "name": "…", "verified": false },
+	"text": "…",
+	"postedAt": "…",
+	"media": [{ "kind": "image", "url": "…" }],
+	"metrics": { "replies": 0, "reposts": 0, "likes": 0, "views": 0 },
+	"observations": [
+		{ "source": "bookmark", "at": "…" },
+		{ "source": "like", "at": "…" }
+	],
+	"firstSeenAt": "…",
+	"lastScrapedAt": "…",
+	"visibility": "shadow",
+	"lists": []
 }
 ```
 
 `visibility` is the only field that decides whether anything leaves the shadow
 store.
 
-| Value | Meaning |
-|---|---|
-| `shadow` | default - archived, never published |
-| `public` | published; a file exists in `Source/Content/Bookmark/` |
+| Value    | Meaning                                                   |
+| -------- | --------------------------------------------------------- |
+| `shadow` | default - archived, never published                       |
+| `public` | published; a file exists in `Source/Content/Bookmark/`    |
 | `hidden` | explicitly withheld; survives re-scrapes, never published |
 
 ## Commands
 
-| Command | Effect |
-|---|---|
-| `store scrape --source bookmark\|like\|history` | write observations and posts to shadow only |
+| Command                                                        | Effect                                                   |
+| -------------------------------------------------------------- | -------------------------------------------------------- |
+| `store scrape --source bookmark\|like\|history`                | write observations and posts to shadow only              |
 | `store publish --id <id>` / `--source like` / `--since <date>` | copy to the public collection, set `visibility:"public"` |
-| `store hide --id <id>` | delete any public file, set `visibility:"hidden"` |
-| `store status` | counts per store, per visibility, per source |
+| `store hide --id <id>`                                         | delete any public file, set `visibility:"hidden"`        |
+| `store status`                                                 | counts per store, per visibility, per source             |
 
 `store publish` and `store hide` are the only commands that write to
 `Source/Content/`. Both are idempotent: publishing a published post rewrites the
@@ -77,17 +80,17 @@ same bytes, hiding a hidden post is a no-op.
   file, an event payload, an index, a log line - is written as
   `Source/Content/Bookmark/<id>.json`, never as `file:///…` and never as an
   absolute path. The repository is public, so an absolute path publishes the
-  machine's directory layout and account name. Astro's own cache
-  (`.astro/`) writes `file://` URLs, which is exactly why it is gitignored and
-  never committed.
+  machine's directory layout and account name. Astro's own cache (`.astro/`)
+  writes `file://` URLs, which is exactly why it is gitignored and never
+  committed.
 - Hiding beats scraping: `hidden` is checked before any publish, so a later
   re-scrape cannot republish something withheld.
 
 ## Claim → test
 
-| Claim | Test |
-|---|---|
-| Shadow store is untracked | `git check-ignore -v Maintain/Storage/Shadow/Post/x.json` |
-| Scrape does not publish | after `store scrape`, `Source/Content/Bookmark/` is unchanged |
-| Publish is explicit | `store status` shows `shadow: n, public: 0` until `store publish` runs |
-| Hide is durable | `store hide --id X`, re-scrape, `store status` still reports X as hidden |
+| Claim                     | Test                                                                     |
+| ------------------------- | ------------------------------------------------------------------------ |
+| Shadow store is untracked | `git check-ignore -v Maintain/Storage/Shadow/Post/x.json`                |
+| Scrape does not publish   | after `store scrape`, `Source/Content/Bookmark/` is unchanged            |
+| Publish is explicit       | `store status` shows `shadow: n, public: 0` until `store publish` runs   |
+| Hide is durable           | `store hide --id X`, re-scrape, `store status` still reports X as hidden |
