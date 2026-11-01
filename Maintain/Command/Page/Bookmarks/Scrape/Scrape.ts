@@ -112,7 +112,10 @@ export async function scrape(url: string, options: ScrapeOptions = {}): Promise<
 	let rounds = 0;
 	let stopped: "limit" | "idle" = "idle";
 
-	await withPage(url, { tab: options.tab, ready: READY, timeout: 25_000, close: true }, async (context) => {
+	// `--tab` is an explicit request to use that tab; without it, take a
+	// background tab of our own so the person's window never moves.
+	const ephemeral = options.tab === undefined;
+	await withPage(url, { tab: options.tab, ready: READY, timeout: 25_000, close: true, ephemeral }, async (context) => {
 		const queue = [context.href];
 		if (options.followTabs === true) {
 			const state = await context.session.evaluate<{ tabs: { href: string }[] }>(tabsExpression());

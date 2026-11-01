@@ -46,6 +46,12 @@ collections + Zod, CDP 1.3 over `ws://127.0.0.1:<port>`.
   are throttled, so a lazy-loading feed needs
   `Emulation.setFocusEmulationEnabled` plus `Page.setWebLifecycleState`
   (`active`) to keep timers alive without touching the OS focus.
+- **A scrape opens its own tab.** Reusing a tab the person already has open
+  moves their window under them; so does `PUT /json/new`, which creates a tab
+  the browser then brings forward. `store scrape` therefore calls
+  `Target.createTarget` with `background: true` on the browser-level websocket,
+  drives that tab, and closes it in a `finally`. The tab set is identical
+  before and after a run - that equality is the test.
 - **Dry-run first.** Every mutating command (`like`, `bookmark`, `list add`)
   supports `--dry-run` and prints the resolved target before acting.
 - **Idempotent ingest.** Re-running the scrape must not duplicate a post:

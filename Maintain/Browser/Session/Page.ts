@@ -21,6 +21,11 @@ export type PageOptions = {
 	 * that was already open is never closed, because it is theirs.
 	 */
 	close?: boolean;
+	/**
+	 * Always open a fresh BACKGROUND tab and close it afterwards. Never reuse,
+	 * never navigate, never focus: a scrape must not move the person's window.
+	 */
+	ephemeral?: boolean;
 };
 
 /**
@@ -40,7 +45,12 @@ export async function withPage<T>(
 	let navigate = true;
 	let opened = false;
 
-	if (typeof options.tab === "string" && options.tab.length > 0) {
+	if (options.ephemeral === true) {
+		// A scrape is not a page the person asked to look at: open a background
+		// tab of our own and close it again, so their window never moves.
+		tab = await open(url, endpoint);
+		opened = true;
+	} else if (typeof options.tab === "string" && options.tab.length > 0) {
 		tab = selectHandle(tabs, options.tab);
 	} else {
 		let existing: Tab | null = null;
@@ -68,7 +78,7 @@ export async function withPage<T>(
 		return await body({ session, tab, href: typeof href === "string" ? href : url });
 	} finally {
 		session.close();
-		if (opened === true && options.close === true) {
+		if (opened === true && (options.close === true || options.ephemeral === true)) {
 			try {
 				await close(tab.id, endpoint);
 			} catch {
