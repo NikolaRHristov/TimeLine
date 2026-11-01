@@ -73,6 +73,13 @@ same bytes, hiding a hidden post is a no-op.
   content config globs `Source/Content/` only.
 - `Maintain/Storage/` is ignored by git; a leaked shadow path in a tracked file
   is a bug.
+- **Paths are repository-relative.** Every path a tool records - in a content
+  file, an event payload, an index, a log line - is written as
+  `Source/Content/Bookmark/<id>.json`, never as `file:///…` and never as an
+  absolute path. The repository is public, so an absolute path publishes the
+  machine's directory layout and account name. Astro's own cache
+  (`.astro/`) writes `file://` URLs, which is exactly why it is gitignored and
+  never committed.
 - Hiding beats scraping: `hidden` is checked before any publish, so a later
   re-scrape cannot republish something withheld.
 
