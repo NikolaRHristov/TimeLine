@@ -38,15 +38,18 @@ the operating procedure.
    person to relaunch it with the debugging flag rather than starting a second
    browser - a second browser has no session and silently returns logged-out
    pages.
-2. **List tabs, never guess one.** `tab list --json` gives `{id,title,url}`.
-   Target by id. A url prefix that matches two tabs is an error, not a coin
-   flip.
+2. **List tabs, never guess one.** `tab list --json` gives
+   `{id,title,url,active}`. Target by id; `--tab` also takes the zero-based
+   index in that list. A url prefix that matches two tabs is an error, not a
+   coin flip.
 3. **Discover the contract, don't memorise it.** `--schema` prints the command's
    JSON Schema; `--help` prints its flags. Both come from the same table, so
    they cannot disagree with the parser.
 4. **Mutate with `--dry-run` first.** `post like --url … --dry-run` prints the
-   resolved post. Drop the flag to act. Like and bookmark read `aria-pressed`
-   first, so a second run reports `was:true` and clicks nothing.
+   resolved post. Drop the flag to act. Like and bookmark read the control's
+   state first - `data-testid` (`like`/`unlike`, `bookmark`/`removeBookmark`)
+   then the aria-label, because the site sets no `aria-pressed` - so a second
+   run reports `was:true` and clicks nothing.
 5. **Ingest, then read counts.** `page bookmarks scrape` returns
    `{scraped,new,updated,events}`. Re-running must print `new:0`; a rising `new`
    on a second run means the status-id extraction fell back to text.
@@ -73,6 +76,14 @@ The pipeline exists to keep model work out of the loop.
 
 ## Pitfalls
 
+- **A click is not a write.** The control flips in the DOM before the request
+  behind it lands, so closing the tab (or the process exiting) in that window
+  drops the mutation and the next run reports `was:false` again. The CLI waits
+  for network quiet, and on a temporary tab reloads and re-reads the server
+  state before printing - `liked:true` means the site agrees.
+- **`--url` never touches the person's tabs.** It reuses a tab already showing
+  that permalink and otherwise opens a temporary one, closed on the way out;
+  `--tab`/`--index` drive a tab they already have and leave it open.
 - **Two debuggers, one tab.** The browser extension attaches its own debugger to
   the tab the person handed to Hermes. Attaching over CDP to that same tab
   detaches the extension and breaks their panel. Resolve targets by url and
@@ -100,6 +111,8 @@ The pipeline exists to keep model work out of the loop.
 | Browser exposes CDP | `curl -s http://127.0.0.1:9222/json/version` |
 | Command surface is self-describing | `node Maintain/Index.ts post like --schema` |
 | Like is idempotent | run twice; second prints `was:true` |
+| An attached tab is never driven | attach `chrome.debugger` from the extension to one tab, then `post extract --tab <id>` → `no-tab` |
+| Failures are one object | any failing command exits 2 with `{error:<code>,…}` and nothing else on stdout |
 | Scrape is idempotent | run twice; second prints `new:0` |
 | Classification is cached | second `author classify infer` prints `asked:0` |
 | Docs are anonymised | `grep -rE "/i/lists/[0-9]+|@[A-Za-z0-9_]{2,}" Documentation/` returns nothing |

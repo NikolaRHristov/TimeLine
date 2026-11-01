@@ -5,7 +5,7 @@ import { configurationPath, load } from "../../../Configuration/Load/Load.ts";
 import { withPage } from "../../../Browser/Session/Page.ts";
 import { readyExpression } from "../../../Browser/Selector/List.ts";
 import type { ListSlug } from "../../../Model/List/List.ts";
-import { ListSlug as Slug } from "../../../Model/List/List.ts";
+import { List as ListModel, ListSlug as Slug } from "../../../Model/List/List.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["page", "list", "open"],
@@ -27,7 +27,7 @@ export const Definition: CommandDefinition = {
 			});
 		}
 
-		const url = `https://x.com/i/lists/${list.id}`;
+		const url = ListModel.url({ slug, name: list.name, id: list.id });
 		return withPage(url, { ready: readyExpression(), timeout: 15_000 }, async (context) => ({
 			navigated: true,
 			slug,

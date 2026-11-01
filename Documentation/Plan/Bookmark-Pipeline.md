@@ -59,6 +59,46 @@ has attached to Hermes. Resolve targets by URL, and skip the active tab.
 
 ---
 
+## Sources and stores
+
+### Sources, in the order they get ingested
+
+| Source | Route | What it is |
+|---|---|---|
+| Bookmarks | `/i/bookmarks` | posts saved explicitly |
+| Likes | `/<handle>/likes` | posts liked, including old likes not saved |
+| History | `/i/history` | the account's own activity trail |
+
+Each source is an independent observation channel over the same post. A post
+liked *and* bookmarked is one record with two observations, never two records.
+
+### Two stores
+
+Nothing scraped is public by default.
+
+| Store | Where | Tracked | Contents |
+|---|---|---|---|
+| **Shadow** | `Maintain/Storage/Shadow/` | no (gitignored) | every observation, raw: post JSON keyed by status id, `Observation.jsonl` append-only log, `Index.json` id→file map |
+| **Public** | `Source/Content/` | yes | only records explicitly promoted, as Astro collection JSON |
+
+Promotion is a separate, reversible command (`store publish`), so "I would
+rather not have that one on the site" is the default state rather than a
+correction. Shadow rows carry `visibility: "shadow" | "public" | "hidden"`;
+`hidden` is a tombstone that survives re-scrapes.
+
+Rules:
+
+- Scraping writes **only** to the shadow store. It never touches `Source/Content/`.
+- Publishing copies a shadow record into the public collection with
+  `publishedAt` and the redactions applied (author handle optional, media URLs
+  optional, text trimmed).
+- Un-publishing deletes the public file and writes `visibility: "hidden"` in
+  shadow, so the next scrape does not resurrect it.
+- The shadow store is never committed, never published, and never included in a
+  build.
+
+---
+
 ## Stage 1 - Tool layer (`Maintain/`)
 
 ### Layout
@@ -241,9 +281,11 @@ daemon in production.
 
 ---
 
-## Stage 3 - Distribution (authors → AI / UI / CODE)
+## Stage 3 - Distribution (authors → AI / UI / CODE) - gated launch process
 
-The expensive step, so it is shaped to spend the least.
+**Not run automatically.** Distribution is the one stage that spends model
+tokens and changes the person's lists, so it ships as tools only and waits for
+an explicit start. Building it is in scope; running it is a separate decision.
 
 **Rules first, model second.** For each author, aggregate their bookmarked
 posts into one compact evidence record: handle, top domains linked, keyword

@@ -45,11 +45,18 @@ export function select(tabs: readonly Tab[], criteria: Criteria, options: Select
 		const exact = eligible.find((tab) => TabModel.key(tab.url) === key);
 		if (exact !== undefined) return exact;
 		if (options.exact !== true) {
-			const prefix = eligible.find((tab) => {
+			const prefixed = eligible.filter((tab) => {
 				const candidate = TabModel.key(tab.url);
 				return candidate.startsWith(key) || key.startsWith(candidate);
 			});
-			if (prefix !== undefined) return prefix;
+			if (prefixed.length === 1) return prefixed[0];
+			if (prefixed.length > 1) {
+				throw fail("no-tab", "the url prefix matched more than one tab", {
+					url: criteria.url,
+					matches: prefixed.map(summarize),
+					candidates: seen,
+				});
+			}
 		}
 		const attached = tabs.find((tab) => TabModel.key(tab.url) === key);
 		throw fail(

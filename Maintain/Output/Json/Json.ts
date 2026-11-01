@@ -7,11 +7,6 @@ export function stringify(value: unknown): string {
 	return JSON.stringify(value, null, 2) ?? "null";
 }
 
-/** The same object as one line - for callers that stream JSON lines. */
-export function compact(value: unknown): string {
-	return JSON.stringify(value) ?? "null";
-}
-
 export function write(value: unknown): void {
 	process.stdout.write(`${stringify(value)}\n`);
 }

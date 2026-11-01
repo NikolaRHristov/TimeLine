@@ -45,6 +45,13 @@ test("query strings and trailing slashes do not defeat a match", () => {
 	assert.equal(select(tabs, { url: "http://127.0.0.1:9119/kanban?profile=default" }).id, "DDD");
 });
 
+test("an ambiguous url prefix is an error, not a coin flip", () => {
+	const twins = [...tabs, tab("FFF", "https://x.com/i/lists/1/members", "AI members / X")];
+	assert.equal(codeOf(() => select(twins, { url: "https://x.com/i/lists" })), "no-tab");
+	assert.equal(select(twins, { url: "https://x.com/i/lists/1" }).id, "BBB");
+	assert.equal(select(twins, { url: "https://x.com/i/lists/1" }, { exact: true }).id, "BBB");
+});
+
 test("exact mode refuses a prefix match", () => {
 	assert.equal(codeOf(() => select(tabs, { url: "https://x.com/i" }, { exact: true })), "no-tab");
 });

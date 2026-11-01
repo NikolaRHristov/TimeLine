@@ -13,6 +13,12 @@ export type List = {
 	slug: string;
 	name: string;
 	id: string;
-	url: string;
 	members?: string[];
+};
+
+export const List = {
+	/** The list page for a configured list. */
+	url(list: List): string {
+		return `https://x.com/i/lists/${list.id}`;
+	},
 };

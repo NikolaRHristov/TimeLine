@@ -1,6 +1,7 @@
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
 import type { Values } from "../../Cli/Parser/Parser.ts";
 import type { Post } from "../../Model/Post/Post.ts";
+import { Post as PostModel } from "../../Model/Post/Post.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
 import { connection } from "../../Configuration/Load/Load.ts";
 import type { DiscoveryOptions } from "../Target/Discovery.ts";
@@ -137,6 +138,9 @@ export async function withPost<T>(values: Values, body: (context: PostContext) =
 
 	try {
 		if (typeof values.url === "string" && values.url.length > 0) {
+			if (PostModel.idFromHref(values.url) === null) {
+				throw fail("usage", "--url is not a post permalink", { url: values.url });
+			}
 			const tabs = await discover(endpoint);
 			let existing: Tab | null = null;
 			try {

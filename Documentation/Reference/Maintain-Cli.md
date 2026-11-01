@@ -29,8 +29,16 @@ command reads identifiers from argv.
 |---|---|---|
 | `tab list` | - | `{tabs:[{id,title,url,active}]}` |
 | `tab focus` | `--id` | `{focused:true,id}` |
+
+`--tab` takes a target id from `tab list` or its zero-based index in that list.
+A tab a browser extension currently holds a debugger on is never selected:
+`tab list` reports it as a candidate, and matching skips to the next one.
 | `post extract` | `--tab`, `--index` | `{post:{id,url,author,text,postedAt,media,metrics}}` |
 | `post like` | `--url` \| `--tab --index`, `--dry-run` | `{liked:true,post:{id,url},was:bool}` |
+
+`--dry-run` prints `{dryRun:true,action,post:{id,url},was}` - the resolved post,
+no click. A mutating command reads the control's state first, so a second run
+reports `was:true` instead of toggling back.
 | `post like remove` | same | `{liked:false,…}` |
 | `post bookmark add` | same | `{bookmarked:true,…}` |
 | `post bookmark remove` | same | `{bookmarked:false,…}` |
@@ -61,7 +69,21 @@ Every failure is one object, exit 2, no stack trace on stdout:
 ```
 
 Known codes: `no-config`, `no-tab`, `no-post`, `rate-limited`,
-`schema-invalid`, `cdp-unreachable`.
+`schema-invalid`, `cdp-unreachable`, `cdp-error`, `io-error`, `usage`,
+`internal`. A code is a contract; the `detail` string is not. `--help` and
+`--schema` are rendered from the same table the parser matches against, so a
+command cannot drift from its own documentation.
+
+## Tests
+
+The parser and the target selector run without a browser:
+
+```bash
+node --test "Maintain/Test/*.test.ts"
+```
+
+Everything else is verified against the live endpoint - the claim-to-test table
+in `Documentation/Plan/Bookmark-Pipeline.md` is the checklist.
 
 ## Why one file per command
 

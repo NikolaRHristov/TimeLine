@@ -16,25 +16,12 @@ export type Post = {
 };
 
 export const Post = {
-	/** Status id from a permalink; null when the href is not `/handle/status/<id>`. */
+	/**
+	 * Status id from a permalink (`/handle/status/<id>`), or null when the string
+	 * is not a post URL. Checked before a tab is opened, so `--url` fails fast.
+	 */
 	idFromHref(href: string): string | null {
 		const match = /\/status\/(\d+)/.exec(href);
-		return match ? match[1] : null;
-	},
-
-	urlFor(handle: string, id: string): string {
-		return `https://x.com/${handle}/status/${id}`;
-	},
-
-	empty(): Post {
-		return {
-			id: "",
-			url: "",
-			author: { handle: "", name: "", verified: false },
-			text: "",
-			postedAt: null,
-			media: [],
-			metrics: { replies: 0, reposts: 0, likes: 0, views: 0 },
-		};
+		return match === null ? null : match[1];
 	},
 };
