@@ -45,6 +45,17 @@ function inPage(request: { op: "snapshot" | "toggle"; index: number; control?: s
 	const label = (element: Element | null): string =>
 		element === null ? "" : (element.getAttribute("aria-label") ?? "");
 
+	/**
+	 * One metric out of an aria-label. The action group labels all four at once
+	 * ("1 reply, 1 repost, 1 like, 234 views"), so the keyword decides - with the
+	 * first number as a fallback for a localized label.
+	 */
+	const metric = (text: string, keyword: string): number => {
+		if (text === "") return 0;
+		const match = new RegExp("([\\d.,]+\\s*[KMB]?)\\s*" + keyword, "i").exec(text);
+		return count(match === null ? text : match[1]);
+	};
+
 	const articles = (): Element[] => Array.from(document.querySelectorAll("article"));
 
 	/** An article by status id: the same post, read again after a reload. */
@@ -135,10 +146,10 @@ function inPage(request: { op: "snapshot" | "toggle"; index: number; control?: s
 			postedAt,
 			media,
 			metrics: {
-				replies: count(label(reply)),
-				reposts: count(label(repost)),
-				likes: count(label(likeButton)),
-				views: count(label(viewsNode)),
+				replies: metric(label(reply), "repl(y|ies)"),
+				reposts: metric(label(repost), "reposts?"),
+				likes: metric(label(likeButton), "likes?"),
+				views: metric(label(viewsNode), "views?"),
 			},
 		};
 	};

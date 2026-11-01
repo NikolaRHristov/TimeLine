@@ -24,7 +24,12 @@ export function commandList(commands: readonly CommandDefinition[]): string {
 export function commandHelp(command: CommandDefinition): string {
 	const usage = ["node Maintain/Index.ts", ...command.path];
 	for (const definition of command.options) {
-		usage.push(definition.required === true ? `--${definition.name} <value>` : `[--${definition.name}]`);
+		const placeholder = definition.kind === "integer" ? "n" : "value";
+		const token =
+			definition.kind === "boolean"
+				? `--${definition.name}`
+				: `--${definition.name} <${placeholder}>`;
+		usage.push(definition.required === true ? token : `[${token}]`);
 	}
 	usage.push("[--json] [--schema] [--help]");
 
