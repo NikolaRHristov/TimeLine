@@ -1,0 +1,3 @@
+# Local identifiers - list ids, handles and ports never leave this machine.
+*
+!.gitignore
