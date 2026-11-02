@@ -14,7 +14,10 @@ A card references its RFC by number; an RFC references the cards that implement 
 | Supersession | a new RFC marks the old one `Superseded by`, both stay |
 | Cards        | every RFC names the cards that implement it, by id     |
 
-## Open
+## Records
+
+All ten are written; none is implemented. A record moves to `implemented/` only when its
+verification table passes against the shipped code.
 
 | RFC      | Title                              | Decision class | Cards                  |
 | -------- | ---------------------------------- | -------------- | ---------------------- |

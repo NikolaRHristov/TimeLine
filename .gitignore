@@ -39,3 +39,4 @@ firebase-debug.log
 .firebase/logs/vsce-debug.log
 
 !AGENTS.md
+.hermes-tmp-measure.mjs
