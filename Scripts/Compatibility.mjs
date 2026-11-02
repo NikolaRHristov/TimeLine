@@ -158,9 +158,9 @@ function CheckNode(Range, Floor) {
 	process.stdout.write(
 		[
 			"",
-			"     Astro 7 declares the same floor, and `pnpm run build` fails inside it with a syntax",
-			"     error that names neither the tool nor the version - which is the whole reason this",
-			"     guard runs before anything else.",
+			"     Astro refuses to build below this floor by name, but it is the only tool in the chain",
+			"     that does: `pnpm run Build` (esbuild) and the tool layer's type-check both exit 0 on",
+			"     the same interpreter. This is the one place the floor is stated before a build runs.",
 			"",
 			"     Put a supported Node first on PATH, then run the command again:",
 			"       PATH=/path/to/supported/node/bin:$PATH pnpm run check",

@@ -31,14 +31,14 @@ components use, and it moves only when a stylesheet adds a feature. It is record
 
 The stack was unpinned in practice. `@astrojs/solid-js`, `solid-js` and `sass` were added with caret
 ranges while every other dependency was exact, `astro` sat at 7.4.4 with no statement anywhere about
-which major was supported, and no page recorded a browser baseline at all. Three measured facts made
+which major was supported, and no page recorded a browser baseline at all. Four measured facts made
 the gap concrete.
 
-**The Node floor is real and was being missed.** `astro` 7.4.4 declares `engines.node` `>=22.23.4`
-(`node -p "require('./node_modules/astro/package.json').engines.node"`). A machine whose default
-interpreter is older - a bundled runtime ahead of the LTS on `PATH` is the ordinary case - fails
-inside Astro's own code with a syntax error naming neither the tool nor the version. The floor was
-known to the build and to nobody else.
+**The Node floor is real, and one tool enforces it.** `astro` 7.4.4 declares `engines.node`
+`>=22.23.4` (`node -p "require('./node_modules/astro/package.json').engines.node"`) and refuses to
+build below it - `Node.js v22.23.0 is not supported by Astro!` - while `pnpm run Build` (esbuild)
+and the tool layer's type-check both exit 0 on that same interpreter. The floor was known to the
+site build and to nothing else; the check path said nothing about the runtime at all.
 
 **A major is already behind and reported nowhere.** `pnpm outdated --format json` answers with one
 entry: `tailwindcss` 3.4.19 against 4.3.3. Nothing in the repository said whether that was a debt, a

@@ -438,11 +438,12 @@ says which claim each mechanism is responsible for.
 
 | Claim                                | Test                                                                                                                                             |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Every colour is a token              | `grep -rnE '#[0-9a-fA-F]{3,8}' Source --include=*.scss --include=*.tsx --include=*.astro` returns only `Global.css` and the `theme-color` meta   |
-| No rgb or hsl triple is written      | `grep -rn 'rgb(\|hsl(' Source/Stylesheet` returns no declaration - today one comment names the form it replaced                                  |
-| No orphan token                      | the token contract script reports none; until it exists, `comm -23` of the declared names against every `var(--x)` read returns nothing          |
-| No undefined token                   | every `var(--x)` resolves to a declaration or to the closed component-scoped set (script, intent)                                                |
-| One stage map                        | `grep -rn 'stage-' Source --include=*.ts --include=*.tsx --include=*.scss \| grep -v Library/Stage.ts` shows reads only, no second mapping       |
+| Every colour is a token              | `pnpm run Check:Tokens`, check 1 (no stray literal) reports nothing; the `theme-color` meta is the one literal outside `Global.css`              |
+| No rgb or hsl triple is written      | the same check covers `rgb()`; `grep -rn 'rgb(\|hsl(' Source/Stylesheet` returns no declaration                                                  |
+| No orphan token                      | `pnpm run Check:Tokens`, check 2 (no orphan token) reports nothing                                                                               |
+| No undefined token                   | `pnpm run Check:Tokens`, check 3 (no undefined token) reports nothing                                                                            |
+| One stage map                        | `pnpm run Check:Tokens`, check 4 (one stage map) reports nothing; `grep -rn 'stage-' Source --include=*.scss` shows reads only                   |
+| One material                         | `pnpm run Check:Tokens`, check 5 (no redefined mixin) reports nothing                                                                            |
 | A component never reads a collection | `grep -rn 'astro:content' Source/Component` returns nothing (true today)                                                                         |
 | The shell owns the measure           | `grep -rn 'max-width' Source/Stylesheet Source/Component` returns `Shell.scss` and two media queries, nothing else                               |
 | Depth is drawn, never simulated      | `grep -rn 'box-shadow\|blur(\|linear-gradient' Source/Stylesheet` returns the two fade rules and nothing else                                    |

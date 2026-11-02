@@ -133,6 +133,11 @@ A build that is still writing shows up as a route serving no document at all - n
 `<main>` - which the verdict names as such rather than reporting a content defect. A page that
 genuinely lost its content fails the selector rules instead.
 
+In a tree another worker builds, prove the output settled before reading it: every expected route
+present and `find Target -newermt '-5 seconds' -name '*.html'` empty. A check that races a rebuild
+reports a failure the code does not have - an island attribute that has not been written yet looks
+exactly like an island that lost its directive.
+
 ## Claim → test
 
 | Claim                                      | Test                                                                                                                 |

@@ -18,8 +18,18 @@ root `package.json`.
 | Vite       | `8.3.5`                              | `package.json` → `dependencies`    |
 
 The Node floor is not a policy choice. `astro` 7.4.4 declares `engines.node` `>=22.23.4` itself, and
-below it `pnpm run build` fails inside Astro with a syntax error that names neither the tool nor the
-version. The repository records the same number so that one command can say so plainly:
+below it it refuses to build, by name:
+
+```
+Node.js v22.23.0 is not supported by Astro!
+Please upgrade Node.js to a supported version: ">=22.23.4"
+```
+
+That message is clear, but it comes from the only tool in the chain that has the check.
+`pnpm run Build` (esbuild) and `pnpm --filter @nikolarhristov/timeline-maintain run check` (tsc and
+the schema tests) both exit 0 on the same interpreter - measured, not assumed - so the check path
+states the floor nowhere. The repository records the number once, in `engines.node`, and the guard
+restates it in one line before anything else runs. The commands that print it:
 
 ```sh
 node -p "require('./package.json').engines.node"              # >=22.23.4

@@ -430,8 +430,14 @@ function main() {
 			"the stage-to-accent map is missing - it is the one module allowed to name a stage accent",
 		);
 	} else {
+		// The names the map states, exactly - a substring test would let
+		// `--stage-source-extra` satisfy `--stage-source`.
+		const named = new Set(
+			[...stageModule.text.matchAll(STAGE_REFERENCE)].map((match) => match[0]),
+		);
+
 		for (const [name, sites] of stageTokens) {
-			if (!stageModule.text.includes(name)) {
+			if (!named.has(name)) {
 				const [site] = sites;
 
 				report(

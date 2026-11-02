@@ -41,12 +41,23 @@ interface Props {
 	 * measure stays a single decision made in one place.
 	 */
 	Wide?: boolean;
+	/**
+	 * Render the surface on its own, with no header, footer or block padding.
+	 *
+	 * The workspace is the whole frame, not an article inside one: its own rail
+	 * starts at the top-left of the viewport and the drawer's ground runs to the
+	 * top edge, so a sticky header above it would push the composition down and
+	 * break every proportion the design states in absolute pixels. A page that
+	 * owns the screen asks for this; every other page keeps the shell.
+	 */
+	Bare?: boolean;
 }
 
 const {
 	Title = Content.Brand.Title,
 	Description = Content.Brand.Description,
 	Wide = false,
+	Bare = false,
 } = Astro.props;
 
 const Path = Astro.url.pathname;
@@ -95,69 +106,77 @@ const Year = new Date().getFullYear();
 
 		<ClientRouter />
 	</Head>
-	<body>
+	<body class:list={{ "shell-body--bare": Bare }}>
 		<a class="skip" href="#main">
 			{Content.Shell.Skip}
 		</a>
 
-		<header class="shell-header">
-			<div class="page shell-header__inner">
-				<a class="shell-brand" href={Route.Home}>
-					<span class="shell-brand__mark" aria-hidden="true">
-						{Content.Shell.Mark}
-					</span>
-					<span class="shell-brand__name">{Content.Brand.Short}</span>
-				</a>
-
-				<nav class="shell-nav" aria-label={Content.Shell.Primary}>
-					<ul>
-						{Primary.map((Entry) => (
-							<li>
-								<a
-									href={Entry.Href}
-									aria-current={IsCurrent(Path, Entry.Href) ? "page" : undefined}>
-									{Entry.Label}
-								</a>
-							</li>
-						))}
-					</ul>
-				</nav>
-
-				{Repository !== "" && (
-					<a class="shell-repository" href={Repository} rel="noopener noreferrer">
-						{Content.Shell.Repository}
+		{!Bare && (
+			<header class="shell-header">
+				<div class="page shell-header__inner">
+					<a class="shell-brand" href={Route.Home}>
+						<span class="shell-brand__mark" aria-hidden="true">
+							{Content.Shell.Mark}
+						</span>
+						<span class="shell-brand__name">{Content.Brand.Short}</span>
 					</a>
-				)}
-			</div>
-		</header>
 
-		<main id="main" class:list={["page", "shell-main", { "page--wide": Wide }]}>
+					<nav class="shell-nav" aria-label={Content.Shell.Primary}>
+						<ul>
+							{Primary.map((Entry) => (
+								<li>
+									<a
+										href={Entry.Href}
+										aria-current={
+											IsCurrent(Path, Entry.Href) ? "page" : undefined
+										}>
+										{Entry.Label}
+									</a>
+								</li>
+							))}
+						</ul>
+					</nav>
+
+					{Repository !== "" && (
+						<a class="shell-repository" href={Repository} rel="noopener noreferrer">
+							{Content.Shell.Repository}
+						</a>
+					)}
+				</div>
+			</header>
+		)}
+
+		<main
+			id="main"
+			class:list={["page", "shell-main", { "page--wide": Wide, "shell-main--bare": Bare }]}>
 			<slot />
 		</main>
 
-		<footer class="shell-footer">
-			<div class="page shell-footer__inner">
-				<div class="shell-footer__brand">
-					<p class="shell-footer__name">{Content.Brand.Title}</p>
-					<p class="shell-footer__note">{Content.Brand.Description}</p>
+		{!Bare && (
+			<footer class="shell-footer">
+				<div class="page shell-footer__inner">
+					<div class="shell-footer__brand">
+						<p class="shell-footer__name">{Content.Brand.Title}</p>
+						<p class="shell-footer__note">{Content.Brand.Description}</p>
+					</div>
+
+					<nav class="shell-sitemap" aria-label={Content.Shell.Sitemap}>
+						<ul>
+							{Sitemap.map((Entry) => (
+								<li>
+									<a href={Entry.Href}>{Entry.Label}</a>
+								</li>
+							))}
+						</ul>
+					</nav>
+
+					<p class="shell-footer__licence">
+						<span>{Content.Brand.Licence}</span>
+						<span>{Year}</span>
+					</p>
 				</div>
-
-				<nav class="shell-sitemap" aria-label={Content.Shell.Sitemap}>
-					<ul>
-						{Sitemap.map((Entry) => (
-							<li>
-								<a href={Entry.Href}>{Entry.Label}</a>
-							</li>
-						))}
-					</ul>
-				</nav>
-
-				<p class="shell-footer__licence">
-					<span>{Content.Brand.Licence}</span>
-					<span>{Year}</span>
-				</p>
-			</div>
-		</footer>
+			</footer>
+		)}
 
 		{import.meta.env.PROD && <script is:inline>
 			// Registered here rather than by the integration, so the worker

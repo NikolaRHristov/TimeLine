@@ -71,6 +71,19 @@
 	padding-block: var(--space-10);
 }
 
+/* A surface that owns the screen: no measure, no block padding, no footer below
+   it. The workspace draws its own frame from the viewport's top-left corner, so
+   any padding here would shift every absolute height the composition states. */
+.shell-main--bare {
+	flex: 1 1 auto;
+	padding-block: 0;
+	background: var(--color-surface-sunken);
+}
+
+.shell-body--bare {
+	background: var(--color-surface-sunken);
+}
+
 .shell-header {
 	@include Material.panel;
 
