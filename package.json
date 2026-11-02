@@ -3,12 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"description": "A bookmark showcase you own: your X bookmarks, your lists, a static site.",
-	"keywords": [
-		"astro",
-		"bookmarks",
-		"cdp",
-		"tailwindcss"
-	],
+	"keywords": ["astro", "bookmarks", "cdp", "tailwindcss"],
 	"license": "SEE LICENSE IN LICENSE",
 	"author": {
 		"name": "Timeline contributors"

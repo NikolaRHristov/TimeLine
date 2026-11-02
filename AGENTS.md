@@ -45,12 +45,11 @@ Documentation/       Reference/ (how it works), Skill/ (how to work)
    never reappear after a re-scrape.
 7. **Builds belong at the epic boundary.** A worker runs the narrowest check for its own change; the
    full pass runs once, when the tree stops moving.
-8. **The repository is public.** No internal process artifacts, no scraped page
-   bodies, no third-party docs pasted into tracked files.
-9. **Write documentation, not transcripts.** Ideas arrive in conversation; they
-   are restated as declarative prose, never quoted back. No quotation marks
-   around a phrase borrowed from the owner, no first-person voice, no attributed
-   fragments - a document states what is true, not who said it.
+8. **The repository is public.** No internal process artifacts, no scraped page bodies, no
+   third-party docs pasted into tracked files.
+9. **Write documentation, not transcripts.** Ideas arrive in conversation; they are restated as
+   declarative prose, never quoted back. No quotation marks around a phrase borrowed from the owner,
+   no first-person voice, no attributed fragments - a document states what is true, not who said it.
 
 ## Verifying a change
 
