@@ -18,68 +18,72 @@
  */
 import Spread, { type Card, type Pillar } from "@Component/Showcase/Spread.astro";
 import Base from "@Layout/Base.astro";
+import { Content } from "@Library/Content.ts";
+
+/** The spread's own words, all of them from `Content/` (RFC-0053 rule 4). */
+const Showcase = Content.Page.Showcase;
 
 const Cards: Card[] = [
 	{
 		Eyebrow: "Provenance",
-		Title: "You can see where every record came from.",
-		Body: "The rail reads the pipeline as depth: what was observed, what was processed, what was reviewed. A stage is a band, and the band that is selected is the one the page is showing.",
+		Title: Showcase.Card.Provenance.Title,
+		Body: Showcase.Card.Provenance.Body,
 		Href: "/Workspace",
 		Tone: "loud",
 	},
 	{
 		Eyebrow: "Drawer",
-		Title: "The private side stays private.",
-		Body: "Everything you have not published lives in your own store. Nothing reaches the canvas until you move it there, and withdrawing a record is the same gesture in reverse.",
+		Title: Showcase.Card.Drawer.Title,
+		Body: Showcase.Card.Drawer.Body,
 		Href: "/Workspace",
 	},
 	{
 		Eyebrow: "Seam",
-		Title: "One verb crosses.",
-		Body: "Publishing is the only action that moves a record from your drawer to a canvas. Curation, voting and commenting select among what is already public; they never publish.",
+		Title: Showcase.Card.Seam.Title,
+		Body: Showcase.Card.Seam.Body,
 		Href: "/Workspace",
 		Tone: "quiet",
 	},
 	{
 		Eyebrow: "Canvas",
-		Title: "Placement is data, not layout.",
-		Body: "A tile states the column and row it starts at and how many tracks it spans, so a thin archive still composes as a page instead of leaving holes.",
+		Title: Showcase.Card.Canvas.Title,
+		Body: Showcase.Card.Canvas.Body,
 		Href: "/Workspace",
 	},
 	{
 		Eyebrow: "Network",
-		Title: "Carried, never read.",
-		Body: "The network moves what you send between peers. The keys are yours, the transport is end to end, and the operator has nothing to inspect because it holds no key to inspect with.",
+		Title: Showcase.Card.Network.Title,
+		Body: Showcase.Card.Network.Body,
 	},
 	{
 		Eyebrow: "Motion",
-		Title: "An action travels, then settles.",
-		Body: "A motion is raised by a participant, carried by the network, and settled when its outcome is recorded. A change of intent is a second motion, never an edit of the first.",
+		Title: Showcase.Card.Motion.Title,
+		Body: Showcase.Card.Motion.Body,
 		Tone: "loud",
 	},
 ];
 
 const Pillars: Pillar[] = [
 	{
-		Name: "Authenticated",
-		Note: "The provider verifies the network, and the network verifies the provider. Both halves of the handshake are drawn.",
+		Name: Showcase.Pillar.Authenticated.Name,
+		Note: Showcase.Pillar.Authenticated.Note,
 	},
 	{
-		Name: "Encrypted",
-		Note: "End to end between peers. The cipher suite is stated, not summarised, so the claim can be checked.",
+		Name: Showcase.Pillar.Encrypted.Name,
+		Note: Showcase.Pillar.Encrypted.Note,
 	},
 	{
-		Name: "Authorised",
-		Note: "Seeing is the first permission. Every grant after it is named, scoped, and revocable by the person who gave it.",
+		Name: Showcase.Pillar.Authorised.Name,
+		Note: Showcase.Pillar.Authorised.Note,
 	},
 ];
 ---
 
-<Base Title="TimeLine" Description="A bookmark showcase you own." Wide>
+<Base Title={Content.Brand.Title} Description={Content.Brand.Description} Wide>
 	<Spread
-		Eyebrow="A network for what you keep"
-		Title="Your archive, your drawer, your canvas."
-		Lede="Everything you save stays private until you decide otherwise. What you publish is composed from your own material, carried over a network that cannot read it, and shown to exactly the people you authorised."
+		Eyebrow={Showcase.Eyebrow}
+		Title={Showcase.Title}
+		Lede={Showcase.Lede}
 		Cards={Cards}
 		Pillars={Pillars}
 	/>

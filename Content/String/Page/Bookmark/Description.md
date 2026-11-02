@@ -1,1 +1,1 @@
-{{total}} saved posts, each one a tile on the archive canvas.
+What a saved post is: a captured record, private until it is published.

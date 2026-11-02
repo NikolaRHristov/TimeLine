@@ -1,17 +1,35 @@
 import "@Stylesheet/Component/Provenance.scss";
+import { Content } from "@Library/Content.ts";
 import { For, Show } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
 export interface Stage {
 	/** The stage's stable key, which is also the value a selection holds. */
 	Key: string;
 	/** What the band prints, e.g. `Ingestion · 3 events`. */
 	Label: string;
-	/** The accent this stage owns, as a CSS colour. */
+	/**
+	 * The accent this stage owns, as a CSS colour.
+	 *
+	 * A pipeline stage names an accent from `Library/Stage.ts`. A section of a
+	 * showcase page is not a stage, so it passes a neutral tone instead
+	 * (RFC-0053 rule 3): the drum keeps its depth, and no colour on the rail
+	 * claims a pipeline the page is not drawing.
+	 */
 	Tone: string;
 	/** How many events sit on the track; the widest band sets the scale. */
 	Events: number;
 	/** The caption under the selected band only. */
 	Caption?: string;
+	/**
+	 * Where the band leads, when the drum is a table of contents.
+	 *
+	 * A band with a destination is an `<a>`: a contents rail is navigation, and
+	 * a press on it must work with no script running. A band without one stays
+	 * a `<button>`, because the pipeline rail's press moves a selection rather
+	 * than a document.
+	 */
+	Href?: string;
 }
 
 interface Props {
@@ -19,6 +37,13 @@ interface Props {
 	Selected: string;
 	Note: string;
 	OnSelect?: (Key: string) => void;
+	/**
+	 * The drum's header. The pipeline rail states its own; a contents rail
+	 * passes its own words, because `Ingestion timeline` over a table of
+	 * contents would name a pipeline the page is not drawing.
+	 */
+	Eyebrow?: string;
+	Title?: string;
 }
 
 /**
@@ -44,6 +69,25 @@ const Ladder = [
 const Marks = [0.12, 0.45, 0.78];
 
 export default function Provenance(Props: Props) {
+	/**
+	 * The drum's header, in the words of whoever mounted it.
+	 *
+	 * The fallback is the content layer rather than a literal: a sentence
+	 * written into a component is the one thing RFC-0053's copy rule forbids,
+	 * and a pipeline rail is the shape most callers want.
+	 */
+	const Eyebrow = () => Props.Eyebrow ?? Content.Provenance.Eyebrow;
+	const Title = () => Props.Title ?? Content.Provenance.Title;
+
+	/**
+	 * Whether this drum is a table of contents.
+	 *
+	 * One value decides the whole arrangement, so a rail cannot end up half
+	 * linked: with destinations the bands are links inside a navigation
+	 * landmark, without them they are buttons inside a list.
+	 */
+	const Contents = () => Props.Stages.some((Entry) => Entry.Href !== undefined);
+
 	const SelectedIndex = () => {
 		const Found = Props.Stages.findIndex((Entry) => Entry.Key === Props.Selected);
 
@@ -98,13 +142,13 @@ export default function Provenance(Props: Props) {
 	const Progress = (Entry: Stage) => `${Math.round((Entry.Events / Widest()) * 100)}%`;
 
 	return (
-		<aside class="provenance" aria-label="Provenance">
+		<aside class="provenance" aria-label={Eyebrow()}>
 			<div class="provenance__header">
-				<p class="provenance__eyebrow">Provenance</p>
-				<p class="provenance__title">Ingestion timeline</p>
+				<p class="provenance__eyebrow">{Eyebrow()}</p>
+				<p class="provenance__title">{Title()}</p>
 			</div>
 
-			<div class="provenance__drum" role="list">
+			<div class="provenance__drum" role={Contents() ? "navigation" : "list"}>
 				<For each={Slots}>
 					{(Distance) => {
 						const Slot = () => Band(Distance);

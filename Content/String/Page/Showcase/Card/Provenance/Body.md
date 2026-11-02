@@ -1,1 +1,1 @@
-The rail reads the pipeline as depth: one band per collection, Bookmark at source, Event at ingestion, Voted at processing, Curated at review, so the rail and the archive cannot disagree about how much work sits at each step.
+The rail reads the pipeline as depth: one band per collection, Bookmark at source, Event at ingestion, Voted at processing, Curated at review, so the rail and the archive cannot disagree about how much work sits at each step (RFC-0001).

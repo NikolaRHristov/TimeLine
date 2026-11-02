@@ -1,1 +1,1 @@
-Everything you have not published lives in the local store, and nothing reaches a canvas until a publish record moves it there. Withdrawing a record is the same gesture in reverse: a hidden post is dropped from the collection, not filtered at render time.
+Everything you have not published lives in the local store, and nothing reaches a canvas until a publish record moves it there; withdrawing a record is the same gesture in reverse, so a hidden post is dropped from the collection rather than filtered at render time (RFC-0043).

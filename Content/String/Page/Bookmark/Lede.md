@@ -1,1 +1,1 @@
-{{total}} {{saved}} {{postNoun}}, ranked first and then newest, each one a tile on the canvas.
+A bookmark is a captured record: its text, its author, its media and the lists it was filed under, held privately until the owner publishes it.

@@ -167,6 +167,10 @@ export const Content = {
 				process.env["CONTENT_STRING_PAGE_ACTIVITY_EMPTYBODY"],
 				"CONTENT_STRING_PAGE_ACTIVITY_EMPTYBODY",
 			),
+			Eyebrow: content(
+				process.env["CONTENT_STRING_PAGE_ACTIVITY_EYEBROW"],
+				"CONTENT_STRING_PAGE_ACTIVITY_EYEBROW",
+			),
 			Lede: content(
 				process.env["CONTENT_STRING_PAGE_ACTIVITY_LEDE"],
 				"CONTENT_STRING_PAGE_ACTIVITY_LEDE",
@@ -175,6 +179,57 @@ export const Content = {
 				process.env["CONTENT_STRING_PAGE_ACTIVITY_POSTCOUNT"],
 				"CONTENT_STRING_PAGE_ACTIVITY_POSTCOUNT",
 			),
+			/**
+			 * The page's own sections, one idea each (RFC-0053 rule 2).
+			 *
+			 * A showcase page holds no records, so its boxes carry no counts and
+			 * no ids: the key is the anchor the contents rail links to, and the
+			 * three strings are the whole of what a box says.
+			 */
+			Section: {
+				Record: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_BODY"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_EYEBROW"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_TITLE"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_TITLE",
+					),
+				},
+				Subject: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_BODY"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_EYEBROW"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_TITLE"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_TITLE",
+					),
+				},
+				Replay: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_BODY"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_EYEBROW"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_TITLE"],
+						"CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_TITLE",
+					),
+				},
+			},
 		},
 		Bookmark: {
 			Description: content(
@@ -243,10 +298,69 @@ export const Content = {
 					"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_VERIFIED",
 				),
 			},
+			Eyebrow: content(
+				process.env["CONTENT_STRING_PAGE_BOOKMARK_EYEBROW"],
+				"CONTENT_STRING_PAGE_BOOKMARK_EYEBROW",
+			),
+			Title: content(
+				process.env["CONTENT_STRING_PAGE_BOOKMARK_TITLE"],
+				"CONTENT_STRING_PAGE_BOOKMARK_TITLE",
+			),
 			Lede: content(
 				process.env["CONTENT_STRING_PAGE_BOOKMARK_LEDE"],
 				"CONTENT_STRING_PAGE_BOOKMARK_LEDE",
 			),
+			/**
+			 * The page's own sections, one idea each (RFC-0053 rule 2).
+			 *
+			 * A showcase page holds no records, so its boxes carry no counts and no
+			 * ids: the key is the anchor the contents rail links to, and the three
+			 * strings are the whole of what a box says.
+			 */
+			Section: {
+				Capture: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_BODY"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_EYEBROW"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_TITLE"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_TITLE",
+					),
+				},
+				Filed: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_BODY"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_EYEBROW"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_TITLE"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_TITLE",
+					),
+				},
+				Private: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_BODY"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_EYEBROW"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_TITLE"],
+						"CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_TITLE",
+					),
+				},
+			},
 		},
 		Index: {
 			All: content(
@@ -265,6 +379,10 @@ export const Content = {
 				process.env["CONTENT_STRING_PAGE_INDEX_EMPTYHINT"],
 				"CONTENT_STRING_PAGE_INDEX_EMPTYHINT",
 			),
+			Eyebrow: content(
+				process.env["CONTENT_STRING_PAGE_INDEX_EYEBROW"],
+				"CONTENT_STRING_PAGE_INDEX_EYEBROW",
+			),
 			Latest: content(
 				process.env["CONTENT_STRING_PAGE_INDEX_LATEST"],
 				"CONTENT_STRING_PAGE_INDEX_LATEST",
@@ -276,6 +394,178 @@ export const Content = {
 			Picks: content(
 				process.env["CONTENT_STRING_PAGE_INDEX_PICKS"],
 				"CONTENT_STRING_PAGE_INDEX_PICKS",
+			),
+			/**
+			 * The page's own sections, one idea each (RFC-0053 rule 2).
+			 *
+			 * A showcase page holds no records, so its boxes carry no counts and no
+			 * ids: the key is the anchor the contents rail links to, and the three
+			 * strings are the whole of what a box says.
+			 */
+			Section: {
+				Processing: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_BODY"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_EYEBROW"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_TITLE"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_TITLE",
+					),
+				},
+				Review: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_BODY"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_EYEBROW"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_TITLE"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_TITLE",
+					),
+				},
+				Source: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_BODY"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_EYEBROW"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_TITLE"],
+						"CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_TITLE",
+					),
+				},
+			},
+			Title: content(
+				process.env["CONTENT_STRING_PAGE_INDEX_TITLE"],
+				"CONTENT_STRING_PAGE_INDEX_TITLE",
+			),
+		},
+		/**
+		 * The showcase spread (RFC-0053), and every card on it is a claim.
+		 *
+		 * A card states a capability and names the protocol or the record behind
+		 * it, which is why the bodies are the longest strings in this file: the
+		 * sentence that would have been an adjective is the one that has to name
+		 * `AES-GCM-256` or an RFC. `Scripts/Position.mjs` checks every body and
+		 * every pillar note against that rule.
+		 */
+		Showcase: {
+			Card: {
+				Canvas: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_CANVAS_BODY"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_CANVAS_BODY",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_CANVAS_TITLE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_CANVAS_TITLE",
+					),
+				},
+				Drawer: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_DRAWER_BODY"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_DRAWER_BODY",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_DRAWER_TITLE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_DRAWER_TITLE",
+					),
+				},
+				Motion: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_MOTION_BODY"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_MOTION_BODY",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_MOTION_TITLE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_MOTION_TITLE",
+					),
+				},
+				Network: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_NETWORK_BODY"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_NETWORK_BODY",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_NETWORK_TITLE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_NETWORK_TITLE",
+					),
+				},
+				Provenance: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_PROVENANCE_BODY"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_PROVENANCE_BODY",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_PROVENANCE_TITLE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_PROVENANCE_TITLE",
+					),
+				},
+				Seam: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_SEAM_BODY"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_SEAM_BODY",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_CARD_SEAM_TITLE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_CARD_SEAM_TITLE",
+					),
+				},
+			},
+			Eyebrow: content(
+				process.env["CONTENT_STRING_PAGE_SHOWCASE_EYEBROW"],
+				"CONTENT_STRING_PAGE_SHOWCASE_EYEBROW",
+			),
+			Lede: content(
+				process.env["CONTENT_STRING_PAGE_SHOWCASE_LEDE"],
+				"CONTENT_STRING_PAGE_SHOWCASE_LEDE",
+			),
+			Pillar: {
+				Authenticated: {
+					Name: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHENTICATED_NAME"],
+						"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHENTICATED_NAME",
+					),
+					Note: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHENTICATED_NOTE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHENTICATED_NOTE",
+					),
+				},
+				Authorised: {
+					Name: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHORISED_NAME"],
+						"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHORISED_NAME",
+					),
+					Note: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHORISED_NOTE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHORISED_NOTE",
+					),
+				},
+				Encrypted: {
+					Name: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_PILLAR_ENCRYPTED_NAME"],
+						"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_ENCRYPTED_NAME",
+					),
+					Note: content(
+						process.env["CONTENT_STRING_PAGE_SHOWCASE_PILLAR_ENCRYPTED_NOTE"],
+						"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_ENCRYPTED_NOTE",
+					),
+				},
+			},
+			Title: content(
+				process.env["CONTENT_STRING_PAGE_SHOWCASE_TITLE"],
+				"CONTENT_STRING_PAGE_SHOWCASE_TITLE",
 			),
 		},
 		List: {
@@ -305,6 +595,10 @@ export const Content = {
 				process.env["CONTENT_STRING_PAGE_LIST_EMPTYBODY"],
 				"CONTENT_STRING_PAGE_LIST_EMPTYBODY",
 			),
+			Eyebrow: content(
+				process.env["CONTENT_STRING_PAGE_LIST_EYEBROW"],
+				"CONTENT_STRING_PAGE_LIST_EYEBROW",
+			),
 			Lede: content(
 				process.env["CONTENT_STRING_PAGE_LIST_LEDE"],
 				"CONTENT_STRING_PAGE_LIST_LEDE",
@@ -312,6 +606,61 @@ export const Content = {
 			Rule: content(
 				process.env["CONTENT_STRING_PAGE_LIST_RULE"],
 				"CONTENT_STRING_PAGE_LIST_RULE",
+			),
+			/**
+			 * The page's own sections, one idea each (RFC-0053 rule 2).
+			 *
+			 * A showcase page holds no records, so its boxes carry no counts and no
+			 * ids: the key is the anchor the contents rail links to, and the three
+			 * strings are the whole of what a box says.
+			 */
+			Section: {
+				Filter: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_FILTER_BODY"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_FILTER_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_FILTER_EYEBROW"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_FILTER_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_FILTER_TITLE"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_FILTER_TITLE",
+					),
+				},
+				Name: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_NAME_BODY"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_NAME_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_NAME_EYEBROW"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_NAME_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_NAME_TITLE"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_NAME_TITLE",
+					),
+				},
+				Slug: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_SLUG_BODY"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_SLUG_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_SLUG_EYEBROW"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_SLUG_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_LIST_SECTION_SLUG_TITLE"],
+						"CONTENT_STRING_PAGE_LIST_SECTION_SLUG_TITLE",
+					),
+				},
+			},
+			Title: content(
+				process.env["CONTENT_STRING_PAGE_LIST_TITLE"],
+				"CONTENT_STRING_PAGE_LIST_TITLE",
 			),
 		},
 		Voted: {
@@ -335,6 +684,10 @@ export const Content = {
 				process.env["CONTENT_STRING_PAGE_VOTED_EMPTYHINTBEFORE"],
 				"CONTENT_STRING_PAGE_VOTED_EMPTYHINTBEFORE",
 			),
+			Eyebrow: content(
+				process.env["CONTENT_STRING_PAGE_VOTED_EYEBROW"],
+				"CONTENT_STRING_PAGE_VOTED_EYEBROW",
+			),
 			Lede: content(
 				process.env["CONTENT_STRING_PAGE_VOTED_LEDE"],
 				"CONTENT_STRING_PAGE_VOTED_LEDE",
@@ -354,6 +707,61 @@ export const Content = {
 			UnknownAuthor: content(
 				process.env["CONTENT_STRING_PAGE_VOTED_UNKNOWNAUTHOR"],
 				"CONTENT_STRING_PAGE_VOTED_UNKNOWNAUTHOR",
+			),
+			/**
+			 * The page's own sections, one idea each (RFC-0053 rule 2).
+			 *
+			 * A showcase page holds no records, so its boxes carry no counts and no
+			 * ids: the key is the anchor the contents rail links to, and the three
+			 * strings are the whole of what a box says.
+			 */
+			Section: {
+				Nominate: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_BODY"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_EYEBROW"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_TITLE"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_TITLE",
+					),
+				},
+				Rank: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_RANK_BODY"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_RANK_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_RANK_EYEBROW"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_RANK_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_RANK_TITLE"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_RANK_TITLE",
+					),
+				},
+				Settle: {
+					Body: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_BODY"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_BODY",
+					),
+					Eyebrow: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_EYEBROW"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_EYEBROW",
+					),
+					Title: content(
+						process.env["CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_TITLE"],
+						"CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_TITLE",
+					),
+				},
+			},
+			Title: content(
+				process.env["CONTENT_STRING_PAGE_VOTED_TITLE"],
+				"CONTENT_STRING_PAGE_VOTED_TITLE",
 			),
 		},
 		Workspace: {
@@ -399,6 +807,23 @@ export const Content = {
 			),
 		},
 	},
+	/**
+	 * The provenance drum's own header, wherever the drum draws a pipeline.
+	 *
+	 * A showcase page passes its own words instead (RFC-0053 rule 3): the same
+	 * drum is a table of contents there, and a contents rail that called itself
+	 * an ingestion timeline would be naming a pipeline it is not drawing.
+	 */
+	Provenance: {
+		Eyebrow: content(
+			process.env["CONTENT_STRING_PROVENANCE_EYEBROW"],
+			"CONTENT_STRING_PROVENANCE_EYEBROW",
+		),
+		Title: content(
+			process.env["CONTENT_STRING_PROVENANCE_TITLE"],
+			"CONTENT_STRING_PROVENANCE_TITLE",
+		),
+	},
 	Reference: {
 		Configure: content(
 			process.env["CONTENT_STRING_REFERENCE_CONFIGURE"],
@@ -440,6 +865,41 @@ export const Content = {
 			"CONTENT_STRING_SHELL_SITEMAP",
 		),
 		Skip: content(process.env["CONTENT_STRING_SHELL_SKIP"], "CONTENT_STRING_SHELL_SKIP"),
+	},
+	/**
+	 * The showcase surface (RFC-0053): the frame every showcase page shares.
+	 *
+	 * The rail and the closing band say the same thing on all five routes, so
+	 * they are stated once here; a page's own words live under `Page`, one
+	 * folder per route. The closing band invites the reader to the workspace,
+	 * which is the one destination RFC-0054 makes public - and the only
+	 * invitation this deployment can honour (RFC-0053 rule 5).
+	 */
+	Showcase: {
+		Close: {
+			Label: content(
+				process.env["CONTENT_STRING_SHOWCASE_CLOSE_LABEL"],
+				"CONTENT_STRING_SHOWCASE_CLOSE_LABEL",
+			),
+			Link: content(
+				process.env["CONTENT_STRING_SHOWCASE_CLOSE_LINK"],
+				"CONTENT_STRING_SHOWCASE_CLOSE_LINK",
+			),
+		},
+		Rail: {
+			Eyebrow: content(
+				process.env["CONTENT_STRING_SHOWCASE_RAIL_EYEBROW"],
+				"CONTENT_STRING_SHOWCASE_RAIL_EYEBROW",
+			),
+			Note: content(
+				process.env["CONTENT_STRING_SHOWCASE_RAIL_NOTE"],
+				"CONTENT_STRING_SHOWCASE_RAIL_NOTE",
+			),
+			Title: content(
+				process.env["CONTENT_STRING_SHOWCASE_RAIL_TITLE"],
+				"CONTENT_STRING_SHOWCASE_RAIL_TITLE",
+			),
+		},
 	},
 	Word: {
 		Across: content(process.env["CONTENT_STRING_WORD_ACROSS"], "CONTENT_STRING_WORD_ACROSS"),

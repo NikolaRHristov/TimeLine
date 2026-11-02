@@ -1,6 +1,6 @@
 import "@Stylesheet/Component/Spectrometer.scss";
 import type { Peer } from "@Library/Band.ts";
-import { Label, Protocol, Steps } from "@Library/Capability.ts";
+import { Protocol, Steps } from "@Library/Capability.ts";
 import { For } from "solid-js";
 
 /**
@@ -42,10 +42,12 @@ export default function Spectrometer(Props: Props) {
 	return (
 		<section class="spectrometer" aria-labelledby="spectrometer-heading">
 			<header class="spectrometer__head">
-				<p class="spectrometer__eyebrow">{Props.Eyebrow}</p>
-				<h2 class="spectrometer__title" id="spectrometer-heading">
-					{Props.Title}
-				</h2>
+				<div class="spectrometer__identity">
+					<p class="spectrometer__eyebrow">{Props.Eyebrow}</p>
+					<h2 class="spectrometer__title" id="spectrometer-heading">
+						{Props.Title}
+					</h2>
+				</div>
 				<p class="spectrometer__note">{Props.Note}</p>
 			</header>
 
@@ -59,7 +61,7 @@ export default function Spectrometer(Props: Props) {
 						{(Step) => (
 							<div class="spectrometer__capability" role="columnheader">
 								<p class="spectrometer__capability-name">{Step.Label}</p>
-								<p class="spectrometer__capability-protocol">{Label(Step)}</p>
+								<p class="spectrometer__capability-protocol">{Protocol(Step)}</p>
 								<p class="spectrometer__capability-record">{Step.Record}</p>
 							</div>
 						)}

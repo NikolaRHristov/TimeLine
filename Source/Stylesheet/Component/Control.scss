@@ -1,0 +1,107 @@
+@use "../Material.scss" as Material;
+@use "../State.scss" as State;
+
+/**
+ * The control's state table (RFC-0049).
+ *
+ * One rule per state, each naming the state and the single value it is drawn
+ * with. The channel the value lands on comes from `Stylesheet/State.scss`, so
+ * this sheet cannot give a state two channels: `hover` takes a face and
+ * `selected` takes a line, and passing the wrong one is a build error rather
+ * than a review comment.
+ *
+ * The base rule is `rest` - it is where every control starts, so it is stated
+ * once here rather than as a state.
+ *
+ * The paper ramp's control, because the public surfaces are paper. A control on
+ * the chrome passes the same four names from the other ramp (RFC-0052).
+ */
+.control {
+	@include Material.reset;
+	@include Material.control(
+		var(--color-surface),
+		var(--color-line),
+		var(--color-ink-muted),
+		var(--radius-card)
+	);
+
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-1) var(--space-3);
+	font-size: var(--text-xs);
+	text-decoration: none;
+
+	&__glyph {
+		flex: none;
+		width: 0.875rem;
+		height: 0.875rem;
+	}
+
+	&__label {
+		white-space: nowrap;
+	}
+
+	/* The busy mark's slot. It is drawn in every state and revealed only while
+	   the control works, so the box the label sits in does not move when the
+	   state changes - a control that resizes mid-action moves its neighbours
+	   (RFC-0049 rule 5). */
+	&__mark {
+		flex: none;
+		width: 0.375rem;
+		height: 0.375rem;
+		border-radius: var(--radius-full);
+		background: currentColor;
+		visibility: hidden;
+	}
+
+	/* The reason a control is locked, read out as part of its name rather than
+	   drawn: the lock glyph says it is closed, this says what would open it. */
+	&__reason {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		clip-path: inset(50%);
+		border: 0;
+	}
+
+	/* The transient states: the pointer is over the control, then down. */
+	&:hover {
+		@include State.hover(var(--color-surface-sunken));
+	}
+
+	&:active {
+		@include State.active(var(--color-line-faint));
+	}
+
+	/* The keyboard state, drawn outside the element so the ring is never read as
+	   a border the design owns. */
+	&:focus-visible {
+		@include State.focus(var(--color-ink));
+	}
+
+	/* The persistent state: this control is the one the surface is showing. */
+	&[data-control-state="selected"] {
+		@include State.selected(var(--color-ink));
+	}
+
+	/* The permission state. It keeps its face and steps its ink up rather than
+	   down, which is what separates it from `disabled` - the control is legible
+	   and says why it is closed. */
+	&[data-control-state="locked"] {
+		@include State.locked(var(--color-ink));
+	}
+
+	/* The working state: the line strengthens and the mark appears. */
+	&[data-control-state="busy"] {
+		@include State.busy(var(--color-line-strong));
+
+		.control__mark {
+			visibility: visible;
+		}
+	}
+}

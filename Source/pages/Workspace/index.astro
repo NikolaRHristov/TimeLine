@@ -1,29 +1,49 @@
 ---
 /**
- * The workspace page: the archive's private side, drawn as one composition.
+ * The workspace: the composition every reader gets, with no gate in front of it.
  *
- * Everything the page knows is read at build time from the content collections
- * and handed to the Solid island as plain data. That split is deliberate - the
- * shell, the rail and the canvas are static HTML a service worker can serve from
- * cache, while the workspace hydrates because what a person sees in their own
- * drawer depends on who they are and which network they belong to.
+ * `/Workspace` is public (RFC-0054). An unauthenticated reader loads the whole
+ * composition - the rail, the drawer, the seam and the canvas - and is never
+ * sent to a sign-in: a page that gates the product's own demonstration cannot be
+ * seen without joining it, which is the opposite of what a network provider
+ * should ask.
  *
- * The island hydrates on visibility rather than on load, so the canvas paints
- * from the build before any bundle competes for the main thread. The rule that
- * keeps it honest - every route must render its content with scripts switched
- * off - is audited by `Documentation/Skill/Progressive-Enhancement`.
+ * The build emits the anonymous workspace. The drawer's four lanes are drawn
+ * with no records in them, and the canvas draws its seats with nothing placed
+ * on them. That is the honest page rather than a degraded one: the drawer is the
+ * reader's own, so a row in it would be a row they own, and a drawer filled with
+ * samples is the one place this product would lie about whose data is on screen
+ * (RFC-0054 §2). The note over the lanes says what the shape is waiting for and
+ * names the command that fills it (RFC-0050 rule 1); hydration replaces the page
+ * only with state it can name (RFC-0043).
+ *
+ * Publishing is `locked` rather than absent (RFC-0049, RFC-0054 §3). The seam
+ * keeps its destination control, carries `aria-disabled` and states the reason
+ * in its note: a published record carries an author, so publishing needs an
+ * identity (RFC-0013). The rail's counts are the archive's rather than the
+ * drawer's, and the archive is public - `/` publishes the same records.
+ *
+ * Everything the page knows is read at build time and handed to the Solid
+ * islands as plain data. That split is deliberate - the shell, the rail and the
+ * canvas are static HTML a service worker can serve from cache, while the
+ * workspace hydrates because what a person sees in their own drawer depends on
+ * who they are and which network they belong to. The islands hydrate on
+ * visibility rather than on load, so the composition paints from the build
+ * before any bundle competes for the main thread. The rule that keeps it honest
+ * - every route renders its content with scripts switched off - is audited by
+ * `Documentation/Skill/Progressive-Enhancement`.
  *
  * An empty archive is a normal state here, not an error: every collection is
  * read with a default, so a fresh clone renders the composition with empty
  * columns instead of throwing. The page never reads the shadow store or the
  * database - the collections are the only source.
  */
-import { Seats } from "@Component/Workspace/Bento.tsx";
+import { type Tile } from "@Component/Workspace/Bento.tsx";
 import Rail from "@Component/Workspace/Rail.tsx";
 import Workspace from "@Component/Workspace/Workspace.tsx";
 import Base from "@Layout/Base.astro";
 import { Bands } from "@Library/Band.ts";
-import { BookmarkHref } from "@Library/Link.ts";
+import { Content } from "@Library/Content.ts";
 import { ColumnAccent, StageAccent } from "@Library/Stage.ts";
 import { Own } from "@Script/Session/Context.ts";
 import { getCollection } from "astro:content";
@@ -31,25 +51,7 @@ import { getCollection } from "astro:content";
 const bookmarks = await getCollection("Bookmark");
 const voted = await getCollection("Voted");
 const curated = await getCollection("Curated");
-const authors = await getCollection("Author");
 const events = await getCollection("Event");
-
-/** The first line of a post, short enough to be one drawer row. */
-const Line = (Text: string, Length = 34) => {
-	const Flat = Text.replace(/\s+/g, " ").trim();
-
-	return Flat.length > Length ? `${Flat.slice(0, Length - 1)}…` : Flat;
-};
-
-/**
- * The most recent first, so the drawer opens on what was just filed.
- *
- * The key is read through a function rather than named as a string, because each
- * collection keeps its timestamps under a different field and a `keyof` lookup
- * into `data` would have to be re-derived per collection anyway.
- */
-const Recent = <T,>(Items: T[], Read: (Item: T) => string) =>
-	[...Items].sort((Left, Right) => Read(Right).localeCompare(Read(Left)));
 
 /** `1 events` reads as a defect; every label on the rail is a sentence. */
 const Count = (Value: number, Singular: string) =>
@@ -83,100 +85,56 @@ const Stages = [
 	},
 ];
 
+/**
+ * The drawer's four lanes, and nothing in them.
+ *
+ * The lanes are the composition's structure - what a reader's own records would
+ * be filed into - so they are drawn whether or not they hold anything, and the
+ * drawer's note sits over them rather than in place of them. The rows are empty
+ * because the drawer belongs to the reader and this page is built before anybody
+ * has identified themselves (RFC-0054 §2). A lane with no rows draws no drop
+ * ghost either, so nothing here offers a verb the page cannot carry.
+ */
 const Columns = [
 	{
 		Key: "bookmark",
 		Label: "Bookmarks",
 		Tone: ColumnAccent("bookmark"),
 		Ghost: "Drag to showcase ↓",
-		Entries: Recent(bookmarks, (Entry) => Entry.data.firstSeenAt)
-			.slice(0, 4)
-			.map((Entry) => ({
-				Id: Entry.data.id,
-				Title: Line(Entry.data.text),
-				Meta: `@${Entry.data.author.handle} · ${Entry.data.metrics.likes} likes`,
-				Kind: "text" as const,
-				Icon: "file-text",
-			})),
+		Entries: [],
 	},
 	{
 		Key: "voted",
 		Label: "Voted",
 		Tone: ColumnAccent("voted"),
 		Ghost: "Drag to showcase ↓",
-		Entries: Recent(voted, (Entry) => Entry.data.nominatedAt)
-			.slice(0, 4)
-			.map((Entry) => ({
-				Id: Entry.data.id,
-				Title: Line(Entry.data.title ?? Entry.data.url),
-				Meta: `${Entry.data.status} · ${Entry.data.votes} votes`,
-				Kind: "text" as const,
-				Icon: "layout",
-			})),
+		Entries: [],
 	},
 	{
 		Key: "curated",
 		Label: "Curated",
 		Tone: ColumnAccent("curated"),
 		Ghost: "Drag to showcase ↓",
-		Entries: [...curated]
-			.sort((Left, Right) => Left.data.rank - Right.data.rank)
-			.slice(0, 4)
-			.map((Entry) => ({
-				Id: Entry.data.id,
-				Title: Line(
-					bookmarks.find((Bookmark) => Bookmark.data.id === Entry.data.id)?.data.text ??
-						Entry.data.id,
-				),
-				Meta: `Rank ${Entry.data.rank} · ${Entry.data.votes} votes`,
-				Kind: "text" as const,
-				Icon: "layout",
-			})),
+		Entries: [],
 	},
 	{
 		Key: "author",
 		Label: "Authors",
 		Tone: ColumnAccent("author"),
 		Ghost: "Drag to showcase ↓",
-		Entries: Recent(authors, (Entry) => Entry.data.firstSeenAt)
-			.slice(0, 4)
-			.map((Entry) => ({
-				Id: Entry.data.handle,
-				Title: `@${Entry.data.handle}`,
-				Meta: `${Entry.data.postCount} posts · ${Entry.data.lists.length} lists`,
-				Kind: "comment" as const,
-				Avatar: Entry.data.name.slice(0, 2),
-			})),
+		Entries: [],
 	},
 ];
 
 /**
- * The canvas starts with what the owner already curated, in rank order.
+ * The canvas is empty for the same reason the drawer is.
  *
- * The records take the seats in the composition's own order, so the hero is the
- * highest-ranked pick and the mosaic fills from the top-left inward. The seat
- * table itself lives with the canvas (`Bento.Seats`) because it is the layout, not
- * the data: a page decides which records go on the canvas, never where.
+ * The build draws what a reader owns and, before a session exists, that is
+ * nothing (RFC-0054 §1). The seats are still drawn - the canvas completes itself
+ * from its own seat table - so an empty canvas is the full mosaic at its
+ * quietest value rather than a hole in the composition.
  */
-const Tiles = [...curated]
-	.sort((Left, Right) => Left.data.rank - Right.data.rank)
-	.slice(0, Seats.length)
-	.map((Entry, Index) => {
-		const Source = bookmarks.find((Bookmark) => Bookmark.data.id === Entry.data.id);
-		const Seat = Seats[Index];
-
-		return {
-			...Seat,
-			Id: Entry.data.id,
-			Eyebrow: `Rank ${Entry.data.rank}`,
-			Title: Source === undefined ? Entry.data.id : Line(Source.data.text, 64),
-			Meta:
-				Source === undefined
-					? `${Entry.data.votes} votes at approval`
-					: `@${Source.data.author.handle} · ${Source.data.metrics.likes} likes`,
-			Href: BookmarkHref(Entry.data.id),
-		};
-	});
+const Tiles: Tile[] = [];
 
 /**
  * The contexts the rail may select.
@@ -205,12 +163,15 @@ const Built = new Date().toISOString();
  * One value, derived once, handed to both islands: the rail prints the protocol
  * marks and the body prints the three bands, and the two must describe the same
  * network. `Bands()` states what the build can prove - two actors, no
- * relationship - so nothing here invents a peer or a state.
+ * relationship - so nothing here invents a peer or a state. Its footer reads
+ * `static` for the connection and for the sync, which is what an anonymous
+ * reader's status surfaces say: not `disconnected`, which would be alarming, and
+ * not `connected`, which would be false (RFC-0054 §4).
  */
 const Bands_ = Bands();
 ---
 
-<Base Title="Workspace" Description="The private side of the archive." Wide Bare>
+<Base Title="Workspace" Description={Content.Page.Workspace.Description} Wide Bare>
 	<div class="workspace">
 		<Rail
 			client:visible
@@ -230,8 +191,16 @@ const Bands_ = Bands();
 			Note="Scroll through source timelines · Source selected"
 			Eyebrow="Depth / Schema"
 			Title={Title}
-			Hint="Private workspace - drag items ↓ to publish"
+			Hint={Content.Page.Workspace.Hint}
 			Instruction="Drop private items here to publish"
+			Locked={Content.Page.Workspace.LockReason}
+			Remedy={Content.Example.Scrape}
+			Empty={{
+				Title: Content.Page.Workspace.EmptyTitle,
+				Body: Content.Page.Workspace.EmptyBody,
+				Hint: Content.Page.Workspace.EmptyHint,
+				Reference: Content.Reference.Configure,
+			}}
 			Contexts={Contexts}
 			AsOf={Built}
 			Bands={Bands_}

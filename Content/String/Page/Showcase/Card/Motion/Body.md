@@ -1,0 +1,1 @@
+A motion is raised by a participant, carried by the network and settled when its outcome is recorded; it carries an author, an audience and an id that makes it idempotent, and a change of intent is a second motion (RFC-0024, RFC-0026).

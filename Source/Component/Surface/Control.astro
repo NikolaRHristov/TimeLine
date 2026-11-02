@@ -55,7 +55,7 @@ const Element = Href === undefined ? "button" : "a";
 
 <Element
 	class="control"
-	classList={{ "control--trailing": Trailing }}
+	class:list={{ "control--trailing": Trailing }}
 	data-control-state={Resolved.State}
 	data-control-action={Action}
 	href={Href}
@@ -66,7 +66,9 @@ const Element = Href === undefined ? "button" : "a";
 
 	<span class="control__label">{Label}</span>
 
-	{Resolved.State === "busy" && <span class="control__mark" aria-hidden="true" />}
+	{/* The mark's slot is drawn in every state and revealed only while busy, so
+	    the control's bounding box is the same in all seven (RFC-0049 rule 5). */}
+	<span class="control__mark" aria-hidden="true" />
 
 	{Resolved.Reason !== null && <span class="control__reason">{Resolved.Reason}</span>}
 

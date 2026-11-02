@@ -1,1 +1,1 @@
-{{total}} saved posts, {{lists}} lists, curated by hand.
+The public surface of an archive that keeps where every record came from.

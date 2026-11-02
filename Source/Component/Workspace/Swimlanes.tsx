@@ -46,20 +46,21 @@ interface Props {
  *
  * They are markup rather than data: a single arrow in either direction would
  * state one half of a handshake as if it were the whole thing, so both are
- * structural and no lane list can remove one.
+ * structural and no lane list can remove one. Each sentence already names the
+ * step it carries, which is why the arrow does not repeat the step's word at its
+ * head - `provider authenticates the network · authenticate` said the same thing
+ * twice in two voices.
  */
 const Arrows = [
 	{
 		Direction: "in" as const,
 		Head: "\u2192",
 		Label: "provider authenticates the network",
-		Step: "authenticate",
 	},
 	{
 		Direction: "out" as const,
 		Head: "\u2190",
 		Label: "network authorises the provider to see",
-		Step: "see",
 	},
 ];
 
@@ -67,10 +68,12 @@ export default function Swimlanes(Props: Props) {
 	return (
 		<section class="swimlanes" aria-labelledby="swimlanes-heading">
 			<header class="swimlanes__head">
-				<p class="swimlanes__eyebrow">{Props.Eyebrow}</p>
-				<h2 class="swimlanes__title" id="swimlanes-heading">
-					{Props.Title}
-				</h2>
+				<div class="swimlanes__identity">
+					<p class="swimlanes__eyebrow">{Props.Eyebrow}</p>
+					<h2 class="swimlanes__title" id="swimlanes-heading">
+						{Props.Title}
+					</h2>
+				</div>
 				<p class="swimlanes__note">{Props.Note}</p>
 			</header>
 
@@ -82,7 +85,6 @@ export default function Swimlanes(Props: Props) {
 								{Arrow.Head}
 							</span>
 							<span class="swimlanes__arrow-label">{Arrow.Label}</span>
-							<span class="swimlanes__arrow-step">{Arrow.Step}</span>
 							<span class="swimlanes__arrow-rule" aria-hidden="true" />
 						</p>
 					)}

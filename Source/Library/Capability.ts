@@ -110,21 +110,13 @@ export const UnknownProtocol = "UNKNOWN";
  * The protocol a step is carried by, or UNKNOWN.
  *
  * The one place an empty `Protocol` becomes a printed word, so a component
- * cannot invent a description for a suite nobody named.
+ * cannot invent a description for a suite nobody named. A band prints this
+ * directly under the step's own name, which is what makes the pair read as
+ * RFC-0046's label - the capability, a dash, the suite - without the step name
+ * being printed twice in one column head.
  */
 export function Protocol(Step: Step): string {
 	return Step.Protocol === "" ? UnknownProtocol : Step.Protocol;
-}
-
-/**
- * A step's protocol-first label, e.g. `see - E2E - X25519 / ChaCha20-Poly1305`.
- *
- * The format is RFC-0046's: the capability, a dash, the suite. A reader who
- * checks one of these against RFC-0013 can; a reader given "encrypted: yes"
- * cannot check it against anything.
- */
-export function Label(Step: Step): string {
-	return `${Step.Label} - ${Protocol(Step)}`;
 }
 
 /** The state a cell prints when its record could not be read. */

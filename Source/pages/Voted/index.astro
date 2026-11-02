@@ -166,12 +166,16 @@ const author = (entry: Entry): string =>
 											</a>
 
 											<p class="queue__meta">
-												<span class="queue__votes" data-vote-total>
-													{entry.data.votes}
-												</span>{" "}
-												{entry.data.votes === 1
-													? Content.Word.Vote
-													: Content.Word.Votes}
+												<span class="queue__tally">
+													<span class="queue__votes" data-vote-total>
+														{entry.data.votes}
+													</span>
+													<span>
+														{entry.data.votes === 1
+															? Content.Word.Vote
+															: Content.Word.Votes}
+													</span>
+												</span>
 												{" · "}
 												{author(entry)}
 												{" · "}

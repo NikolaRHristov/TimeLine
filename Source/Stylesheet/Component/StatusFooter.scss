@@ -20,7 +20,7 @@
 	display: flex;
 	align-items: baseline;
 	gap: var(--space-6);
-	padding: var(--space-3) 1.75rem;
+	padding: var(--space-3) var(--rhythm-block);
 	background: var(--seam);
 	border-top: 1px solid var(--seam-line);
 	color: var(--seam-ink);
@@ -46,8 +46,11 @@
 		gap: var(--space-2);
 	}
 
+	// The label is read, not skimmed: `queued` and `failed` are one letter apart
+	// in meaning and four in shape, so the label takes the body's muted ink rather
+	// than the seam's faint one. Only the eyebrow is allowed the faint voice.
 	&__label {
-		@include Material.label(var(--text-2xs), var(--seam-ink));
+		@include Material.label(var(--text-2xs), var(--color-ink-muted));
 
 		margin: 0;
 	}

@@ -27,10 +27,21 @@
 
 	&__head {
 		display: flex;
-		align-items: baseline;
+		align-items: flex-start;
+		justify-content: space-between;
 		gap: var(--space-4);
 		padding-bottom: var(--space-4);
-		border-bottom: var(--hairline-faint);
+		border-bottom: var(--hairline);
+	}
+
+	// The eyebrow sits above the title, so this panel's title starts on the same x
+	// as the swimlanes' above it: two eyebrows of different lengths beside their
+	// titles would indent one band against the other.
+	&__identity {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
 	}
 
 	&__eyebrow {
@@ -47,7 +58,7 @@
 	}
 
 	&__note {
-		margin: 0 0 0 auto;
+		margin: 0;
 		max-width: 32rem;
 		font-size: var(--text-xs);
 		line-height: 1.4;
@@ -66,10 +77,17 @@
 		align-items: stretch;
 		gap: var(--space-4);
 		padding-block: var(--space-3);
-		border-bottom: var(--hairline-faint);
+		border-bottom: var(--hairline);
 
 		&--head {
 			padding-block: var(--space-3) var(--space-2);
+		}
+
+		// The last row closes the table: its rule would double the panel's own
+		// edge and its padding would leave a stray band of air under it.
+		&:last-child {
+			padding-bottom: 0;
+			border-bottom: 0;
 		}
 	}
 
@@ -81,10 +99,13 @@
 		min-width: 0;
 		margin: 0;
 
+		// The head's label sits at the top of the column heads, level with the
+		// first step name - at the bottom it would read as a caption for the row
+		// above it.
 		&--head {
 			@include Material.label(var(--text-3xs), var(--color-ink-faint));
 
-			justify-content: flex-end;
+			justify-content: flex-start;
 		}
 	}
 
@@ -116,36 +137,42 @@
 
 	// The protocol is set in the monospace face because it is an identifier
 	// rather than prose: a suite name is checked character by character, and a
-	// proportional face invites a misread.
+	// proportional face invites a misread. It is 9px so the longest label -
+	// `E2E - X25519 / ChaCha20-Poly1305` - stays on one line inside a 190px
+	// column: a suite broken across two lines is a suite a reader misreads.
 	&__capability-protocol {
 		margin: 0;
 		font-family: var(--font-mono);
-		font-size: var(--text-3xs);
+		font-size: 9px;
 		line-height: 1.4;
+		letter-spacing: -0.01em;
 		color: var(--color-ink-muted);
 	}
 
+	// The record is anchored to the bottom of the head cell, so the four record
+	// lines share one baseline however many lines the protocol above them takes.
 	&__capability-record {
-		margin: 0;
+		margin: auto 0 0;
 		font-size: var(--text-3xs);
 		line-height: 1.4;
 		color: var(--color-ink-faint);
 	}
 
+	// A cell is a state, not a control: no face, no border, no radius. A row of
+	// filled boxes reads as a row of disabled inputs, and the band's empty state
+	// would then look like eight broken controls instead of eight honest reads.
 	&__cell {
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-		padding: var(--space-2) var(--space-3);
-		background: var(--color-surface-sunken);
-		border-radius: var(--radius-card);
+		padding-inline: var(--space-3);
 	}
 
 	&__mark {
-		width: 8px;
-		height: 8px;
+		width: 9px;
+		height: 9px;
 		flex-shrink: 0;
-		border: 1px solid var(--color-line-strong);
+		border: 1px solid var(--color-ink-muted);
 		border-radius: 2px;
 	}
 
@@ -160,16 +187,19 @@
 		border-color: var(--color-ink);
 	}
 
-	&__cell[data-state="available"] &__mark {
-		border-color: var(--color-ink-muted);
-	}
-
+	// Square for the two open states: a corner radius eats the corner mark of a
+	// dashed or dotted border, which is how a 1px dotted 8px box turns into a
+	// smudge. The stroke stays at the muted ink - a line token is 1.5:1 here and
+	// reads as no mark at all.
 	&__cell[data-state="absent"] &__mark {
 		border-style: dashed;
+		border-radius: 0;
 	}
 
 	&__cell[data-state="unknown"] &__mark {
 		border-style: dotted;
+		border-color: var(--color-ink-faint);
+		border-radius: 0;
 	}
 
 	@media (max-width: 900px) {

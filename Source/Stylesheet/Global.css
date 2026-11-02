@@ -61,6 +61,7 @@
 	--text-base: 1rem;
 	--text-lg: 1.125rem;
 	--text-2xl: 1.5rem;
+	--text-3xl: 3rem; /* 48px - the showcase hero, one step above the page title */
 
 	/* No sans token: the body's stack is Tailwind's `fontFamily.sans`, which
 	   leads with the site's own face, and a second copy here would be a token

@@ -273,12 +273,43 @@ function CheckVocabulary() {
 }
 
 /**
- * Check 3 - a claim names its protocol or its record.
+ * What is wrong with one claim sentence, in the order a reader would notice it.
  *
- * Every claim file has to name a record, because a claim nobody can trace is a
+ * Shared by the claim files and the showcase bodies: a claim is a claim
+ * wherever it is printed, and two copies of this rule would be two rules.
+ *
+ * Every claim has to name a record, because a claim nobody can trace is a
  * slogan. A claim that talks about cryptography has to name the suite as well,
  * which is the difference between a checkable statement and an adjective.
  */
+function Judge(Sentence) {
+	const Problems = [];
+
+	if (!Record.test(Sentence)) {
+		Problems.push("names no record (RFC-NNNN)");
+	}
+
+	const Cryptographic = /\b(?:cipher\w*|decrypt\w*|encrypt\w*|keys?|seal\w*)\b/i.test(Sentence);
+
+	if (Cryptographic && !Protocols.some((Name_) => Sentence.includes(Name_))) {
+		Problems.push(`names no cipher suite (one of ${Protocols.join(", ")})`);
+	}
+
+	return Problems;
+}
+
+/** The content wrapper, or empty when the tree has none yet. */
+function Wrapper() {
+	try {
+		return Read("Source/Library/Content.ts");
+	} catch {
+		// A tree with no content wrapper has no key to resolve: every claim then
+		// reports the missing key, which is the honest answer.
+		return "";
+	}
+}
+
+/** Check 3 - every file under `Content/String/Claim/` is a claim. */
 function CheckClaims() {
 	Section("claims");
 
@@ -289,34 +320,13 @@ function CheckClaims() {
 		return false;
 	}
 
-	const Content = (() => {
-		try {
-			return Read("Source/Library/Content.ts");
-		} catch {
-			// A tree with no content wrapper has no key to resolve: every claim
-			// then reports the missing key, which is the honest answer.
-			return "";
-		}
-	})();
+	const Content = Wrapper();
 	let Ok = true;
 
 	for (const File of Files) {
 		const Sentence = Read(File);
 		const Name = File.slice(File.lastIndexOf("/") + 1, -3);
-
-		const Problems = [];
-
-		if (!Record.test(Sentence)) {
-			Problems.push("names no record (RFC-NNNN)");
-		}
-
-		const Cryptographic = /\b(?:cipher\w*|decrypt\w*|encrypt\w*|keys?|seal\w*)\b/i.test(
-			Sentence,
-		);
-
-		if (Cryptographic && !Protocols.some((Name_) => Sentence.includes(Name_))) {
-			Problems.push(`names no cipher suite (one of ${Protocols.join(", ")})`);
-		}
+		const Problems = Judge(Sentence);
 
 		if (!Content.includes(`CONTENT_STRING_CLAIM_${Key(File).split("CLAIM_")[1]}`)) {
 			Problems.push(`has no key in Source/Library/Content.ts (Content.Claim.${Name})`);
@@ -337,13 +347,56 @@ function CheckClaims() {
 	return Ok;
 }
 
+/**
+ * Check 4 - every card on a showcase page is a claim too.
+ *
+ * A card body and a pillar note are the sentences a reader meets first, so they
+ * answer to the same rule as the claim files. The masthead and the card titles
+ * do not: a title is a heading and the eyebrow is the component's own name, and
+ * a rule that demanded a cipher suite from a heading would be obeyed by making
+ * the headings worse.
+ */
+function CheckShowcase() {
+	Section("showcase");
+
+	const Files = Walk("Content/String/Page/Showcase").filter(
+		(File) => File.endsWith("/Body.md") || File.endsWith("/Note.md"),
+	);
+
+	if (Files.length === 0) {
+		Line("INFO", "no showcase copy yet; the rule applies once a card exists");
+		return true;
+	}
+
+	let Ok = true;
+
+	for (const File of Files) {
+		const Problems = Judge(Read(File));
+		const Name = File.replace("Content/String/Page/Showcase/", "").replace(/\.md$/, "");
+
+		if (Problems.length === 0) {
+			Line("PASS", Name);
+			continue;
+		}
+
+		Ok = false;
+
+		for (const Problem of Problems) {
+			Line("FAIL", `${File}: ${Problem}`);
+		}
+	}
+
+	return Ok;
+}
+
 const BrandOk = CheckBrand();
 const VocabularyOk = CheckVocabulary();
 const ClaimOk = CheckClaims();
+const ShowcaseOk = CheckShowcase();
+
+const Positioned = BrandOk && VocabularyOk && ClaimOk && ShowcaseOk;
 
 process.stdout.write("---\n");
-process.stdout.write(
-	BrandOk && VocabularyOk && ClaimOk ? "RESULT positioned\n" : "RESULT mispositioned\n",
-);
+process.stdout.write(Positioned ? "RESULT positioned\n" : "RESULT mispositioned\n");
 
-process.exit(BrandOk && VocabularyOk && ClaimOk ? 0 : 1);
+process.exit(Positioned ? 0 : 1);
