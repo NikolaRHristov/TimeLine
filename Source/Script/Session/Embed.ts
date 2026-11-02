@@ -9,10 +9,11 @@
  *
  * A page with no session embeds nothing and gets no reader, which is the normal
  * case: the workspace is anonymous until a session layer can answer (RFC-0043
- * §7). That absence is not a failure and prints no warning. A payload that is
- * not JSON is a failure, and it arrives as a rejected promise rather than a
- * throw, so the session layer reports it once and the store keeps its anonymous
- * slot.
+ * §7). That absence is not a failure, and it is not silent either - the session
+ * layer states it once, so the build's rows are never mistaken for a session's.
+ * A payload that is not JSON is a failure, and it arrives as a rejected promise
+ * rather than a throw, so the session layer reports it once and the store keeps
+ * its anonymous slot.
  */
 import type { Reader } from "./Session.ts";
 

@@ -27,13 +27,16 @@ export type Context =
 			readonly Destination: string;
 	  };
 
+/** One room of the owner's User Network, narrowed so a membership can hold it. */
+export type RoomContext = Extract<Context, { Kind: "room" }>;
+
 /** The owner's own archive. There is exactly one of these per person. */
 export function Own(Label: string, Destination: string): Context {
 	return { Kind: "own", Label, Destination };
 }
 
 /** One room of the owner's User Network. */
-export function Room(RoomId: string, Label: string, Destination: string): Context {
+export function Room(RoomId: string, Label: string, Destination: string): RoomContext {
 	return { Kind: "room", RoomId, Label, Destination };
 }
 

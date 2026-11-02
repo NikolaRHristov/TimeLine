@@ -22,12 +22,32 @@
 	background: var(--seam);
 	color: var(--seam-ink);
 
-	&__group {
+	// The destination is a control rather than a caption: publishing is the verb
+	// that crosses this seam, so the label is a button and carries the control's
+	// state. `locked` keeps the label's ink and adds the lock glyph, which is the
+	// distinction RFC-0049 rule 4 draws against `disabled` - a quieter label
+	// would read as a control that does not apply here rather than as one this
+	// reader may not use.
+	&__control {
+		@include Material.reset;
+
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		flex-shrink: 0;
 		white-space: nowrap;
+
+		&[aria-disabled="true"] {
+			cursor: not-allowed;
+		}
+	}
+
+	// The lock: the part of `locked` a reader sees before reading the reason.
+	&__lock {
+		width: 12px;
+		height: 12px;
+		color: var(--seam-ink);
+		flex-shrink: 0;
 	}
 
 	// A step control: white on the light band, and the one shadow in the whole

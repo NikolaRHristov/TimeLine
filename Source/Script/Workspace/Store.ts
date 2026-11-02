@@ -198,10 +198,12 @@ function create(): WorkspaceStore {
 	 *
 	 * The read happens on mount, never during render, so the server-rendered HTML
 	 * and the first client render are the same anonymous slot and hydration has
-	 * nothing to disagree with. A page that embeds no session has nothing to read
-	 * and prints no warning - an absent session is not a failure (RFC-0043 §7).
-	 * A page that embeds one that cannot be read keeps the anonymous slot, and the
-	 * session layer's own `Resolve` is the one place that says so, once.
+	 * nothing to disagree with. A page that embeds no session is not a failure,
+	 * and it is not silent either: the session layer states the absence once, so
+	 * the build's rows are never mistaken for a session's (RFC-0003's reason for
+	 * refusing a fallback that hides itself). A page that embeds a session which
+	 * cannot be read keeps the anonymous slot, and the same `Resolve` is the one
+	 * place that says so.
 	 *
 	 * The reader is wrapped so that a reader which throws synchronously becomes a
 	 * rejection the session layer handles, and the chain ends in a no-op rejection
@@ -211,11 +213,17 @@ function create(): WorkspaceStore {
 	const Resolve = (Read: Reader | undefined = embed()): Promise<void> => {
 		const Initial = State.Session;
 
-		if (typeof document === "undefined" || Initial === null || Read === undefined) {
+		if (typeof document === "undefined" || Initial === null) {
 			return Promise.resolve();
 		}
 
-		return (Attempt ??= ResolveSession(Initial, () => Promise.resolve().then(Read))
+		// An absent session is handed over rather than skipped: the session layer
+		// is the one place that says what is on screen and why, and a page that
+		// silently kept the build's view would be the fallback RFC-0003 refuses.
+		return (Attempt ??= ResolveSession(
+			Initial,
+			Read === undefined ? undefined : () => Promise.resolve().then(Read),
+		)
 			.then((Next) => {
 				SetState("Session", Next);
 			})

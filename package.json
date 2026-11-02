@@ -17,6 +17,7 @@
 		"Check:Position": "node Scripts/Position.mjs",
 		"Check:Tokens": "node Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs",
 		"Audit": "node Documentation/Skill/Progressive-Enhancement/Reference/no-js-audit.mjs",
+		"Audit:Session": "node Documentation/Skill/Tool-Archive/Reference/session-audit.mjs",
 		"Format": "prettier --write .",
 		"Format:Check": "prettier --check .",
 		"maintain": "node Maintain/Target/Index.js",

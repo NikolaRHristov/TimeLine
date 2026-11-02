@@ -1,0 +1,74 @@
+---
+/**
+ * The one control, and its seven states (RFC-0049).
+ *
+ * Every press on this site is this component: a link when it navigates, a button
+ * when it acts, and a locked press when the actor may not use it. The state is
+ * derived by `@Library/ComponentState.ts` from the facts the surface passes, so
+ * no call site chooses a state name and no call site can invent an eighth.
+ *
+ * The states a surface cares about, and what this component does with each:
+ *
+ * - `hover` and `active` step the face, and nothing else. A pointer press is
+ *   transient, and the sheet draws it as one channel.
+ * - `selected` moves the line, so a chosen control reads as chosen rather than
+ *   pressed - the two are separate states for exactly that reason.
+ * - `focus` is `:focus-visible` and is drawn as a ring outside the element, so
+ *   the ring is never mistaken for a border the design owns.
+ * - `locked` is not `disabled`. The control stays in the tab order, carries
+ *   `aria-disabled`, keeps its ink, gains a lock glyph and states its reason in
+ *   a hidden span that becomes part of the control's accessible name. A locked
+ *   control without a reason cannot be built: `StateOf` refuses an empty one, so
+ *   the failure is a build error rather than a screen full of dead controls.
+ * - `busy` keeps the label, keeps the width and the height, and adds a mark
+ *   beside the label. Nothing here changes the geometry, because a control that
+ *   resizes while working moves every neighbour.
+ *
+ * The component renders markup and nothing else. The press belongs to the island
+ * that mounts it: this file has no handler, so a control that must act gets its
+ * handler where the action lives, and a control that navigates is a plain link
+ * that works with scripts off.
+ */
+import "@Stylesheet/Component/Control.scss";
+import Icon from "@Component/Workspace/Icon.tsx";
+import { StateOf, type StateFacts } from "@Library/ComponentState.ts";
+
+interface Props {
+	/** The label the control keeps in every state, including `busy`. */
+	Label: string;
+	/** The facts the state is derived from. */
+	State: StateFacts;
+	/** Where the control goes. A control with no href is a button. */
+	Href?: string;
+	/** The action's name, for a button: what the island listens for. */
+	Action?: string;
+	/** Draw the label before the glyph rather than after it. */
+	Trailing?: boolean;
+}
+
+const { Label, State: Facts, Href, Action, Trailing = false } = Astro.props;
+
+const Resolved = StateOf(Facts);
+const Locked = Resolved.State === "locked";
+const Element = Href === undefined ? "button" : "a";
+---
+
+<Element
+	class="control"
+	classList={{ "control--trailing": Trailing }}
+	data-control-state={Resolved.State}
+	data-control-action={Action}
+	href={Href}
+	type={Href === undefined ? "button" : undefined}
+	aria-disabled={Locked ? "true" : undefined}
+	aria-busy={Resolved.State === "busy" ? "true" : undefined}>
+	{Resolved.Glyph !== null && !Trailing && <Icon Name={Resolved.Glyph} Class="control__glyph" />}
+
+	<span class="control__label">{Label}</span>
+
+	{Resolved.State === "busy" && <span class="control__mark" aria-hidden="true" />}
+
+	{Resolved.Reason !== null && <span class="control__reason">{Resolved.Reason}</span>}
+
+	{Resolved.Glyph !== null && Trailing && <Icon Name={Resolved.Glyph} Class="control__glyph" />}
+</Element>

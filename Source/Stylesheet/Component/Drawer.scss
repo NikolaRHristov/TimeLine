@@ -171,6 +171,26 @@
 		height: 15rem;
 		flex-shrink: 0;
 	}
+
+	// An empty drawer draws its note over the lanes rather than instead of them.
+	// The four columns are the composition's structure - a reader should see the
+	// shape that will hold their records - so the note is taken out of flow and
+	// the lanes keep their measured widths and the band its 240px height
+	// (RFC-0054 §2, RFC-0050 rule 6: the frame does not move when records land).
+	&__columns--empty {
+		position: relative;
+	}
+
+	&__empty {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		max-width: 36rem;
+		margin-inline: auto;
+		overflow: auto;
+	}
 }
 
 .drawer-column {

@@ -81,3 +81,39 @@
 		color: var(--color-ink);
 	}
 }
+
+/**
+ * The chrome note: the same shape, on the dark side of the composition.
+ *
+ * The drawer's empty state is the only note drawn above the seam, and the drawer
+ * is chrome. Only the ramp changes - the heading, the sentence, the command and
+ * the meta line keep the roles they have on paper - so an empty drawer and an
+ * empty page state the same fact in the same shape rather than in two panels
+ * that happen to look similar (RFC-0050 rule 1).
+ */
+.note--chrome {
+	@include Material.card(var(--chrome-deep), var(--chrome-line), var(--radius-sm));
+
+	color: var(--chrome-ink-muted);
+
+	.note__title {
+		color: var(--chrome-ink-bright);
+	}
+
+	.note__meta {
+		color: var(--chrome-ink-faint);
+	}
+
+	.note__code {
+		color: var(--chrome-ink);
+	}
+
+	code {
+		background: var(--chrome-control);
+		color: var(--chrome-ink);
+	}
+
+	a {
+		color: var(--chrome-ink);
+	}
+}

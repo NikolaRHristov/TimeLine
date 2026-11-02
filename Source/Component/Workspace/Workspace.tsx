@@ -7,7 +7,7 @@ import { store } from "@Script/Workspace/Store.ts";
 import { onMount } from "solid-js";
 import Bento, { type Tile } from "./Bento.tsx";
 import ContextSwitch from "./ContextSwitch.tsx";
-import Drawer from "./Drawer.tsx";
+import Drawer, { type DrawerEmpty } from "./Drawer.tsx";
 import { type Column } from "./DrawerColumn.tsx";
 import { type Stage } from "./Provenance.tsx";
 import Publish from "./Publish.tsx";
@@ -56,6 +56,15 @@ interface Props {
 	Hint: string;
 	/** The publish bar's standing instruction. */
 	Instruction: string;
+	/**
+	 * Why a drop cannot cross the seam here, or `undefined` when it can
+	 * (RFC-0054 §3). Passed straight to the seam, which derives `locked` from it.
+	 */
+	Locked?: string;
+	/** The command that fills an empty drawer (RFC-0050 rule 1). */
+	Remedy: string;
+	/** What the drawer says while it holds nothing (RFC-0054 §2). */
+	Empty: DrawerEmpty;
 	/** The contexts the rail may select, in the order it prints them. */
 	Contexts: Context[];
 	/** When the build's view is current to, as an ISO timestamp. */
@@ -194,6 +203,8 @@ export default function Workspace(Props: Props) {
 				Columns={Props.Columns}
 				Active={Store.State.Column}
 				View={Store.State.View}
+				Remedy={Props.Remedy}
+				Empty={Props.Empty}
 				OnActivate={(Key) => Store.Activate(Key)}
 				OnView={(Next) => Store.Show(Next)}
 				OnOpen={(Id) => Store.Open(Id)}
@@ -205,6 +216,8 @@ export default function Workspace(Props: Props) {
 				Label={Contract().Destination}
 				Note={Props.Instruction}
 				Context={StageName()}
+				Locked={Props.Locked}
+				OnPublish={() => Publish_(Store.State.Column)}
 			/>
 
 			<Bento Tiles={Contract().Canvas} />

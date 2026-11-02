@@ -356,6 +356,48 @@ export const Content = {
 				"CONTENT_STRING_PAGE_VOTED_UNKNOWNAUTHOR",
 			),
 		},
+		Workspace: {
+			Description: content(
+				process.env["CONTENT_STRING_PAGE_WORKSPACE_DESCRIPTION"],
+				"CONTENT_STRING_PAGE_WORKSPACE_DESCRIPTION",
+			),
+			/**
+			 * The drawer's empty state, in the reader's own words (RFC-0054 §2).
+			 *
+			 * The drawer is the reader's own and is never filled with a sample, so
+			 * an anonymous reader meets an empty one. The body says whose the
+			 * drawer is before it says how to fill it, because the one lie this
+			 * surface must not tell is that a row on screen is theirs.
+			 */
+			EmptyBody: content(
+				process.env["CONTENT_STRING_PAGE_WORKSPACE_EMPTYBODY"],
+				"CONTENT_STRING_PAGE_WORKSPACE_EMPTYBODY",
+			),
+			EmptyHint: content(
+				process.env["CONTENT_STRING_PAGE_WORKSPACE_EMPTYHINT"],
+				"CONTENT_STRING_PAGE_WORKSPACE_EMPTYHINT",
+			),
+			EmptyTitle: content(
+				process.env["CONTENT_STRING_PAGE_WORKSPACE_EMPTYTITLE"],
+				"CONTENT_STRING_PAGE_WORKSPACE_EMPTYTITLE",
+			),
+			Hint: content(
+				process.env["CONTENT_STRING_PAGE_WORKSPACE_HINT"],
+				"CONTENT_STRING_PAGE_WORKSPACE_HINT",
+			),
+			/**
+			 * Why the seam is `locked` rather than absent (RFC-0049, RFC-0054 §3).
+			 *
+			 * The reason is the state's whole content: a locked control that
+			 * cannot say what would open it is the dead end the state exists to
+			 * prevent, so the sentence names the fact that is missing - an
+			 * identity - and the rule that makes it necessary.
+			 */
+			LockReason: content(
+				process.env["CONTENT_STRING_PAGE_WORKSPACE_LOCKREASON"],
+				"CONTENT_STRING_PAGE_WORKSPACE_LOCKREASON",
+			),
+		},
 	},
 	Reference: {
 		Configure: content(

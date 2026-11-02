@@ -635,7 +635,8 @@ function main() {
 		stateModule === undefined
 			? new Map()
 			: (recordOf(stateModule.text, "StateChannel") ?? new Map());
-	const reads = dataModule === undefined ? [] : (arrayOf(dataModule.text, "DataState") ?? []);
+	const readStates =
+		dataModule === undefined ? [] : (arrayOf(dataModule.text, "DataState") ?? []);
 	const codes = dataModule === undefined ? [] : (arrayOf(dataModule.text, "FailureCode") ?? []);
 
 	if (stateModule !== undefined && states.length === 0) {
@@ -647,7 +648,7 @@ function main() {
 		);
 	}
 
-	if (dataModule !== undefined && reads.length === 0) {
+	if (dataModule !== undefined && readStates.length === 0) {
 		report(
 			6,
 			DATA_MODULE,
@@ -657,7 +658,7 @@ function main() {
 	}
 
 	const stateSet = new Set(states);
-	const readSet = new Set(reads);
+	const readSet = new Set(readStates);
 	const mixins = new Map();
 	const stateSheet = sheets.get(STATE_SHEET);
 
@@ -742,7 +743,7 @@ function main() {
 					6,
 					file,
 					line,
-					`data-read="${value}" is not one of the six (${reads.join(", ")}) - a read's state is derived by ${DATA_MODULE}, never named by hand`,
+					`data-read="${value}" is not one of the six (${readStates.join(", ")}) - a read's state is derived by ${DATA_MODULE}, never named by hand`,
 				);
 			}
 
