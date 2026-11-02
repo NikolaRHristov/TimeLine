@@ -1,24 +1,39 @@
 ---
 /**
- * One published post.
+ * One published post, drawn on the workspace ground.
+ *
+ * The page is the composition turned to face a single record: the provenance
+ * rail on the left - the same drum the workspace uses, showing only the events
+ * that touched this post - and the post itself as the canvas, a light tile on
+ * the ground. Reading a record and working on it are the same page seen from two
+ * sides, so they are built from the same parts.
  *
  * The page shows what the archive knows and says so: `firstSeenAt` is the first
  * scrape that observed the post, which is the earliest moment this pipeline can
  * vouch for. The interface never exposes when the post was saved, so the page
  * must not present that timestamp as one.
  *
+ * The rail is the one thing a reader interacts with, so it is the one island:
+ * its bands select an event and the caption under the selected band is that
+ * event's day. Everything else is HTML a service worker can serve from cache,
+ * and a post whose trail is empty still draws the drum - thirteen bands with no
+ * stage on them - rather than throwing.
+ *
  * The route parameter is `Id` rather than `id` because the route a visitor
  * reads is `/Bookmark/<id>` - a public path segment - while this name only
  * exists inside `getStaticPaths`. The file is a rest route so an id that
  * contains a separator still resolves to one page.
  */
-import "@Stylesheet/Component/Note.scss";
-import "@Stylesheet/Component/Pill.scss";
-import "@Stylesheet/Component/Roster.scss";
+import ProvenanceRail from "@Component/Workspace/ProvenanceRail.tsx";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
 import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
+import { StageAccent } from "@Library/Stage.ts";
 import { fill } from "@Library/Text.ts";
+import "@Stylesheet/Component/Note.scss";
+import "@Stylesheet/Component/Pill.scss";
+import "@Stylesheet/Component/Post.scss";
+import "@Stylesheet/Component/Workspace.scss";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
@@ -33,6 +48,8 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { author, media, metrics } = entry.data;
 
+const day = (value: string): string => value.slice(0, 10);
+
 /**
  * The owner's opinion, when there is one. Joined from the Curated collection by
  * id - the curated file carries the rank and the votes frozen at approval time,
@@ -41,10 +58,68 @@ const { author, media, metrics } = entry.data;
 const curated = await getCollection("Curated");
 const rank = curated.find((candidate) => candidate.id === entry.id) ?? null;
 
-const images = media.filter((item) => item.kind === "image");
+/**
+ * The three kinds that touch a published post, and the accent each one draws.
+ *
+ * A kind is not a stage: `bookmark.added` is the capture, `list.assigned` is the
+ * record filed under a list, and `bookmark.published` is the record leaving the
+ * private side. The accents come from the one stage map, so a band here and a
+ * column in the workspace that mean the same thing are the same colour.
+ */
+const Kinds = [
+	{ Key: "bookmark.added", Tone: StageAccent.source },
+	{ Key: "list.assigned", Tone: StageAccent.file },
+	{ Key: "bookmark.published", Tone: StageAccent.publish },
+] as const;
+
+/** The trail of this post: the events whose subject is its id, and nothing else. */
+const touched = (await getCollection("Event")).filter((event) => event.data.subject === entry.id);
+
+/**
+ * One band per kind that actually happened.
+ *
+ * A kind with no event is not drawn, because a band with nothing on it is not a
+ * stage the record passed through - it is a shape the page would be inventing.
+ * When no event touched the post at all the list is empty, which is the state
+ * the rail is built to draw: a drum with no stage on it.
+ */
+const Stages = Kinds.flatMap(({ Key, Tone }) => {
+	const matching = touched
+		.filter((event) => event.data.kind === Key)
+		.sort((left, right) => left.data.at.localeCompare(right.data.at));
+	const latest = matching[matching.length - 1];
+
+	if (latest === undefined) {
+		return [];
+	}
+
+	return [
+		{
+			Key,
+			Label: `${Key} · ${matching.length} ${
+				matching.length === 1 ? Content.Word.Event : Content.Word.Events
+			}`,
+			Tone,
+			Events: matching.length,
+			Caption: day(latest.data.at),
+		},
+	];
+});
+
+/** The rail opens on the last thing that happened to the post. */
+const newest = [...touched].sort((left, right) => right.data.at.localeCompare(left.data.at))[0];
+const Selected = newest?.data.kind ?? "";
+
+/**
+ * Media, split by what it is. An image and a gif are pictures; a video is played
+ * in place with the browser's own controls; a link card is a link. All three
+ * keep the ratio their file has - the sheet sets the width and lets the height
+ * follow - so nothing is cropped to fit a frame the page invented.
+ */
+const pictures = media.filter((item) => item.kind === "image" || item.kind === "gif");
+const videos = media.filter((item) => item.kind === "video");
 const links = media.filter((item) => item.kind === "link");
 
-const day = (value: string): string => value.slice(0, 10);
 const measured = [
 	[Content.Page.Bookmark.Detail.Metric.Replies, metrics.replies],
 	[Content.Page.Bookmark.Detail.Metric.Reposts, metrics.reposts],
@@ -55,112 +130,122 @@ const measured = [
 
 <Base
 	Title={fill(Content.Page.Bookmark.Detail.Title, { name: author.name })}
-	Description={entry.data.text.slice(0, 160)}>
-	<article class="sheet">
-		<nav class="mb-8 text-sm">
-			<a class="underline decoration-neutral-300 underline-offset-2" href={Route.Bookmark}>
-				{Content.Page.Bookmark.Detail.Back}
-			</a>
-		</nav>
+	Description={entry.data.text.slice(0, 160)}
+	Wide>
+	<div class="workspace">
+		<ProvenanceRail
+			client:visible
+			Stages={Stages}
+			Initial={Selected}
+			Note={Content.Page.Bookmark.Detail.Rail.Note}
+		/>
 
-		<article>
-			<header class="mb-4 flex flex-wrap items-baseline gap-x-2">
-				<h1 class="text-lg font-semibold">{author.name}</h1>
-				<span class="text-sm text-neutral-600">@{author.handle}</span>
-				{author.verified && (
-					<span
-						class="text-sm text-neutral-500"
-						title={Content.Page.Bookmark.Detail.Verified}>
-						✓
-					</span>
-				)}
-				{entry.data.postedAt && (
-					<time class="ml-auto text-xs text-neutral-500" datetime={entry.data.postedAt}>
-						{fill(Content.Page.Bookmark.Detail.Posted, {
-							day: day(entry.data.postedAt),
-						})}
-					</time>
-				)}
-				{rank !== null && (
-					<p class="w-full text-xs text-neutral-500">
-						{fill(Content.Page.Bookmark.Detail.Curated, {
-							rank: String(rank.data.rank),
-							count: String(rank.data.votes),
-							voteNoun:
-								rank.data.votes === 1 ? Content.Word.Vote : Content.Word.Votes,
-						})}
+		<div class="workspace__body">
+			<article class="page post">
+				<nav class="post__back">
+					<a href={Route.Bookmark}>{Content.Page.Bookmark.Detail.Back}</a>
+				</nav>
+
+				<header class="post__head">
+					<p class="post__eyebrow">
+						@{author.handle}
+						{author.verified && (
+							<span title={Content.Page.Bookmark.Detail.Verified}>✓</span>
+						)}
 					</p>
+					<h1 class="post__title">{author.name}</h1>
+					{entry.data.postedAt && (
+						<time class="post__time" datetime={entry.data.postedAt}>
+							{fill(Content.Page.Bookmark.Detail.Posted, {
+								day: day(entry.data.postedAt),
+							})}
+						</time>
+					)}
+					{rank !== null && (
+						<p class="post__rank">
+							{fill(Content.Page.Bookmark.Detail.Curated, {
+								rank: String(rank.data.rank),
+								count: String(rank.data.votes),
+								voteNoun:
+									rank.data.votes === 1 ? Content.Word.Vote : Content.Word.Votes,
+							})}
+						</p>
+					)}
+				</header>
+
+				<p class="post__text">{entry.data.text}</p>
+
+				{entry.data.lists.length > 0 && (
+					<ul class="pill__row">
+						{entry.data.lists.map((list) => (
+							<li>
+								<a class="pill__link" href={ListHref(list)}>
+									{list}
+								</a>
+							</li>
+						))}
+					</ul>
 				)}
-			</header>
 
-			<p class="whitespace-pre-wrap text-base leading-relaxed">{entry.data.text}</p>
+				{(pictures.length > 0 || videos.length > 0) && (
+					<ul class="post__media">
+						{pictures.map((item) => (
+							<li>
+								<img
+									src={item.url}
+									alt=""
+									loading="lazy"
+									decoding="async"
+									referrerpolicy="no-referrer"
+								/>
+							</li>
+						))}
+						{videos.map((item) => (
+							<li>
+								<video
+									src={item.url}
+									controls
+									preload="metadata"
+									playsinline
+									referrerpolicy="no-referrer"
+								/>
+							</li>
+						))}
+					</ul>
+				)}
 
-			{entry.data.lists.length > 0 && (
-				<ul class="pill__row">
-					{entry.data.lists.map((list) => (
-						<li>
-							<a class="pill__link" href={ListHref(list)}>
-								{list}
-							</a>
-						</li>
-					))}
-				</ul>
-			)}
+				{links.length > 0 && (
+					<ul class="post__links">
+						{links.map((item) => (
+							<li>
+								<a class="post__link" href={item.url} rel="noopener noreferrer nofollow">
+									{item.url}
+								</a>
+							</li>
+						))}
+					</ul>
+				)}
 
-			{images.length > 0 && (
-				<div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
-					{images.map((item) => (
-						<img
-							class="h-auto w-full rounded border border-neutral-200"
-							src={item.url}
-							alt=""
-							loading="lazy"
-							referrerpolicy="no-referrer"
-						/>
-					))}
-				</div>
-			)}
+				{measured.length > 0 && (
+					<dl class="post__metrics">
+						{measured.map(([label, value]) => (
+							<div class="post__metric">
+								<dt class="post__metric-label">{label}</dt>
+								<dd class="post__metric-value">{value.toLocaleString("en")}</dd>
+							</div>
+						))}
+					</dl>
+				)}
 
-			{links.length > 0 && (
-				<ul class="mt-6 space-y-1 text-sm">
-					{links.map((item) => (
-						<li class="truncate">
-							<a
-								class="underline decoration-neutral-300 underline-offset-2"
-								href={item.url}
-								rel="noopener noreferrer nofollow">
-								{item.url}
-							</a>
-						</li>
-					))}
-				</ul>
-			)}
-
-			{measured.length > 0 && (
-				<dl class="mt-8 flex flex-wrap gap-x-6 gap-y-1 border-t border-neutral-200 pt-4 text-sm">
-					{measured.map(([label, value]) => (
-						<div class="flex gap-1">
-							<dt class="text-neutral-500">{label}</dt>
-							<dd class="font-medium">{value.toLocaleString("en")}</dd>
-						</div>
-					))}
-				</dl>
-			)}
-		</article>
-
-		<footer class="mt-10 space-y-1 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
-			<p>
-				<a class="underline" href={entry.data.url} rel="noopener noreferrer">
-					{Content.Page.Bookmark.Detail.Open}
-				</a>
-			</p>
-			<p>{fill(Content.Page.Bookmark.Detail.Saved, { day: day(entry.data.firstSeenAt) })}</p>
-			<p>{fill(Content.Page.Bookmark.Detail.LastRead, { day: day(entry.data.scrapedAt) })}</p>
-			<p>
-				<a class="underline" href={BookmarkHref(entry.id)}>
-					{Content.Page.Bookmark.Detail.Permalink}
-				</a>
-			</p>
-		</footer>
-	</article>
+				<footer class="post__foot">
+					<a href={entry.data.url} rel="noopener noreferrer">
+						{Content.Page.Bookmark.Detail.Open}
+					</a>
+					<span>{fill(Content.Page.Bookmark.Detail.Saved, { day: day(entry.data.firstSeenAt) })}</span>
+					<span>{fill(Content.Page.Bookmark.Detail.LastRead, { day: day(entry.data.scrapedAt) })}</span>
+					<a href={BookmarkHref(entry.id)}>{Content.Page.Bookmark.Detail.Permalink}</a>
+				</footer>
+			</article>
+		</div>
+	</div>
 </Base>

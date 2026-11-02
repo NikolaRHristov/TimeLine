@@ -10,7 +10,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 - **Filename** - `RFC-NNNN-kebab-case-title.md`.
 - **Location** - `proposed/` while open, `implemented/` once shipped.
-- **Numbering** - assigned on creation, never reused. `0046` is the next free number.
+- **Numbering** - assigned on creation, never reused. `0053` is the next free number.
 - **Supersession** - a new record marks the old one `Superseded by`, and both stay.
 - **Cards** - every record names the cards that implement it, by id.
 
@@ -18,7 +18,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 ## The records
 
-Forty-five are written; none is implemented. A record moves to `implemented/` only when its
+Fifty-two are written; none is implemented. A record moves to `implemented/` only when its
 verification table passes against the shipped code.
 
 Every file in `proposed/` appears below, and the count above is the number of files there. A record
@@ -44,6 +44,9 @@ its entry.
 - **RFC-0034** - Versioning and protocol compatibility.
 - **RFC-0040** - Time, ordering and causality.
 - **RFC-0042** - Plugin and extension model.
+- **RFC-0049** - The component state model.
+- **RFC-0050** - The data states.
+- **RFC-0052** - The material states.
 
 ### Product
 
@@ -57,6 +60,9 @@ its entry.
 - **RFC-0035** - Notifications, presence and attention.
 - **RFC-0039** - Billing and metering.
 - **RFC-0043** - Local-first workspace: identity, network and publishing. _Cards: `t_ab85d9de`._
+- **RFC-0046** - The capability spectrometer.
+- **RFC-0047** - The trust swimlanes.
+- **RFC-0048** - The status surfaces.
 
 ### Policy
 
@@ -85,6 +91,7 @@ its entry.
 - **RFC-0044** - Toolchain upgrade policy. _Cards: `t_344b78d0`._
 - **RFC-0045** - The material, the tokens and the component contract. _Cards: `t_15d5d8fd`,
   `t_30030978`, `t_6b11bda7`, `t_bd4c07b0`, `t_e2a377d0`, `t_52a99949`._
+- **RFC-0051** - The token lifecycle.
 
 ---
 

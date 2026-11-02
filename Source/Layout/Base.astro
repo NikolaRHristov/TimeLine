@@ -72,6 +72,11 @@ const Year = new Date().getFullYear();
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{Full}</title>
+		<!-- An empty data icon rather than a missing file: every browser asks for
+		     /favicon.ico on its own, and a 404 for a file the page never
+		     referenced is noise in the console of every route. A real mark goes
+		     here once the brand has one. -->
+		<link rel="icon" href="data:," />
 		<meta name="description" content={Description} />
 		<link rel="canonical" href={Canonical} />
 		<meta name="theme-color" content="#1c1c1e" />

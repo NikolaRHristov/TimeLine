@@ -1,0 +1,168 @@
+@use "../Material.scss" as Material;
+
+// The post: one published record, drawn as a light tile on the workspace ground.
+//
+// The detail page mounts the workspace frame - the rail on the left, the ground
+// behind - so the record itself is the canvas, and a canvas is a tile. It is the
+// material's card on the paper ramp, one value above the ground it sits on, with
+// the tile's corner because a tile is the shape this side of the site gives a
+// record.
+//
+// Nothing here names a fill or a line: `Material.card` draws the face and the
+// three steps of the paper ramp colour the ink, so the note, the pill and this
+// tile cannot drift apart the first time one of them is edited.
+.post {
+	@include Material.card(var(--color-surface), var(--color-line), var(--radius-tile));
+
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	padding: var(--space-8);
+	color: var(--color-ink);
+
+	&__back {
+		font-size: var(--text-xs);
+
+		a {
+			color: var(--color-ink-muted);
+			text-decoration: underline;
+			text-underline-offset: 2px;
+
+			&:hover {
+				color: var(--color-ink);
+			}
+		}
+	}
+
+	// The author line: the handle is the eyebrow voice, the name is the title,
+	// and the timestamps sit under them rather than under the body.
+	&__head {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+	}
+
+	&__eyebrow {
+		@include Material.label(var(--text-2xs), var(--color-ink-faint));
+
+		margin: 0;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--text-lg);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	&__time {
+		font-size: var(--text-xs);
+		color: var(--color-ink-faint);
+	}
+
+	&__rank {
+		@include Material.label(var(--text-2xs), var(--color-ink-faint));
+
+		margin: 0;
+	}
+
+	&__text {
+		margin: 0;
+		font-size: var(--text-base);
+		line-height: 1.6;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	// Media keeps the ratio the file has. One dimension is set and the other
+	// follows, so an image is never stretched into a frame the sheet invented
+	// and a portrait post does not get a landscape crop.
+	&__media {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+
+		img,
+		video {
+			display: block;
+			width: 100%;
+			height: auto;
+			border: 1px solid var(--color-line);
+			border-radius: var(--radius-card);
+		}
+	}
+
+	&__links {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: var(--text-sm);
+	}
+
+	&__link {
+		@include Material.ellipsis;
+
+		display: block;
+		color: var(--color-ink-muted);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+
+		&:hover {
+			color: var(--color-ink);
+		}
+	}
+
+	// The counts. The name of each is the eyebrow voice and the number is the
+	// only thing on the row set in the body ink, so a reader scans the numbers
+	// and reads the labels only when a number surprises them.
+	&__metrics {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2) var(--space-6);
+		margin: 0;
+		padding-top: var(--space-4);
+		border-top: var(--hairline);
+	}
+
+	&__metric {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+	}
+
+	&__metric-label {
+		@include Material.label(var(--text-2xs), var(--color-ink-faint));
+	}
+
+	&__metric-value {
+		margin: 0;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__foot {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2) var(--space-4);
+		padding-top: var(--space-4);
+		border-top: var(--hairline);
+		font-size: var(--text-xs);
+		color: var(--color-ink-faint);
+
+		a {
+			color: inherit;
+			text-decoration: underline;
+			text-underline-offset: 2px;
+
+			&:hover {
+				color: var(--color-ink);
+			}
+		}
+	}
+}

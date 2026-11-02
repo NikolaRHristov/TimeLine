@@ -191,6 +191,12 @@ export const Content = {
 					process.env["CONTENT_STRING_PAGE_BOOKMARK_DETAIL_POSTED"],
 					"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_POSTED",
 				),
+				Rail: {
+					Note: content(
+						process.env["CONTENT_STRING_PAGE_BOOKMARK_DETAIL_RAIL_NOTE"],
+						"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_RAIL_NOTE",
+					),
+				},
 				Saved: content(
 					process.env["CONTENT_STRING_PAGE_BOOKMARK_DETAIL_SAVED"],
 					"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_SAVED",
