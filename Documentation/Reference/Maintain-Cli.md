@@ -23,44 +23,44 @@ with identical JSON shapes. See `Reference/Transport.md`.
 
 ## Environment
 
-| Variable            | Default                                                 | Meaning                                  |
-| ------------------- | ------------------------------------------------------- | ---------------------------------------- |
-| `MAINTAIN_CDP_PORT` | `9222`                                                  | Port of the browser's debugging endpoint |
-| `MAINTAIN_CONFIG`   | `Maintain/Configuration/Local/Configuration.local.json` | Identifier map                           |
-| `MAINTAIN_STORAGE`  | `Maintain/Storage/Shadow`                               | Shadow store root                        |
-| `MAINTAIN_VOCABULARY`| `Configuration/Keyword/Keyword.ts` (tracked default)   | Keyword vocabulary, `{slug: [term, …]}`  |
-| `MAINTAIN_RULES`    | `Maintain/Configuration/Rules/Rules.json`               | Weighted rules for `author classify`     |
-| `MAINTAIN_DEBUG`    | unset                                                   | Print a failure's stack trace to stderr  |
+| Variable              | Default                                                 | Meaning                                  |
+| --------------------- | ------------------------------------------------------- | ---------------------------------------- |
+| `MAINTAIN_CDP_PORT`   | `9222`                                                  | Port of the browser's debugging endpoint |
+| `MAINTAIN_CONFIG`     | `Maintain/Configuration/Local/Configuration.local.json` | Identifier map                           |
+| `MAINTAIN_STORAGE`    | `Maintain/Storage/Shadow`                               | Shadow store root                        |
+| `MAINTAIN_VOCABULARY` | `Configuration/Keyword/Keyword.ts` (tracked default)    | Keyword vocabulary, `{slug: [term, …]}`  |
+| `MAINTAIN_RULES`      | `Maintain/Configuration/Rules/Rules.json`               | Weighted rules for `author classify`     |
+| `MAINTAIN_DEBUG`      | unset                                                   | Print a failure's stack trace to stderr  |
 
-Missing config exits 2 with `{error:"no-config", expected:"<path>",
-copy:"<copy command>", next:"maintain config init"}`. No command reads
-identifiers from argv.
+Missing config exits 2 with
+`{error:"no-config", expected:"<path>", copy:"<copy command>", next:"maintain config init"}`.
+No command reads identifiers from argv.
 
 ## Commands
 
-| Command                 | Options                                                              | Result                                               |
-| ----------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- |
-| `config init`           | `--profile`, `--list <slug>=<id>` (repeatable), `--cdp-port`, `--force` | `{written,profile,lists,cdp,next}`                |
-| `config show`           | `--reveal`, `--list <slug>`                                          | `{path,profile,cdp,lists,routes,content,storage}`    |
-| `tab list`              | -                                                                    | `{tabs:[{id,title,url,active}]}`                     |
-| `tab focus`             | `--id`                                                               | `{focused:true,id}`                                  |
-| `post extract`          | `--tab`, `--index`                                                   | `{post:{id,url,author,text,postedAt,media,metrics}}` |
-| `post like`             | `--url` \| `--tab --index`, `--dry-run`                              | `{liked:true,post:{id,url},was:bool}`                |
-| `post like remove`      | same                                                                 | `{liked:false,…}`                                    |
-| `post bookmark add`     | same                                                                 | `{bookmarked:true,…}`                                |
-| `post bookmark remove`  | same                                                                 | `{bookmarked:false,…}`                               |
-| `page bookmarks open`   | `--tab`                                                              | `{navigated:true,url,count}`                         |
-| `page bookmarks scrape` | `--limit`, `--max-idle`, `--tab`                                     | `{source,scraped,new,updated,events}`                |
-| `page list open`        | `--name <slug>`                                                      | `{navigated:true,slug,url}`                          |
-| `page list member add`  | `--name`, `--handle`, `--apply`                                      | `{added:true,handle,list}`                           |
-| `store scrape`          | `--source bookmark\|like\|history`, `--limit`, `--max-idle`, `--tab` | `{source,scraped,new,updated,events}`                |
-| `store publish`         | `--id` \| `--source` \| `--since` \| `--all`                         | `{published,unchanged,hidden}`                       |
-| `store hide`            | `--id`                                                               | `{hidden:true,id,removed,unchanged}`                 |
-| `store status`          | -                                                                    | `{shadow:{…},public:{…}}`                            |
-| `author evidence build` | -                                                                    | `{archive,posts,authors:[…],skipped}`                |
-| `author classify rules` | -                                                                    | `{rules,threshold,counts,decisions,ambiguous,preserved}` |
-| `event append`          | `--kind`, `--subject`, `--payload`                                   | `{written:true,path}`                                |
-| `event tail`            | `--follow`, `--dir shadow\|public`, `--since`, `--interval`          | `{directory,count,events}` or JSON lines             |
+| Command                 | Options                                                                 | Result                                                   |
+| ----------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
+| `config init`           | `--profile`, `--list <slug>=<id>` (repeatable), `--cdp-port`, `--force` | `{written,profile,lists,cdp,next}`                       |
+| `config show`           | `--reveal`, `--list <slug>`                                             | `{path,profile,cdp,lists,routes,content,storage}`        |
+| `tab list`              | -                                                                       | `{tabs:[{id,title,url,active}]}`                         |
+| `tab focus`             | `--id`                                                                  | `{focused:true,id}`                                      |
+| `post extract`          | `--tab`, `--index`                                                      | `{post:{id,url,author,text,postedAt,media,metrics}}`     |
+| `post like`             | `--url` \| `--tab --index`, `--dry-run`                                 | `{liked:true,post:{id,url},was:bool}`                    |
+| `post like remove`      | same                                                                    | `{liked:false,…}`                                        |
+| `post bookmark add`     | same                                                                    | `{bookmarked:true,…}`                                    |
+| `post bookmark remove`  | same                                                                    | `{bookmarked:false,…}`                                   |
+| `page bookmarks open`   | `--tab`                                                                 | `{navigated:true,url,count}`                             |
+| `page bookmarks scrape` | `--limit`, `--max-idle`, `--tab`                                        | `{source,scraped,new,updated,events}`                    |
+| `page list open`        | `--name <slug>`                                                         | `{navigated:true,slug,url}`                              |
+| `page list member add`  | `--name`, `--handle`, `--apply`                                         | `{added:true,handle,list}`                               |
+| `store scrape`          | `--source bookmark\|like\|history`, `--limit`, `--max-idle`, `--tab`    | `{source,scraped,new,updated,events}`                    |
+| `store publish`         | `--id` \| `--source` \| `--since` \| `--all`                            | `{published,unchanged,hidden}`                           |
+| `store hide`            | `--id`                                                                  | `{hidden:true,id,removed,unchanged}`                     |
+| `store status`          | -                                                                       | `{shadow:{…},public:{…}}`                                |
+| `author evidence build` | -                                                                       | `{archive,posts,authors:[…],skipped}`                    |
+| `author classify rules` | -                                                                       | `{rules,threshold,counts,decisions,ambiguous,preserved}` |
+| `event append`          | `--kind`, `--subject`, `--payload`                                      | `{written:true,path}`                                    |
+| `event tail`            | `--follow`, `--dir shadow\|public`, `--since`, `--interval`             | `{directory,count,events}` or JSON lines                 |
 
 `--tab` takes a target id from `tab list` or its zero-based index in that list.
 A tab a browser extension currently holds a debugger on is never selected:
@@ -79,14 +79,14 @@ loop. A dry run reads the handle's "Pick a List" dialog and prints
 as `{error:"rate-limited"}`, so a caller looping over handles stops instead of
 retrying. A profile whose header has no "Add/remove from Lists" control - the
 account's own profile is the common case - is `no-list-menu`; a dialog that
-opens with no rows is `no-list-surface`. The two are reported apart because
-they send a caller looking in different places.
+opens with no rows is `no-list-surface`. The two are reported apart because they
+send a caller looking in different places.
 
 A command that waits for a page to be ready gets one answer when it never is:
 `page-not-ready` with `{expression,timeout,url}`. `page bookmarks open`,
 `page list open` and `page list member add` stop there, because a count or a
-membership write against a page that never arrived would describe something
-that is not on screen. Scraping is the exception: `page bookmarks scrape` and
+membership write against a page that never arrived would describe something that
+is not on screen. Scraping is the exception: `page bookmarks scrape` and
 `store scrape` warn on stderr and read what did render, and end as `no-post`
 only when nothing did.
 
@@ -221,8 +221,8 @@ says so.
   the key: one typo in a long weights list must not stop a run.
 
 A decision already marked `decision.by: "manual"` is never scored and never
-rewritten. It is reported in `preserved` with the reason on file, including
-when its author no longer appears in the archive. `rule` and `model` answers are
+rewritten. It is reported in `preserved` with the reason on file, including when
+its author no longer appears in the archive. `rule` and `model` answers are
 previous guesses, so this pass may supersede them.
 
 The command reads the shadow archive and the Author collection and writes
@@ -255,9 +255,9 @@ Every failure is one object, exit 2, no stack trace on stdout:
 
 Known codes: `no-config`, `config-exists`, `unknown-list`, `no-list-menu`,
 `no-list-surface`, `no-tab`, `no-post`, `page-not-ready`, `rate-limited`,
-`schema-invalid`, `cdp-unreachable`, `cdp-error`, `io-error`,
-`usage`, `internal`. A code is a contract; the `detail` string is not. `--help`
-and `--schema` are rendered from the same table the parser matches against, so a
+`schema-invalid`, `cdp-unreachable`, `cdp-error`, `io-error`, `usage`,
+`internal`. A code is a contract; the `detail` string is not. `--help` and
+`--schema` are rendered from the same table the parser matches against, so a
 command cannot drift from its own documentation.
 
 ## Tests

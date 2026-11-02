@@ -31,10 +31,10 @@ collections + Zod, CDP 1.3 over `ws://127.0.0.1:<port>`.
   bundle a second browser and break the "drive _my_ tabs" requirement.
 - **Anonymised documentation.** No handles, list ids, post ids, profile paths,
   session tokens, extension ids or cookies in any tracked file. Identifiers live
-  in `Maintain/Configuration/Local/Configuration.local.json` (gitignored) and are
-  referenced in docs as `<handle>`, `<slug>`, `<list-id>`. The tracked template
-  is `Maintain/Configuration/Example/Configuration.example.json`, placeholders
-  only.
+  in `Maintain/Configuration/Local/Configuration.local.json` (gitignored) and
+  are referenced in docs as `<handle>`, `<slug>`, `<list-id>`. The tracked
+  template is `Maintain/Configuration/Example/Configuration.example.json`,
+  placeholders only.
 - **One JSON object per command.** `--json` is the default when stdout is not a
   TTY. Human tables are a rendering of the same object, never a second code
   path.
@@ -224,10 +224,11 @@ in a command line or a doc.
 `Configuration/Write/Write.ts`, `Command/Config/Init/Init.ts`,
 `Command/Config/Show/Show.ts`, `Command/Event/Append/Append.ts`. Config is JSON
 with `{cdp:{host,port},profile,lists:[{slug,name,id}],routes,content,storage}`;
-missing file → `{error:"no-config", expected:"<path>", copy:"<copy command>",
-next:"maintain config init"}` and exit 2, never a crash. `config init` writes it
-atomically from the example; `config show` masks ids unless `--reveal`. Events
-are `Source/Content/Event/<ISO>-<kind>-<subject>.json`.
+missing file →
+`{error:"no-config", expected:"<path>", copy:"<copy command>", next:"maintain config init"}`
+and exit 2, never a crash. `config init` writes it atomically from the example;
+`config show` masks ids unless `--reveal`. Events are
+`Source/Content/Event/<ISO>-<kind>-<subject>.json`.
 
 ---
 

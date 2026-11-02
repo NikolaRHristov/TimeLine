@@ -31,28 +31,28 @@ command takes a slug, never an id.
 ## Two instances, two profiles
 
 A second debug instance needs its own `--user-data-dir`. Chromium locks each
-profile directory, so relaunching on a directory already in use starts no
-second process and silently drops the flags. Launch both explicitly, so each is
+profile directory, so relaunching on a directory already in use starts no second
+process and silently drops the flags. Launch both explicitly, so each is
 identifiable by its own command line rather than by assumption:
 
 ```sh
 # the person's normal browser
 "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" \
-  --user-data-dir="$HOME/Library/Application Support/BraveSoftware/Brave-Browser" \
-  --no-first-run --no-default-browser-check
+	--user-data-dir="$HOME/Library/Application Support/BraveSoftware/Brave-Browser" \
+	--no-first-run --no-default-browser-check
 
 # the CDP instance
 "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" \
-  --remote-debugging-port=9222 \
-  --user-data-dir="$HOME/.hermes/cache/scratch/brave-cdp-profile" \
-  --load-extension="$HOME/<path-to-extension>/dist" \
-  --disable-features=DisableLoadExtensionCommandLineSwitch \
-  --no-first-run --no-default-browser-check
+	--remote-debugging-port=9222 \
+	--user-data-dir="$HOME/.hermes/cache/scratch/brave-cdp-profile" \
+	--load-extension="$HOME/<path-to-extension>/dist" \
+	--disable-features=DisableLoadExtensionCommandLineSwitch \
+	--no-first-run --no-default-browser-check
 ```
 
-Quit gracefully (`kill -TERM <main-pid>`) rather than force-killing: the
-profile writes its session on a clean exit. Confirm the port is free before
-relaunching with `lsof -nP -iTCP:9222 -sTCP:LISTEN`.
+Quit gracefully (`kill -TERM <main-pid>`) rather than force-killing: the profile
+writes its session on a clean exit. Confirm the port is free before relaunching
+with `lsof -nP -iTCP:9222 -sTCP:LISTEN`.
 
 ## Chromium 156+ ignores `--load-extension`
 
@@ -65,8 +65,8 @@ URL and whose `chrome.storage` is `undefined` - the limited `window.chrome`
 object, not an extension context.
 
 An extension that a previous session was using can therefore disappear purely
-because a relaunch omitted the flag. Always re-probe after a relaunch instead
-of assuming the old targets survived.
+because a relaunch omitted the flag. Always re-probe after a relaunch instead of
+assuming the old targets survived.
 
 ## Prove the extension loaded
 
@@ -74,7 +74,7 @@ The background worker is the only positive signal; the launch exit code is not:
 
 ```sh
 curl -s --max-time 5 http://127.0.0.1:9222/json/list \
-  | grep -o 'chrome-extension://[a-z]*/background.js'
+	| grep -o 'chrome-extension://[a-z]*/background.js'
 ```
 
 Poll more than once. An MV3 background worker is absent while idle, so a single
@@ -94,9 +94,9 @@ Observed on a `--load-extension` relaunch: the background worker was present,
 yet no `browser-control/register` request arrived for 12+ minutes. Opening the
 extension's `sidepanel.html` with `PUT /json/new` did not change that - it
 renders as a plain tab with no extension APIs. The reliable trigger is the
-person clicking the toolbar icon, which opens the real side panel and starts
-the heartbeat. Report that as the remaining step; do not call the extension
-healthy because its target exists.
+person clicking the toolbar icon, which opens the real side panel and starts the
+heartbeat. Report that as the remaining step; do not call the extension healthy
+because its target exists.
 
 ## Restoring the tab set
 
@@ -105,7 +105,7 @@ previous session, so a relaunch loses the person's tabs even though the session
 files exist. Reopen the known set and let the titles prove the session:
 
 ```sh
-curl -s -X PUT "http://127.0.0.1:9222/json/new?<url-encoded-url>" >/dev/null
+curl -s -X PUT "http://127.0.0.1:9222/json/new?<url-encoded-url>" > /dev/null
 ```
 
 A logged-in title (the person's handle, not `@undefined`) is the evidence that
@@ -115,11 +115,11 @@ after a few seconds.
 
 ## Claim → test
 
-| Claim | Test |
-|---|---|
-| A browser is exposing CDP | `curl -s http://127.0.0.1:9222/json/version` returns a `Protocol-Version` |
-| Which profile owns the port | `PID=$(lsof -nP -iTCP:9222 -sTCP:LISTEN -t \| head -1); ps -o command= -p "$PID"` |
-| Both instances are up | `ps -eo command \| grep '[B]rave Browser' \| grep -o -- '--user-data-dir=[^ ]*' \| sort \| uniq -c` |
-| The extension actually loaded | `curl -s http://127.0.0.1:9222/json/list \| grep -o 'chrome-extension://[a-z]*/background.js'` |
-| The extension is talking to Hermes | `grep 'browser-control/register' ~/.hermes/logs/gateway.log \| tail -1` shows a recent timestamp |
-| Tabs came back and are logged in | `curl -s http://127.0.0.1:9222/json/list` shows resolved titles, not `@undefined` |
+| Claim                              | Test                                                                                                |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| A browser is exposing CDP          | `curl -s http://127.0.0.1:9222/json/version` returns a `Protocol-Version`                           |
+| Which profile owns the port        | `PID=$(lsof -nP -iTCP:9222 -sTCP:LISTEN -t \| head -1); ps -o command= -p "$PID"`                   |
+| Both instances are up              | `ps -eo command \| grep '[B]rave Browser' \| grep -o -- '--user-data-dir=[^ ]*' \| sort \| uniq -c` |
+| The extension actually loaded      | `curl -s http://127.0.0.1:9222/json/list \| grep -o 'chrome-extension://[a-z]*/background.js'`      |
+| The extension is talking to Hermes | `grep 'browser-control/register' ~/.hermes/logs/gateway.log \| tail -1` shows a recent timestamp    |
+| Tabs came back and are logged in   | `curl -s http://127.0.0.1:9222/json/list` shows resolved titles, not `@undefined`                   |

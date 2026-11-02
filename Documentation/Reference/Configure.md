@@ -32,17 +32,17 @@ expected and the exact copy command:
 
 ## Keys
 
-| Key                | Type                        | Default                     | Meaning                                                                 |
-| ------------------ | --------------------------- | --------------------------- | ----------------------------------------------------------------------- |
-| `cdp.host`         | string                      | `"127.0.0.1"`               | Host of the browser's DevTools endpoint                                 |
-| `cdp.port`         | integer                     | `9222`                      | Port of that endpoint                                                   |
-| `profile`          | string                      | `""` (unknown)              | Your handle, without `@`. Fills the `likes` route                       |
-| `lists`            | array of `{slug,name,id}`   | `[]`                        | Your lists. Empty is valid - commands that need one fail `unknown-list` |
-| `routes.bookmarks` | string (url)                | `https://x.com/i/bookmarks` | Page the `bookmark` source is read from                                 |
-| `routes.likes`     | string (url)                | derived from `profile`      | Page the `like` source is read from                                     |
-| `routes.history`   | string (url)                | `https://x.com/i/history`   | Container page the `history` source walks                               |
-| `content.root`     | string (repository-relative) | `Source/Content`           | Where the site's collections live                                       |
-| `storage.shadow`   | string (repository-relative) | `Maintain/Storage/Shadow`  | Where the shadow store lives                                            |
+| Key                | Type                         | Default                     | Meaning                                                                 |
+| ------------------ | ---------------------------- | --------------------------- | ----------------------------------------------------------------------- |
+| `cdp.host`         | string                       | `"127.0.0.1"`               | Host of the browser's DevTools endpoint                                 |
+| `cdp.port`         | integer                      | `9222`                      | Port of that endpoint                                                   |
+| `profile`          | string                       | `""` (unknown)              | Your handle, without `@`. Fills the `likes` route                       |
+| `lists`            | array of `{slug,name,id}`    | `[]`                        | Your lists. Empty is valid - commands that need one fail `unknown-list` |
+| `routes.bookmarks` | string (url)                 | `https://x.com/i/bookmarks` | Page the `bookmark` source is read from                                 |
+| `routes.likes`     | string (url)                 | derived from `profile`      | Page the `like` source is read from                                     |
+| `routes.history`   | string (url)                 | `https://x.com/i/history`   | Container page the `history` source walks                               |
+| `content.root`     | string (repository-relative) | `Source/Content`            | Where the site's collections live                                       |
+| `storage.shadow`   | string (repository-relative) | `Maintain/Storage/Shadow`   | Where the shadow store lives                                            |
 
 `routes.likes` is derived from `profile` on purpose: one key cannot drift from
 the other. Set it explicitly only if the derived URL is wrong for you.
@@ -66,8 +66,8 @@ The set of lists is yours, so nothing in the code enumerates it. Each entry is
 - `id` is the number at the end of `https://x.com/i/lists/<id>`.
 
 Two older shapes are still read, so an existing map keeps working: an object
-keyed by slug (`{"alpha": {"id": "…"}}`) and a bare id (`{"alpha": "…"}`). A slug
-declared twice keeps its first id.
+keyed by slug (`{"alpha": {"id": "…"}}`) and a bare id (`{"alpha": "…"}`). A
+slug declared twice keeps its first id.
 
 ## Commands
 
@@ -76,12 +76,12 @@ declared twice keeps its first id.
 Writes the map from the tracked example, then applies the flags. Non-interactive
 by construction - every value is a flag, which is what makes it agent-drivable.
 
-| Flag                | Kind    | Meaning                                              |
-| ------------------- | ------- | ---------------------------------------------------- |
-| `--profile <handle>`| string  | Your handle; a leading `@` is stripped               |
-| `--list <slug>=<id>`| string, repeatable | One configured list. Repeat once per list |
-| `--cdp-port <n>`    | integer | Port of the DevTools endpoint                        |
-| `--force`           | boolean | Overwrite an existing map                            |
+| Flag                 | Kind               | Meaning                                   |
+| -------------------- | ------------------ | ----------------------------------------- |
+| `--profile <handle>` | string             | Your handle; a leading `@` is stripped    |
+| `--list <slug>=<id>` | string, repeatable | One configured list. Repeat once per list |
+| `--cdp-port <n>`     | integer            | Port of the DevTools endpoint             |
+| `--force`            | boolean            | Overwrite an existing map                 |
 
 - No flags: writes the example's defaults and prints the next three commands.
 - An existing map without `--force` is `config-exists` - list ids cannot be
@@ -97,8 +97,8 @@ Prints the resolved map - after defaults, after env overrides - with list ids
 masked. `--reveal` prints them.
 
 ```bash
-maintain config show            # {"lists":[{"slug":"alpha","id":"*"}], …}
-maintain config show --reveal   # {"lists":[{"slug":"alpha","id":"1"}], …}
+maintain config show          # {"lists":[{"slug":"alpha","id":"*"}], …}
+maintain config show --reveal # {"lists":[{"slug":"alpha","id":"1"}], …}
 ```
 
 `--list <slug>` narrows the output to one list. The slug is resolved against the
@@ -106,20 +106,20 @@ map, never against a hardcoded set, so an unconfigured slug is `unknown-list`
 with the configured set in `configured`:
 
 ```bash
-maintain config show --list alpha   # one entry
-maintain config show --list nope    # {"error":"unknown-list","configured":["alpha","beta"],…}
+maintain config show --list alpha # one entry
+maintain config show --list nope  # {"error":"unknown-list","configured":["alpha","beta"],…}
 ```
 
 ## Environment overrides
 
-| Variable             | Overrides              | Notes                                                            |
-| -------------------- | ---------------------- | ---------------------------------------------------------------- |
-| `MAINTAIN_CONFIG`    | the map's path         | Absolute, or relative to the working directory                    |
-| `MAINTAIN_CDP_PORT`  | `cdp.port`             | Wins over the map; non-numeric values are ignored with a warning  |
-| `MAINTAIN_STORAGE`   | `storage.shadow`       | Points the whole store at a temporary directory for a test        |
-| `MAINTAIN_VOCABULARY`| the keyword vocabulary | A JSON file of `{ "<slug>": ["term", …] }`; unreadable falls back |
-| `MAINTAIN_RULES`     | the weights file       | Absolute, or relative to the working directory                    |
-| `MAINTAIN_DEBUG`     | -                      | Prints the stack trace of a failure to stderr                     |
+| Variable              | Overrides              | Notes                                                             |
+| --------------------- | ---------------------- | ----------------------------------------------------------------- |
+| `MAINTAIN_CONFIG`     | the map's path         | Absolute, or relative to the working directory                    |
+| `MAINTAIN_CDP_PORT`   | `cdp.port`             | Wins over the map; non-numeric values are ignored with a warning  |
+| `MAINTAIN_STORAGE`    | `storage.shadow`       | Points the whole store at a temporary directory for a test        |
+| `MAINTAIN_VOCABULARY` | the keyword vocabulary | A JSON file of `{ "<slug>": ["term", …] }`; unreadable falls back |
+| `MAINTAIN_RULES`      | the weights file       | Absolute, or relative to the working directory                    |
+| `MAINTAIN_DEBUG`      | -                      | Prints the stack trace of a failure to stderr                     |
 
 Environment beats the file, and the file beats the default. A command that only
 touches the browser (`tab list`, `post extract`) works with no map at all: it
@@ -146,13 +146,13 @@ same slug still scores on domains, and the rules loader says so.
 
 ## Failure codes
 
-| Code             | When                                                     | Carries                                    |
-| ---------------- | -------------------------------------------------------- | ------------------------------------------ |
-| `no-config`      | the map is missing                                       | `expected`, `copy`, `next`                 |
-| `config-exists`  | `config init` would overwrite without `--force`          | `path`, `next`                             |
-| `schema-invalid` | the map is not JSON, or a key has the wrong shape        | `path`, `field`, `reason`                  |
-| `unknown-list`   | a command named a slug the map does not declare          | `slug`, `configured`, `expected`, `next`   |
-| `io-error`       | the map could not be written (permissions, disk)         | `path`, `reason`                           |
+| Code             | When                                              | Carries                                  |
+| ---------------- | ------------------------------------------------- | ---------------------------------------- |
+| `no-config`      | the map is missing                                | `expected`, `copy`, `next`               |
+| `config-exists`  | `config init` would overwrite without `--force`   | `path`, `next`                           |
+| `schema-invalid` | the map is not JSON, or a key has the wrong shape | `path`, `field`, `reason`                |
+| `unknown-list`   | a command named a slug the map does not declare   | `slug`, `configured`, `expected`, `next` |
+| `io-error`       | the map could not be written (permissions, disk)  | `path`, `reason`                         |
 
 Every failure is one JSON object on stdout and exit code 2. A code is a
 contract; the `detail` string is not.
