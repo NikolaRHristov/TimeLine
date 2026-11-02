@@ -7,6 +7,7 @@ import { open as openClient, type Client } from "../../../Spacetime/Client.ts";
 import type { ShadowPost } from "../../../Store/Model/Model.ts";
 import { shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /**
  * Push the archive into the live projection.
@@ -186,15 +187,21 @@ export const Definition: CommandDefinition = {
 			format: "uri",
 		}),
 	],
-	async run(values): Promise<unknown> {
+	async run(context: CommandContext): Promise<unknown> {
 		// The server's address is the identifier map's business, so a missing map
 		// is `no-config` with the copy command attached, as everywhere else.
 		const configuration = load();
 
-		const url = typeof values["url"] === "string" ? values["url"] : configuration.spacetime.url;
+		const url =
+			typeof context.values["url"] === "string"
+				? context.values["url"]
+				: configuration.spacetime.url;
 		const database = configuration.spacetime.database;
-		const filter = typeof values["source"] === "string" ? (values["source"] as Source) : null;
-		const limit = typeof values["limit"] === "number" ? values["limit"] : null;
+		const filter =
+			typeof context.values["source"] === "string"
+				? (context.values["source"] as Source)
+				: null;
+		const limit = typeof context.values["limit"] === "number" ? context.values["limit"] : null;
 
 		if (limit !== null && limit < 0) {
 			throw fail("usage", "--limit must not be negative", {
@@ -207,7 +214,7 @@ export const Definition: CommandDefinition = {
 		const { planned: selected, skipped } = plan(shadow.all(), filter, limit);
 		const source = filter ?? "all";
 
-		if (values["dry-run"] === true) {
+		if (context.values["dry-run"] === true) {
 			return {
 				pushed: selected.length,
 				skipped,

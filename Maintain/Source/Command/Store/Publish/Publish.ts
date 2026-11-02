@@ -6,6 +6,7 @@ import { project, type ShadowPost } from "../../../Store/Model/Model.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /** `--since` accepts a date or a timestamp; anything unreadable is a usage error. */
 function moment(value: string): string {
@@ -35,24 +36,28 @@ export const Definition: CommandDefinition = {
 		option("since", "string", "Publish every post first seen at or after this date."),
 		option("all", "boolean", "Publish every post that is not hidden."),
 	],
-	async run(values): Promise<unknown> {
+	async run(context: CommandContext): Promise<unknown> {
 		const hasSelector =
-			typeof values["id"] === "string" ||
-			typeof values["source"] === "string" ||
-			typeof values["since"] === "string" ||
-			values["all"] === true;
+			typeof context.values["id"] === "string" ||
+			typeof context.values["source"] === "string" ||
+			typeof context.values["since"] === "string" ||
+			context.values["all"] === true;
 		if (hasSelector !== true) {
 			throw fail("usage", "say what to publish: --id, --source, --since or --all");
 		}
 
-		const since = typeof values["since"] === "string" ? moment(values["since"]) : null;
-		const source = typeof values["source"] === "string" ? (values["source"] as Source) : null;
+		const since =
+			typeof context.values["since"] === "string" ? moment(context.values["since"]) : null;
+		const source =
+			typeof context.values["source"] === "string"
+				? (context.values["source"] as Source)
+				: null;
 		const shadow = openShadow(shadowDirectory());
 		const publicStore = openPublic(contentDirectory());
 		const at = new Date().toISOString();
 
 		const matches = (post: ShadowPost): boolean => {
-			if (typeof values["id"] === "string") return post.id === values["id"];
+			if (typeof context.values["id"] === "string") return post.id === context.values["id"];
 			if (source !== null) return post.observations.some((entry) => entry.source === source);
 			if (since !== null) return post.firstSeenAt >= since;
 			return true;
@@ -96,9 +101,9 @@ export const Definition: CommandDefinition = {
 
 		if (published === 0 && unchanged === 0 && hidden === 0) {
 			throw fail("no-post", "nothing in the shadow store matched", {
-				id: values["id"],
-				source: values["source"],
-				since: values["since"],
+				id: context.values["id"],
+				source: context.values["source"],
+				since: context.values["since"],
 			});
 		}
 

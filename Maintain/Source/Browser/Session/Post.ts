@@ -1,7 +1,5 @@
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
-import type { Values } from "../../CLI/Parser/Parser.ts";
-import { connection } from "../../Configuration/Load/Load.ts";
-import { Post as PostModel, type Post } from "../../Model/Post/Post.ts";
+import type { Post } from "../../Model/Post/Post.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
 import {
 	expression,
@@ -9,10 +7,7 @@ import {
 	type InPageControl,
 	type InPageSnapshot,
 } from "../Selector/Post.ts";
-import { discover, type DiscoveryOptions } from "../Target/Discovery.ts";
-import { close, open } from "../Target/Lifecycle.ts";
-import { select, selectHandle } from "../Target/Select.ts";
-import { attach, type Session } from "./Session.ts";
+import type { Session } from "./Session.ts";
 
 export type Controls = Record<ControlName, InPageControl>;
 
@@ -145,88 +140,4 @@ export async function toggle(
 	}
 
 	return { was, now };
-}
-
-/**
- * Resolve one post, hand it to `body`, then clean up.
- *
- * `--url` reuses a tab already showing that permalink and otherwise opens a
- * temporary one that is closed afterwards - the person's own tabs are never
- * navigated away. `--tab`/`--index` drive a tab they already have.
- */
-export async function withPost<T>(
-	values: Values,
-	body: (context: PostContext) => Promise<T>,
-): Promise<T> {
-	const endpoint: DiscoveryOptions = connection();
-	const index = typeof values["index"] === "number" ? values["index"] : 0;
-	let tab: Tab | null = null;
-	let temporary = false;
-	let session: Session | null = null;
-
-	try {
-		if (typeof values["url"] === "string" && values["url"].length > 0) {
-			if (PostModel.idFromHref(values["url"]) === null) {
-				throw fail("usage", "--url is not a post permalink", {
-					url: values["url"],
-				});
-			}
-			const tabs = await discover(endpoint);
-			let existing: Tab | null = null;
-			try {
-				existing = select(tabs, { url: values["url"] }, { exact: true });
-			} catch {
-				existing = null;
-			}
-			if (existing !== null) {
-				tab = existing;
-			} else {
-				tab = await open(values["url"], endpoint);
-				temporary = true;
-			}
-		} else if (typeof values["tab"] === "string" && values["tab"].length > 0) {
-			const tabs = await discover(endpoint);
-			tab = selectHandle(tabs, values["tab"]);
-		} else {
-			throw fail("usage", "give --url, or --tab with --index");
-		}
-
-		session = await attach(tab, endpoint);
-		const ready = await session.waitFor('document.querySelectorAll("article").length > 0', {
-			timeout: 25_000,
-		});
-		if (ready !== true) {
-			throw fail("no-post", "the page showed no posts", {
-				tab: tab.id,
-				url: tab.url,
-			});
-		}
-
-		const state = await snapshot(session, index);
-		if (state.found !== true || state.post === undefined || state.controls === undefined) {
-			throw fail("no-post", `no post at index ${index}`, {
-				count: state.count,
-				tab: tab.id,
-				url: tab.url,
-			});
-		}
-
-		return await body({
-			session,
-			tab,
-			post: state.post,
-			controls: state.controls,
-			index,
-			temporary,
-		});
-	} finally {
-		session?.close();
-		if (temporary === true && tab !== null) {
-			try {
-				await close(tab.id, endpoint);
-			} catch {
-				// The tab is already gone; nothing to clean up.
-			}
-		}
-	}
 }

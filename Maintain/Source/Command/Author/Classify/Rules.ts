@@ -5,6 +5,7 @@ import { load as loadRules, rulesPath, scope } from "../../../Configuration/Rule
 import { classify, type Preserved } from "../../../Model/Author/Decision.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 import { collect } from "../Evidence/Collect.ts";
 
 /** A path for the output: repository-relative when it is inside the repo. */
@@ -52,7 +53,7 @@ export const Definition: CommandDefinition = {
 	path: ["author", "classify", "rules"],
 	summary: "Place authors into lists with weighted rules; leave the ambiguous ones unassigned.",
 	options: [],
-	async run(): Promise<unknown> {
+	async run(_context: CommandContext): Promise<unknown> {
 		// The identifier map decides which lists exist; the rules file only says
 		// how to weigh them. Scoring against the rules' own keys would let the
 		// weights file decide the taxonomy, so the rules are narrowed first.

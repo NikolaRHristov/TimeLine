@@ -1,9 +1,5 @@
-import { discover } from "../../../Browser/Target/Discovery.ts";
-import { activate } from "../../../Browser/Target/Lifecycle.ts";
-import { select } from "../../../Browser/Target/Select.ts";
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
-import { connection } from "../../../Configuration/Load/Load.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["tab", "focus"],
@@ -13,11 +9,8 @@ export const Definition: CommandDefinition = {
 			required: true,
 		}),
 	],
-	async run(values): Promise<unknown> {
-		const endpoint = connection();
-		const tabs = await discover(endpoint);
-		const tab = select(tabs, { id: String(values["id"]) });
-		await activate(tab.id, endpoint);
-		return { focused: true, id: tab.id };
+	transport: "browser",
+	async run(context): Promise<unknown> {
+		return context.transport.focus(String(context.values["id"]));
 	},
 };

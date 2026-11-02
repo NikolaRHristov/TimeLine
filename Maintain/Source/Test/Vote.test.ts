@@ -12,6 +12,7 @@ import { Definition as Reject } from "../Command/Vote/Reject/Reject.ts";
 import { Definition as Sync } from "../Command/Vote/Sync/Sync.ts";
 import { candidates, dense, order, place, totals, type CuratedEntry } from "../Model/Vote/Vote.ts";
 import { open as openVote } from "../Store/Vote/Vote.ts";
+import { context } from "./Context.ts";
 
 const roots: string[] = [];
 let content = "";
@@ -61,7 +62,7 @@ function codes(ranks: readonly CuratedEntry[]): number[] {
 }
 
 async function nominate(id: string): Promise<void> {
-	await Nominate.run({ url: `https://x.com/example/status/${id}` });
+	await Nominate.run(context({ url: `https://x.com/example/status/${id}` }));
 }
 
 test("ranks are dense and unique after any sequence of place", () => {
@@ -134,7 +135,7 @@ test("the queue is candidates only, votes descending, then oldest first", async 
 	);
 	assert.deepEqual(totals(all), { candidate: 2, approved: 1, rejected: 1 });
 
-	const queue = (await Queue.run({})) as {
+	const queue = (await Queue.run(context({}))) as {
 		count: number;
 		totals: Record<string, number>;
 		entries: { id: string; age: number }[];
@@ -155,7 +156,7 @@ test("an empty index is a normal state, not an error", async () => {
 	assert.deepEqual(openVote(content).votedAll(), []);
 	assert.deepEqual(openVote(content).curatedAll(), []);
 
-	const queue = (await Queue.run({})) as { count: number; entries: unknown[] };
+	const queue = (await Queue.run(context({}))) as { count: number; entries: unknown[] };
 	assert.equal(queue.count, 0);
 	assert.deepEqual(queue.entries, []);
 });
@@ -163,9 +164,11 @@ test("an empty index is a normal state, not an error", async () => {
 test("nominate is idempotent and writes one candidate", async () => {
 	await nominate("42");
 
-	const again = (await Nominate.run({
-		url: "https://x.com/example/status/42",
-	})) as { nominated: boolean; unchanged: boolean; status: string };
+	const again = (await Nominate.run(
+		context({
+			url: "https://x.com/example/status/42",
+		}),
+	)) as { nominated: boolean; unchanged: boolean; status: string };
 	assert.equal(again.nominated, false);
 	assert.equal(again.unchanged, true);
 	assert.equal(again.status, "candidate");
@@ -179,7 +182,7 @@ test("nominate is idempotent and writes one candidate", async () => {
 test("approve is idempotent and freezes rank, votes and timestamp", async () => {
 	await nominate("7");
 
-	const first = (await Approve.run({ id: "7" })) as {
+	const first = (await Approve.run(context({ id: "7" }))) as {
 		rank: number;
 		unchanged: boolean;
 	};
@@ -189,7 +192,7 @@ test("approve is idempotent and freezes rank, votes and timestamp", async () => 
 	const file = join(content, "Curated", "7.json");
 	const before = readFileSync(file, "utf8");
 
-	const second = (await Approve.run({ id: "7" })) as {
+	const second = (await Approve.run(context({ id: "7" }))) as {
 		rank: number;
 		unchanged: boolean;
 	};
@@ -205,7 +208,7 @@ test("approve is idempotent and freezes rank, votes and timestamp", async () => 
 
 test("approving three entries keeps ranks 1..3, and rank moves stay dense", async () => {
 	for (const id of ["1", "2", "3"]) await nominate(id);
-	for (const id of ["1", "2", "3"]) await Approve.run({ id });
+	for (const id of ["1", "2", "3"]) await Approve.run(context({ id }));
 
 	let index = openVote(content).curatedAll();
 	assert.deepEqual(codes(dense(index)), [1, 2, 3]);
@@ -214,7 +217,7 @@ test("approving three entries keeps ranks 1..3, and rank moves stay dense", asyn
 		["1", "2", "3"],
 	);
 
-	await Rank.run({ id: "3", rank: 1 });
+	await Rank.run(context({ id: "3", rank: 1 }));
 	index = openVote(content).curatedAll();
 	assert.deepEqual(
 		order(index).map((entry) => entry.id),
@@ -223,7 +226,7 @@ test("approving three entries keeps ranks 1..3, and rank moves stay dense", asyn
 	assert.deepEqual(codes(dense(index)), [1, 2, 3]);
 
 	// Re-ranking to the position it already holds changes nothing.
-	const same = (await Rank.run({ id: "3", rank: 1 })) as {
+	const same = (await Rank.run(context({ id: "3", rank: 1 }))) as {
 		unchanged: boolean;
 	};
 	assert.equal(same.unchanged, true);
@@ -231,17 +234,17 @@ test("approving three entries keeps ranks 1..3, and rank moves stay dense", asyn
 
 test("a rejected entry is a tombstone: no approve, no second nomination", async () => {
 	await nominate("9");
-	const rejected = (await Reject.run({ id: "9", reason: "off topic" })) as {
+	const rejected = (await Reject.run(context({ id: "9", reason: "off topic" }))) as {
 		status: string;
 	};
 	assert.equal(rejected.status, "rejected");
 
 	await assert.rejects(
-		() => Approve.run({ id: "9" }),
+		() => Approve.run(context({ id: "9" })),
 		(error: unknown) => isFailure(error) && error.code === "tombstone",
 	);
 	await assert.rejects(
-		() => Nominate.run({ url: "https://x.com/example/status/9" }),
+		() => Nominate.run(context({ url: "https://x.com/example/status/9" })),
 		(error: unknown) => isFailure(error) && error.code === "tombstone",
 	);
 
@@ -251,10 +254,10 @@ test("a rejected entry is a tombstone: no approve, no second nomination", async 
 
 test("rejecting what is already curated is refused, not an unpublish", async () => {
 	await nominate("11");
-	await Approve.run({ id: "11" });
+	await Approve.run(context({ id: "11" }));
 
 	await assert.rejects(
-		() => Reject.run({ id: "11" }),
+		() => Reject.run(context({ id: "11" })),
 		(error: unknown) => isFailure(error) && error.code === "already-curated",
 	);
 	assert.equal(openVote(content).curated("11")?.rank, 1);
@@ -262,22 +265,22 @@ test("rejecting what is already curated is refused, not an unpublish", async () 
 
 test("rejecting twice is a no-op", async () => {
 	await nominate("12");
-	await Reject.run({ id: "12" });
-	const again = (await Reject.run({ id: "12" })) as { unchanged: boolean };
+	await Reject.run(context({ id: "12" }));
+	const again = (await Reject.run(context({ id: "12" }))) as { unchanged: boolean };
 	assert.equal(again.unchanged, true);
 });
 
 test("unknown ids fail with a code and a next step", async () => {
 	await assert.rejects(
-		() => Approve.run({ id: "404" }),
+		() => Approve.run(context({ id: "404" })),
 		(error: unknown) => isFailure(error) && error.code === "no-entry",
 	);
 	await assert.rejects(
-		() => Rank.run({ id: "404", rank: 1 }),
+		() => Rank.run(context({ id: "404", rank: 1 })),
 		(error: unknown) => isFailure(error) && error.code === "not-curated",
 	);
 	await assert.rejects(
-		() => Nominate.run({}),
+		() => Nominate.run(context({})),
 		(error: unknown) => isFailure(error) && error.code === "usage",
 	);
 });
@@ -288,7 +291,7 @@ test("sync without a transport fails no-transport and writes nothing", async () 
 	const before = readFileSync(file, "utf8");
 
 	await assert.rejects(
-		() => Sync.run({}),
+		() => Sync.run(context({})),
 		(error: unknown) => isFailure(error) && error.code === "no-transport",
 	);
 

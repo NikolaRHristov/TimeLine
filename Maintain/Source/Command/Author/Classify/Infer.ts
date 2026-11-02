@@ -18,6 +18,7 @@ import {
 import { open as openModel, type Complete } from "../../../Model/Inference/Client.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 import { collect } from "../Evidence/Collect.ts";
 import { manual } from "./Rules.ts";
 
@@ -77,7 +78,7 @@ export const Definition: CommandDefinition = {
 		option("limit", "integer", "Ask about at most this many authors this run."),
 		option("dry-run", "boolean", "Report what would be asked and spend nothing."),
 	],
-	async run(values: Values): Promise<unknown> {
+	async run(context: CommandContext): Promise<unknown> {
 		// The map is the authority on the slug set, so it also decides what the
 		// model is allowed to answer: a prompt that offered the rules file's own
 		// keys would hand back a list nobody configured.
@@ -120,13 +121,13 @@ export const Definition: CommandDefinition = {
 			if (found !== undefined) pending.push(found);
 		}
 
-		const asked = limit(values);
+		const asked = limit(context.values);
 		const planned = asked > 0 ? pending.slice(0, asked) : pending;
 		const lists = scoped.slugs;
 		const grouped = batches(planned, BATCH_LIMIT);
 		const deferred = pending.length - planned.length;
 
-		if (values["dry-run"] === true) {
+		if (context.values["dry-run"] === true) {
 			return {
 				counts: {
 					authors: collection.authors.length,

@@ -20,6 +20,7 @@ import {
 import type { Post } from "../Model/Post/Post.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
+import { context } from "./Context.ts";
 
 const roots: string[] = [];
 
@@ -63,7 +64,7 @@ async function run(directory: string): Promise<{
 	const previous = process.env["MAINTAIN_STORAGE"];
 	process.env["MAINTAIN_STORAGE"] = directory;
 	try {
-		return (await Definition.run({})) as {
+		return (await Definition.run(context({}))) as {
 			authors: Evidence[];
 			posts: number;
 			skipped: {

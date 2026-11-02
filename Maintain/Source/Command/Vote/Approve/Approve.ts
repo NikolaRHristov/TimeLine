@@ -4,6 +4,7 @@ import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { place, type CuratedEntry } from "../../../Model/Vote/Vote.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 import { requireVoted } from "../Entry/Entry.ts";
 
 /**
@@ -28,9 +29,10 @@ export const Definition: CommandDefinition = {
 		}),
 		option("rank", "integer", "Position in the Curated index; appended by default."),
 	],
-	async run(values): Promise<unknown> {
-		const id = String(values["id"]);
-		const requested = typeof values["rank"] === "number" ? values["rank"] : null;
+	async run(context: CommandContext): Promise<unknown> {
+		const id = String(context.values["id"]);
+		const requested =
+			typeof context.values["rank"] === "number" ? context.values["rank"] : null;
 		const store = openVote(contentDirectory());
 
 		const voted = requireVoted(store, id);

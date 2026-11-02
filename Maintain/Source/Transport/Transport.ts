@@ -35,10 +35,7 @@ export type Requirement = "read" | "write" | "browser";
  * opens one; `tab`/`index` drives a tab the person already has; `id` looks for
  * a tab showing that status and otherwise opens the permalink.
  */
-export type PostTarget =
-	| { id: string }
-	| { url: string }
-	| { tab: string; index: number };
+export type PostTarget = { id: string } | { url: string } | { tab: string; index: number };
 
 /** `dryRun` resolves the post and reports its state without touching it. */
 export type WriteOptions = { dryRun?: boolean };
@@ -72,7 +69,8 @@ export type PageRequest = {
 export type PageHandle = {
 	tab: string;
 	url: string;
-	evaluate<T>(expression: string): Promise<T>;
+	/** How many posts the page currently holds - the `articles` readiness, counted. */
+	articles(): Promise<number>;
 };
 
 export type ListMemberOptions = { apply?: boolean };
@@ -101,18 +99,10 @@ export interface Transport {
 	navigate(url: string, tab?: string): Promise<{ url: string }>;
 	evaluate<T>(expression: string, tab?: string): Promise<T>;
 	/** Open a URL, wait for it, hand it to `body`, and clean up. */
-	page<T>(
-		url: string,
-		request: PageRequest,
-		body: (page: PageHandle) => Promise<T>,
-	): Promise<T>;
+	page<T>(url: string, request: PageRequest, body: (page: PageHandle) => Promise<T>): Promise<T>;
 
 	post(target: PostTarget): Promise<Post>;
-	setLike(
-		target: PostTarget,
-		value: boolean,
-		options?: WriteOptions,
-	): Promise<ControlOutcome>;
+	setLike(target: PostTarget, value: boolean, options?: WriteOptions): Promise<ControlOutcome>;
 	setBookmark(
 		target: PostTarget,
 		value: boolean,

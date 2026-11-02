@@ -1,6 +1,7 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { configurationPath, load, requireList } from "../../../Configuration/Load/Load.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /**
  * A list id, masked.
@@ -21,10 +22,10 @@ export const Definition: CommandDefinition = {
 		option("reveal", "boolean", "Print list ids instead of masking them."),
 		option("list", "string", "Show only the configured list with this slug."),
 	],
-	async run(values): Promise<unknown> {
+	async run(context: CommandContext): Promise<unknown> {
 		const configuration = load();
-		const reveal = values["reveal"] === true;
-		const slug = values["list"];
+		const reveal = context.values["reveal"] === true;
+		const slug = context.values["list"];
 
 		// A slug is resolved through the map, never against a hardcoded set: an
 		// unconfigured slug fails `unknown-list` naming what *is* configured.

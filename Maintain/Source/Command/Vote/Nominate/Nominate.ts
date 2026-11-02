@@ -8,6 +8,7 @@ import { stringify } from "../../../Output/Json/Json.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /**
  * A URL becomes a filename, so it needs a name a filename can carry.
@@ -76,16 +77,18 @@ export const Definition: CommandDefinition = {
 		option("note", "string", "Why it was nominated."),
 	],
 	alternatives: [["id"], ["url"]],
-	async run(values): Promise<unknown> {
-		const id = typeof values["id"] === "string" ? values["id"] : null;
-		const href = typeof values["url"] === "string" ? values["url"] : null;
+	async run(context: CommandContext): Promise<unknown> {
+		const id = typeof context.values["id"] === "string" ? context.values["id"] : null;
+		const href = typeof context.values["url"] === "string" ? context.values["url"] : null;
 		if ((id === null) === (href === null)) {
 			throw fail("usage", "say what to nominate: --id or --url, not both", {
 				options: ["--id", "--url"],
 			});
 		}
 
-		const requested = Array.isArray(values["list"]) ? (values["list"] as string[]) : [];
+		const requested = Array.isArray(context.values["list"])
+			? (context.values["list"] as string[])
+			: [];
 		// The identifier map is only needed to resolve a list slug; a nomination
 		// with no `--list` must work before `config init` has ever run.
 		const lists: string[] = [];
@@ -116,8 +119,10 @@ export const Definition: CommandDefinition = {
 			});
 		}
 
-		const title = typeof values["title"] === "string" ? values["title"] : existing?.title;
-		const note = typeof values["note"] === "string" ? values["note"] : existing?.note;
+		const title =
+			typeof context.values["title"] === "string" ? context.values["title"] : existing?.title;
+		const note =
+			typeof context.values["note"] === "string" ? context.values["note"] : existing?.note;
 
 		const next: VoteEntry = {
 			id: entryId,

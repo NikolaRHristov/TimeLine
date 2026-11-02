@@ -1,4 +1,3 @@
-import { withPage } from "../../../Browser/Session/Page.ts";
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load } from "../../../Configuration/Load/Load.ts";
@@ -7,27 +6,23 @@ export const Definition: CommandDefinition = {
 	path: ["page", "bookmarks", "open"],
 	summary: "Show the saved-posts page and report how many posts it has.",
 	options: [option("tab", "string", "CDP target id from `tab list`, or its index.")],
-	async run(values): Promise<unknown> {
+	transport: "browser",
+	async run(context): Promise<unknown> {
 		const configuration = load();
-		// `fail`: the count is the answer, so a page that never painted must not
-		// be reported as "0 posts".
-		return withPage(
+		// `onNotReady: "fail"`: the count is the answer, so a page that never
+		// painted must not be reported as "0 posts".
+		return context.transport.page(
 			configuration.routes.bookmarks,
 			{
-				tab: values["tab"],
-				ready: 'document.querySelectorAll("article").length > 0',
+				tab: context.values["tab"],
+				ready: "articles",
 				onNotReady: "fail",
 			},
-			async (context) => {
-				const count = await context.session.evaluate<number>(
-					'document.querySelectorAll("article").length',
-				);
-				return {
-					navigated: true,
-					url: context.href,
-					count: typeof count === "number" ? count : 0,
-				};
-			},
+			async (page) => ({
+				navigated: true,
+				url: page.url,
+				count: await page.articles(),
+			}),
 		);
 	},
 };

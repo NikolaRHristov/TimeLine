@@ -6,6 +6,7 @@ import { configurationPath, example, load } from "../../../Configuration/Load/Lo
 import type { Configuration } from "../../../Configuration/Schema/Schema.ts";
 import { save } from "../../../Configuration/Write/Write.ts";
 import type { List } from "../../../Model/List/List.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /** A slug is the person's word for a list: letters, digits, dash, underscore. */
 const SLUG = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
@@ -103,11 +104,11 @@ export const Definition: CommandDefinition = {
 		option("cdp-port", "integer", "Port of the browser's debugging endpoint."),
 		option("force", "boolean", "Replace an existing map, keeping its values as the base."),
 	],
-	async run(values): Promise<unknown> {
-		const force = values["force"] === true;
+	async run(context: CommandContext): Promise<unknown> {
+		const force = context.values["force"] === true;
 		const configuration = base(force);
 
-		const profile = values["profile"];
+		const profile = context.values["profile"];
 		if (profile !== undefined) {
 			const handle = String(profile).trim().replace(/^@/, "");
 			if (!HANDLE.test(handle)) {
@@ -123,7 +124,9 @@ export const Definition: CommandDefinition = {
 
 		// One slug is one entry: `--list` replaces the entry it names and appends
 		// the ones it does not, so wiring a second list does not drop the first.
-		const lists = Array.isArray(values["list"]) ? (values["list"] as string[]) : [];
+		const lists = Array.isArray(context.values["list"])
+			? (context.values["list"] as string[])
+			: [];
 		for (const raw of lists) {
 			const list = parseList(raw);
 			const at = configuration.lists.findIndex((entry) => entry.slug === list.slug);
@@ -131,7 +134,7 @@ export const Definition: CommandDefinition = {
 			else configuration.lists[at] = list;
 		}
 
-		const port = values["cdp-port"];
+		const port = context.values["cdp-port"];
 		if (port !== undefined) {
 			const number = Number(port);
 			if (!Number.isInteger(number) || number < 1 || number > 65_535) {

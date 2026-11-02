@@ -6,6 +6,7 @@ import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { root } from "../../../Configuration/Load/Load.ts";
 import type { EventRecord } from "../../../Model/Event/Event.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 const sleep = (milliseconds: number): Promise<void> =>
 	new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -62,15 +63,17 @@ export const Definition: CommandDefinition = {
 			default: 1000,
 		}),
 	],
-	async run(values): Promise<unknown> {
-		const which = String(values["dir"] ?? "shadow");
+	async run(context: CommandContext): Promise<unknown> {
+		const which = String(context.values["dir"] ?? "shadow");
 		const directory = join(
 			which === "public" ? contentDirectory() : shadowDirectory(),
 			"Event",
 		);
-		const since = typeof values["since"] === "string" ? values["since"] : null;
+		const since = typeof context.values["since"] === "string" ? context.values["since"] : null;
 		const interval =
-			typeof values["interval"] === "number" ? Math.max(values["interval"], 100) : 1000;
+			typeof context.values["interval"] === "number"
+				? Math.max(context.values["interval"], 100)
+				: 1000;
 
 		if (since !== null && Number.isNaN(new Date(since).getTime())) {
 			throw fail("usage", "--since is not a date", { value: since });
@@ -79,7 +82,7 @@ export const Definition: CommandDefinition = {
 		const after = (line: Line): boolean => since === null || line.record.at >= since;
 		const initial = list(directory).filter(after);
 
-		if (values["follow"] !== true) {
+		if (context.values["follow"] !== true) {
 			// Repository-relative: the repo is public, so the machine's layout
 			// never appears in a command's output.
 			return {

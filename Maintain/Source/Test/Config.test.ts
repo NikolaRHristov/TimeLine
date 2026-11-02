@@ -8,6 +8,7 @@ import { isFailure } from "../CLI/Parser/Output/Failure.ts";
 import { Definition as Init } from "../Command/Config/Init/Init.ts";
 import { Definition as Show } from "../Command/Config/Show/Show.ts";
 import { EXAMPLE_CONFIGURATION, load, root } from "../Configuration/Load/Load.ts";
+import { context } from "./Context.ts";
 
 /** One scratch root per process; every case gets its own map below it. */
 const scratch = mkdtempSync(join(tmpdir(), "maintain-config-"));
@@ -34,7 +35,7 @@ function at(name: string): string {
 type Result = Record<string, unknown>;
 
 async function run(definition: typeof Init, values: Record<string, unknown>): Promise<Result> {
-	return (await definition.run(values as never)) as Result;
+	return (await definition.run(context(values as never))) as Result;
 }
 
 function caught(work: () => unknown): unknown {
@@ -80,7 +81,7 @@ test("config init refuses to replace an existing map without --force", async () 
 	await run(Init, { profile: "someone" });
 	const before = readFileSync(path, "utf8");
 
-	const failure = await rejected(() => Init.run({} as never));
+	const failure = await rejected(() => Init.run(context({} as never)));
 
 	assert.equal(isFailure(failure), true);
 	if (!isFailure(failure)) return;

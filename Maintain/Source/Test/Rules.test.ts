@@ -12,6 +12,7 @@ import { totals, type DomainHit, type Evidence, type TermHits } from "../Model/A
 import type { Post } from "../Model/Post/Post.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
+import { context } from "./Context.ts";
 
 const roots: string[] = [];
 
@@ -151,7 +152,7 @@ async function run(paths: { storage: string; content: string; rules?: string }):
 	else process.env["MAINTAIN_RULES"] = paths.rules;
 
 	try {
-		return (await Definition.run({})) as Output;
+		return (await Definition.run(context({}))) as Output;
 	} finally {
 		for (const key of keys) {
 			const value = previous.get(key);

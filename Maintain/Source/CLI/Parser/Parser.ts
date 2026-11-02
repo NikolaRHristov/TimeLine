@@ -1,3 +1,6 @@
+import type { CommandContext } from "../../Command/Context/Context.ts";
+import { TRANSPORT_OPTION } from "../../Transport/Select.ts";
+import type { Requirement } from "../../Transport/Transport.ts";
 import { parseValue, takesValue, type Option } from "./Argument/Option.ts";
 import { fail } from "./Output/Failure.ts";
 
@@ -11,7 +14,12 @@ export type CommandDefinition = {
 	options: readonly Option[];
 	/** Option groups where one of each group is required, e.g. `[["url"], ["tab", "index"]]`. */
 	alternatives?: readonly (readonly string[])[];
-	run(values: Values): Promise<unknown>;
+	/**
+	 * What the command needs from a transport. Absent means it needs none, and
+	 * resolves none - a filesystem command keeps working with the browser shut.
+	 */
+	transport?: Requirement;
+	run(context: CommandContext): Promise<unknown>;
 };
 
 export type Parsed = {
@@ -39,6 +47,10 @@ export const universal: readonly Option[] = [
 		kind: "boolean",
 		description: "Print JSON (implied when stdout is not a TTY).",
 	},
+	// Universal, not per-command: `--transport view` on anything has to be a
+	// readable refusal, never an `unknown option`. A command that uses no
+	// transport ignores it, which is why the flag is safe to accept everywhere.
+	TRANSPORT_OPTION,
 ];
 
 function isFlag(token: string): boolean {

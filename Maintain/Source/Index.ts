@@ -4,6 +4,7 @@ import { commandHelp, commandList } from "./CLI/Parser/Output/Help.ts";
 import { parse } from "./CLI/Parser/Parser.ts";
 import { commands } from "./CLI/Registry/Registry.ts";
 import { schema } from "./CLI/Schema/Schema.ts";
+import { create } from "./Command/Context/Context.ts";
 import { stringify, write } from "./Output/Json/Json.ts";
 import { render } from "./Output/Table/Table.ts";
 
@@ -30,7 +31,7 @@ async function main(argv: readonly string[]): Promise<void> {
 		return;
 	}
 
-	const result = await parsed.command.run(parsed.values);
+	const result = await parsed.command.run(create(parsed.command, parsed.values));
 	const interactive = process.stdout.isTTY === true && parsed.json === false;
 	process.stdout.write(
 		interactive ? human(parsed.command.path, result) : `${stringify(result)}\n`,

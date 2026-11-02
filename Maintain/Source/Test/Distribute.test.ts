@@ -23,6 +23,7 @@ import type { Post } from "../Model/Post/Post.ts";
 import { open as openAuthors, type AuthorRecord } from "../Store/Author/Author.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
+import { context } from "./Context.ts";
 
 const AT = "2026-11-02T00:00:00.000Z";
 
@@ -501,7 +502,7 @@ async function run(
 	process.env["MAINTAIN_CONTENT"] = paths.content;
 
 	try {
-		return (await Definition.run(values)) as Record<string, unknown>;
+		return (await Definition.run(context(values))) as Record<string, unknown>;
 	} finally {
 		for (const key of KEYS) {
 			const value = previous.get(key);
@@ -575,7 +576,7 @@ test("applying without an identifier map is a named failure, not a guessed list"
 });
 
 test("--apply and --dry-run together are refused rather than silently ordered", async () => {
-	const code = await codeOf(() => Definition.run({ apply: true, "dry-run": true }));
+	const code = await codeOf(() => Definition.run(context({ apply: true, "dry-run": true })));
 	assert.equal(code, "usage");
 });
 

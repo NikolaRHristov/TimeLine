@@ -20,15 +20,22 @@ export const Definition: CommandDefinition = {
 		}),
 		option("tab", "string", "CDP target id from `tab list`, or its index."),
 	],
-	async run(values): Promise<unknown> {
-		const name = String(values["source"]);
+	// `store scrape` reads the browser and writes the archive, so it is not
+	// transport-agnostic the way `store status`/`publish`/`hide` are.
+	transport: "browser",
+	async run(context): Promise<unknown> {
+		const name = String(context.values["source"]);
 		if (!(Sources as readonly string[]).includes(name)) {
 			throw fail("usage", `unknown source: ${name}`, { values: Sources });
 		}
-		return ingest(name as Source, {
-			tab: values["tab"],
-			limit: typeof values["limit"] === "number" ? values["limit"] : undefined,
-			maxIdle: typeof values["max-idle"] === "number" ? values["max-idle"] : undefined,
+		return ingest(name as Source, context.transport, {
+			tab: context.values["tab"],
+			limit:
+				typeof context.values["limit"] === "number" ? context.values["limit"] : undefined,
+			maxIdle:
+				typeof context.values["max-idle"] === "number"
+					? context.values["max-idle"]
+					: undefined,
 		});
 	},
 };

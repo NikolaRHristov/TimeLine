@@ -4,6 +4,7 @@ import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote, writeSnapshot } from "../../../Store/Vote/Vote.ts";
 import { ENVIRONMENT } from "../../../Vote/Transport/Firebase.ts";
 import { select } from "../../../Vote/Transport/Transport.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /**
  * Pull the live counts in, and change nothing else.
@@ -30,7 +31,7 @@ export const Definition: CommandDefinition = {
 	path: ["vote", "sync"],
 	summary: "Pull current vote counts from the transport into the local store.",
 	options: [],
-	async run(): Promise<unknown> {
+	async run(_context: CommandContext): Promise<unknown> {
 		const transport = select();
 		if (transport.name === "none") {
 			// One named failure, before anything on disk is touched. A sync that

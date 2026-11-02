@@ -1,9 +1,5 @@
-import {
-	snapshot,
-	toggle,
-	type ControlName,
-	type PostContext,
-} from "../../Browser/Session/Post.ts";
+import type { ControlName } from "../../Browser/Selector/Post.ts";
+import { snapshot, toggle, type PostContext } from "../../Browser/Session/Post.ts";
 import { attach, type Session } from "../../Browser/Session/Session.ts";
 import { discover, type DiscoveryOptions } from "../../Browser/Target/Discovery.ts";
 import { close, open } from "../../Browser/Target/Lifecycle.ts";

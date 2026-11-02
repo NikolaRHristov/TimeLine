@@ -1,32 +1,13 @@
-import { tabsExpression } from "../../../../Browser/Selector/History.ts";
-import { expression, type InPageSnapshot } from "../../../../Browser/Selector/Post.ts";
-import { withPage } from "../../../../Browser/Session/Page.ts";
-import { assertReady } from "../../../../Browser/Session/Ready.ts";
-import type { Session } from "../../../../Browser/Session/Session.ts";
-import { fail } from "../../../../CLI/Parser/Output/Failure.ts";
-import type { Post } from "../../../../Model/Post/Post.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
+import type { Post } from "../../Model/Post/Post.ts";
+import type { ScrapeOptions, ScrapeResult } from "../../Model/Scrape/Scrape.ts";
+import { tabsExpression } from "../Selector/History.ts";
+import { expression, type InPageSnapshot } from "../Selector/Post.ts";
+import { withPage } from "./Page.ts";
+import { assertReady } from "./Ready.ts";
+import type { Session } from "./Session.ts";
 
-export type ScrapeOptions = {
-	/** `--tab`: a CDP target id, or its index in `tab list`. */
-	tab?: unknown;
-	/** Stop once this many distinct posts have been read. */
-	limit?: number | undefined;
-	/** Stop after this many scrolls in a row that produced nothing new. */
-	maxIdle?: number | undefined;
-	/** How long one scroll may take to produce a new id, in milliseconds. */
-	wait?: number;
-	/** Walk every tab the page presents - `/i/history` holds Bookmarks and Likes. */
-	followTabs?: boolean;
-};
-
-export type ScrapeResult = {
-	/** Every distinct post seen, in the order the page first showed it. */
-	posts: Post[];
-	/** The pages actually walked, after redirects. */
-	pages: string[];
-	rounds: number;
-	stopped: "limit" | "idle";
-};
+export type { ScrapeOptions, ScrapeResult };
 
 const READY = 'document.querySelectorAll("article").length > 0';
 

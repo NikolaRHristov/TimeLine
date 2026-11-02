@@ -1,13 +1,13 @@
-import { execute, withListMember } from "../../../Browser/Session/ListMember.ts";
 import { flag } from "../../../CLI/Parser/Argument/Flag.ts";
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
-import type { CommandDefinition, Values } from "../../../CLI/Parser/Parser.ts";
-import { configurationPath, optional, requireList } from "../../../Configuration/Load/Load.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import { configurationPath, optional } from "../../../Configuration/Load/Load.ts";
 import { load as loadRules, scope } from "../../../Configuration/Rules/Rules.ts";
 import { apply as applyPlan, resolve, SPACING } from "../../../Model/Author/Distribute.ts";
 import { handle as normalize } from "../../../Model/List/Member.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 import { collect } from "../Evidence/Collect.ts";
 
 /** Wait, holding nothing: the only thing between two writes. */
@@ -43,11 +43,12 @@ export const Definition: CommandDefinition = {
 		),
 		flag("dry-run", "Report the plan. This is the default; the flag only makes it explicit."),
 	],
-	async run(values: Values): Promise<unknown> {
-		if (values["apply"] === true && values["dry-run"] === true) {
+	transport: "write",
+	async run(context: CommandContext): Promise<unknown> {
+		if (context.values["apply"] === true && context.values["dry-run"] === true) {
 			throw fail("usage", "--apply and --dry-run ask for opposite things; pass one");
 		}
-		const apply = values["apply"] === true;
+		const apply = context.values["apply"] === true;
 
 		// A membership is named by the map's slug, so the map is required to
 		// write one - the same rule `page list member add` follows. A dry run
@@ -89,15 +90,12 @@ export const Definition: CommandDefinition = {
 				});
 			}
 
-			const name = requireList(configuration, list).name;
-			return withListMember(normalized, async ({ surface }) => {
-				const report = await execute(surface, {
-					handle: normalized,
-					name,
-					apply: true,
-				});
-				return report.dryRun === false && report.added ? "added" : "already";
+			// The transport resolves the slug against the same map, so a list
+			// nothing declares fails `unknown-list` before a browser is opened.
+			const report = await context.transport.listMember(list, normalized, {
+				apply: true,
 			});
+			return report.dryRun === false && report.added === true ? "added" : "already";
 		};
 
 		const applied = await applyPlan(resolution.plan, {

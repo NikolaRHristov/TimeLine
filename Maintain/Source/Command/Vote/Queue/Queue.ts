@@ -3,6 +3,7 @@ import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { age, candidates, totals } from "../../../Model/Vote/Vote.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /**
  * The curation view: what is waiting, best-supported first.
@@ -16,11 +17,11 @@ export const Definition: CommandDefinition = {
 	path: ["vote", "queue"],
 	summary: "Every candidate, sorted by votes, with age and list.",
 	options: [option("limit", "integer", "Show at most this many candidates.")],
-	async run(values): Promise<unknown> {
+	async run(context: CommandContext): Promise<unknown> {
 		const store = openVote(contentDirectory());
 		const all = store.votedAll();
 		const now = new Date().toISOString();
-		const limit = typeof values["limit"] === "number" ? values["limit"] : null;
+		const limit = typeof context.values["limit"] === "number" ? context.values["limit"] : null;
 
 		const queue = candidates(all).map((entry) => {
 			const row: Record<string, unknown> = {

@@ -6,6 +6,7 @@ import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
 import { EventKind } from "../../../Model/Event/Event.ts";
 import { stringify } from "../../../Output/Json/Json.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /** The event kinds the site's Event collection accepts. */
 export const EVENT_KINDS = EventKind;
@@ -23,12 +24,12 @@ export const Definition: CommandDefinition = {
 		}),
 		option("payload", "json", "Extra event data.", { default: {} }),
 	],
-	async run(values): Promise<unknown> {
+	async run(context: CommandContext): Promise<unknown> {
 		const configuration = load();
 		const at = new Date().toISOString();
-		const kind = String(values["kind"]);
-		const subject = String(values["subject"]);
-		const payload = values["payload"] ?? {};
+		const kind = String(context.values["kind"]);
+		const subject = String(context.values["subject"]);
+		const payload = context.values["payload"] ?? {};
 
 		const directory = join(root(), configuration.content.root, "Event");
 		const name = `${at.replace(/[:.]/g, "-")}-${kind}-${subject.replace(/[^A-Za-z0-9_-]+/g, "-")}.json`;

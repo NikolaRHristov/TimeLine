@@ -1,25 +1,24 @@
-import { toggle, withPost } from "../../../Browser/Session/Post.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
-import { dryRun, targetAlternatives, targetOptions } from "../Target.ts";
+import { dryRun, targetAlternatives, targetOf, targetOptions } from "../Target.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["post", "like"],
 	summary: "Like a post, unless it is already liked.",
 	options: [...targetOptions, dryRun],
 	alternatives: targetAlternatives,
-	async run(values): Promise<unknown> {
-		return withPost(values, async (context) => {
-			const post = { id: context.post.id, url: context.post.url };
-			if (values["dry-run"] === true) {
-				return {
-					dryRun: true,
-					action: "like",
-					post,
-					was: context.controls.like.active,
-				};
-			}
-			const outcome = await toggle(context, "like", "add");
-			return { liked: outcome.now, post, was: outcome.was };
-		});
+	transport: "write",
+	async run(context): Promise<unknown> {
+		const target = targetOf(context.values);
+		const dry = context.values["dry-run"] === true;
+		const outcome = await context.transport.setLike(target, true, dry ? { dryRun: true } : {});
+		if (dry) {
+			return {
+				dryRun: true,
+				action: "like",
+				post: outcome.post,
+				was: outcome.was,
+			};
+		}
+		return { liked: outcome.now, post: outcome.post, was: outcome.was };
 	},
 };

@@ -20,6 +20,8 @@ export type FailureCode =
 	| "spacetime-auth"
 	| "spacetime-reducer"
 	| "no-transport"
+	| "read-only-transport"
+	| "unsupported-transport"
 	| "vote-unreachable"
 	| "no-entry"
 	| "not-curated"

@@ -3,6 +3,7 @@ import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { place } from "../../../Model/Vote/Vote.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 import { requireCurated } from "../Entry/Entry.ts";
 
 /**
@@ -24,9 +25,9 @@ export const Definition: CommandDefinition = {
 			required: true,
 		}),
 	],
-	async run(values): Promise<unknown> {
-		const id = String(values["id"]);
-		const rank = Number(values["rank"]);
+	async run(context: CommandContext): Promise<unknown> {
+		const id = String(context.values["id"]);
+		const rank = Number(context.values["rank"]);
 		const store = openVote(contentDirectory());
 		const entry = requireCurated(store, id);
 

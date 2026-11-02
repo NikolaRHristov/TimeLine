@@ -3,6 +3,7 @@ import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 import { requireVoted } from "../Entry/Entry.ts";
 
 /**
@@ -26,8 +27,8 @@ export const Definition: CommandDefinition = {
 		}),
 		option("reason", "string", "Why it was rejected; kept on the event."),
 	],
-	async run(values): Promise<unknown> {
-		const id = String(values["id"]);
+	async run(context: CommandContext): Promise<unknown> {
+		const id = String(context.values["id"]);
 		const store = openVote(contentDirectory());
 		const entry = requireVoted(store, id);
 
@@ -47,7 +48,9 @@ export const Definition: CommandDefinition = {
 		store.event(
 			"vote.rejected",
 			id,
-			typeof values["reason"] === "string" ? { reason: values["reason"] } : {},
+			typeof context.values["reason"] === "string"
+				? { reason: context.values["reason"] }
+				: {},
 			at,
 		);
 

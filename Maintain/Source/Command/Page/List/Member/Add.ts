@@ -1,9 +1,7 @@
-import { execute, withListMember } from "../../../../Browser/Session/ListMember.ts";
 import { flag } from "../../../../CLI/Parser/Argument/Flag.ts";
 import { option } from "../../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../../CLI/Parser/Parser.ts";
-import { load, requireList } from "../../../../Configuration/Load/Load.ts";
 import { handle } from "../../../../Model/List/Member.ts";
 
 /**
@@ -30,13 +28,11 @@ export const Definition: CommandDefinition = {
 			"Report what would happen. This is the default; the flag only makes it explicit.",
 		),
 	],
-	async run(values): Promise<unknown> {
-		const configuration = load();
-		const name = String(values["name"]);
-		// The configured set is the only authority on what a list is called.
-		const list = requireList(configuration, name);
-
-		const requested = String(values["handle"]);
+	transport: "write",
+	async run(context): Promise<unknown> {
+		const requested = String(context.values["handle"]);
+		// The configured set is the only authority on what a list is called; the
+		// transport resolves the slug, so this command never reads the map.
 		const normalized = handle(requested);
 		if (normalized === null) {
 			throw fail("usage", `not a handle: ${requested}`, {
@@ -45,20 +41,14 @@ export const Definition: CommandDefinition = {
 			});
 		}
 
-		if (values["apply"] === true && values["dry-run"] === true) {
+		if (context.values["apply"] === true && context.values["dry-run"] === true) {
 			throw fail("usage", "--apply and --dry-run ask for opposite things; pass one", {
 				handle: normalized,
 			});
 		}
 
-		const apply = values["apply"] === true;
-		return withListMember(normalized, async ({ surface, url }) => {
-			const report = await execute(surface, {
-				handle: normalized,
-				name: list.name,
-				apply,
-			});
-			return { ...report, url };
+		return context.transport.listMember(String(context.values["name"]), normalized, {
+			apply: context.values["apply"] === true,
 		});
 	},
 };

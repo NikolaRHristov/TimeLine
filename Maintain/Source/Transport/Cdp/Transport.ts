@@ -84,8 +84,10 @@ export function cdp(): Transport {
 				body({
 					tab: context.tab.id,
 					url: context.href,
-					evaluate<TResult>(value: string): Promise<TResult> {
-						return context.session.evaluate<TResult>(value);
+					articles(): Promise<number> {
+						return context.session.evaluate<number>(
+							'document.querySelectorAll("article").length',
+						);
 					},
 				}),
 			);

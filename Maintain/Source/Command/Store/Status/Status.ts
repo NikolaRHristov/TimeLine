@@ -6,6 +6,7 @@ import type { Visibility } from "../../../Store/Model/Model.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /**
  * What each store holds, without reading any post's content.
@@ -18,7 +19,7 @@ export const Definition: CommandDefinition = {
 	path: ["store", "status"],
 	summary: "Count what the shadow store and the site's collection hold.",
 	options: [],
-	async run(): Promise<unknown> {
+	async run(_context: CommandContext): Promise<unknown> {
 		// The store's location is the identifier map's business, so a missing
 		// map is `no-config` here too - with the copy command attached - rather
 		// than a count of whatever the defaults happen to point at.

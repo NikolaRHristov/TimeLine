@@ -4,6 +4,7 @@ import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
+import type { CommandContext } from "../../Context/Context.ts";
 
 /**
  * Withhold a post, for good.
@@ -20,8 +21,8 @@ export const Definition: CommandDefinition = {
 			required: true,
 		}),
 	],
-	async run(values): Promise<unknown> {
-		const id = String(values["id"]);
+	async run(context: CommandContext): Promise<unknown> {
+		const id = String(context.values["id"]);
 		const shadow = openShadow(shadowDirectory());
 		const publicStore = openPublic(contentDirectory());
 

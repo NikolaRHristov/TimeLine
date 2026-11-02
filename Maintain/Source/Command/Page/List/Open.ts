@@ -1,5 +1,3 @@
-import { readyExpression } from "../../../Browser/Selector/List.ts";
-import { withPage } from "../../../Browser/Session/Page.ts";
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, requireList } from "../../../Configuration/Load/Load.ts";
@@ -13,25 +11,22 @@ export const Definition: CommandDefinition = {
 			required: true,
 		}),
 	],
-	async run(values): Promise<unknown> {
+	transport: "browser",
+	async run(context): Promise<unknown> {
 		// The slug is not validated against a hardcoded set: `requireList` knows
 		// the configured ones, so a stranger's `alpha` opens their list and an
 		// unconfigured slug fails `unknown-list` naming what *is* configured.
 		const configuration = load();
-		const slug = String(values["name"]);
+		const slug = String(context.values["name"]);
 		const list = requireList(configuration, slug);
 
 		const url = ListModel.url(list);
-		// `fail`: "the list is open" is the whole answer, so a page that never
-		// arrived must not be reported as one.
-		return withPage(
+		// `onNotReady: "fail"`: "the list is open" is the whole answer, so a page
+		// that never arrived must not be reported as one.
+		return context.transport.page(
 			url,
-			{ ready: readyExpression(), timeout: 15_000, onNotReady: "fail" },
-			async (context) => ({
-				navigated: true,
-				slug,
-				url: context.href,
-			}),
+			{ ready: "list", timeout: 15_000, onNotReady: "fail" },
+			async (page) => ({ navigated: true, slug, url: page.url }),
 		);
 	},
 };
