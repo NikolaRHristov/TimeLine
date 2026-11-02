@@ -71,6 +71,10 @@
 	}
 
 	&__name {
+		// The page's `<h1>`: the level is the document's, so the browser's own
+		// heading margin and type step are removed and the composition's face is
+		// what draws it.
+		margin: 0;
 		font-size: 13px;
 		font-weight: 600;
 		line-height: normal;

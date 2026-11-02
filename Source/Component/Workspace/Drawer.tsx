@@ -22,6 +22,12 @@ import Icon from "./Icon.tsx";
  * for and the command that fills it (RFC-0050 rule 1). The state is derived from
  * the rows the drawer was handed - never passed in as a flag - so a drawer that
  * gains a record stops being empty without anyone telling it to.
+ *
+ * The title is the page's `<h1>`. The composition draws no page heading above
+ * the frame - the rail names the stage and the drawer names the surface - so the
+ * drawer's own title is the only element that names the document, and a page
+ * without a heading is a page a screen reader cannot outline. It keeps its
+ * 13px semibold face: the level is the document's, not a type step.
  */
 export type DrawerView = "graph" | "list";
 
@@ -68,10 +74,10 @@ export default function Drawer(Props: Props) {
 						<Icon Name="chevron-left" />
 					</span>
 
-					<span class="drawer__heading">
+					<div class="drawer__heading">
 						<span class="drawer__eyebrow">{Props.Eyebrow}</span>
-						<span class="drawer__name">{Props.Title}</span>
-					</span>
+						<h1 class="drawer__name">{Props.Title}</h1>
+					</div>
 
 					<span class="drawer__depth" aria-hidden="true">
 						<Icon Name="chevron-right" />

@@ -19,13 +19,21 @@
  * a zero-height wrapper is present in the markup and absent from the page, and
  * only a renderer can tell the two apart.
  *
+ * Why it measures a snapshot instead of the build directory: `astro build`
+ * empties `Target/` before it writes, so a run that starts mid-build sees an
+ * empty tree and reports every route as serving no document - a total failure
+ * that looks exactly like the defect this exists to catch. The audit waits for
+ * the build to stop writing, copies the tree aside, and serves the copy, so a
+ * verdict is a fact about one build rather than about when the audit started.
+ *
  * Usage
  * -----
- *     node no-js-audit.mjs                     # serve ./Target and audit every route
+ *     node no-js-audit.mjs                     # snapshot ./Target and audit every route
  *     node no-js-audit.mjs --root ../Target    # another build directory
  *     node no-js-audit.mjs --origin http://127.0.0.1:9999   # an already-served site
  *     node no-js-audit.mjs --route /Workspace/ # one route
  *     node no-js-audit.mjs --json              # machine-readable report
+ *     node no-js-audit.mjs --wait 60000        # stop waiting for a build after a minute
  *     node no-js-audit.mjs --browser "/path/to/Chrome"
  *
  * Configuration comes from the environment, never from this file: the browser
@@ -39,10 +47,10 @@
 
 import { spawn } from "node:child_process";
 import { createReadStream, existsSync, readdirSync } from "node:fs";
-import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
-import { extname, join, normalize, relative, resolve } from "node:path";
+import { dirname, extname, join, normalize, relative, resolve } from "node:path";
 
 // ---------------------------------------------------------------------------
 // Routes and what each one must show before a script runs.
@@ -54,34 +62,59 @@ import { extname, join, normalize, relative, resolve } from "node:path";
 // `Require` is a minimum visible count per selector. `Some` is a set of
 // alternatives, at least one of which must hold - that is how an empty archive
 // passes: the page shows rows when there is content and a note when there is
-// none, and both are complete first paints.
+// none, and both are complete first paints. `Islands` is how many hydration
+// boundaries the route is allowed, and it defaults to none.
+//
+// A profile asserts what the design promises, never the markup a page happens
+// to use today. A heading is a heading, so the rules name `h1` and not
+// `h1.board__title`: the class belongs to the component that draws the page and
+// changes when the page is redrawn, while "one visible h1" is the contract a
+// reader's browser and a screen reader both depend on. A profile therefore
+// names three kinds of selector and nothing else:
+//
+//   - elements with a meaning (`main section`, `main ol`, `main a[href]`),
+//   - the parts `Documentation/Reference/Design-Composition.md` makes
+//     contractual (`.rail`, `.drawer`, `.drawer-column`, `.swimlane`,
+//     `.spectrometer__cell`, `.status__value`, `.security__mark`,
+//     `.provenance__band`),
+//   - the empty state a page renders when the archive holds nothing
+//     (`.drawer__empty`).
+//
+// A profile pinned to `.roster__row` or `article.sheet` fails the day the
+// surface is redrawn, and a redraw is not a no-script regression.
 // ---------------------------------------------------------------------------
 
 /**
- * What every showcase page must show before a script runs (RFC-0053).
- *
- * The five pages that are not the workspace share one shape - a contents rail,
- * three boxes and one way into the workspace - so they share one profile. A
- * page that lost its rail, or grew a fourth box, is a change to the showcase
- * surface, and this is where it is noticed.
+ * The copy-only showcase pages (RFC-0053): a contents rail, at least one box,
+ * and one way onward. They read no collection, so the shape is the same on a
+ * full archive and on a fresh clone - which is why the rail and the boxes are
+ * asserted rather than any record.
  */
 const Showcase = {
-	Title: "h1.board__title",
 	Require: [
 		{ Selector: ".provenance__band", Min: 1 },
-		{ Selector: "section.board__box", Min: 3 },
-		{ Selector: ".board__open[href]", Min: 1 },
+		{ Selector: "main section", Min: 1 },
+		{ Selector: "main a[href]", Min: 1 },
 	],
 };
 
 const Profiles = [
 	{ Path: "/", ...Showcase },
+	{ Path: "/Bookmark/", ...Showcase },
+	{ Path: "/List/", ...Showcase },
+	{ Path: "/Voted/", ...Showcase },
 	{
 		Path: "/Workspace/",
-		Title: ".drawer__name",
+		// The rail and the body are two islands reading one store
+		// (`Source/Script/Workspace/Store.ts`). Two, not one: a single island
+		// would make the composition one component that happens to look split.
+		Islands: 2,
 		Require: [
-			{ Selector: ".drawer__eyebrow", Min: 1 },
-			{ Selector: ".drawer__tabs", Min: 1 },
+			// The parts the composition states, under the names it gives them.
+			{ Selector: ".rail", Min: 1 },
+			{ Selector: ".provenance__band", Min: 1 },
+			{ Selector: ".drawer", Min: 1 },
+			// Four columns (Design-Composition, "Columns, 240 tall").
 			{ Selector: "section.drawer-column", Min: 4 },
 			// The anonymous workspace is the build's own state (RFC-0054), so its
 			// explanation is content and not a nicety: a reader whose browser runs
@@ -89,43 +122,63 @@ const Profiles = [
 			// it, and the four lanes must still be drawn around that note.
 			{ Selector: ".drawer__empty", Min: 1 },
 			{ Selector: ".drawer__empty code", Min: 1 },
-			{ Selector: "article.bento__tile", Min: 1 },
-			{ Selector: ".publish__label", Min: 1 },
-			{ Selector: ".provenance__band", Min: 1 },
+			// The seam's publish control and the canvas's mosaic.
+			{ Selector: ".publish__control", Min: 1 },
+			{ Selector: ".bento__tile", Min: 1 },
 			// The three bands below the canvas and the rail's cluster
 			// (RFC-0046 to RFC-0048). Every one of them is server-rendered, so a
 			// band that is missing here is a band that waits for hydration.
-			{ Selector: ".rail", Min: 1 },
 			{ Selector: ".swimlane", Min: 2 },
 			{ Selector: ".swimlane__step", Min: 8 },
 			{ Selector: ".spectrometer__cell", Min: 8 },
+			// Four textual states and four marks: the words are the signal.
 			{ Selector: ".status__value", Min: 4 },
 			{ Selector: ".security__mark", Min: 4 },
 		],
 	},
-	{ Path: "/Bookmark/", ...Showcase },
 	{
 		Path: "/Bookmark/:Id/",
-		Title: "h1.post__title",
+		// The post's provenance rail is an island; the record itself is not.
+		Islands: 1,
 		Require: [
-			{ Selector: "article.post", Min: 1 },
-			{ Selector: ".post__text", Min: 1 },
-			{ Selector: "dl dt", Min: 4 },
-			{ Selector: "a[href]", Min: 3 },
+			{ Selector: "main article", Min: 1 },
+			{ Selector: "main dl dt", Min: 1 },
+			{ Selector: "main a[href]", Min: 1 },
+			{ Selector: ".provenance__band", Min: 1 },
 		],
 	},
-	{ Path: "/List/", ...Showcase },
 	{
 		Path: "/List/:Slug/",
-		Title: "h1.sheet__title",
-		Require: [{ Selector: "article.bento__tile", Min: 1 }],
+		// A list is drawn as the canvas's mosaic, so its tiles are articles.
+		Require: [
+			{ Selector: "main article", Min: 1 },
+			{ Selector: "main a[href]", Min: 1 },
+		],
 	},
-	{ Path: "/Voted/", ...Showcase },
-	{ Path: "/Activity/", ...Showcase },
+	{
+		Path: "/Activity/",
+		// One section per day, and the empty state is a section as well.
+		Require: [{ Selector: "main section", Min: 1 }],
+	},
 ];
 
 /** The floor every route must clear, profile or not: real prose under `<main>`. */
 const MinText = 40;
+
+/**
+ * How many visible `<h1>` a route shows. One: the document's heading, the page's
+ * own name. Which class carries it is the page's business, and a route that
+ * draws two has a heading the document outline cannot name.
+ */
+const MinHeadings = 1;
+
+/**
+ * How long the build directory must hold still before it is read, and how long
+ * the audit waits for a build to finish. A build writes for seconds; a run that
+ * reads mid-write sees half a site.
+ */
+const Quiet = 1500;
+const Wait = 180_000;
 
 /** What each extension is served as; a build directory has no server of its own. */
 const ContentTypes = {
@@ -163,6 +216,7 @@ function parseArguments(argv) {
 		Keep: false,
 		SelfTest: false,
 		Timeout: 20_000,
+		Wait,
 	};
 
 	for (let index = 0; index < argv.length; index += 1) {
@@ -189,6 +243,9 @@ function parseArguments(argv) {
 				break;
 			case "--timeout":
 				options.Timeout = Number(value());
+				break;
+			case "--wait":
+				options.Wait = Number(value());
 				break;
 			case "--json":
 				options.Json = true;
@@ -270,8 +327,9 @@ function serve(root) {
 // silent skip: a page that exists is audited, whether or not a profile names it.
 // ---------------------------------------------------------------------------
 
-async function discover(root) {
-	const routes = [];
+/** Every file called `name` under `root`, as absolute paths. */
+async function files(root, name) {
+	const found = [];
 
 	async function walk(directory) {
 		const entries = await readdir(directory, { withFileTypes: true });
@@ -281,13 +339,21 @@ async function discover(root) {
 				await walk(full);
 				continue;
 			}
-			if (entry.name !== "index.html") continue;
-			const folder = relative(root, directory);
-			routes.push(folder === "" ? "/" : `/${folder.split(/[\\/]/).join("/")}/`);
+			if (entry.name !== name) continue;
+			found.push(full);
 		}
 	}
 
 	await walk(root);
+	return found;
+}
+
+async function discover(root) {
+	const routes = (await files(root, "index.html")).map((file) => {
+		const folder = relative(root, dirname(file));
+		return folder === "" ? "/" : `/${folder.split(/[\\/]/).join("/")}/`;
+	});
+
 	return routes.sort((left, right) => left.localeCompare(right));
 }
 
@@ -311,13 +377,110 @@ function profileFor(route) {
 
 /** Every selector a profile names, deduplicated, in declaration order. */
 function selectorsOf(profile) {
-	if (profile === null) return ["h1"];
+	const all = ["h1"];
+	if (profile === null) return all;
 
-	const all = [profile.Title];
 	for (const entry of profile.Require ?? []) all.push(entry.Selector);
 	for (const group of profile.Some ?? []) for (const entry of group) all.push(entry.Selector);
 
 	return [...new Set(all)];
+}
+
+// ---------------------------------------------------------------------------
+// Reading a settled tree
+//
+// `astro build` empties `Target/` before it writes, so the audit cannot measure
+// the directory it was pointed at: it would measure whichever moment the run
+// happened to land on. Two steps fix that, and both are needed.
+//
+//   1. Wait for the tree to hold still. Every file's mtime is older than the
+//      quiet window and the tree holds at least one route. A build in progress
+//      keeps writing, so this turns "a build is running" into "wait for it"
+//      rather than "every route is broken".
+//   2. Copy the settled tree aside and serve the copy. A build that starts
+//      after the copy cannot take the pages away from under the browser.
+//
+// The copy is checked before it is used: every document must be complete (it
+// ends with `</html>`) and the route set must be the one the live tree held. A
+// copy that fails either check is discarded and taken again.
+// ---------------------------------------------------------------------------
+
+/** The newest mtime under `root`, or null when the tree holds no file yet. */
+async function newestWrite(root) {
+	let newest = null;
+
+	async function walk(directory) {
+		const entries = await readdir(directory, { withFileTypes: true });
+		for (const entry of entries) {
+			const full = join(directory, entry.name);
+			if (entry.isDirectory()) {
+				await walk(full);
+				continue;
+			}
+			const info = await stat(full).catch(() => null);
+			if (info === null) continue;
+			if (newest === null || info.mtimeMs > newest) newest = info.mtimeMs;
+		}
+	}
+
+	await walk(root);
+	return newest;
+}
+
+/** Wait until the tree has stopped being written and holds at least one route. */
+async function settle(root, wait) {
+	const deadline = Date.now() + wait;
+
+	while (Date.now() < deadline) {
+		const newest = await newestWrite(root).catch(() => null);
+		if (newest !== null && Date.now() - newest >= Quiet) {
+			const routes = await discover(root).catch(() => []);
+			if (routes.length > 0) return;
+		}
+		await sleep(200);
+	}
+
+	throw new Error(
+		`the build under ${root} never stopped writing: ${wait}ms elapsed without ${Quiet}ms of quiet`,
+	);
+}
+
+/** True when every document in the tree is a complete page. */
+async function complete(root) {
+	for (const file of await files(root, "index.html")) {
+		const text = await readFile(file, "utf8").catch(() => "");
+		if (!/<\/html>\s*$/i.test(text)) return false;
+	}
+	return true;
+}
+
+/** A settled, self-consistent copy of `root`, and the routes it holds. */
+async function capture(root, wait) {
+	let reason = "the tree was never read";
+
+	for (let attempt = 1; attempt <= 3; attempt += 1) {
+		await settle(root, wait);
+		const live = await discover(root);
+
+		const directory = await mkdtemp(join(tmpdir(), "no-js-snapshot-"));
+		const copy = join(directory, "Target");
+		await cp(root, copy, { recursive: true });
+
+		const copied = await discover(copy);
+		const intact = await complete(copy);
+		const same =
+			copied.length === live.length && copied.every((route, index) => route === live[index]);
+
+		if (intact && same && copied.length > 0) return { directory, copy, routes: copied };
+
+		reason = intact
+			? "the route set changed while it was copied"
+			: "a copied document was incomplete";
+		await rm(directory, { recursive: true, force: true }).catch(() => {});
+		await sleep(250);
+	}
+
+	throw new Error(`could not take a consistent snapshot of ${root}: ${reason}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -664,16 +827,11 @@ async function measure(connection, { origin, route, scripts, selectors, timeout 
 				try { matched = Array.from(document.querySelectorAll(selector)); } catch { return { total: -1, visible: -1 }; }
 				return { total: matched.length, visible: matched.filter(Visible).length };
 			};
-			const Text = (selector) => {
-				const element = document.querySelector(selector);
-				return element === null ? "" : (element.textContent || "").replace(/\\s+/g, " ").trim();
-			};
 			const main = document.querySelector("main");
 			return {
 				title: document.title || "",
 				mainText: (main === null ? "" : (main.innerText || main.textContent || "")).replace(/\\s+/g, " ").trim().length,
-				titleText: Text(${JSON.stringify(selectors.Title)}),
-				titleVisible: Count(${JSON.stringify(selectors.Title)}).visible > 0,
+				headings: Count("h1"),
 				selectors: Object.fromEntries(${JSON.stringify(selectors.List)}.map((selector) => [selector, Count(selector)])),
 				islands: Array.from(document.querySelectorAll("astro-island")).map((island) => ({
 					client: island.getAttribute("client") || "",
@@ -715,9 +873,7 @@ function judge({ route, profile, off, on }) {
 
 	if (off.title.trim() === "") failures.push("the document has no title");
 	if (off.title.trim() === "" && off.mainText === 0) {
-		failures.push(
-			"the route served no document: its HTML was missing when measured, which is what a build still writing looks like",
-		);
+		failures.push("the route served no document: its HTML was empty when it was measured");
 	}
 	if (off.mainText < MinText) {
 		failures.push(
@@ -725,11 +881,24 @@ function judge({ route, profile, off, on }) {
 		);
 	}
 
-	if (profile !== null) {
-		if (off.titleText === "" || off.titleVisible === false) {
-			failures.push(`the page title (${profile.Title}) is missing or hidden without scripts`);
-		}
+	// One heading, whatever class carries it: a page whose outline lost its
+	// heading is unreadable to a screen reader even when its prose is intact.
+	if (off.headings.visible !== MinHeadings) {
+		failures.push(
+			`the route shows ${off.headings.visible} visible <h1>; a page has exactly ${MinHeadings}`,
+		);
+	}
 
+	const expected = profile?.Islands ?? 0;
+	if (off.islands.length !== expected) {
+		failures.push(
+			`the route carries ${off.islands.length} island(s); ${expected} expected${
+				expected === 0 ? " (a content surface ships no script)" : ""
+			}`,
+		);
+	}
+
+	if (profile !== null) {
 		for (const entry of profile.Require ?? []) {
 			const seen = off.selectors[entry.Selector] ?? { visible: 0 };
 			if (seen.visible < entry.Min) {
@@ -748,19 +917,18 @@ function judge({ route, profile, off, on }) {
 				);
 			}
 		}
-
-		for (const selector of selectorsOf(profile)) {
-			const disabled = off.selectors[selector]?.visible ?? 0;
-			const enabled = on.selectors[selector]?.visible ?? 0;
-			if (disabled < enabled) {
-				failures.push(
-					`${selector}: ${disabled} visible without scripts but ${enabled} with them - content waits for hydration`,
-				);
-			}
-		}
 	} else {
 		warnings.push("no route profile: generic checks only");
-		if (off.titleText === "") failures.push("the page has no visible <h1>");
+	}
+
+	for (const selector of selectorsOf(profile)) {
+		const disabled = off.selectors[selector]?.visible ?? 0;
+		const enabled = on.selectors[selector]?.visible ?? 0;
+		if (disabled < enabled) {
+			failures.push(
+				`${selector}: ${disabled} visible without scripts but ${enabled} with them - content waits for hydration`,
+			);
+		}
 	}
 
 	for (const island of off.islands) {
@@ -802,6 +970,9 @@ function report(results, meta) {
 	lines.push(
 		`no-js audit  routes=${results.length}  origin=${meta.Origin}  browser=${meta.Browser}`,
 	);
+	if (meta.Snapshot !== undefined && meta.Snapshot !== null) {
+		lines.push(`  snapshot of ${meta.Source} at ${meta.Snapshot}`);
+	}
 
 	for (const result of results) {
 		const island = result.Off.islands.length;
@@ -814,7 +985,7 @@ function report(results, meta) {
 		const label = result.Profile === null ? "generic" : result.Profile;
 		lines.push(
 			`  ${result.Status === "pass" ? "PASS" : "FAIL"}  ${result.Route.padEnd(28)} ${label.padEnd(16)} ` +
-				`text=${result.Off.mainText} islands=${island} js=${hydrated}`,
+				`text=${result.Off.mainText} h1=${result.Off.headings.visible} islands=${island} js=${hydrated}`,
 		);
 		for (const failure of result.Failures) lines.push(`        - ${failure}`);
 		for (const warning of result.Warnings) lines.push(`        ~ ${warning}`);
@@ -836,42 +1007,61 @@ function sleep(ms) {
 // ---------------------------------------------------------------------------
 
 /**
- * A page that satisfies every structural rule and still fails the audit: its
- * rows arrive from a script and its island carries no server-rendered content.
+ * Two pages that satisfy every structural rule and still fail the audit.
  *
- * The self-test exists because an audit that cannot fail is decoration. The
- * fixture is generated rather than archived as a second file, so the negative
- * control cannot drift away from the rules that are supposed to catch it.
+ * The first draws a rail band from a script and carries an island with no
+ * server-rendered content; the second lost its heading and its prose. Between
+ * them they cover every rule the audit states, which is what makes the negative
+ * control worth running: an audit that cannot fail is decoration.
+ *
+ * The fixtures are generated rather than archived as extra files, so they
+ * cannot drift away from the rules that are supposed to catch them.
  */
-const Fixture = `<!doctype html>
+const Fixtures = {
+	"/": `<!doctype html>
 <html lang="en">
 	<head><meta charset="utf-8" /><title>No-script audit fixture</title></head>
 	<body>
 		<main>
-			<article class="sheet">
-				<header class="sheet__head">
-					<h1 class="sheet__title">Curated</h1>
-					<p class="sheet__lede">A fixture whose rows arrive only after a script runs.</p>
-				</header>
-				<ul class="roster" id="roster"></ul>
-				<footer class="sheet__foot">
-					<a href="/">Curated</a><a href="/Bookmark/">Bookmarks</a><a href="/List/">Lists</a>
-				</footer>
-				<astro-island client="load" component-export="default" component-url="/nowhere.js"></astro-island>
-			</article>
+			<aside class="provenance">
+				<div class="provenance__drum">
+					<a class="provenance__band" href="#one">Source</a>
+				</div>
+			</aside>
+			<div class="workspace__body">
+				<article class="board__page">
+					<header class="board__hero">
+						<h1 class="board__title">A fixture whose rail arrives from a script</h1>
+						<p class="board__lede">Every rule below is satisfied in the markup and broken by the render.</p>
+					</header>
+					<section class="board__box" id="one">
+						<p class="board__body">One box of prose, drawn by the build rather than by a bundle.</p>
+					</section>
+					<footer class="board__close"><a class="board__open" href="/">Open the workspace</a></footer>
+					<astro-island client="load" component-export="default" component-url="/nowhere.js"></astro-island>
+				</article>
+			</div>
 		</main>
 		<script>
-			const row = document.createElement("li");
-			row.className = "roster__row";
-			row.textContent = "Added by hydration";
-			document.getElementById("roster").append(row);
+			const band = document.createElement("a");
+			band.className = "provenance__band";
+			band.href = "#one";
+			band.textContent = "Added by hydration";
+			document.querySelector(".provenance__drum").append(band);
 		</script>
 	</body>
 </html>
-`;
+`,
+	"/Lost/": `<!doctype html>
+<html lang="en">
+	<head><meta charset="utf-8" /><title>A fixture that lost its content</title></head>
+	<body><main></main></body>
+</html>
+`,
+};
 
 /**
- * Run the audit against the fixture and require it to fail.
+ * Run the audit against the fixtures and require both to fail.
  *
  * Exit code 0 means the rules fired, 1 means one of them stopped catching the
  * defect it exists for - which is the only way a broken audit is allowed to be
@@ -879,26 +1069,49 @@ const Fixture = `<!doctype html>
  */
 async function selfTest(options) {
 	const root = await mkdtemp(join(tmpdir(), "no-js-fixture-"));
-	await writeFile(join(root, "index.html"), Fixture, "utf8");
 
 	try {
-		const { results } = await audit({ ...options, Root: root, Origin: null, Routes: [] });
-		const result = results[0];
-		const expected = ["content waits for hydration", "no server-rendered content"];
-		const missed = expected.filter(
-			(fragment) => !(result?.Failures ?? []).some((failure) => failure.includes(fragment)),
-		);
-
-		if (result === undefined || result.Status !== "fail" || missed.length > 0) {
-			console.error(
-				`self-test failed: the fixture did not fail on ${missed.join(", ") || "the parity rule"}`,
+		for (const [route, html] of Object.entries(Fixtures)) {
+			const file = join(
+				root,
+				route === "/" ? "index.html" : `${route.replace(/^\//, "")}index.html`,
 			);
+			await mkdir(dirname(file), { recursive: true });
+			await writeFile(file, html, "utf8");
+		}
+
+		const { results } = await audit({ ...options, Root: root, Origin: null, Routes: [] });
+		const expected = [
+			{
+				Route: "/",
+				Fragments: ["content waits for hydration", "no server-rendered content"],
+			},
+			{ Route: "/Lost/", Fragments: ["visible <h1>", "floor"] },
+		];
+
+		const missed = [];
+		for (const entry of expected) {
+			const result = results.find((candidate) => candidate.Route === entry.Route);
+			if (result === undefined || result.Status !== "fail") {
+				missed.push(`${entry.Route} was not audited or did not fail`);
+				continue;
+			}
+			for (const fragment of entry.Fragments) {
+				if (!result.Failures.some((failure) => failure.includes(fragment))) {
+					missed.push(`${entry.Route} did not fail on "${fragment}"`);
+				}
+			}
+		}
+
+		if (missed.length > 0) {
+			console.error(`self-test failed: ${missed.join("; ")}`);
 			console.error(report(results, { Origin: "-", Browser: "-" }));
 			return 1;
 		}
 
+		const total = results.reduce((sum, result) => sum + result.Failures.length, 0);
 		console.log(
-			`self-test passed: the fixture failed on ${result.Failures.length} rules, including hydration parity and an empty island`,
+			`self-test passed: the fixtures failed on ${total} rules, including hydration parity, an empty island and a lost heading`,
 		);
 		return 0;
 	} finally {
@@ -911,7 +1124,7 @@ async function main() {
 
 	if (options.Help) {
 		console.log(
-			"node no-js-audit.mjs [--root <dir>] [--origin <url>] [--browser <path>] [--route <path>] [--json] [--keep] [--self-test] [--timeout <ms>]",
+			"node no-js-audit.mjs [--root <dir>] [--origin <url>] [--browser <path>] [--route <path>] [--json] [--keep] [--self-test] [--timeout <ms>] [--wait <ms>]",
 		);
 		return 0;
 	}
@@ -936,27 +1149,33 @@ async function main() {
 }
 
 /**
- * Serve the build, launch a browser of the audit's own, and measure every route
- * twice. Returns the verdicts; printing is the caller's decision, because the
- * self-test reads them instead of showing them.
+ * Snapshot the build, launch a browser of the audit's own, and measure every
+ * route twice. Returns the verdicts; printing is the caller's decision, because
+ * the self-test reads them instead of showing them.
  */
 async function audit(options) {
 	let server = null;
 	let origin = options.Origin;
+	let routes;
+	let snapshot = null;
+
 	if (origin === null) {
 		if (!existsSync(options.Root)) {
 			throw new Error(
 				`no build directory at ${options.Root}; run the build first or pass --root`,
 			);
 		}
-		const served = await serve(options.Root);
+
+		// Read a settled copy, never the directory a build is writing into: the
+		// difference between "this build is broken" and "this build is not
+		// finished" is the whole point of the wait.
+		const captured = await capture(options.Root, options.Wait);
+		snapshot = captured;
+
+		const served = await serve(captured.copy);
 		server = served.server;
 		origin = served.origin;
-	}
-
-	let routes;
-	if (options.Origin === null) {
-		routes = await discover(options.Root);
+		routes = captured.routes;
 	} else {
 		// An external origin has no directory to walk, so the profile table is the
 		// inventory. A dynamic route is audited at the one instance the profile
@@ -993,10 +1212,7 @@ async function audit(options) {
 		const results = [];
 		for (const route of routes) {
 			const profile = profileFor(route);
-			const selectors = {
-				Title: profile === null ? "h1" : profile.Title,
-				List: selectorsOf(profile),
-			};
+			const selectors = { List: selectorsOf(profile) };
 
 			// A route that cannot be measured is a failure of that route, not of the
 			// run: the report still names it, so a broken page is never a silent skip.
@@ -1026,13 +1242,21 @@ async function audit(options) {
 						`the route could not be measured: ${error instanceof Error ? error.message : String(error)}`,
 					],
 					Warnings: [],
-					Off: { mainText: 0, islands: [] },
+					Off: { mainText: 0, headings: { total: 0, visible: 0 }, islands: [] },
 					On: { islands: [] },
 				});
 			}
 		}
 
-		return { results, meta: { Origin: origin, Browser: browser } };
+		return {
+			results,
+			meta: {
+				Origin: origin,
+				Browser: browser,
+				Source: options.Root,
+				Snapshot: snapshot === null ? null : snapshot.copy,
+			},
+		};
 	} finally {
 		connection?.close();
 		launched.child.kill("SIGTERM");
@@ -1040,6 +1264,9 @@ async function audit(options) {
 		if (!options.Keep) {
 			await sleep(300);
 			await rm(launched.profile, { recursive: true, force: true }).catch(() => {});
+			if (snapshot !== null) {
+				await rm(snapshot.directory, { recursive: true, force: true }).catch(() => {});
+			}
 		}
 	}
 }
