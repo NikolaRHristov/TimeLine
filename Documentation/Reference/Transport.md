@@ -114,7 +114,7 @@ export default async function run(context: CommandContext) {
 | `store status`, `store publish`, `store hide`                       | file-only, transport-agnostic | same                                   |
 | everything else (`config`, `vote`, `author`, `event`, `store push`) | file-only, transport-agnostic | same                                   |
 
-## What "same shape" means, and what it does not
+## Shape parity between transports
 
 `post extract` prints `{post:{…}, source:"live"|"shadow"}` from both transports, with the same keys
 in the same order. `source` is the only field the transport chooses.
