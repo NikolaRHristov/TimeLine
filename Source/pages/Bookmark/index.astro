@@ -16,8 +16,8 @@ import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
 import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
 import { fill } from "@Library/Text.ts";
-import "@Stylesheet/Component/Note.css";
-import "@Stylesheet/Component/Roster.css";
+import "@Stylesheet/Component/Note.scss";
+import "@Stylesheet/Component/Roster.scss";
 import { getCollection } from "astro:content";
 
 const bookmarks = await getCollection("Bookmark");

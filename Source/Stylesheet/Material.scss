@@ -7,9 +7,14 @@
 // That keeps every surface readable at a 9px type size, which is what the
 // drawer's meta lines are set in.
 //
-// The mixins exist so a component sheet states structure, not colour. A sheet
-// that wrote `background: #2c2c2e` would be a second place the palette lives;
-// these read the tokens declared in `Global.css`, so a theme change is one edit.
+// The material has two faces and one vocabulary. Every mixin below defaults to
+// the chrome ramp - the dark instrument panel the workspace and the site shell
+// are built from - and takes the ramp's values as arguments, so the same shapes
+// are available on the paper ramp the published pages sit on: `card` with
+// `--color-surface` and `--color-line` is the note's panel, and `control` with
+// the same pair is a pill. A sheet that named a fill or a line directly would be
+// a second place the palette lives; every value here comes from `Global.css`, so
+// a theme change is one edit.
 
 // The drawer's ground: the darkest face in the composition.
 @mixin panel {
@@ -18,50 +23,65 @@
 }
 
 // A face that sits above the ground but below a selected card.
-@mixin face($surface: var(--chrome-deep), $line: var(--chrome-line)) {
+@mixin face(
+	$surface: var(--chrome-deep),
+	$line: var(--chrome-line),
+	$radius: var(--radius-column)
+) {
 	background: $surface;
 	border: 1px solid $line;
-	border-radius: var(--radius-column);
+	border-radius: $radius;
 }
 
 // A row inside a column. Every item in the drawer is one of these, so the
-// radius, the line and the fill are stated once.
-@mixin card {
-	background: var(--chrome-control);
-	border: 1px solid var(--chrome-line-strong);
-	border-radius: var(--radius-card);
+// radius, the line and the fill are stated once. On the paper ramp the same
+// shape is the note's panel.
+@mixin card(
+	$surface: var(--chrome-control),
+	$line: var(--chrome-line-strong),
+	$radius: var(--radius-card)
+) {
+	background: $surface;
+	border: 1px solid $line;
+	border-radius: $radius;
 }
 
 // A control the person presses: square-ish, quiet, one step above its ground.
-@mixin control {
-	background: var(--chrome-control);
-	border: 1px solid var(--chrome-line-strong);
-	border-radius: var(--radius-card);
-	color: var(--chrome-ink-muted);
+// A pill is this mixin on the paper ramp with a capsule corner.
+@mixin control(
+	$surface: var(--chrome-control),
+	$line: var(--chrome-line-strong),
+	$ink: var(--chrome-ink-muted),
+	$radius: var(--radius-card)
+) {
+	background: $surface;
+	border: 1px solid $line;
+	border-radius: $radius;
+	color: $ink;
 }
 
 // The track an event sits on. Darker than the card that carries it, so a
 // progress bar reads as a groove rather than as a second card.
-@mixin inset($height: 100%, $radius: 2px) {
+@mixin inset($height: 100%, $radius: 2px, $track: var(--chrome-control)) {
 	position: relative;
 	display: flex;
 	align-items: flex-start;
 	width: 100%;
 	height: $height;
-	background: var(--chrome-control);
+	background: $track;
 	border-radius: $radius;
 	overflow: clip;
 }
 
 // The eyebrow voice: uppercase, tracked, faint. Used for the rail's axis name
 // and the drawer's depth path, so the two read as the same kind of label.
-@mixin label($size: 11px) {
+@mixin label($size: var(--text-2xs), $ink: var(--chrome-ink-muted)) {
 	font-size: $size;
 	font-weight: 400;
 	line-height: normal;
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
-	color: var(--chrome-ink-muted);
+	color: $ink;
 }
 
 // The one-line truncation every drawer title and meta line needs.

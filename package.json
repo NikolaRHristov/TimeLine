@@ -12,7 +12,8 @@
 		"Build": "pnpm --filter @nikolarhristov/timeline-maintain run Build",
 		"Run": "astro dev --host",
 		"build": "astro build",
-		"check": "pnpm --filter @nikolarhristov/timeline-maintain run check",
+		"check": "pnpm run Check:Compatibility && pnpm --filter @nikolarhristov/timeline-maintain run check",
+		"Check:Compatibility": "node Scripts/Compatibility.mjs",
 		"Format": "prettier --write .",
 		"Format:Check": "prettier --check .",
 		"maintain": "node Maintain/Target/Index.js",
@@ -23,7 +24,7 @@
 	},
 	"dependencies": {
 		"@astrojs/sitemap": "3.7.4",
-		"@astrojs/solid-js": "^7.1.2",
+		"@astrojs/solid-js": "7.1.2",
 		"@playform/build": "0.3.5",
 		"@playform/compress": "0.2.5",
 		"@playform/inline": "0.1.4",
@@ -44,7 +45,7 @@
 		"postcss-import": "17.0.1",
 		"postcss-reporter": "7.1.0",
 		"postcss-url": "10.1.4",
-		"solid-js": "^1.9.18",
+		"solid-js": "1.9.18",
 		"tailwindcss": "3.4.19",
 		"typescript": "7.0.2",
 		"zod": "4.6.7"
@@ -55,11 +56,14 @@
 		"firebase-tools": "15.34.2",
 		"prettier": "3.9.10",
 		"prettier-plugin-astro": "1.1.2",
-		"sass": "^1.107.1",
+		"sass": "1.107.1",
 		"turbo": "2.11.10",
 		"vite": "8.3.5"
 	},
 	"packageManager": "pnpm@11.18.0",
+	"engines": {
+		"node": ">=22.23.4"
+	},
 	"publishConfig": {
 		"access": "restricted",
 		"provenance": true

@@ -5,6 +5,11 @@
  * log are the same shape seen from four angles - a ranked row, a vote count, a
  * timestamp - so they share one row primitive instead of four near-copies.
  *
+ * A row has no face to draw: it is a line and two columns of type, so it reads
+ * the line and type ramps directly rather than a material mixin. The rule under
+ * a row is the faint step of the line ramp - the same weight as the rule inside
+ * a block - because the roster is one block, not a stack of boxes.
+ *
  * The row wraps rather than truncates. A post excerpt is the widest thing on
  * the page and an author handle is the narrowest, so on a phone the meta line
  * drops under the label and nothing is clipped.
@@ -20,7 +25,7 @@
 		align-items: baseline;
 		gap: var(--space-1) var(--space-3);
 		padding-block: var(--space-2);
-		border-bottom: 1px solid var(--color-surface-sunken);
+		border-bottom: var(--hairline-faint);
 		line-height: 1.35;
 
 		&:last-child {

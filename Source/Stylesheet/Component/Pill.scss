@@ -1,9 +1,15 @@
+@use "../Material.scss" as Material;
+
 /**
  * The pill: a list slug rendered as a link.
  *
  * A slug is a word the person chose, so it is shown as one - not as a tag with
  * a count, and not as a filter control that hides rows. Each pill navigates to
  * that list's page, which is the only place the list's posts are grouped.
+ *
+ * It is the material's control on the paper ramp: a fill, one line and a
+ * capsule corner, the same shape the drawer's controls are cut from, one ramp
+ * lighter because a reader presses it on the page rather than in the panel.
  *
  * The row wraps rather than scrolls: a person with forty lists should see forty
  * pills on four lines, not one line with a horizontal scrollbar.
@@ -19,12 +25,16 @@
 	}
 
 	&__link {
+		@include Material.control(
+			var(--color-surface),
+			var(--color-line),
+			var(--color-ink-muted),
+			var(--radius-full)
+		);
+
 		display: inline-block;
 		padding: var(--space-1) var(--space-3);
-		border: var(--hairline);
-		border-radius: var(--radius-full);
 		font-size: var(--text-xs);
-		color: var(--color-ink-muted);
 		text-decoration: none;
 
 		&:hover {

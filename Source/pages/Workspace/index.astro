@@ -16,6 +16,7 @@
 import Workspace from "@Component/Workspace/Workspace.tsx";
 import Base from "@Layout/Base.astro";
 import { BookmarkHref } from "@Library/Link.ts";
+import { ColumnAccent, StageAccent } from "@Library/Stage.ts";
 import { getCollection } from "astro:content";
 
 const bookmarks = await getCollection("Bookmark");
@@ -45,26 +46,26 @@ const Stages = [
 	{
 		Key: "source",
 		Label: `Source · ${bookmarks.length} events`,
-		Tone: "#6366f1",
+		Tone: StageAccent.source,
 		Events: bookmarks.length,
 		Caption: `${bookmarks.length} events · Source · Selected`,
 	},
 	{
 		Key: "ingestion",
 		Label: `Ingestion · ${events.length} events`,
-		Tone: "#34d399",
+		Tone: StageAccent.ingestion,
 		Events: events.length,
 	},
 	{
 		Key: "processing",
 		Label: `Processing · ${voted.length} events`,
-		Tone: "#f59e0b",
+		Tone: StageAccent.processing,
 		Events: voted.length,
 	},
 	{
 		Key: "review",
 		Label: `Review · ${curated.length} events`,
-		Tone: "#ec4899",
+		Tone: StageAccent.review,
 		Events: curated.length,
 	},
 ];
@@ -73,7 +74,7 @@ const Columns = [
 	{
 		Key: "bookmark",
 		Label: "Bookmarks",
-		Tone: "#6366f1",
+		Tone: ColumnAccent("bookmark"),
 		Ghost: "Drag to showcase ↓",
 		Entries: Recent(bookmarks, (Entry) => Entry.data.firstSeenAt)
 			.slice(0, 4)
@@ -88,7 +89,7 @@ const Columns = [
 	{
 		Key: "voted",
 		Label: "Voted",
-		Tone: "#f0a045",
+		Tone: ColumnAccent("voted"),
 		Ghost: "Drag to showcase ↓",
 		Entries: Recent(voted, (Entry) => Entry.data.nominatedAt)
 			.slice(0, 4)
@@ -103,7 +104,7 @@ const Columns = [
 	{
 		Key: "curated",
 		Label: "Curated",
-		Tone: "#9b77fa",
+		Tone: ColumnAccent("curated"),
 		Ghost: "Drag to showcase ↓",
 		Entries: [...curated]
 			.sort((Left, Right) => Left.data.rank - Right.data.rank)
@@ -122,7 +123,7 @@ const Columns = [
 	{
 		Key: "author",
 		Label: "Authors",
-		Tone: "#6e9efa",
+		Tone: ColumnAccent("author"),
 		Ghost: "Drag to showcase ↓",
 		Entries: Recent(authors, (Entry) => Entry.data.firstSeenAt)
 			.slice(0, 4)
@@ -171,7 +172,7 @@ const Tiles = [...curated]
 					? `${Entry.data.votes} votes at approval`
 					: `@${Source.data.author.handle} · ${Source.data.metrics.likes} likes`,
 			Href: BookmarkHref(Entry.data.id),
-			Stage: "#6366f1",
+			Stage: StageAccent.source,
 		};
 	});
 ---

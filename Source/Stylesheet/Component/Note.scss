@@ -1,3 +1,5 @@
+@use "../Material.scss" as Material;
+
 /**
  * The note: a bordered panel that explains an empty state.
  *
@@ -6,12 +8,16 @@
  * no vote store has no counts to show. The note is the shape those states share:
  * a heading, one sentence of cause, and the commands that change it.
  *
+ * It is the material's card on the paper ramp - the same fill, one line and one
+ * corner the drawer's rows are drawn with - so an empty state belongs to the
+ * same design as the workspace that fills it.
+ *
  * It is deliberately not an alert. Nothing here is wrong, so nothing is red.
  */
 .note {
+	@include Material.card(var(--color-surface), var(--color-line), var(--radius-sm));
+
 	padding: var(--space-6);
-	border: var(--hairline);
-	border-radius: var(--radius-sm);
 	font-size: var(--text-sm);
 	color: var(--color-ink-muted);
 

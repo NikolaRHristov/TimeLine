@@ -9,16 +9,34 @@
  * The palette is Tailwind's neutral ramp, kept in step with the utility classes
  * the pages still use. A page that migrates off the utilities should read a
  * token instead of a colour, so there is one place a theme would change.
+ *
+ * Every colour the sheets use is declared here, in one of two ramps. A sheet
+ * names a step in a ramp, never a value: a hex that appears in two sheets is a
+ * second place the palette lives, which is what this file exists to prevent.
  */
 
 :root {
+	/* The paper ramp: the published side of the site, ordered by depth. */
+	--color-surface: #ffffff; /* the page ground */
+	--color-surface-sunken: #f5f5f5; /* a quiet face on it: a chip, a track */
+	--canvas: #fafafa; /* the canvas a mosaic sits on */
+	--tile-1: #e2e2e2; /* the loudest tile */
+	--tile-2: #e9e9e9; /* the middle tile */
+	--tile-3: #eee; /* the quietest tile */
+
+	/* The line ramp. Three weights, and picking one is a decision about how
+	   visible an edge has to be rather than about a colour: a rule inside a
+	   block is faint, the hairline between blocks is the default, and an edge a
+	   person has to find - a control's border - is strong. */
+	--color-line-faint: #f5f5f5;
+	--color-line: #e5e5e5;
+	--color-line-strong: #d4d4d4;
+
+	/* The ink ramp. */
 	--color-ink: #171717;
 	--color-ink-muted: #525252;
 	--color-ink-faint: #737373;
-	--color-line: #e5e5e5;
-	--color-line-strong: #d4d4d4;
-	--color-surface: #ffffff;
-	--color-surface-sunken: #f5f5f5;
+
 	--color-accent: #171717;
 	--color-accent-ink: #ffffff;
 
@@ -30,6 +48,10 @@
 	--space-8: 2rem;
 	--space-10: 2.5rem;
 
+	/* The type scale. The steps are named for their order rather than for a
+	   role, so a sheet asks for the next size up instead of inventing one. */
+	--text-3xs: 0.625rem; /* 10px - a mark, a caption under a figure */
+	--text-2xs: 0.6875rem; /* 11px - an eyebrow */
 	--text-xs: 0.75rem;
 	--text-sm: 0.875rem;
 	--text-base: 1rem;
@@ -40,9 +62,13 @@
 	--font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
 	--radius-sm: 0.25rem;
+	--radius-card: 0.5rem;
+	--radius-column: 0.75rem;
+	--radius-tile: 1.5rem;
 	--radius-full: 9999px;
 
 	--hairline: 1px solid var(--color-line);
+	--hairline-faint: 1px solid var(--color-line-faint);
 	--header-height: 3.5rem;
 	--rhythm-block: 3rem;
 	--content-width: 48rem;
@@ -51,15 +77,19 @@
 /**
  * The workspace chrome: the private side of the archive.
  *
- * A second palette, because the workspace is a dark instrument panel around a
+ * A second ramp, because the workspace is a dark instrument panel around a
  * light canvas - the same split the composition draws. These are the Figma
  * values verbatim, so a designer reading a layer's fill finds the same hex in
  * the sheet. They are declared next to the light tokens rather than in a
- * component sheet, because three sheets read them: the provenance rail, the
- * drawer and the publish bar.
+ * component sheet, because four sheets read them: the provenance rail, the
+ * drawer, the workspace frame and the site shell.
  *
- * The four stage accents are the event pipeline's own colours, not decoration:
- * a band, a marker and a column header that share a colour are describing the
+ * The surface ramp ascends from the ground (`void`) to the control a person
+ * presses (`active`), the line ramp has two weights, and the ink ramp runs from
+ * the brightest label to the faintest meta line.
+ *
+ * The stage accents are the event pipeline's own colours, not decoration: a
+ * band, a marker and a column header that share a colour are describing the
  * same stage of the same event.
  */
 :root {
@@ -71,6 +101,7 @@
 	--chrome-line: #2e2e30;
 	--chrome-line-strong: #3a3a3c;
 
+	--chrome-ink-white: #ffffff; /* a label on a stage's own colour */
 	--chrome-ink-bright: #e5e5ea;
 	--chrome-ink: #d1d1d6;
 	--chrome-ink-muted: #8e8e93;
@@ -83,15 +114,6 @@
 	--stage-publish: #6e9efa;
 	--stage-file: #f0a045;
 	--stage-template: #9b77fa;
-
-	--canvas: #fafafa;
-	--tile-1: #e2e2e2;
-	--tile-2: #e9e9e9;
-	--tile-3: #eee;
-
-	--radius-tile: 1.5rem;
-	--radius-card: 0.5rem;
-	--radius-column: 0.75rem;
 }
 
 html {

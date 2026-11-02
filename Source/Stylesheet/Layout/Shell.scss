@@ -1,3 +1,5 @@
+@use "../Material.scss" as Material;
+
 /**
  * The application shell: the sticky header, the brand, the primary navigation,
  * and the footer sitemap.
@@ -6,12 +8,13 @@
  * page shares; a rule that styles one block of content belongs in
  * `Stylesheet/Component/` instead, so the shell stays readable.
  *
- * The shell carries no theme switch. The pages style themselves with Tailwind
- * utilities pinned to light values (`bg-white`, `text-neutral-700`), so a switch
- * that themed only the chrome would produce a dark header over a white article -
- * a half-feature that reads as a bug. The tokens in `Global.css` are the seam
- * where a real theme would be added: convert the pages to them first, then the
- * switch becomes one attribute.
+ * The shell is the instrument panel. It takes the chrome ramp and the material
+ * mixins - the same ground, line and ink as the provenance rail - rather than
+ * restating a palette of its own, so the frame, the rail and the drawer read as
+ * one instrument. The page inside the frame stays on the paper ramp: that split
+ * of dark panel and light canvas is the composition's own, not a half-applied
+ * theme, and it is why the shell carries no switch. A real theme is a change to
+ * the two ramps in `Global.css`, not a second set of rules here.
  */
 
 /* The page column. One measure for the header, the content and the footer, so
@@ -34,17 +37,26 @@
 	padding-inline: 0;
 }
 
-/* The first focusable element on the page: off-screen until it is focused. */
+/* The first focusable element on the page: off-screen until it is focused.
+ *
+ * It is a control on the panel rather than a link on the page, because it is the
+ * one control a keyboard reaches before the panel is even in view - so it is
+ * drawn in the chrome ramp, one step above the ground it lands on. */
 .skip {
 	position: absolute;
 	left: -9999px;
 	top: 0;
 	z-index: 10;
 	padding: var(--space-2) var(--space-4);
-	background: var(--color-accent);
-	color: var(--color-accent-ink);
 	font-size: var(--text-sm);
 	text-decoration: none;
+
+	@include Material.control(
+		var(--chrome-control),
+		var(--chrome-line-strong),
+		var(--chrome-ink-bright),
+		var(--radius-sm)
+	);
 
 	&:focus {
 		left: var(--space-4);
@@ -60,11 +72,12 @@
 }
 
 .shell-header {
+	@include Material.panel;
+
 	position: sticky;
 	top: 0;
 	z-index: 5;
-	border-bottom: var(--hairline);
-	background: var(--color-surface);
+	border-bottom: 1px solid var(--chrome-line);
 
 	&__inner {
 		display: flex;
@@ -78,9 +91,11 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-2);
-	color: var(--color-ink);
+	color: var(--chrome-ink-bright);
 	text-decoration: none;
 
+	/* The mark is a control on the panel: one step above the ground, with the
+	   brightest ink, so the initials read at the header's smallest size. */
 	&__mark {
 		display: inline-flex;
 		align-items: center;
@@ -88,10 +103,10 @@
 		width: 26px;
 		height: 26px;
 		border-radius: var(--radius-sm);
-		background: var(--color-accent);
-		color: var(--color-accent-ink);
+		background: var(--chrome-control);
+		color: var(--chrome-ink-bright);
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--text-3xs);
 		font-weight: 600;
 		letter-spacing: 0.04em;
 	}
@@ -117,15 +132,15 @@
 
 	a {
 		font-size: var(--text-sm);
-		color: var(--color-ink-muted);
+		color: var(--chrome-ink-muted);
 		text-decoration: none;
 
 		&:hover {
-			color: var(--color-ink);
+			color: var(--chrome-ink-bright);
 		}
 
 		&[aria-current="page"] {
-			color: var(--color-ink);
+			color: var(--chrome-ink-bright);
 			font-weight: 600;
 		}
 	}
@@ -134,18 +149,19 @@
 .shell-repository {
 	font-family: var(--font-mono);
 	font-size: var(--text-xs);
-	color: var(--color-ink-faint);
+	color: var(--chrome-ink-muted);
 	text-decoration: none;
 
 	&:hover {
-		color: var(--color-ink);
+		color: var(--chrome-ink-bright);
 	}
 }
 
 .shell-footer {
+	@include Material.panel;
+
 	margin-top: var(--rhythm-block);
-	border-top: var(--hairline);
-	background: var(--color-surface-sunken);
+	border-top: 1px solid var(--chrome-line);
 
 	&__inner {
 		display: flex;
@@ -162,12 +178,13 @@
 		margin: 0;
 		font-size: var(--text-sm);
 		font-weight: 600;
+		color: var(--chrome-ink-bright);
 	}
 
 	&__note {
 		margin: var(--space-1) 0 0;
 		font-size: var(--text-xs);
-		color: var(--color-ink-faint);
+		color: var(--chrome-ink-muted);
 	}
 
 	&__licence {
@@ -175,7 +192,7 @@
 		gap: var(--space-3);
 		margin: 0;
 		font-size: var(--text-xs);
-		color: var(--color-ink-faint);
+		color: var(--chrome-ink-muted);
 	}
 }
 
@@ -193,11 +210,20 @@
 
 	a {
 		font-size: var(--text-xs);
-		color: var(--color-ink-muted);
+		color: var(--chrome-ink-muted);
 		text-decoration: none;
 
 		&:hover {
-			color: var(--color-ink);
+			color: var(--chrome-ink-bright);
 		}
 	}
+}
+
+/* The global ring is drawn in the paper ink, which is invisible on the panel.
+   One rule here rather than a second ring in `Global.css`, because the panel is
+   the only place the ink and the ground are both dark. */
+.shell-header :focus-visible,
+.shell-footer :focus-visible,
+.skip:focus-visible {
+	outline-color: var(--chrome-ink-bright);
 }
