@@ -45,7 +45,7 @@ speak on a Node old enough to be the thing it complains about. It does two thing
   file the floor came from.
 - **Reports** what is behind, from `pnpm outdated --format json --silent`, and never fails on it. A
   major that is available but not taken is printed as `INFO`, because taking one is a decision with
-  its own record (RFC-0043), and a guard that turned every upstream release into a red build would
+  its own record (RFC-0044), and a guard that turned every upstream release into a red build would
   force that decision on the day of the release instead of the day of the review.
 
 It degrades rather than crashes: a `pnpm` missing from `PATH`, a registry that does not answer, or
@@ -59,7 +59,7 @@ PASS floor ">=22.23.4" read from package.json engines.node
 == node
 PASS v26.5.1 satisfies >=22.23.4 (package.json engines.node)
 == dependencies behind
-INFO 1 behind a major - reported, not failed; taking one is RFC-0043:
+INFO 1 behind a major - reported, not failed; taking one is RFC-0044:
        tailwindcss 3.4.19 -> 4.3.3 (dependencies)
 ---
 RESULT compatible
@@ -109,7 +109,7 @@ half of the site is the half that must always work.
 
 ## The upgrade policy
 
-Stated in full in RFC-0043; the rule a person needs at the keyboard is here.
+Stated in full in RFC-0044; the rule a person needs at the keyboard is here.
 
 - **Patch and minor, within a recorded major** - taken as they ship. A bump is one edit to
   `package.json`, and the guard reports the majors that are left.
@@ -121,12 +121,12 @@ Stated in full in RFC-0043; the rule a person needs at the keyboard is here.
 - **Tailwind is deliberately deferred at 3.4.19 against 4.3.3.** Version 4 removes the
   `tailwindcss/nesting` entry `postcss.config.js` imports and moves the theme from
   `tailwind.config.js` into CSS, so taking it is a stylesheet migration, not a version bump. The
-  deferral is recorded in RFC-0043 and reported by the guard on every run.
+  deferral is recorded in RFC-0044 and reported by the guard on every run.
 - **Node majors** - adopted when the new line reaches LTS, and the recorded floor rises only when a
   dependency's own `engines` forces it. Raising the floor early costs every clone a runtime upgrade
   for no build it could not already do.
 
-The decision lives in `Documentation/RFC/proposed/RFC-0043-toolchain-upgrade-policy.md`. A change of
+The decision lives in `Documentation/RFC/proposed/RFC-0044-toolchain-upgrade-policy.md`. A change of
 policy supersedes that record; it does not edit this page into disagreement with it.
 
 ## Known gaps

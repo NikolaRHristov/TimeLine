@@ -26,6 +26,7 @@ Maintain/
 | `pnpm maintain <group> <cmd>` | runs the compiled CLI                             |
 | `pnpm tool <group> <cmd>`     | the same, through the Maintain package's `tool`   |
 | `pnpm Run`                    | `astro dev --host`                                |
+| `pnpm check`                  | the compatibility guard, then the tool layer's type-check and tests |
 
 `Maintain/package.json`:
 
@@ -140,9 +141,12 @@ from the environment, so no `MAINTAIN_*` value can reach a build.
   hand-edited.
 - A path stays tracked after it is added to `.gitignore`; `git rm -r --cached Target` is what makes
   the rule apply to site output committed before the rule existed.
-- `pnpm check` is the type-check backlog, not a build gate: the tool layer predates the strict base
+- `pnpm check` runs the compatibility guard first (`Scripts/Compatibility.mjs`), then the tool
+  layer's type-check and tests. The guard is the only half that can fail on a wrong interpreter; the
+  type-check is still the backlog, not a build gate: the tool layer predates the strict base
   `tsconfig`, so `tsc --noEmit` reports errors that `@playform/build` logs and continues past. The
-  build does not depend on it.
+  build does not depend on either. The floor the guard enforces is recorded once, in
+  `Documentation/Reference/Compatibility.md` and `package.json` `engines.node`.
 - `-w` narrows `pnpm ls` to the root project; without it both workspace projects are listed.
 
 ## Claim → test
@@ -156,3 +160,4 @@ from the environment, so no `MAINTAIN_*` value can reach a build.
 | CI is static             | `.github/workflows/Node.yml` runs `pnpm run prepublishOnly` → `astro build`             |
 | Workspace resolves       | `pnpm ls --depth -1` shows `timeline-bookmarks` and `@nikolarhristov/timeline-maintain` |
 | No build-time env        | `grep -r MAINTAIN_ turbo.json pnpm-workspace.yaml Maintain/Configuration/ESBuild.ts`    |
+| The floor is enforced    | `pnpm run check` under Node 22.22.1 prints the guard's `FAIL` before any `tsc` output   |

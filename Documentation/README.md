@@ -31,6 +31,8 @@ what is intended, the RFCs state what was decided, and the skills state how to d
   are two.
 - **`Reference/Transport.md`** - CDP as the primary transport, the store as the read-only fallback.
 - **`Reference/Build.md`** - how the tool layer and the site are built.
+- **`Reference/Compatibility.md`** - the Node floor the build needs, the browser baseline the
+  stylesheets imply, and the upgrade policy that follows from both.
 - **`Reference/Content.md`** - the content layer: strings baked in from `Content/` at build time.
 - **`Reference/URL-And-Shell.md`** - URL targeting and the shell's quoting rules.
 - **`Reference/Voting.md`** - the Voted index, owner approval, and bringing your own Firebase.

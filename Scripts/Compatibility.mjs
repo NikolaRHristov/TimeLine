@@ -15,7 +15,7 @@
  *
  *   2. What is behind. `pnpm outdated --format json` is run and summarised, and
  *      a major that is available but not taken is *reported*, never failed:
- *      taking a major is a decision with its own record (RFC-0043), and a guard
+ *      taking a major is a decision with its own record (RFC-0044), and a guard
  *      that turned every upstream release into a red build would force that
  *      decision on the day of the release rather than on the day of the review.
  *
@@ -285,7 +285,7 @@ function CheckOutdated() {
 	} else {
 		Line(
 			"INFO",
-			`${Majors.length} behind a major - reported, not failed; taking one is RFC-0043:`,
+			`${Majors.length} behind a major - reported, not failed; taking one is RFC-0044:`,
 		);
 		for (const Entry of Majors) {
 			process.stdout.write(`       ${Entry}\n`);

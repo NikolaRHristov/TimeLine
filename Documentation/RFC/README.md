@@ -10,7 +10,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 - **Filename** - `RFC-NNNN-kebab-case-title.md`.
 - **Location** - `proposed/` while open, `implemented/` once shipped.
-- **Numbering** - assigned on creation, never reused. `0044` is the next free number.
+- **Numbering** - assigned on creation, never reused. `0045` is the next free number.
 - **Supersession** - a new record marks the old one `Superseded by`, and both stay.
 - **Cards** - every record names the cards that implement it, by id.
 
@@ -82,6 +82,7 @@ its entry.
 
 - **RFC-0009** - Build, release and toolchain. _Cards: `t_17031e18`, `t_6e510f8e`._
 - **RFC-0037** - Testing and simulation strategy.
+- **RFC-0044** - Toolchain upgrade policy. _Cards: `t_344b78d0`._
 
 ---
 

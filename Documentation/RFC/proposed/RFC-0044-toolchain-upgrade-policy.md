@@ -1,4 +1,4 @@
-# RFC-0043 - Toolchain upgrade policy
+# RFC-0044 - Toolchain upgrade policy
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the root
 `package.json`, `Scripts/Compatibility.mjs`, `pnpm run check`, the Node workflow, every dependency
