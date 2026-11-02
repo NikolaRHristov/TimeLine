@@ -132,6 +132,7 @@ test("the real `post like` schema is draft 2020-12 and names its flags", () => {
 	assert.equal((properties["--dry-run"] as Record<string, unknown>)["type"], "boolean");
 	assert.equal((properties["--index"] as Record<string, unknown>)["type"], "integer");
 	assert.deepEqual(document["anyOf"], [
+		{ required: ["--id"] },
 		{ required: ["--url"] },
 		{ required: ["--tab", "--index"] },
 	]);

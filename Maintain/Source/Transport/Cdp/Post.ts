@@ -19,6 +19,33 @@ function permalink(id: string): string {
 }
 
 /**
+ * Make a background tab paint its media.
+ *
+ * A post's detail page keeps its photos lazy: in a tab the browser believes is
+ * `hidden`, the image boxes are empty and `tweetPhoto img` finds nothing, so a
+ * reading taken from `--id` would report `media: []` for a post that has two
+ * photos. Focus emulation makes the page think it is visible without moving the
+ * person's window, which `Page.bringToFront` would.
+ *
+ * Only ever called on a tab this run opened itself. A tab the person is looking
+ * at is already visible, and toggling emulation on it would be their business.
+ */
+async function reveal(session: Session): Promise<void> {
+	const commands: [string, Record<string, unknown>][] = [
+		["Emulation.setFocusEmulationEnabled", { enabled: true }],
+		["Page.setWebLifecycleState", { state: "active" }],
+	];
+	for (const [method, params] of commands) {
+		try {
+			await session.client.send(method, params);
+		} catch {
+			// No such domain on this target: the media stays empty, and every
+			// other field of the reading is still right.
+		}
+	}
+}
+
+/**
  * Resolve one post, hand it to `body`, then clean up.
  *
  * `--url` reuses a tab already showing that permalink and otherwise opens a
@@ -90,6 +117,14 @@ export async function withTarget<T>(
 				tab: tab.id,
 				url: tab.url,
 			});
+		}
+
+		// `--id` opens a background tab of its own, and a hidden tab never
+		// paints the post's photos. Reveal it before the reading is taken so a
+		// live read and an archived read describe the same post.
+		if (wanted !== undefined && temporary === true) {
+			await reveal(session);
+			await session.waitForIdle({ quiet: 500, timeout: 3000 });
 		}
 
 		const state = await snapshot(session, index, wanted);

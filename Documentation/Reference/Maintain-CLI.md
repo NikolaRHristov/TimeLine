@@ -16,6 +16,7 @@ B) has to have compiled the tool layer first - `pnpm run tool` is the _runner_ (
 
 `--json` is implied when stdout is not a TTY. `--schema` prints the command's JSON Schema (draft
 2020-12) instead of running it. `--help` renders the same table the parser was built from.
+`--transport cdp|view` is accepted by every command and defaults to `cdp`.
 
 Every command speaks through a **transport**: CDP is primary and the only one that may mutate;
 `--transport view` answers read commands from the shadow store with identical JSON shapes. See
@@ -50,8 +51,8 @@ command reads identifiers from argv.
 | `config show`             | `--reveal`, `--list <slug>`                                             | `{path,profile,cdp,lists,routes,content,storage}`                       |
 | `tab list`                | -                                                                       | `{tabs:[{id,title,url,active}]}`                                        |
 | `tab focus`               | `--id`                                                                  | `{focused:true,id}`                                                     |
-| `post extract`            | `--tab`, `--index`                                                      | `{post:{id,url,author,text,postedAt,media,metrics}}`                    |
-| `post like`               | `--url` \| `--tab --index`, `--dry-run`                                 | `{liked:true,post:{id,url},was:bool}`                                   |
+| `post extract`            | `--id` \| `--url` \| `--tab --index`                                    | `{post:{id,url,author,text,postedAt,media,metrics},source}`             |
+| `post like`               | `--id` \| `--url` \| `--tab --index`, `--dry-run`                       | `{liked:true,post:{id,url},was:bool}`                                   |
 | `post like remove`        | same                                                                    | `{liked:false,…}`                                                       |
 | `post bookmark add`       | same                                                                    | `{bookmarked:true,…}`                                                   |
 | `post bookmark remove`    | same                                                                    | `{bookmarked:false,…}`                                                  |
@@ -452,10 +453,11 @@ Every failure is one object, exit 2, no stack trace on stdout:
 Known codes: `no-config`, `config-exists`, `unknown-list`, `no-list-menu`, `no-list-surface`,
 `no-tab`, `no-post`, `page-not-ready`, `rate-limited`, `schema-invalid`, `no-rules`, `no-model`,
 `model-error`, `model-reply`, `cdp-unreachable`, `cdp-error`, `spacetime-unreachable`,
-`spacetime-auth`, `spacetime-reducer`, `no-transport`, `vote-unreachable`, `no-entry`,
-`not-curated`, `already-curated`, `tombstone`, `io-error`, `usage`, `internal`. A code is a
-contract; the `detail` string is not. `--help` and `--schema` are rendered from the same table the
-parser matches against, so a command cannot drift from its own documentation.
+`spacetime-auth`, `spacetime-reducer`, `no-transport`, `read-only-transport`,
+`unsupported-transport`, `vote-unreachable`, `no-entry`, `not-curated`, `already-curated`,
+`tombstone`, `io-error`, `usage`, `internal`. A code is a contract; the `detail` string is not.
+`--help` and `--schema` are rendered from the same table the parser matches against, so a command
+cannot drift from its own documentation.
 
 ## Tests
 

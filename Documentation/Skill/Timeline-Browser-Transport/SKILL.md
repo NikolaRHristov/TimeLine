@@ -19,6 +19,23 @@ every downstream symptom looks like a data bug.
 No handle, list id or session id belongs in this file. Tab identity comes from the gitignored
 identifier map (`Documentation/Reference/Configure.md`); a command takes a slug, never an id.
 
+## A command reaches the browser through `Transport`, never `Browser/`
+
+`Source/Transport/Transport.ts` is the seam. A command declares what it needs
+(`transport: "read" | "write" | "browser"`), receives a `CommandContext`, and calls
+`context.transport`. `Source/Browser/` is the CDP implementation detail: the client, the selectors
+and the session, reachable only from `Source/Transport/Cdp/`.
+
+A new browser command therefore adds nothing to `Browser/` and imports nothing from it. If the
+interface has no member for what the command needs, that is the interface's gap, not a reason to
+reach past it - and `Source/Test/Transport.test.ts` fails on any command that names `Transport/Cdp`
+or `Transport/View`.
+
+`--transport view` answers read commands from the shadow store with the same JSON shapes and refuses
+everything else (`read-only-transport` for a write, `unsupported-transport` for a tab, a page or a
+scrape). It is never a fallback: with the debug port closed, `tab list` fails `cdp-unreachable`
+instead of answering from the archive.
+
 ## When to Use
 
 - Relaunching the browser instances.
