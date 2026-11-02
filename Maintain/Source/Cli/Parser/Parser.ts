@@ -72,7 +72,10 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 
 	const values: Values = {};
 	for (const definition of command.options) {
-		if (definition.default !== undefined) values[definition.name] = definition.default;
+		if (definition.default === undefined) continue;
+		// An array default is cloned: every parse gets its own bucket, so a
+		// repeatable option can never accumulate into the command table itself.
+		values[definition.name] = Array.isArray(definition.default) ? [...definition.default] : definition.default;
 	}
 
 	for (let index = 0; index < rest.length; index += 1) {
@@ -100,13 +103,20 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 			throw fail("usage", `--${rawName} expects a value`, { command: command.path.join(" ") });
 		}
 		if (inline === undefined) index += 1;
-		values[rawName] = parseValue(definition, raw);
+		const value = parseValue(definition, raw);
+		if (definition.repeat !== true) {
+			values[rawName] = value;
+			continue;
+		}
+		const bucket = Array.isArray(values[rawName]) ? (values[rawName] as unknown[]) : [];
+		bucket.push(value);
+		values[rawName] = bucket;
 	}
 
 	// `--help` and `--schema` describe a command rather than run it, so they must
 	// not demand its arguments: a command with a required option has to be able
 	// to document itself before the caller knows what to pass.
-	if (values.help !== true && values.schema !== true) {
+	if (values["help"] !== true && values["schema"] !== true) {
 		for (const definition of command.options) {
 			if (definition.required === true && values[definition.name] === undefined) {
 				throw fail("usage", `--${definition.name} is required`, {
@@ -120,12 +130,12 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 	const parsed: Parsed = {
 		command,
 		values,
-		help: values.help === true,
-		schema: values.schema === true,
-		json: values.json === true,
+		help: values["help"] === true,
+		schema: values["schema"] === true,
+		json: values["json"] === true,
 	};
-	delete values.help;
-	delete values.schema;
-	delete values.json;
+	delete values["help"];
+	delete values["schema"];
+	delete values["json"];
 	return parsed;
 }

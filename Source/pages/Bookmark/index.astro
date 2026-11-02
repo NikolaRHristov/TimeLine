@@ -32,11 +32,15 @@ for (const entry of newestFirst) {
 	}
 }
 
-const order = ["AI", "UI", "CODE", "Unsorted"];
+/**
+ * The headings are the slugs the posts carry, sorted alphabetically with
+ * `Unsorted` last. No list name is hardcoded here: the set of lists belongs to
+ * the person who configured them, not to the site.
+ */
 const sections = [...grouped].sort(([left], [right]) => {
-	const leftIndex = order.indexOf(left);
-	const rightIndex = order.indexOf(right);
-	return (leftIndex === -1 ? order.length : leftIndex) - (rightIndex === -1 ? order.length : rightIndex);
+	if (left === "Unsorted") return 1;
+	if (right === "Unsorted") return -1;
+	return left.localeCompare(right);
 });
 
 const total = bookmarks.length;
@@ -84,8 +88,10 @@ const excerpt = (text: string): string => (text.length > 180 ? `${text.slice(0, 
 		{
 			total === 0 && (
 				<p class="text-sm text-neutral-600">
-					Nothing published yet. Scrape into the shadow store, then run
-					<code class="mx-1 rounded bg-neutral-100 px-1">store publish</code>.
+					No bookmarks yet. Scrape your own into the shadow store, then publish what you want to show:
+					<code class="mx-1 rounded bg-neutral-100 px-1">maintain store scrape --source bookmark</code>
+					then
+					<code class="mx-1 rounded bg-neutral-100 px-1">maintain store publish --all</code>.
 				</p>
 			)
 		}

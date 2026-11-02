@@ -56,7 +56,7 @@ function inPage(request: {
 		if (!value) return 0;
 		const match = /^([\d.]+)\s*([KMB])?/i.exec(String(value).replace(/,/g, "").trim());
 		if (!match) return 0;
-		const base = Number.parseFloat(match[1]);
+		const base = Number.parseFloat(match[1] ?? "0");
 		const suffix = (match[2] ?? "").toUpperCase();
 		const factor = suffix === "K" ? 1000 : suffix === "M" ? 1000000 : suffix === "B" ? 1000000000 : 1;
 		return Math.round(base * factor);
@@ -73,7 +73,7 @@ function inPage(request: {
 	const metric = (text: string, keyword: string): number => {
 		if (text === "") return 0;
 		const match = new RegExp("([\\d.,]+\\s*[KMB]?)\\s*" + keyword, "i").exec(text);
-		return count(match === null ? text : match[1]);
+		return count(match?.[1] ?? text);
 	};
 
 	const articles = (): Element[] => Array.from(document.querySelectorAll("article"));
@@ -85,7 +85,7 @@ function inPage(request: {
 				.map((anchor) => anchor.getAttribute("href") ?? "")
 				.find((href) => /^\/[^/?#]+\/status\/\d+$/.test(href)) ?? "";
 		const match = /\/status\/(\d+)/.exec(permalink);
-		return match === null ? "" : match[1];
+		return match?.[1] ?? "";
 	};
 
 	/** An article by status id: the same post, read again after a reload. */
@@ -107,7 +107,7 @@ function inPage(request: {
 						.find((href) => /^\/[A-Za-z0-9_]{1,30}\/?$/.test(href)) ?? "");
 		const handle = profileHref.replace(/\//g, "");
 		const rawName = userBlock === null ? "" : (userBlock.textContent ?? "").trim();
-		const name = rawName.split("@")[0].trim() || handle;
+		const name = (rawName.split("@")[0] ?? "").trim() || handle;
 		const verified = userBlock !== null && userBlock.querySelector('[data-testid="icon-verified"]') !== null;
 
 		const textNode = node.querySelector('[data-testid="tweetText"]');

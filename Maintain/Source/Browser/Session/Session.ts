@@ -39,7 +39,10 @@ export async function attach(tab: Tab, options: { timeout?: number } = {}): Prom
 	if (tab.webSocketDebuggerUrl === undefined) {
 		throw fail("cdp-unreachable", "the target exposes no websocket", { id: tab.id, url: tab.url });
 	}
-	const client = await connect(tab.webSocketDebuggerUrl, { timeout: options.timeout });
+	const client = await connect(
+		tab.webSocketDebuggerUrl,
+		options.timeout === undefined ? {} : { timeout: options.timeout },
+	);
 
 	/**
 	 * Load accounting, for `navigate` and `reload`. A navigation's URL is not

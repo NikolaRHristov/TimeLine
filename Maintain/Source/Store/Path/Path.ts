@@ -14,12 +14,20 @@ function absolute(path: string): string {
  * a temporary directory without touching the real archive.
  */
 export function shadowDirectory(): string {
-	const configured = process.env.MAINTAIN_STORAGE;
+	const configured = process.env["MAINTAIN_STORAGE"];
 	if (configured !== undefined && configured.length > 0) return absolute(configured);
 	return absolute(optional()?.storage.shadow ?? DEFAULT_SHADOW);
 }
 
-/** The content collection root - the only directory the site builds from. */
+/**
+ * The content collection root - the only directory the site builds from.
+ *
+ * `MAINTAIN_CONTENT` mirrors `MAINTAIN_STORAGE`: a test can point the Author
+ * collection at a temporary directory and prove what a command does with a
+ * manual decision without touching the real one.
+ */
 export function contentDirectory(): string {
+	const configured = process.env["MAINTAIN_CONTENT"];
+	if (configured !== undefined && configured.length > 0) return absolute(configured);
 	return absolute(optional()?.content.root ?? DEFAULT_CONTENT);
 }

@@ -1,0 +1,18 @@
+{
+	"cdp": {
+		"host": "127.0.0.1",
+		"port": 9222
+	},
+	"profile": "",
+	"lists": [],
+	"routes": {
+		"bookmarks": "https://x.com/i/bookmarks",
+		"history": "https://x.com/i/history"
+	},
+	"content": {
+		"root": "Source/Content"
+	},
+	"storage": {
+		"shadow": "Maintain/Storage/Shadow"
+	}
+}

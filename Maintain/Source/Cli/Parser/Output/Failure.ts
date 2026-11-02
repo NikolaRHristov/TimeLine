@@ -1,6 +1,10 @@
 /** Every failure this CLI can report. A code is a contract; a message is not. */
 export type FailureCode =
 	| "no-config"
+	| "no-rules"
+	| "config-exists"
+	| "unknown-list"
+	| "no-list-surface"
 	| "no-tab"
 	| "no-post"
 	| "rate-limited"
@@ -32,7 +36,7 @@ export class Failure extends Error {
 	/** The object printed on stdout. `error` is always first. */
 	toObject(): Record<string, unknown> {
 		const object: Record<string, unknown> = { error: this.code };
-		if (this.detail !== undefined) object.detail = this.detail;
+		if (this.detail !== undefined) object["detail"] = this.detail;
 		return { ...object, ...this.extra };
 	}
 }

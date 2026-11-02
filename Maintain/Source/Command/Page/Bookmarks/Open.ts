@@ -11,7 +11,7 @@ export const Definition: CommandDefinition = {
 		const configuration = load();
 		return withPage(
 			configuration.routes.bookmarks,
-			{ tab: values.tab, ready: 'document.querySelectorAll("article").length > 0' },
+			{ tab: values["tab"], ready: 'document.querySelectorAll("article").length > 0' },
 			async (context) => {
 				const count = await context.session.evaluate<number>('document.querySelectorAll("article").length');
 				return {

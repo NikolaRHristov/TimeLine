@@ -10,7 +10,7 @@ export function commandList(commands: readonly CommandDefinition[]): string {
 	return [
 		"maintain - a clap-shaped CLI over the Chrome DevTools Protocol.",
 		"",
-		"Usage: node Maintain/Index.ts <group> <command> [options] [--json] [--schema] [--dry-run]",
+		"Usage: pnpm maintain <group> <command> [options] [--json] [--schema] [--help]",
 		"",
 		"Commands:",
 		...lines,
@@ -22,13 +22,14 @@ export function commandList(commands: readonly CommandDefinition[]): string {
 
 /** One command's usage line and option table. */
 export function commandHelp(command: CommandDefinition): string {
-	const usage = ["node Maintain/Index.ts", ...command.path];
+	const usage = ["pnpm maintain", ...command.path];
 	for (const definition of command.options) {
 		const placeholder = definition.kind === "integer" ? "n" : "value";
+		const repeat = definition.repeat === true ? "..." : "";
 		const token =
 			definition.kind === "boolean"
-				? `--${definition.name}`
-				: `--${definition.name} <${placeholder}>`;
+				? `--${definition.name}${repeat}`
+				: `--${definition.name} <${placeholder}>${repeat}`;
 		usage.push(definition.required === true ? token : `[${token}]`);
 	}
 	usage.push("[--json] [--schema] [--help]");
@@ -43,8 +44,9 @@ export function commandHelp(command: CommandDefinition): string {
 		const name = `--${definition.name}`.padEnd(nameWidth);
 		const kind = definition.kind.padEnd(kindWidth);
 		const values = definition.values ? ` (${definition.values.join("|")})` : "";
+		const repeat = definition.repeat === true ? " repeatable" : "";
 		const required_ = required ? " required" : "";
-		return `  ${name}  ${kind}  ${definition.description}${values}${required_}`;
+		return `  ${name}  ${kind}  ${definition.description}${values}${repeat}${required_}`;
 	});
 
 	return [

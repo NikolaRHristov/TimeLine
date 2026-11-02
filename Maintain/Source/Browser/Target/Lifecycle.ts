@@ -1,6 +1,5 @@
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
 import type { RawTarget, Tab } from "../../Model/Tab/Tab.ts";
-import { Tab as TabModel } from "../../Model/Tab/Tab.ts";
 import { connect } from "../Cdp/Client.ts";
 import { discover, endpoint, getJson } from "./Discovery.ts";
 import type { DiscoveryOptions } from "./Discovery.ts";

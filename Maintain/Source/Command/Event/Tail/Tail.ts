@@ -56,10 +56,10 @@ export const Definition: CommandDefinition = {
 		option("interval", "integer", "Polling interval in milliseconds.", { default: 1000 }),
 	],
 	async run(values): Promise<unknown> {
-		const which = String(values.dir ?? "shadow");
+		const which = String(values["dir"] ?? "shadow");
 		const directory = join(which === "public" ? contentDirectory() : shadowDirectory(), "Event");
-		const since = typeof values.since === "string" ? values.since : null;
-		const interval = typeof values.interval === "number" ? Math.max(values.interval, 100) : 1000;
+		const since = typeof values["since"] === "string" ? values["since"] : null;
+		const interval = typeof values["interval"] === "number" ? Math.max(values["interval"], 100) : 1000;
 
 		if (since !== null && Number.isNaN(new Date(since).getTime())) {
 			throw fail("usage", "--since is not a date", { value: since });
@@ -68,7 +68,7 @@ export const Definition: CommandDefinition = {
 		const after = (line: Line): boolean => since === null || line.record.at >= since;
 		const initial = list(directory).filter(after);
 
-		if (values.follow !== true) {
+		if (values["follow"] !== true) {
 			// Repository-relative: the repo is public, so the machine's layout
 			// never appears in a command's output.
 			return { directory: relative(root(), directory), count: initial.length, events: initial.map((line) => line.record) };

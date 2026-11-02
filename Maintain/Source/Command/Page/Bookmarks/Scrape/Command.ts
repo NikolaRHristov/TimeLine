@@ -19,8 +19,8 @@ export const Definition: CommandDefinition = {
 	],
 	async run(values): Promise<unknown> {
 		return ingest("bookmark", {
-			tab: values.tab,
-			limit: typeof values.limit === "number" ? values.limit : undefined,
+			tab: values["tab"],
+			limit: typeof values["limit"] === "number" ? values["limit"] : undefined,
 			maxIdle: typeof values["max-idle"] === "number" ? values["max-idle"] : undefined,
 		});
 	},

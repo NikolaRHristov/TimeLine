@@ -29,7 +29,11 @@ const sleep = (milliseconds: number): Promise<void> =>
 	new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 export async function snapshot(session: Session, index: number, id?: string): Promise<InPageSnapshot> {
-	return session.evaluate<InPageSnapshot>(expression({ op: "snapshot", index, id }));
+	return session.evaluate<InPageSnapshot>(
+		id === undefined
+			? expression({ op: "snapshot", index })
+			: expression({ op: "snapshot", index, id }),
+	);
 }
 
 function controlOf(state: InPageSnapshot, control: ControlName): InPageControl | undefined {
@@ -131,32 +135,32 @@ export async function toggle(
  */
 export async function withPost<T>(values: Values, body: (context: PostContext) => Promise<T>): Promise<T> {
 	const endpoint: DiscoveryOptions = connection();
-	const index = typeof values.index === "number" ? values.index : 0;
-	let tab: Tab;
+	const index = typeof values["index"] === "number" ? values["index"] : 0;
+	let tab: Tab | null = null;
 	let temporary = false;
 	let session: Session | null = null;
 
 	try {
-		if (typeof values.url === "string" && values.url.length > 0) {
-			if (PostModel.idFromHref(values.url) === null) {
-				throw fail("usage", "--url is not a post permalink", { url: values.url });
+		if (typeof values["url"] === "string" && values["url"].length > 0) {
+			if (PostModel.idFromHref(values["url"]) === null) {
+				throw fail("usage", "--url is not a post permalink", { url: values["url"] });
 			}
 			const tabs = await discover(endpoint);
 			let existing: Tab | null = null;
 			try {
-				existing = select(tabs, { url: values.url }, { exact: true });
+				existing = select(tabs, { url: values["url"] }, { exact: true });
 			} catch {
 				existing = null;
 			}
 			if (existing !== null) {
 				tab = existing;
 			} else {
-				tab = await open(values.url, endpoint);
+				tab = await open(values["url"], endpoint);
 				temporary = true;
 			}
-		} else if (typeof values.tab === "string" && values.tab.length > 0) {
+		} else if (typeof values["tab"] === "string" && values["tab"].length > 0) {
 			const tabs = await discover(endpoint);
-			tab = selectHandle(tabs, values.tab);
+			tab = selectHandle(tabs, values["tab"]);
 		} else {
 			throw fail("usage", "give --url, or --tab with --index");
 		}
@@ -188,7 +192,7 @@ export async function withPost<T>(values: Values, body: (context: PostContext) =
 		});
 	} finally {
 		session?.close();
-		if (temporary === true) {
+		if (temporary === true && tab !== null) {
 			try {
 				await close(tab.id, endpoint);
 			} catch {

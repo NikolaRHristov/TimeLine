@@ -1,33 +1,23 @@
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import { fail } from "../../../Cli/Parser/Output/Failure.ts";
-import { configurationPath, load } from "../../../Configuration/Load/Load.ts";
+import { load, requireList } from "../../../Configuration/Load/Load.ts";
 import { withPage } from "../../../Browser/Session/Page.ts";
 import { readyExpression } from "../../../Browser/Selector/List.ts";
-import type { ListSlug } from "../../../Model/List/List.ts";
-import { List as ListModel, ListSlug as Slug } from "../../../Model/List/List.ts";
+import { List as ListModel } from "../../../Model/List/List.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["page", "list", "open"],
-	summary: "Show one curated list; the id comes from the identifier map, never argv.",
-	options: [
-		option("name", "enum", "Which curated list to open.", { required: true, values: Slug.values }),
-	],
+	summary: "Show one configured list; the id comes from the identifier map, never argv.",
+	options: [option("name", "string", "Slug of a list declared in the identifier map.", { required: true })],
 	async run(values): Promise<unknown> {
+		// The slug is not validated against a hardcoded set: `requireList` knows
+		// the configured ones, so a stranger's `alpha` opens their list and an
+		// unconfigured slug fails `unknown-list` naming what *is* configured.
 		const configuration = load();
-		const name = String(values.name);
-		const slug = Slug.is(name) ? name : null;
-		if (slug === null) throw fail("usage", `unknown list: ${name}`, { values: Slug.values });
+		const slug = String(values["name"]);
+		const list = requireList(configuration, slug);
 
-		const list = configuration.lists[slug as ListSlug];
-		if (list === undefined) {
-			throw fail("no-config", `no list id configured for ${slug}`, {
-				expected: configurationPath(),
-				slug,
-			});
-		}
-
-		const url = ListModel.url({ slug, name: list.name, id: list.id });
+		const url = ListModel.url(list);
 		return withPage(url, { ready: readyExpression(), timeout: 15_000 }, async (context) => ({
 			navigated: true,
 			slug,

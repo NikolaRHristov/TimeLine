@@ -1,0 +1,13 @@
+{
+	"handle": "example",
+	"name": "Example Author",
+	"verified": false,
+	"firstSeenAt": "2026-01-01T00:00:00.000Z",
+	"postCount": 1,
+	"lists": ["example"],
+	"decision": {
+		"by": "manual",
+		"confidence": 1,
+		"reason": "synthetic fixture shipped with the repository"
+	}
+}

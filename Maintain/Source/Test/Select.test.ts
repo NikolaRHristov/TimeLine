@@ -84,7 +84,7 @@ test("nothing matching reports every tab it saw", () => {
 	} catch (error) {
 		assert.ok(isFailure(error));
 		assert.equal(error.code, "no-tab");
-		const candidates = error.extra.candidates as unknown[];
+		const candidates = error.extra["candidates"] as unknown[];
 		assert.equal(candidates.length, tabs.length);
 	}
 });

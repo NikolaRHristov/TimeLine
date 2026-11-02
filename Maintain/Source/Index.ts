@@ -49,7 +49,7 @@ function human(path: readonly string[], result: unknown): string {
 
 main(process.argv.slice(2)).catch((error: unknown) => {
 	const failure = toFailure(error);
-	if (process.env.MAINTAIN_DEBUG !== undefined) {
+	if (process.env["MAINTAIN_DEBUG"] !== undefined) {
 		process.stderr.write(`${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`);
 	}
 	process.stdout.write(`${stringify(failure.toObject())}\n`);

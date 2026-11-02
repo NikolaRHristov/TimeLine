@@ -1,31 +1,24 @@
 {
-	"name": "@playform/starter",
-	"version": "0.0.1",
+	"name": "timeline-bookmarks",
+	"version": "0.1.0",
 	"private": true,
-	"description": "Starter 📄",
+	"packageManager": "pnpm@11.18.0",
+	"description": "A bookmark showcase you own: your X bookmarks, your lists, a static site.",
 	"keywords": [
 		"astro",
-		"starter",
-		"skeleton",
-		"playform"
+		"bookmarks",
+		"cdp",
+		"tailwindcss"
 	],
-	"homepage": "https://GitHub.Com/PlayForm/Starter#readme",
-	"bugs": {
-		"url": "https://GitHub.Com/PlayForm/Starter/issues"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/PlayForm/Starter.git"
-	},
 	"license": "SEE LICENSE IN LICENSE",
 	"author": {
-		"name": "Source ✍🏻 Open 👐🏻",
-		"email": "Source/Open@PlayForm.Cloud",
-		"url": "https://PlayForm.Cloud"
+		"name": "Timeline contributors"
 	},
 	"scripts": {
 		"build": "astro build",
-		"tool": "turbo run tool --filter=@nikolarhristov/timeline-maintain",
+		"Build": "pnpm --filter @nikolarhristov/timeline-maintain run Build",
+		"tool": "pnpm --filter @nikolarhristov/timeline-maintain run tool",
+		"maintain": "node Maintain/Target/Index.js",
 		"Run": "astro dev --host",
 		"prepublishOnly": "pnpm run build"
 	},

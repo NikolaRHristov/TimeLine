@@ -1,11 +1,15 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fail, isFailure } from "../../Cli/Parser/Output/Failure.ts";
+import type { List } from "../../Model/List/List.ts";
 import type { Configuration } from "../Schema/Schema.ts";
-import { validate } from "../Schema/Schema.ts";
+import { empty, validate } from "../Schema/Schema.ts";
 
 /** Where the identifier map lives, relative to the repository root. */
 export const DEFAULT_CONFIGURATION = "Maintain/Configuration/Local/Configuration.local.json";
+
+/** The tracked example a fresh clone copies (or `config init` writes from). */
+export const EXAMPLE_CONFIGURATION = "Maintain/Configuration/Example/Configuration.example.json";
 
 /** The marker that names the repository root: the workspace file. */
 const ROOT_MARKER = "pnpm-workspace.yaml";
@@ -40,7 +44,7 @@ export function root(): string {
 }
 
 export function configurationPath(): string {
-	const configured = process.env.MAINTAIN_CONFIG;
+	const configured = process.env["MAINTAIN_CONFIG"];
 	if (configured === undefined || configured.length === 0) return join(root(), DEFAULT_CONFIGURATION);
 	return isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
 }
@@ -52,7 +56,13 @@ export function load(): Configuration {
 	try {
 		raw = readFileSync(path, "utf8");
 	} catch {
-		throw fail("no-config", "the identifier map is missing", { expected: path });
+		throw fail("no-config", "the identifier map is missing", {
+			expected: path,
+			// The exact commands, run from the repository root: a failure that
+			// only names a path leaves the caller guessing at the next step.
+			copy: `mkdir -p ${dirname(DEFAULT_CONFIGURATION)} && cp ${EXAMPLE_CONFIGURATION} ${DEFAULT_CONFIGURATION}`,
+			next: "maintain config init",
+		});
 	}
 
 	let parsed: unknown;
@@ -78,6 +88,43 @@ export function optional(): Configuration | null {
 }
 
 /**
+ * The tracked example, validated.
+ *
+ * `config init` starts from this file so the written map carries the same
+ * defaults the documentation describes. A broken example degrades to the
+ * built-in defaults with a warning - onboarding must not die because someone
+ * edited the example by hand.
+ */
+export function example(): Configuration {
+	const path = join(root(), EXAMPLE_CONFIGURATION);
+	try {
+		return validate(JSON.parse(readFileSync(path, "utf8")), path);
+	} catch (error) {
+		const detail = error instanceof Error ? error.message : String(error);
+		process.stderr.write(`maintain: ${EXAMPLE_CONFIGURATION} is unreadable (${detail}); using built-in defaults\n`);
+		return empty();
+	}
+}
+
+/**
+ * The one list a slug names, or `unknown-list` naming the configured set.
+ *
+ * This is the only place a slug becomes an id, so a command cannot invent a
+ * list the map does not declare.
+ */
+export function requireList(configuration: Configuration, slug: string): List {
+	const found = configuration.lists.find((entry) => entry.slug === slug);
+	if (found !== undefined) return found;
+
+	throw fail("unknown-list", `no list named ${slug} in the identifier map`, {
+		slug,
+		configured: configuration.lists.map((entry) => entry.slug),
+		expected: configurationPath(),
+		next: `add it with: maintain config init --force --list ${slug}=<id>`,
+	});
+}
+
+/**
  * Where the browser listens.
  *
  * Commands that only touch the browser (`tab list`, `post extract`) work
@@ -92,7 +139,7 @@ export function connection(): { host: string; port: number } {
 		process.stderr.write(`maintain: using the default CDP endpoint (${detail})\n`);
 	}
 
-	const fromEnvironment = process.env.MAINTAIN_CDP_PORT;
+	const fromEnvironment = process.env["MAINTAIN_CDP_PORT"];
 	const port =
 		fromEnvironment !== undefined && /^\d+$/.test(fromEnvironment)
 			? Number(fromEnvironment)

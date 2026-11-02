@@ -81,7 +81,7 @@ export function open(directory: string): ShadowStore {
 		post(id: string): ShadowPost | null {
 			if (!STATUS_ID.test(id)) return null;
 			const value = record(readJson(join(postDirectory(), `${id}.json`)));
-			if (value === null || typeof value.id !== "string") return null;
+			if (value === null || typeof value["id"] !== "string") return null;
 			return value as unknown as ShadowPost;
 		},
 
@@ -167,7 +167,7 @@ export function open(directory: string): ShadowStore {
 			const found: ShadowEvent[] = [];
 			for (const name of entries(eventDirectory(), suffix)) {
 				const value = record(readJson(join(eventDirectory(), name)));
-				if (value === null || typeof value.at !== "string") continue;
+				if (value === null || typeof value["at"] !== "string") continue;
 				found.push({ file: join(eventDirectory(), name), record: value as unknown as EventRecord });
 			}
 			return found.sort((left, right) => left.record.at.localeCompare(right.record.at));
@@ -195,7 +195,7 @@ export function open(directory: string): ShadowStore {
 
 		index(): Record<string, string> {
 			const value = record(readJson(indexPath()));
-			const posts = value === null ? null : record(value.posts);
+			const posts = value === null ? null : record(value["posts"]);
 			if (posts === null) return {};
 			const map: Record<string, string> = {};
 			for (const [id, file] of Object.entries(posts)) {

@@ -14,6 +14,11 @@ export type Option = {
 	/** JSON Schema `format` hint, e.g. `uri`. */
 	format?: string;
 	default?: unknown;
+	/**
+	 * Collect every occurrence into an array instead of keeping the last one.
+	 * `--list alpha=1 --list beta=2` is one flag, two values.
+	 */
+	repeat?: boolean;
 };
 
 export function option(

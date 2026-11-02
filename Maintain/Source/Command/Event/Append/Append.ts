@@ -21,9 +21,9 @@ export const Definition: CommandDefinition = {
 	async run(values): Promise<unknown> {
 		const configuration = load();
 		const at = new Date().toISOString();
-		const kind = String(values.kind);
-		const subject = String(values.subject);
-		const payload = values.payload ?? {};
+		const kind = String(values["kind"]);
+		const subject = String(values["subject"]);
+		const payload = values["payload"] ?? {};
 
 		const directory = join(root(), configuration.content.root, "Event");
 		const name = `${at.replace(/[:.]/g, "-")}-${kind}-${subject.replace(/[^A-Za-z0-9_-]+/g, "-")}.json`;

@@ -12,7 +12,7 @@ export const Definition: CommandDefinition = {
 	async run(values): Promise<unknown> {
 		const endpoint = connection();
 		const tabs = await discover(endpoint);
-		const tab = select(tabs, { id: String(values.id) });
+		const tab = select(tabs, { id: String(values["id"]) });
 		await activate(tab.id, endpoint);
 		return { focused: true, id: tab.id };
 	},

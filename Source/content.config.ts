@@ -34,7 +34,13 @@ const Metrics = z
 	})
 	.partial();
 
-const List = z.enum(["AI", "UI", "CODE"]);
+/**
+ * A list slug is configuration, not code.
+ *
+ * The identifier map declares the slugs (`Maintain/Configuration/Example/
+ * Configuration.example.json` is the template), so `lists` accepts any string.
+ * Enumerating them here would couple the site to one person's lists.
+ */
 
 const Bookmark = defineCollection({
 	loader: glob({ pattern: "**/*.json", base: "./Source/Content/Bookmark" }),
@@ -48,7 +54,7 @@ const Bookmark = defineCollection({
 		media: z.array(Media),
 		metrics: Metrics,
 		/** Filled by the distribution stage; empty until an author is filed. */
-		lists: z.array(List),
+		lists: z.array(z.string()),
 		scrapedAt: Timestamp,
 		/**
 		 * The first scrape that observed this post. The interface never exposes
@@ -88,7 +94,7 @@ const Person = defineCollection({
 		verified: z.boolean(),
 		firstSeenAt: Timestamp,
 		postCount: z.number(),
-		lists: z.array(List),
+		lists: z.array(z.string()),
 		decision: z.object({
 			by: z.enum(["rule", "model", "manual"]),
 			confidence: z.number(),

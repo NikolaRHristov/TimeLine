@@ -37,22 +37,22 @@ export const Definition: CommandDefinition = {
 	],
 	async run(values): Promise<unknown> {
 		const hasSelector =
-			typeof values.id === "string" ||
-			typeof values.source === "string" ||
-			typeof values.since === "string" ||
-			values.all === true;
+			typeof values["id"] === "string" ||
+			typeof values["source"] === "string" ||
+			typeof values["since"] === "string" ||
+			values["all"] === true;
 		if (hasSelector !== true) {
 			throw fail("usage", "say what to publish: --id, --source, --since or --all");
 		}
 
-		const since = typeof values.since === "string" ? moment(values.since) : null;
-		const source = typeof values.source === "string" ? (values.source as Source) : null;
+		const since = typeof values["since"] === "string" ? moment(values["since"]) : null;
+		const source = typeof values["source"] === "string" ? (values["source"] as Source) : null;
 		const shadow = openShadow(shadowDirectory());
 		const publicStore = openPublic(contentDirectory());
 		const at = new Date().toISOString();
 
 		const matches = (post: ShadowPost): boolean => {
-			if (typeof values.id === "string") return post.id === values.id;
+			if (typeof values["id"] === "string") return post.id === values["id"];
 			if (source !== null) return post.observations.some((entry) => entry.source === source);
 			if (since !== null) return post.firstSeenAt >= since;
 			return true;
@@ -96,9 +96,9 @@ export const Definition: CommandDefinition = {
 
 		if (published === 0 && unchanged === 0 && hidden === 0) {
 			throw fail("no-post", "nothing in the shadow store matched", {
-				id: values.id,
-				source: values.source,
-				since: values.since,
+				id: values["id"],
+				source: values["source"],
+				since: values["since"],
 			});
 		}
 

@@ -1,0 +1,23 @@
+{
+	"id": "example-post",
+	"url": "https://x.com/example/status/0",
+	"author": {
+		"handle": "example",
+		"name": "Example Author",
+		"verified": false
+	},
+	"text": "A synthetic bookmark that ships with this repository. Run `maintain store scrape` and `maintain store publish --all` to replace it with your own.",
+	"postedAt": "2026-01-01T00:00:00.000Z",
+	"media": [],
+	"metrics": {
+		"replies": 0,
+		"reposts": 0,
+		"likes": 0,
+		"views": 0
+	},
+	"lists": ["example"],
+	"scrapedAt": "2026-01-01T00:00:00.000Z",
+	"firstSeenAt": "2026-01-01T00:00:00.000Z",
+	"source": "x",
+	"publishedAt": "2026-01-01T00:00:00.000Z"
+}

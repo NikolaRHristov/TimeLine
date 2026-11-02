@@ -69,7 +69,7 @@ export function open(content: string): PublicStore {
 		bookmark(id: string): PublicBookmark | null {
 			if (!STATUS_ID.test(id)) return null;
 			const value = record(readJson(join(bookmarkDirectory(), `${id}.json`)));
-			if (value === null || typeof value.id !== "string") return null;
+			if (value === null || typeof value["id"] !== "string") return null;
 			return value as unknown as PublicBookmark;
 		},
 
@@ -149,7 +149,7 @@ export function open(content: string): PublicStore {
 			const found: EventRecord[] = [];
 			for (const name of names(eventDirectory())) {
 				const value = record(readJson(join(eventDirectory(), name)));
-				if (value === null || typeof value.at !== "string") continue;
+				if (value === null || typeof value["at"] !== "string") continue;
 				found.push(value as unknown as EventRecord);
 			}
 			return found.sort((left, right) => left.at.localeCompare(right.at));

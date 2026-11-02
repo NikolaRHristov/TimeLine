@@ -49,7 +49,8 @@ export function select(tabs: readonly Tab[], criteria: Criteria, options: Select
 				const candidate = TabModel.key(tab.url);
 				return candidate.startsWith(key) || key.startsWith(candidate);
 			});
-			if (prefixed.length === 1) return prefixed[0];
+			const only = prefixed[0];
+				if (prefixed.length === 1 && only !== undefined) return only;
 			if (prefixed.length > 1) {
 				throw fail("no-tab", "the url prefix matched more than one tab", {
 					url: criteria.url,

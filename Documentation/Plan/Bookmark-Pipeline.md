@@ -29,10 +29,12 @@ collections + Zod, CDP 1.3 over `ws://127.0.0.1:<port>`.
 - **No new runtime dependencies.** Node 22.23 ships `fetch` and `WebSocket`; a
   CDP client needs nothing else. Do not add `puppeteer` or `playwright` - they
   bundle a second browser and break the "drive _my_ tabs" requirement.
-- **Anonymised documentation.** No handles, list ids, profile paths, session
-  tokens, extension ids or cookies in any tracked file. Identifiers live in
-  `Maintain/Configuration/Local/Configuration.local.json` (gitignored) and are
-  referenced in docs as `<LIST_AI>`, `<LIST_UI>`, `<LIST_CODE>`.
+- **Anonymised documentation.** No handles, list ids, post ids, profile paths,
+  session tokens, extension ids or cookies in any tracked file. Identifiers live
+  in `Maintain/Configuration/Local/Configuration.local.json` (gitignored) and are
+  referenced in docs as `<handle>`, `<slug>`, `<list-id>`. The tracked template
+  is `Maintain/Configuration/Example/Configuration.example.json`, placeholders
+  only.
 - **One JSON object per command.** `--json` is the default when stdout is not a
   TTY. Human tables are a rendering of the same object, never a second code
   path.
@@ -150,7 +152,7 @@ Maintain/
   Command/Post/Bookmark/Remove.ts
   Command/Post/Extract/Extract.ts       # one article → Model/Post
   Command/Page/Bookmarks/Open.ts
-  Command/Page/List/Open.ts             # --name AI|UI|CODE
+  Command/Page/List/Open.ts             # --name <slug>, id from the map
   Command/Page/List/Member/Add.ts       # add handle to a list
   Command/Tab/List/List.ts
   Command/Tab/Focus/Focus.ts
@@ -174,8 +176,8 @@ changes when X renames a button is exactly one file.
 | `post bookmark add`    | same                                                | `{bookmarked:true,…}`                   |
 | `post bookmark remove` | same                                                | `{bookmarked:false,…}`                  |
 | `page bookmarks open`  | `--tab <n>`?                                        | `{navigated:true,url,count}`            |
-| `page list open`       | `--name AI\|UI\|CODE`                               | `{navigated:true,slug,url}`             |
-| `page list member add` | `--name`, `--handle`, `--dry-run`                   | `{added:true,handle,list}`              |
+| `page list open`       | `--name <slug>`                                     | `{navigated:true,slug,url}`             |
+| `page list member add` | `--name`, `--handle`, `--apply`                     | `{added:true,handle,list}`              |
 | `event append`         | `--kind`, `--subject`, `--payload <json>`           | `{written:true,path}`                   |
 | `schema`               | `[command]`                                         | JSON Schema document                    |
 
@@ -219,10 +221,13 @@ lists resolve slug → id from `Configuration.local.json`, so no list id is ever
 in a command line or a doc.
 
 **Task 1.7 - Config and events.** Files: `Configuration/Load/Load.ts`,
-`Command/Event/Append/Append.ts`. Config is JSON with
-`{cdp:{port},lists:{AI,UI,CODE},profile}`; missing file →
-`{error:"no-config", expected:"<path>"}` and exit 2, never a crash. Events are
-`Source/Content/Event/<ISO>-<kind>-<subject>.json`.
+`Configuration/Write/Write.ts`, `Command/Config/Init/Init.ts`,
+`Command/Config/Show/Show.ts`, `Command/Event/Append/Append.ts`. Config is JSON
+with `{cdp:{host,port},profile,lists:[{slug,name,id}],routes,content,storage}`;
+missing file → `{error:"no-config", expected:"<path>", copy:"<copy command>",
+next:"maintain config init"}` and exit 2, never a crash. `config init` writes it
+atomically from the example; `config show` masks ids unless `--reveal`. Events
+are `Source/Content/Event/<ISO>-<kind>-<subject>.json`.
 
 ---
 
@@ -246,7 +251,7 @@ z.object({
   postedAt: z.string().datetime().nullable(),
   media: z.array(z.object({kind:z.enum(["image","video","gif","link"]), url:z.string()})),
   metrics: z.object({replies:z.number(), reposts:z.number(), likes:z.number(), views:z.number()}).partial(),
-  lists: z.array(z.enum(["AI","UI","CODE"])),   // filled by stage 3
+  lists: z.array(z.string()),       // slugs come from the identifier map
   scrapedAt: z.string().datetime(),
   firstSeenAt: z.string().datetime(),
   source: z.literal("x"),
@@ -300,7 +305,7 @@ in production.
 
 ---
 
-## Stage 3 - Distribution (authors → AI / UI / CODE) - gated launch process
+## Stage 3 - Distribution (authors → the person's own lists) - gated launch process
 
 **Not run automatically.** Distribution is the one stage that spends model
 tokens and changes the person's lists, so it ships as tools only and waits for
@@ -324,6 +329,17 @@ run reads the file and spends nothing.
 handle with `--dry-run` by default, 1 handle per 3 seconds, and stops on the
 first `{error:"rate-limited"}`. Nothing about stage 3 is automatic without
 `--apply`.
+
+The flow it drives is the profile's own: the header's "More" caret
+(`[data-testid="userActions"]`) opens "Add/remove from Lists", which opens a
+"Pick a List" dialog whose rows are `[role="checkbox"][data-testid="listCell"]`
+carrying `aria-checked`. Clicking a row stages the membership and Save commits
+it, so a dry run reads `aria-checked` and stops. Two constraints the browser
+imposes: the dialog's rows are fetched only while the page believes it is
+visible, so a background tab needs `Emulation.setFocusEmulationEnabled` plus
+`Page.setWebLifecycleState active` (otherwise the dialog renders as an empty
+shell); and closing the dialog without Save writes nothing, which is what makes
+the dry run a read.
 
 ### Tasks
 

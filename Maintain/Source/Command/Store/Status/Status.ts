@@ -1,6 +1,6 @@
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { relative } from "node:path";
-import { root } from "../../../Configuration/Load/Load.ts";
+import { load, root } from "../../../Configuration/Load/Load.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
@@ -20,6 +20,10 @@ export const Definition: CommandDefinition = {
 	summary: "Count what the shadow store and the site's collection hold.",
 	options: [],
 	async run(): Promise<unknown> {
+		// The store's location is the identifier map's business, so a missing
+		// map is `no-config` here too - with the copy command attached - rather
+		// than a count of whatever the defaults happen to point at.
+		load();
 		const shadow = openShadow(shadowDirectory());
 		const publicStore = openPublic(contentDirectory());
 		const posts = shadow.all();

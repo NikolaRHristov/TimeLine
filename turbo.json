@@ -8,16 +8,20 @@
 			"outputs": ["Target/**"]
 		},
 
-		"check": {
-			"dependsOn": ["build"],
+		"Build": {
+			"outputs": ["Target/**"]
+		},
 
+		"check": {
 			"outputs": []
 		},
 
 		"tool": {
 			"cache": false,
 
-			"outputs": ["Target/**"]
+			"dependsOn": ["Build"]
 		}
-	}
+	},
+
+	"ui": "stream"
 }

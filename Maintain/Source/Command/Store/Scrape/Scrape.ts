@@ -15,13 +15,13 @@ export const Definition: CommandDefinition = {
 		option("tab", "string", "CDP target id from `tab list`, or its index."),
 	],
 	async run(values): Promise<unknown> {
-		const name = String(values.source);
+		const name = String(values["source"]);
 		if (!(Sources as readonly string[]).includes(name)) {
 			throw fail("usage", `unknown source: ${name}`, { values: Sources });
 		}
 		return ingest(name as Source, {
-			tab: values.tab,
-			limit: typeof values.limit === "number" ? values.limit : undefined,
+			tab: values["tab"],
+			limit: typeof values["limit"] === "number" ? values["limit"] : undefined,
 			maxIdle: typeof values["max-idle"] === "number" ? values["max-idle"] : undefined,
 		});
 	},

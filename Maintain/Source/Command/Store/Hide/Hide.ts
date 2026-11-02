@@ -17,7 +17,7 @@ export const Definition: CommandDefinition = {
 	summary: "Withhold one post and delete its published file.",
 	options: [option("id", "string", "Status id of the post to withhold.", { required: true })],
 	async run(values): Promise<unknown> {
-		const id = String(values.id);
+		const id = String(values["id"]);
 		const shadow = openShadow(shadowDirectory());
 		const publicStore = openPublic(contentDirectory());
 
