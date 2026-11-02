@@ -36,6 +36,26 @@
 		}
 	}
 
+	/* The one extra line a non-ready state adds: the ratio, the timestamp, the
+	   error code or the command. Tabular figures because two surfaces built at
+	   different sizes still print their counts in the same columns. */
+	&__meta {
+		margin: var(--space-3) 0 0;
+		font-size: var(--text-xs);
+		color: var(--color-ink-faint);
+		font-variant-numeric: tabular-nums;
+
+		& + & {
+			margin-top: var(--space-2);
+		}
+	}
+
+	/* The tool layer's own code, in the typeface a terminal prints it in - the
+	   page and the terminal are quoting the same fact (RFC-0050 rule 4). */
+	&__code {
+		color: var(--color-ink);
+	}
+
 	/* The commands a reader can run. Inline code, not a code block: each one is
 	   a step in a short list, and a block would push the last step off screen. */
 	code {

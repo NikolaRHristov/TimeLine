@@ -1,0 +1,159 @@
+@use "../Material.scss" as Material;
+
+/**
+ * The queue: the candidate index drawn as the drawer's columns.
+ *
+ * This is the one public surface that is a queue, so it takes the drawer's
+ * column band rather than a list: one column per state a record can be in, each
+ * a stack of cards. The frame is not drawn here - `.column`, `.column__inner`,
+ * `.column__head` and `.column__count` come from `Component/Column.scss`, the
+ * public column the lists index already uses, so a reader who has seen one
+ * surface recognises the other. This sheet draws only what a queue adds to that
+ * frame: the state's mark, the card, and the vote control.
+ *
+ * A card is the material's card on the paper ramp: the sunken step inside the
+ * column's white face, which is the same value step the drawer's rows make
+ * inside its face - a card sits in a face the way a face sits on a ground.
+ *
+ * A rejection is a state, not a deletion. A rejected card keeps its place, its
+ * link and its count, and is struck through, because a reader who saw an entry
+ * being considered should be able to see what was decided about it.
+ *
+ * The mark is the stage accent of the state, taken from `Library/Stage.ts` and
+ * arriving as `--column-tone`, so the candidate mark is the processing accent
+ * here and the processing band on the workspace rail. A colour means one thing
+ * across the site, and this sheet never names one.
+ */
+.queue {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-items: start;
+	gap: var(--space-3);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	/* The state's name, in the eyebrow voice the drawer's column heads use: a
+	   column head names a bucket, not a page. */
+	&__name {
+		@include Material.label(var(--text-2xs), var(--color-ink-faint));
+
+		margin: 0;
+	}
+
+	/* A square of the state's accent, the same mark the event trail puts beside
+	   a row. It is a shape rather than coloured text because the accents are
+	   drawn for the dark panel, and a green word on paper is not readable. */
+	&__mark {
+		display: inline-block;
+		width: 6px;
+		height: 6px;
+		margin-right: var(--space-2);
+		border-radius: 1px;
+		background: var(--column-tone);
+		vertical-align: middle;
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__card {
+		@include Material.card(var(--color-surface-sunken), var(--color-line), var(--radius-card));
+
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		padding: var(--space-2);
+	}
+
+	&__title {
+		font-size: var(--text-xs);
+		font-weight: 600;
+		line-height: 1.35;
+		color: var(--color-ink);
+		text-decoration: none;
+		overflow-wrap: anywhere;
+
+		&:hover {
+			text-decoration: underline;
+			text-underline-offset: 2px;
+		}
+	}
+
+	/* The meta line: the count on file, then who nominated it and when. The
+	   count is the first thing on it because it is what ranks the column. */
+	&__meta {
+		margin: 0;
+		font-size: var(--text-2xs);
+		line-height: 1.4;
+		color: var(--color-ink-faint);
+	}
+
+	&__votes {
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-ink-muted);
+	}
+
+	&__note {
+		margin: 0;
+		font-size: var(--text-2xs);
+		line-height: 1.4;
+		color: var(--color-ink-muted);
+	}
+
+	&__card--tombstone &__title {
+		color: var(--color-ink-faint);
+		text-decoration: line-through;
+		text-decoration-color: var(--color-line-strong);
+	}
+
+	/* The vote control: the material's control on the paper ramp, the shape a
+	   pill is cut from. A disabled control is drawn one step quieter rather than
+	   made transparent - opacity is not depth, and a half-visible button is a
+	   button a reader cannot find. */
+	&__vote {
+		@include Material.reset;
+		@include Material.control(
+			var(--color-surface),
+			var(--color-line-strong),
+			var(--color-ink-muted),
+			var(--radius-full)
+		);
+
+		align-self: flex-start;
+		margin-top: var(--space-1);
+		padding: var(--space-1) var(--space-3);
+		font-size: var(--text-2xs);
+
+		&:hover:not(:disabled) {
+			border-color: var(--color-ink-muted);
+			color: var(--color-ink);
+		}
+
+		&:disabled {
+			border-color: var(--color-line);
+			color: var(--color-ink-faint);
+			cursor: default;
+		}
+	}
+
+	/* The one line the vote widget writes into when a cast fails. */
+	&__status {
+		margin: var(--space-3) 0 0;
+		font-size: var(--text-xs);
+		color: var(--color-ink-faint);
+	}
+
+	/* Three columns hold at a desk and fold to one on a phone: a card is a
+	   sentence, and a third of a phone's width is not one. */
+	@media (max-width: 900px) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

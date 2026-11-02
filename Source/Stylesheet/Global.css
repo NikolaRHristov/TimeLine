@@ -74,11 +74,24 @@
 	--radius-tile: 1.5rem;
 	--radius-full: 9999px;
 
+	/* The bands below the canvas share one horizontal axis: the swimlanes' step
+	   columns and the spectrometer's capability columns are the same four tracks
+	   at the same widths. Stated once, because two sheets each holding the
+	   literal would be two diagrams of the same thing. */
+	--band-columns: 14.5rem repeat(4, minmax(0, 1fr));
+
 	--hairline: 1px solid var(--color-line);
 	--hairline-faint: 1px solid var(--color-line-faint);
 	--header-height: 3.5rem;
 	--rhythm-block: 3rem;
 	--content-width: 48rem;
+
+	/* The focus ring's geometry. Two tokens rather than two literals, because a
+	   dense surface tightens the ring without a second rule (RFC-0049 rule 3):
+	   `Stylesheet/State.scss` draws the ring, and the global rule below draws the
+	   same one for anything that never opted into a component sheet. */
+	--state-ring-width: 2px;
+	--state-ring-offset: 2px;
 }
 
 /**
@@ -149,10 +162,12 @@ img {
 	@apply inline-block select-none align-top outline-none;
 }
 
-/* A visible focus ring, because the shell is keyboard-reachable first. */
+/* A visible focus ring, because the shell is keyboard-reachable first. The
+   width and the offset are tokens so the ring and `Stylesheet/State.scss`'s
+   `focus` mixin cannot drift into two rings. */
 :focus-visible {
-	outline: 2px solid var(--color-ink);
-	outline-offset: 2px;
+	outline: var(--state-ring-width) solid var(--color-ink);
+	outline-offset: var(--state-ring-offset);
 }
 
 @media (prefers-reduced-motion: reduce) {

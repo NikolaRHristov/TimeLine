@@ -1,1 +1,1 @@
-You decide who sees it: a reader reaches a motion through a grant set that begins at the see step, and ciphertext addressed to another audience fails to decrypt without that audience's epoch key (RFC-0047, RFC-0013).
+You decide who sees it: a reader reaches a motion through a grant set that begins at the see step, and a payload sealed with AES-GCM-256 under another audience's epoch key does not decrypt for them (RFC-0047, RFC-0013).

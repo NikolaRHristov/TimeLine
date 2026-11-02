@@ -1,0 +1,75 @@
+---
+/**
+ * One read, rendered - the six data states in one place (RFC-0050).
+ *
+ * Every surface that reads a collection renders its state through this
+ * component, so `empty` looks the same on every page and the failure vocabulary
+ * is printed once rather than invented per surface. The state itself is derived
+ * by `@Library/DataState.ts` from the read the page performed; nothing here
+ * decides which state it is, and nothing takes a flag.
+ *
+ * `ready` renders nothing at all: the records below are the surface. The other
+ * five render the note - the panel an empty state already used - because a
+ * blank region cannot be told from a broken one, and a reader needs the cause
+ * and the way out in the same shape whichever of the five they are looking at.
+ *
+ * What each state adds beyond the heading and the sentence:
+ *
+ * - `empty` prints the command that fills it, which is the whole difference
+ *   between a normal state and a blank one.
+ * - `partial` prints the ratio - `18 of 20` - because the eighteen are shown
+ *   and the two that did not arrive must not be quietly forgotten.
+ * - `stale` prints an absolute ISO time, never "2 hours ago": a cached page
+ *   would repeat the relative phrase tomorrow as a false statement.
+ * - `failed` prints the tool layer's own code and the remedy, so the page and
+ *   the terminal state the same fact rather than two facts that look alike.
+ * - `pending` says it is reading and keeps the frame, so nothing around it
+ *   moves when the records land.
+ */
+import "@Stylesheet/Component/Note.scss";
+import { Iso, Ratio, type DataRead } from "@Library/DataState.ts";
+
+interface Props {
+	/** The read this surface performed, derived by `@Library/DataState.ts`. */
+	Read: DataRead;
+	/** What the state is about, in the surface's own words. */
+	Title: string;
+	/** One sentence of cause, in the surface's own words. */
+	Body: string;
+}
+
+const { Read, Title, Body } = Astro.props;
+
+const Share = Ratio(Read);
+const Stamp = Read.State === "stale" ? Iso(Read.At) : null;
+---
+
+{Read.State !== "ready" && (
+	<section
+		class="note"
+		data-read={Read.State}
+		aria-busy={Read.State === "pending" ? "true" : undefined}>
+		<h2 class="note__title">{Title}</h2>
+		<p class="note__body">{Body}</p>
+
+		{Share !== null && <p class="note__meta">{Share}</p>}
+
+		{Stamp !== null && (
+			<p class="note__meta">
+				<time datetime={Stamp}>{Stamp}</time>
+			</p>
+		)}
+
+		{Read.Code !== null && (
+			<p class="note__meta">
+				<code class="note__code">{Read.Code}</code>
+			</p>
+		)}
+
+		{Read.Remedy !== null && (
+			<p class="note__meta">
+				<code>{Read.Remedy}</code>
+			</p>
+		)}
+	</section>
+)}

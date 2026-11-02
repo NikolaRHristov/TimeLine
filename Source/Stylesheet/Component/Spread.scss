@@ -19,7 +19,6 @@
 .spread {
 	--spread-column: 68rem;
 	--spread-gap: 5.5rem;
-	--spread-offset: 14%;
 
 	display: flex;
 	flex-direction: column;
@@ -50,16 +49,19 @@
 
 		// The dispersion. Odd boxes step right, even boxes step left, and the
 		// last box returns to the centre so the page does not end on a drift.
-		&:nth-child(odd) {
+		//
+		// `nth-of-type`, not `nth-child`: the hero and the pillar band are
+		// siblings of the boxes, so counting all children would offset every box
+		// by one and the closing rule would land on the footer instead.
+		&:nth-of-type(odd) {
 			align-self: flex-start;
-			margin-inline-start: 0;
 		}
 
-		&:nth-child(even) {
+		&:nth-of-type(even) {
 			align-self: flex-end;
 		}
 
-		&:last-child {
+		&:last-of-type {
 			align-self: center;
 		}
 

@@ -67,6 +67,11 @@ mirror at `y=228`. They are what make a clipped stack read as a cylinder.
 **Progress widths are fixed pixels, not percentages** - 60, 80, 95, 110, 104, 132, 92, 118 across
 the bands. A percentage is a different design.
 
+`Provenance.tsx` diverges here on purpose: it draws each bar at `Events / Widest(Stages)` of the
+track, because a rail that reports where the work sits cannot carry a bar that never moves. The
+export's widths are a mock's data, not a ladder - they are reproduced by a real archive with the
+same counts, and the heights, opacity and fades above are what carry the perspective.
+
 ### Scroll state, 31 tall
 
 A 6px track `#2c2c2e` with a capsule indigo thumb, 6px above a 10px `#636366` note.
@@ -158,7 +163,8 @@ naming the same stage.
 - **Tokens** - `Source/Stylesheet/Global.css`, one `:root` block per ramp.
 - **Mixins** - `Source/Stylesheet/Material.scss`: `panel`, `face`, `card`, `control`, `inset`,
   `label`, `ellipsis`, `reset`.
-- **Sheets** - `Source/Stylesheet/Component/{Provenance,Drawer,Bento,Workspace}.scss`.
+- **Sheets** - `Source/Stylesheet/Component/`, one sheet per part, each built from a `Material`
+  mixin; `Source/Stylesheet/Layout/` holds the shell and the page frame.
 - **Components** - `Source/Component/Workspace/`, one file per part, Solid `.tsx`.
 
 A number in this file that a sheet hardcodes as a literal instead of a custom property is a defect

@@ -19,8 +19,10 @@
  * database - the collections are the only source.
  */
 import { Seats } from "@Component/Workspace/Bento.tsx";
+import Rail from "@Component/Workspace/Rail.tsx";
 import Workspace from "@Component/Workspace/Workspace.tsx";
 import Base from "@Layout/Base.astro";
+import { Bands } from "@Library/Band.ts";
 import { BookmarkHref } from "@Library/Link.ts";
 import { ColumnAccent, StageAccent } from "@Library/Stage.ts";
 import { Own } from "@Script/Session/Context.ts";
@@ -175,19 +177,64 @@ const Tiles = [...curated]
 			Href: BookmarkHref(Entry.data.id),
 		};
 	});
+
+/**
+ * The contexts the rail may select.
+ *
+ * The build knows one: the owner's own archive, whose publish destination is the
+ * public showcase. A room arrives with a session, and a session is read in the
+ * browser - so a page that listed rooms here would be inventing them at build
+ * time, which is the one thing the session layer must not do.
+ */
+const Title = "My Files";
+
+const Contexts = [Own(Title, "Showcase · Network")];
+
+/**
+ * When the build's view is current to.
+ *
+ * The state line prints it, so a reader can tell the build's rows from a
+ * snapshot's. Taken once, here, rather than in the island: the island's clock is
+ * the reader's, and the build's rows are not current to the reader's clock.
+ */
+const Built = new Date().toISOString();
+
+/**
+ * The bands below the canvas, and the rail's security cluster.
+ *
+ * One value, derived once, handed to both islands: the rail prints the protocol
+ * marks and the body prints the three bands, and the two must describe the same
+ * network. `Bands()` states what the build can prove - two actors, no
+ * relationship - so nothing here invents a peer or a state.
+ */
+const Bands_ = Bands();
 ---
 
 <Base Title="Workspace" Description="The private side of the archive." Wide Bare>
-	<Workspace
-		client:visible
-		Stages={Stages}
-		Columns={Columns}
-		Tiles={Tiles}
-		Note="Scroll through source timelines · Source selected"
-		Eyebrow="Depth / Schema"
-		Title="My Files"
-		Hint="Private workspace - drag items ↓ to publish"
-		Destination="Showcase · Network"
-		Instruction="Drop private items here to publish"
-	/>
+	<div class="workspace">
+		<Rail
+			client:visible
+			Stages={Stages}
+			Initial="source"
+			Note="Scroll through source timelines · Source selected"
+			Marks={Bands_.Marks}
+			ClusterEyebrow={Bands_.Words.Cluster.Eyebrow}
+			ClusterLabel={Bands_.Words.Cluster.Label}
+		/>
+
+		<Workspace
+			client:visible
+			Stages={Stages}
+			Columns={Columns}
+			Tiles={Tiles}
+			Note="Scroll through source timelines · Source selected"
+			Eyebrow="Depth / Schema"
+			Title={Title}
+			Hint="Private workspace - drag items ↓ to publish"
+			Instruction="Drop private items here to publish"
+			Contexts={Contexts}
+			AsOf={Built}
+			Bands={Bands_}
+		/>
+	</div>
 </Base>

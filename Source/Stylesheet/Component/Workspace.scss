@@ -26,11 +26,54 @@
 		min-width: 0;
 	}
 
+	// The bands below the canvas. The composition grows downward from the canvas,
+	// so this block is the third part of the page column and the footer inside it
+	// closes the composition flush - the bands own no bottom padding, which is
+	// what lets the rail's security cluster share the footer's baseline.
+	&__bands {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		padding-top: 1.25rem;
+		background: var(--canvas);
+	}
+
 	@media (max-width: 900px) {
 		flex-direction: column;
 
 		.workspace__body {
 			width: 100%;
 		}
+	}
+}
+
+// The rail: a column the height of the composition, holding the drum at its top
+// and the security cluster at its bottom (RFC-0048 §2).
+//
+// The drum keeps its own 224 × 360 box - it is the design's block, not a
+// stretched panel - so the cluster needs a column around it to sit on the
+// composition's bottom line. `align-self: stretch` is what makes that column as
+// tall as the page column beside it, and the cluster's own `margin-top: auto`
+// is what puts it at the end of it.
+//
+// The column is dark for its whole height because the cluster is set in the
+// chrome ramp: the material's ink for a sidebar is light, and a light ink on the
+// page ground would be unreadable. The 2rem of padding at the top is the context
+// strip's height, which is what makes the drum start level with the drawer beside
+// it - the strip is the frame's top band, and the rail is the block under it.
+// `verify-composition.mjs` holds the alignment, so a change to either number
+// reports itself instead of drifting.
+.rail {
+	display: flex;
+	flex-direction: column;
+	align-self: stretch;
+	width: 14rem;
+	flex-shrink: 0;
+	padding-top: 2rem;
+	background: var(--chrome-void);
+
+	@media (max-width: 900px) {
+		width: 100%;
+		padding-top: 0;
 	}
 }

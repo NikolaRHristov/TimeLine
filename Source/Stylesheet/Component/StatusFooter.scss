@@ -1,0 +1,72 @@
+@use "../Material.scss" as Material;
+
+// The status footer: the composition's bottom band.
+//
+// It is a rule rather than a panel. The band above it is paper with a 24px
+// corner; this one runs the full width of the page column, sits on the seam's own
+// ground and is closed by the same hairline, so it reads as the machine's status
+// line under the composition rather than as a third diagram (RFC-0048).
+//
+// Nothing here varies with the state it reports. There is no tinted dot, no
+// `--quiet` ink and no `--alarm` ink: the value is always set at the body ink and
+// the label always at the seam's, because a disconnected footer that looked
+// slightly different from a connected one would be read as working. The word is
+// the signal, and the band states four of them.
+//
+// The padding is `--space-3` block, which is the number the rail's security
+// cluster matches so its last mark sits on this band's baseline. Change one and
+// `verify-composition.mjs` reports the two surfaces drifting apart.
+.status {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-6);
+	padding: var(--space-3) 1.75rem;
+	background: var(--seam);
+	border-top: 1px solid var(--seam-line);
+	color: var(--seam-ink);
+
+	&__eyebrow {
+		@include Material.label(var(--text-2xs), var(--seam-ink));
+
+		margin: 0;
+		flex-shrink: 0;
+	}
+
+	&__list {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: var(--space-6);
+		margin: 0;
+	}
+
+	&__item {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+	}
+
+	&__label {
+		@include Material.label(var(--text-2xs), var(--seam-ink));
+
+		margin: 0;
+	}
+
+	// The state word: the same ink for `connected`, `disconnected` and `static`.
+	&__value {
+		margin: 0;
+		font-size: var(--text-2xs);
+		line-height: 1.2;
+		color: var(--color-ink);
+	}
+
+	@media (max-width: 900px) {
+		flex-wrap: wrap;
+		gap: var(--space-2) var(--space-4);
+		padding-inline: var(--space-4);
+
+		&__list {
+			gap: var(--space-2) var(--space-4);
+		}
+	}
+}

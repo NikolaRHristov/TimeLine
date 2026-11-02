@@ -46,7 +46,14 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const Here = dirname(fileURLToPath(import.meta.url));
-const Root = resolve(Here, "..");
+
+/**
+ * The tree to read. `--root` exists so the guard can be pointed at a fixture:
+ * a check that has never failed is a check nobody has tested.
+ */
+const Flag = process.argv.indexOf("--root");
+
+const Root = Flag === -1 ? resolve(Here, "..") : resolve(process.argv[Flag + 1] ?? process.cwd());
 
 /** The one file allowed to name the company. */
 const Attribution = "Content/String/Brand/Attribution.md";
@@ -54,8 +61,23 @@ const Attribution = "Content/String/Brand/Attribution.md";
 /** The folder whose every file is a showcase claim. */
 const Claim = "Content/String/Claim";
 
-/** Folders that are generated, installed or archived - never read as copy. */
-const Skip = new Set([".git", ".hermes", "node_modules", "Target", "dist", "Storage", "Local"]);
+/**
+ * Folders that are generated, installed or archived - never read as copy.
+ *
+ * `Generated` is the compiled mirror of `Content/`: every string in the copy
+ * layer appears there by construction, so counting it would count the same
+ * mention twice. It is reported separately, and the acceptance grep excludes it.
+ */
+const Skip = new Set([
+	".git",
+	".hermes",
+	"Generated",
+	"Local",
+	"node_modules",
+	"Storage",
+	"Target",
+	"dist",
+]);
 
 /** Files this guard reads. A binary is skipped rather than decoded. */
 const Text = /\.(?:astro|css|json|md|mjs|scss|ts|tsx)$/;
@@ -176,6 +198,27 @@ function CheckBrand() {
 		return false;
 	}
 
+	/**
+	 * The compiled mirror, reported rather than counted.
+	 *
+	 * `Source/Generated/Content.ts` is written from `Content/` on every config
+	 * load, so the attribution appears there by construction. Counting it would
+	 * make one mention look like two; naming it here is what keeps the
+	 * acceptance grep - which excludes the folder - from reading as a cover-up.
+	 */
+	const Mirror = "Source/Generated/Content.ts";
+
+	try {
+		const Compiled = (Read(Mirror).match(/\bDELO\b/g) ?? []).length;
+
+		Line(
+			"INFO",
+			`${Mirror} carries it ${Compiled} time(s) - the same string, compiled; the count above is the copy`,
+		);
+	} catch {
+		// No generated module yet: `astro` writes it on the next config load.
+	}
+
 	Line("PASS", `${Attribution} names it once, and Source/ names it ${InSource.length} times`);
 	return true;
 }
@@ -246,7 +289,15 @@ function CheckClaims() {
 		return false;
 	}
 
-	const Content = Read("Source/Library/Content.ts");
+	const Content = (() => {
+		try {
+			return Read("Source/Library/Content.ts");
+		} catch {
+			// A tree with no content wrapper has no key to resolve: every claim
+			// then reports the missing key, which is the honest answer.
+			return "";
+		}
+	})();
 	let Ok = true;
 
 	for (const File of Files) {
@@ -259,7 +310,9 @@ function CheckClaims() {
 			Problems.push("names no record (RFC-NNNN)");
 		}
 
-		const Cryptographic = /\b(?:cipher|decrypt|encrypt|key|sealed?)\b/i.test(Sentence);
+		const Cryptographic = /\b(?:cipher\w*|decrypt\w*|encrypt\w*|keys?|seal\w*)\b/i.test(
+			Sentence,
+		);
 
 		if (Cryptographic && !Protocols.some((Name_) => Sentence.includes(Name_))) {
 			Problems.push(`names no cipher suite (one of ${Protocols.join(", ")})`);

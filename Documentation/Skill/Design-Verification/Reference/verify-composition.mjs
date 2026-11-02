@@ -59,6 +59,40 @@ const Frame = [
 		(Box) => Box.seamNote,
 		"Drop private items here to publish · Source timeline selected",
 	],
+
+	// The composition grows downward from the canvas (RFC-0046 §4, RFC-0047 §5,
+	// RFC-0048). The three bands follow the canvas on its own 20px rhythm, in the
+	// order a reader meets them: what was published, who trusts whom, what the
+	// network runs, and the machine's own state.
+	[
+		"the bands are drawn in reading order",
+		(Box) => Box.bandOrder.every((Top, Index, All) => Index === 0 || Top > All[Index - 1]),
+		true,
+	],
+	["the swimlanes sit 20 under the canvas", (Box) => Box.gaps[0], 20],
+	["the spectrometer sits under the swimlanes", (Box) => Box.gaps[1], 20],
+	["the status footer closes the composition", (Box) => Box.gaps[2], 20],
+	[
+		"the lane air exceeds the canvas gap",
+		(Box) => Box.laneAir,
+		(Box) => Box.canvasGap,
+		(Got, Want) => Got > Want,
+	],
+	[
+		"the cluster sits on the rail's bottom",
+		(Box) => Box.security.y + Box.security.h,
+		(Box) => Box.rail.y + Box.rail.h,
+	],
+	[
+		"the cluster shares the footer's baseline",
+		(Box) => Box.marks.y + Box.marks.h,
+		(Box) => Box.statusList.y + Box.statusList.h,
+	],
+	[
+		"the footer states its four values as words",
+		(Box) => Box.statusWords.join(","),
+		"static,static,0,0",
+	],
 ];
 
 const Probe = `(() => {
@@ -69,14 +103,40 @@ const Probe = `(() => {
 		return { x: Math.round(Rect.x), y: Math.round(Rect.y), w: Math.round(Rect.width), h: Math.round(Rect.height) };
 	};
 	const Bands = [...document.querySelectorAll(".provenance__band")];
+	const Lanes = [...document.querySelectorAll(".swimlane")].map((Lane) => Lane.getBoundingClientRect());
+	const Canvas = document.querySelector(".bento");
+
+	// Measured from the unrounded rects: a band's height lands on a fraction of a
+	// pixel often enough that rounding both edges first turns a 20px gap into 21.
+	const Gap = (Above, Below) => {
+		const Top = document.querySelector(Above);
+		const Bottom = document.querySelector(Below);
+		if (Top === null || Bottom === null) return -1;
+		return Math.round(Bottom.getBoundingClientRect().y - Top.getBoundingClientRect().bottom);
+	};
 
 	return JSON.stringify({
 		provenance: Box(".provenance"),
 		drawer: Box(".drawer"),
 		publish: Box(".publish"),
 		bento: Box(".bento"),
+		rail: Box(".rail"),
+		swimlanes: Box(".swimlanes"),
+		spectrometer: Box(".spectrometer"),
+		status: Box(".status"),
+		statusList: Box(".status__list"),
+		security: Box(".security"),
+		marks: Box(".security__marks"),
 		bandCount: Bands.length,
 		bandHeights: Bands.map((Band) => Math.round(Band.getBoundingClientRect().height)),
+		bandOrder: [".swimlanes", ".spectrometer", ".status"].map((Selector) => {
+			const Element = document.querySelector(Selector);
+			return Element === null ? -1 : Math.round(Element.getBoundingClientRect().y);
+		}),
+		gaps: [Gap(".bento", ".swimlanes"), Gap(".swimlanes", ".spectrometer"), Gap(".spectrometer", ".status")],
+		laneAir: Lanes.length < 2 ? -1 : Math.round(Lanes[1].y - Lanes[0].bottom),
+		canvasGap: Math.round(parseFloat(getComputedStyle(Canvas).rowGap)),
+		statusWords: [...document.querySelectorAll(".status__value")].map((Value) => Value.textContent.trim()),
 		seamBackground: getComputedStyle(document.querySelector(".publish")).backgroundColor,
 		seamNote: document.querySelector(".publish__note")?.textContent?.trim(),
 	});
@@ -200,10 +260,10 @@ try {
 	const Box = await measure(Url);
 	let Failed = 0;
 
-	for (const [Label, Read, Want] of Frame) {
+	for (const [Label, Read, Want, Test] of Frame) {
 		const Got = Read(Box);
 		const Expected = typeof Want === "function" ? Want(Box) : Want;
-		const Held = Got === Expected;
+		const Held = Test === undefined ? Got === Expected : Test(Got, Expected);
 
 		if (!Held) Failed++;
 		console.log(

@@ -1,0 +1,195 @@
+@use "../Material.scss" as Material;
+
+// The capability spectrometer: the band under the swimlanes.
+//
+// Same paper, same 48px inset, same 24px corner and same `--band-columns` axis
+// as the swimlanes above it (RFC-0046 §4), so the two bands read as one diagram
+// cut into two rows of space: a lane and a column that disagreed about the order
+// would be two diagrams of the same thing.
+//
+// A column head carries three lines - the step, the protocol that carries it, and
+// the record its state is read from - because the band is evidence and a reader
+// who wants to check a cell needs to know which record answered. A cell carries
+// the state and the shape that states it, so the cell alone is complete.
+//
+// The states are shapes at one ink, like the swimlanes': filled is running, an
+// outline is available, a dashed outline is absent, a dotted one is a record the
+// client could not read. The state word is always printed beside the shape, which
+// is what keeps a cell readable when it is copied into a review document with the
+// styling stripped.
+.spectrometer {
+	margin-inline: var(--rhythm-block);
+	padding: var(--space-6);
+	background: var(--color-surface);
+	border: 1px solid var(--color-line-faint);
+	border-radius: var(--radius-tile);
+	color: var(--color-ink);
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-4);
+		padding-bottom: var(--space-4);
+		border-bottom: var(--hairline-faint);
+	}
+
+	&__eyebrow {
+		@include Material.label(var(--text-2xs), var(--color-ink-faint));
+
+		margin: 0;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--text-lg);
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
+	&__note {
+		margin: 0 0 0 auto;
+		max-width: 32rem;
+		font-size: var(--text-xs);
+		line-height: 1.4;
+		text-align: right;
+		color: var(--color-ink-muted);
+	}
+
+	&__table {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__row {
+		display: grid;
+		grid-template-columns: var(--band-columns);
+		align-items: stretch;
+		gap: var(--space-4);
+		padding-block: var(--space-3);
+		border-bottom: var(--hairline-faint);
+
+		&--head {
+			padding-block: var(--space-3) var(--space-2);
+		}
+	}
+
+	&__peer {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 2px;
+		min-width: 0;
+		margin: 0;
+
+		&--head {
+			@include Material.label(var(--text-3xs), var(--color-ink-faint));
+
+			justify-content: flex-end;
+		}
+	}
+
+	&__peer-kind {
+		@include Material.label(var(--text-3xs), var(--color-ink-faint));
+
+		margin: 0;
+	}
+
+	&__peer-name {
+		margin: 0;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
+	&__capability {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__capability-name {
+		@include Material.label(var(--text-2xs), var(--color-ink));
+
+		margin: 0;
+	}
+
+	// The protocol is set in the monospace face because it is an identifier
+	// rather than prose: a suite name is checked character by character, and a
+	// proportional face invites a misread.
+	&__capability-protocol {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: var(--text-3xs);
+		line-height: 1.4;
+		color: var(--color-ink-muted);
+	}
+
+	&__capability-record {
+		margin: 0;
+		font-size: var(--text-3xs);
+		line-height: 1.4;
+		color: var(--color-ink-faint);
+	}
+
+	&__cell {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-3);
+		background: var(--color-surface-sunken);
+		border-radius: var(--radius-card);
+	}
+
+	&__mark {
+		width: 8px;
+		height: 8px;
+		flex-shrink: 0;
+		border: 1px solid var(--color-line-strong);
+		border-radius: 2px;
+	}
+
+	&__state {
+		@include Material.label(var(--text-3xs), var(--color-ink-muted));
+
+		margin: 0;
+	}
+
+	&__cell[data-state="running"] &__mark {
+		background: var(--color-ink);
+		border-color: var(--color-ink);
+	}
+
+	&__cell[data-state="available"] &__mark {
+		border-color: var(--color-ink-muted);
+	}
+
+	&__cell[data-state="absent"] &__mark {
+		border-style: dashed;
+	}
+
+	&__cell[data-state="unknown"] &__mark {
+		border-style: dotted;
+	}
+
+	@media (max-width: 900px) {
+		margin-inline: var(--space-4);
+		padding: var(--space-4);
+
+		&__head {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-2);
+		}
+
+		&__note {
+			margin: 0;
+			text-align: left;
+		}
+
+		&__row {
+			grid-template-columns: minmax(0, 1fr);
+			gap: var(--space-2);
+		}
+	}
+}

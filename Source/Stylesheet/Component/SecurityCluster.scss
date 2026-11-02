@@ -1,0 +1,116 @@
+@use "../Material.scss" as Material;
+
+// The rail's security cluster: the protocol marks, at the bottom of the rail.
+//
+// The rail is a column running the height of the composition and the drum is the
+// block at its top, so the cluster is pushed down with `margin-top: auto` and
+// sits on the composition's bottom line (RFC-0048 §2). Its block padding is the
+// status footer's, which is what puts the last mark on the footer's baseline
+// without either surface knowing the other's height.
+//
+// The width is 200 inside the 224 rail, the measurement RFC-0048 §
+// Consequences states: four marks and a word fit, and a fifth protocol forces a
+// design decision rather than an overflow.
+//
+// A mark's state is the shape of its square, at one ink: filled is engaged, an
+// outline is available, a dashed outline is absent. The word is printed beside
+// it, so the mark is never a colour a reader has to interpret - and `absent` is
+// drawn rather than dropped, because a protocol that was engaged and is no longer
+// engaged is a fact the surface owes the reader.
+.security {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	align-self: center;
+	width: 200px;
+	margin-top: auto;
+	padding: var(--space-4) var(--space-3) var(--space-3);
+	color: var(--chrome-ink);
+
+	&__eyebrow {
+		@include Material.label(var(--text-2xs), var(--chrome-ink-faint));
+
+		margin: 0;
+	}
+
+	&__marks {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__mark {
+		display: grid;
+		grid-template-columns: 8px minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0 var(--space-2);
+	}
+
+	&__mark-shape {
+		width: 8px;
+		height: 8px;
+		border: 1px solid var(--chrome-line-strong);
+		border-radius: 2px;
+	}
+
+	&__mark-name {
+		@include Material.ellipsis;
+
+		font-size: var(--text-3xs);
+		line-height: 1.5;
+		color: var(--chrome-ink);
+	}
+
+	&__mark-state {
+		@include Material.label(var(--text-3xs), var(--chrome-ink-muted));
+
+		margin: 0;
+	}
+
+	// What the protocol does, on a second line under the name. A mark without it
+	// would be a badge, and a badge in a security surface reads as an assurance
+	// nobody gave.
+	&__mark-note {
+		grid-column: 2 / -1;
+		font-size: var(--text-3xs);
+		line-height: 1.4;
+		color: var(--chrome-ink-faint);
+	}
+
+	&__mark[data-state="engaged"] &__mark-shape {
+		background: var(--chrome-ink-bright);
+		border-color: var(--chrome-ink-bright);
+	}
+
+	&__mark[data-state="available"] &__mark-shape {
+		border-color: var(--chrome-ink-muted);
+	}
+
+	&__mark[data-state="absent"] &__mark-shape {
+		border-style: dashed;
+	}
+
+	@media (max-width: 900px) {
+		align-self: stretch;
+		width: auto;
+		margin-top: 0;
+		padding-inline: var(--space-4);
+
+		&__marks {
+			flex-direction: row;
+			flex-wrap: wrap;
+			gap: var(--space-4);
+		}
+
+		&__mark {
+			grid-template-columns: 8px auto auto;
+		}
+
+		&__mark-note {
+			display: none;
+		}
+	}
+}

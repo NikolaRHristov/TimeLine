@@ -83,6 +83,15 @@ const Profiles = [
 			{ Selector: "article.bento__tile", Min: 1 },
 			{ Selector: ".publish__label", Min: 1 },
 			{ Selector: ".provenance__band", Min: 1 },
+			// The three bands below the canvas and the rail's cluster
+			// (RFC-0046 to RFC-0048). Every one of them is server-rendered, so a
+			// band that is missing here is a band that waits for hydration.
+			{ Selector: ".rail", Min: 1 },
+			{ Selector: ".swimlane", Min: 2 },
+			{ Selector: ".swimlane__step", Min: 8 },
+			{ Selector: ".spectrometer__cell", Min: 8 },
+			{ Selector: ".status__value", Min: 4 },
+			{ Selector: ".security__mark", Min: 4 },
 		],
 	},
 	{

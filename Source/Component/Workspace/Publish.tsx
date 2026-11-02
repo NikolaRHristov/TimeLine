@@ -44,9 +44,12 @@ export default function Publish(Props: Props) {
 			<p class="publish__note">
 				<Icon Name="arrow-down-circle" />
 				<Show when={Props.Context} fallback={<span>{Props.Note}</span>}>
-					<span>
-						{Props.Note} · {Props.Context} timeline selected
-					</span>
+					{/* One template, not three text nodes around an interpolation: Solid
+					    renders `{Note} · {Context} timeline` with the space after the
+					    dot inside the dynamic block, so the first update replaces it
+					    and the line reads `·Source`. A single expression has no
+					    boundary for the update to fall on. */}
+					<span>{`${Props.Note} · ${Props.Context} timeline selected`}</span>
 				</Show>
 			</p>
 		</div>

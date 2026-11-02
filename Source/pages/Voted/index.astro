@@ -1,33 +1,46 @@
 ---
 /**
- * The Voted index: what people are being asked to rank.
+ * The Voted index: the candidate queue.
  *
  * A candidate is public here and nowhere else. Approving one is a command the
  * owner runs, and the Curated index on the homepage is the only place an
  * approved entry appears - so this page can be as open as it likes without
  * publishing anything.
  *
+ * The page is the drawer's column band turned public, because this is the one
+ * public surface that is a queue: one column per state a record can be in, each a
+ * stack of cards. The frame comes from `Component/Column.scss` - the same face,
+ * corner and inner padding the lists index draws - and the cards come from
+ * `Component/Queue.scss`, because a queue card carries a vote count, a note and a
+ * control where a list column carries one line of post text.
+ *
+ * A rejection is a state, not a deletion: a rejected entry keeps its column, its
+ * link and its count, and is struck through. Nothing a reader could have seen
+ * disappears because the owner decided against it.
+ *
  * Two builds of this page exist, and both are normal:
  *
  * - **No vote configuration** (every fresh clone). The counts on file are
  *   shown, the line under the heading says voting is not configured, and there
  *   are no buttons. No request, no error, no empty page.
- * - **A configured project.** The same rows, plus a `Vote` control per row and
- *   the live counts fetched by `Source/Script/Vote/Widget.ts`.
+ * - **A configured project.** The same cards, plus a `Vote` control on each
+ *   candidate and the live counts fetched by `Source/Script/Vote/Widget.ts`.
  *
  * Nothing is fetched while this page is built: the numbers come from the
  * content collection, which `maintain vote sync` refreshed last time the owner
  * ran it.
  *
- * The `data-vote-*` attributes are the widget's contract. They are on the same
- * elements as the roster classes on purpose: the markup is styled by the
+ * The `data-vote-*` attributes are the widget's contract, and they are on the
+ * same elements as the queue classes on purpose: the markup is styled by the
  * stylesheet and found by the script, and neither has to know about the other.
  */
+import "@Stylesheet/Component/Column.scss";
 import "@Stylesheet/Component/Note.scss";
-import "@Stylesheet/Component/Roster.scss";
+import "@Stylesheet/Component/Queue.scss";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
 import { Route } from "@Library/Link.ts";
+import { StatusAccent, type StatusKey } from "@Library/Stage.ts";
 import { fill } from "@Library/Text.ts";
 import { read as readConfiguration } from "@Script/Vote/Configuration.ts";
 import { getCollection } from "astro:content";
@@ -36,21 +49,38 @@ const voted = await getCollection("Voted");
 const configuration = readConfiguration();
 const configured = configuration !== null;
 
+type Entry = (typeof voted)[number];
+
 /**
- * Candidates only, best-supported first, ties broken by the older nomination
- * and then by id so the order never depends on the filesystem.
+ * The three states of one record, in the order a record moves through them.
  *
- * Approved entries are not repeated here - they are on the homepage - and a
- * rejected entry is a tombstone, so it is not rendered at all.
+ * A state is a column and a stage is a step, which is why the label comes from
+ * the site's words and the accent from the stage map rather than from a colour
+ * this page chooses.
  */
-const candidates = voted
-	.filter((entry) => entry.data.status === "candidate")
-	.sort(
-		(left, right) =>
-			right.data.votes - left.data.votes ||
-			left.data.nominatedAt.localeCompare(right.data.nominatedAt) ||
-			left.id.localeCompare(right.id),
-	);
+const States: { Status: StatusKey; Label: string }[] = [
+	{ Status: "candidate", Label: Content.Word.Candidates },
+	{ Status: "approved", Label: Content.Word.Approved },
+	{ Status: "rejected", Label: Content.Word.Rejected },
+];
+
+/**
+ * Best-supported first, ties broken by the older nomination and then by id so
+ * the order never depends on the filesystem. One order for all three columns:
+ * a column is a ranking of the same field, whichever state it holds.
+ */
+const Order = (left: Entry, right: Entry): number =>
+	right.data.votes - left.data.votes ||
+	left.data.nominatedAt.localeCompare(right.data.nominatedAt) ||
+	left.id.localeCompare(right.id);
+
+const Queues = States.map((State) => ({
+	...State,
+	Tone: StatusAccent(State.Status),
+	Entries: voted.filter((entry) => entry.data.status === State.Status).sort(Order),
+}));
+
+const candidates = voted.filter((entry) => entry.data.status === "candidate").sort(Order);
 
 const description = fill(Content.Page.Voted.Description, { count: String(candidates.length) });
 const lede = fill(Content.Page.Voted.Lede, {
@@ -58,8 +88,12 @@ const lede = fill(Content.Page.Voted.Lede, {
 	candidateNoun: candidates.length === 1 ? Content.Word.Candidate : Content.Word.Candidates,
 });
 const day = (value: string): string => value.slice(0, 10);
-const label = (entry: (typeof candidates)[number]): string =>
+const label = (entry: Entry): string =>
 	entry.data.title !== undefined && entry.data.title !== "" ? entry.data.title : entry.data.url;
+const author = (entry: Entry): string =>
+	entry.data.author.handle === ""
+		? Content.Page.Voted.UnknownAuthor
+		: `@${entry.data.author.handle}`;
 ---
 
 <Base Title={Content.Route.Voted} Description={description}>
@@ -76,7 +110,7 @@ const label = (entry: (typeof candidates)[number]): string =>
 			)}
 		</header>
 
-		{candidates.length === 0 && (
+		{voted.length === 0 && (
 			<section class="note">
 				<h2 class="note__title">{Content.Empty.Voted}</h2>
 				<p class="note__body">{Content.Page.Voted.EmptyBody}</p>
@@ -99,45 +133,77 @@ const label = (entry: (typeof candidates)[number]): string =>
 			</section>
 		)}
 
-		{candidates.length > 0 && (
+		{voted.length > 0 && (
 			<div data-vote>
-				<ol class="roster">
-					{candidates.map((entry) => (
-						<li class="roster__row" data-vote-row>
-							<span class="roster__lead" data-vote-total>
-								{entry.data.votes}
-							</span>
-							<a
-								class="roster__label"
-								href={entry.data.url}
-								rel="noopener noreferrer">
-								{label(entry)}
-							</a>
-							<span class="roster__meta">
-								{entry.data.author.handle === ""
-									? Content.Page.Voted.UnknownAuthor
-									: `@${entry.data.author.handle}`}
-								{" · "}
-								{fill(Content.Page.Voted.Nominated, {
-									day: day(entry.data.nominatedAt),
-								})}
-								{entry.data.lists.length > 0 && ` · ${entry.data.lists.join(", ")}`}
-							</span>
-							{entry.data.note !== undefined && entry.data.note !== "" && (
-								<span class="roster__aside">{entry.data.note}</span>
-							)}
-							{configured && (
-								<button
-									class="ml-auto rounded border border-neutral-300 px-3 py-1 text-xs text-neutral-700 hover:border-neutral-500 disabled:opacity-50"
-									data-vote-id={entry.data.id}
-									type="button">
-									{Content.Page.Voted.Button}
-								</button>
-							)}
+				<ul class="queue">
+					{Queues.map((Queue) => (
+						<li class="column" style={`--column-tone: ${Queue.Tone}`}>
+							<div class="column__inner">
+								<div class="column__head">
+									<h2 class="queue__name">
+										<span class="queue__mark" aria-hidden="true" />
+										{Queue.Label}
+									</h2>
+									<span class="column__count">{Queue.Entries.length}</span>
+								</div>
+
+								<ol class="queue__list">
+									{Queue.Entries.map((entry) => (
+										<li
+											class:list={[
+												"queue__card",
+												{
+													"queue__card--tombstone":
+														entry.data.status === "rejected",
+												},
+											]}
+											data-vote-row>
+											<a
+												class="queue__title"
+												href={entry.data.url}
+												rel="noopener noreferrer">
+												{label(entry)}
+											</a>
+
+											<p class="queue__meta">
+												<span class="queue__votes" data-vote-total>
+													{entry.data.votes}
+												</span>{" "}
+												{entry.data.votes === 1
+													? Content.Word.Vote
+													: Content.Word.Votes}
+												{" · "}
+												{author(entry)}
+												{" · "}
+												{fill(Content.Page.Voted.Nominated, {
+													day: day(entry.data.nominatedAt),
+												})}
+												{entry.data.lists.length > 0 &&
+													` · ${entry.data.lists.join(", ")}`}
+											</p>
+
+											{entry.data.note !== undefined &&
+												entry.data.note !== "" && (
+													<p class="queue__note">{entry.data.note}</p>
+												)}
+
+											{configured && entry.data.status === "candidate" && (
+												<button
+													class="queue__vote"
+													data-vote-id={entry.data.id}
+													type="button">
+													{Content.Page.Voted.Button}
+												</button>
+											)}
+										</li>
+									))}
+								</ol>
+							</div>
 						</li>
 					))}
-				</ol>
-				{configured && <p class="mt-4 text-xs text-neutral-600" data-vote-status hidden />}
+				</ul>
+
+				{configured && <p class="queue__status" data-vote-status hidden />}
 			</div>
 		)}
 

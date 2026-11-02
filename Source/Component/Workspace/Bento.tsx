@@ -1,79 +1,24 @@
 import "@Stylesheet/Component/Bento.scss";
+import { Occupy, Seats, type Tile } from "@Script/Workspace/Seat.ts";
 import { For, Show } from "solid-js";
 
 /**
- * One published tile.
+ * The seat table and the tile shape, re-exported for the pages that build them.
  *
- * Placement is data: the tile names the column and row it starts at and how many
- * tracks it spans. That is what makes the canvas a template - the same sheet
- * draws a single hero or a ten-tile mosaic, and rearranging the page is a change
- * to the array, not to the stylesheet.
+ * They live in `@Script/Workspace/Seat.ts` because two callers read them and only
+ * this one draws: the store hands a published record the next free seat, and a
+ * store that reached into this file for the table would also ship this sheet to
+ * every page that mounts a rail. The canvas stays their documented home for the
+ * composition - a page still reads `Seats` here.
  */
-export interface Tile {
-	/** The record the tile renders; empty tiles carry a synthetic id. */
-	Id: string;
-	Column: number;
-	Row: number;
-	ColumnSpan: number;
-	RowSpan: number;
-	/** Which of the three greys the tile is filled with. */
-	Tone?: "plain" | "quiet" | "sunken";
-	/** The small line above the title. */
-	Eyebrow?: string;
-	Title?: string;
-	Meta?: string;
-	Href?: string;
-}
-
-interface Props {
-	Tiles: Tile[];
-}
-
-/**
- * The composition's canvas, as ten seats.
- *
- * The mosaic is the design, not a consequence of how many records exist: a hero
- * three columns wide beside a stacked pair, a tall column closing the right edge,
- * then that rhythm mirrored underneath. Stating it as a table is what lets a thin
- * archive draw the same page - a record takes the next seat and the seats after it
- * stay empty at their own grey, so the layout never reflows around the data.
- *
- * The three greys are the seat's rank rather than its state: `sunken` is the
- * loudest at `#e2e2e2`, `plain` the middle at `#e9e9e9`, `quiet` the softest at
- * `#eee`. A seat keeps its grey whether or not a record has landed on it, which
- * is what makes the hierarchy readable on an empty canvas.
- */
-export const Seats: Tile[] = [
-	{ Id: "seat-1", Column: 1, Row: 1, ColumnSpan: 3, RowSpan: 2, Tone: "plain" },
-	{ Id: "seat-2", Column: 4, Row: 1, ColumnSpan: 2, RowSpan: 1, Tone: "quiet" },
-	{ Id: "seat-3", Column: 6, Row: 1, ColumnSpan: 1, RowSpan: 2, Tone: "plain" },
-	{ Id: "seat-4", Column: 4, Row: 2, ColumnSpan: 1, RowSpan: 1, Tone: "sunken" },
-	{ Id: "seat-5", Column: 5, Row: 2, ColumnSpan: 1, RowSpan: 1, Tone: "plain" },
-	{ Id: "seat-6", Column: 1, Row: 3, ColumnSpan: 1, RowSpan: 2, Tone: "quiet" },
-	{ Id: "seat-7", Column: 2, Row: 3, ColumnSpan: 2, RowSpan: 1, Tone: "plain" },
-	{ Id: "seat-8", Column: 4, Row: 3, ColumnSpan: 3, RowSpan: 2, Tone: "sunken" },
-	{ Id: "seat-9", Column: 2, Row: 4, ColumnSpan: 1, RowSpan: 1, Tone: "sunken" },
-	{ Id: "seat-10", Column: 3, Row: 4, ColumnSpan: 1, RowSpan: 1, Tone: "quiet" },
-];
+export { Seats };
+export type { Tile };
 
 const Tone = {
 	plain: "bento__tile--plain",
 	quiet: "bento__tile--quiet",
 	sunken: "bento__tile--sunken",
 };
-
-/** The cells a tile occupies, as `column:row` keys. */
-function Occupy(Tile: Tile): string[] {
-	const Cells: string[] = [];
-
-	for (let Column = Tile.Column; Column < Tile.Column + Tile.ColumnSpan; Column++) {
-		for (let Row = Tile.Row; Row < Tile.Row + Tile.RowSpan; Row++) {
-			Cells.push(`${Column}:${Row}`);
-		}
-	}
-
-	return Cells;
-}
 
 /**
  * The seats the mosaic still has empty.
@@ -84,13 +29,13 @@ function Occupy(Tile: Tile): string[] {
  * derived from the placed tiles, never stored, so a tile that arrives in the data
  * simply takes its seat and the empty set shrinks by one.
  */
-function Empty(Tiles: Tile[]): Tile[] {
+function Empty(Tiles: readonly Tile[]): Tile[] {
 	const Taken = new Set(Tiles.flatMap(Occupy));
 
 	return Seats.filter((Seat) => !Occupy(Seat).some((Cell) => Taken.has(Cell)));
 }
 
-export default function Bento(Props: Props) {
+export default function Bento(Props: { Tiles: readonly Tile[] }) {
 	const All = () => [...Props.Tiles, ...Empty(Props.Tiles)];
 
 	return (

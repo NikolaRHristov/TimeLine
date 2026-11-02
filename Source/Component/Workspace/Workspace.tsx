@@ -1,34 +1,46 @@
 import "@Stylesheet/Component/Workspace.scss";
+import type { Band } from "@Library/Band.ts";
 import { OwnKey, type Context } from "@Script/Session/Context.ts";
 import { CrossTheSeam } from "@Script/Session/Seam.ts";
-import { Enter } from "@Script/Session/Session.ts";
-import { UseSession } from "@Script/Session/Use.ts";
-import { createSignal, Show } from "solid-js";
-import Bento, { Seats, type Tile } from "./Bento.tsx";
+import { Anonymous, Enter, type Slot } from "@Script/Session/Session.ts";
+import { store } from "@Script/Workspace/Store.ts";
+import { onMount } from "solid-js";
+import Bento, { type Tile } from "./Bento.tsx";
 import ContextSwitch from "./ContextSwitch.tsx";
-import Drawer, { type DrawerView } from "./Drawer.tsx";
+import Drawer from "./Drawer.tsx";
 import { type Column } from "./DrawerColumn.tsx";
-import Provenance, { type Stage } from "./Provenance.tsx";
+import { type Stage } from "./Provenance.tsx";
 import Publish from "./Publish.tsx";
+import Spectrometer from "./Spectrometer.tsx";
+import StatusFooter from "./StatusFooter.tsx";
+import Swimlanes from "./Swimlanes.tsx";
 
 /**
- * The workspace: the private drawer, the publish seam, and the published canvas.
+ * The workspace body: the private drawer, the publish seam, and the published
+ * canvas.
  *
- * This is the one component that holds state, and it holds only what a person
- * is doing right now - which stage is selected, which column is live, which
- * record is open, and which tiles have been published this session. Everything
- * else arrives as props, so the same component renders an empty archive and a
- * full one, and a page decides what the workspace is looking at.
+ * This component holds no state. Everything a person is doing right now - which
+ * stage is selected, which column is live, which record is open, which tiles have
+ * been published, which context the session is looking at - lives in the
+ * workspace store, which the rail beside it reads too. That is why the two are
+ * separate islands: the rail can select a stage and this surface names it,
+ * because there is one value behind both.
  *
- * The session layer decides the rest: which context is selected, what standing
- * the identity has in it, and which of the four states is on screen. It starts
- * empty, so the first render - the server's and the client's - is the build's
- * own view, and a session that never resolves leaves exactly that in place.
+ * What arrives as props is the build's data and nothing else: the stages, the
+ * columns, the tiles and the contexts a page derived from its collections. The
+ * page still decides what the workspace is looking at; the store decides what the
+ * person has done to it since.
+ *
+ * The session layer decides who is here. The store holds the slot and reads it
+ * once on mount, so the first render - the server's and the client's - is the
+ * build's own view, and a session that never resolves leaves exactly that in
+ * place.
  *
  * Publishing is the composition's core gesture, and it crosses the seam rather
  * than writing the canvas: `CrossTheSeam` is the only path from a drawer record
  * to a tile, so an act that is not a publication cannot reach the canvas even by
- * mistake.
+ * mistake. The seat a crossed record lands on is the store's, because the rail
+ * beside this surface can publish into the same canvas.
  */
 interface Props {
 	Stages: Stage[];
@@ -40,7 +52,7 @@ interface Props {
 	Eyebrow: string;
 	/** The drawer's title. */
 	Title: string;
-	/** The lock line beside the title. */
+	/** The lock line beside the title, before a session names itself. */
 	Hint: string;
 	/** The publish bar's standing instruction. */
 	Instruction: string;
@@ -48,44 +60,44 @@ interface Props {
 	Contexts: Context[];
 	/** When the build's view is current to, as an ISO timestamp. */
 	AsOf: string | null;
-}
-
-/** The cells a tile occupies, as `column:row` keys. */
-function Occupy(Tile: Tile): string[] {
-	const Cells: string[] = [];
-
-	for (let Column = Tile.Column; Column < Tile.Column + Tile.ColumnSpan; Column++) {
-		for (let Row = Tile.Row; Row < Tile.Row + Tile.RowSpan; Row++) {
-			Cells.push(`${Column}:${Row}`);
-		}
-	}
-
-	return Cells;
-}
-
-/**
- * The next seat the canvas has empty.
- *
- * The mosaic is fixed, so a publish cannot choose its own geometry: it takes the
- * first seat no record has landed on, in the composition's own order. That is why
- * the drawer's queue and the canvas cannot disagree - there is one seat table and
- * one cursor into it. A full canvas returns nothing, and the caller treats that
- * as "already full" rather than stacking a record on top of another.
- */
-function FreeSeat(Tiles: Tile[]): Tile | undefined {
-	const Taken = new Set(Tiles.flatMap(Occupy));
-
-	return Seats.find((Seat) => !Occupy(Seat).some((Cell) => Taken.has(Cell)));
+	/**
+	 * The three bands below the canvas and the rail's cluster (RFC-0046 to
+	 * RFC-0048).
+	 *
+	 * One value rather than nine props: the bands answer one question about one
+	 * network, and a page that assembled them field by field could give the
+	 * swimlanes and the spectrometer different peers.
+	 */
+	Bands: Band;
 }
 
 export default function Workspace(Props: Props) {
-	const Session = UseSession(Props.Contexts, Props.AsOf);
+	const Store = store();
 
-	const [Stage, SetStage] = createSignal(Props.Stages[0]?.Key ?? "");
-	const [Active, SetActive] = createSignal(Props.Columns[0]?.Key ?? "");
-	const [View, SetView] = createSignal<DrawerView>("list");
-	const [Open, SetOpen] = createSignal<string | null>(null);
-	const [Published, SetPublished] = createSignal<Tile[]>(Props.Tiles);
+	Store.Adopt({
+		Stages: Props.Stages,
+		Columns: Props.Columns,
+		Tiles: Props.Tiles,
+		Contexts: Props.Contexts,
+		AsOf: Props.AsOf,
+	});
+
+	// The session is read after the first render, never during it: the server's
+	// HTML and the first client render are then the same anonymous slot, and a
+	// failed read costs one warning instead of an error during hydration.
+	onMount(() => {
+		void Store.Resolve();
+	});
+
+	/**
+	 * The session slot.
+	 *
+	 * `Adopt` above has already handed the store this page's contexts, so the
+	 * fallback is for a reader that mounts the slot before the page does - the
+	 * anonymous slot those contexts make, which is the same value the store would
+	 * have adopted.
+	 */
+	const Slot = (): Slot => Store.State.Session ?? Anonymous(Props.Contexts, Props.AsOf);
 
 	/**
 	 * The island's whole input (RFC-0043 §7), composed per read.
@@ -97,9 +109,9 @@ export default function Workspace(Props: Props) {
 	 * because a canvas whose rows are not readable is not an empty canvas.
 	 */
 	const Contract = () =>
-		Enter(Session.Slot(), {
+		Enter(Slot(), {
 			Drawer: Props.Columns,
-			Canvases: { [OwnKey]: Published() },
+			Canvases: { [OwnKey]: Store.State.Published },
 			Built: Props.Tiles,
 			Pending: [],
 		});
@@ -112,24 +124,32 @@ export default function Workspace(Props: Props) {
 	 * that has room for one clause.
 	 */
 	const StageName = () =>
-		(Props.Stages.find((Entry) => Entry.Key === Stage())?.Label ?? "").split(" · ")[0];
+		(Props.Stages.find((Entry) => Entry.Key === Store.State.Stage)?.Label ?? "").split(
+			" · ",
+		)[0];
+
+	/**
+	 * The drawer's lock line.
+	 *
+	 * Anonymous, it is the page's standing instruction. A session that names
+	 * itself replaces it, because the question the line answers - what may I do
+	 * here - has a different answer once somebody is signed in.
+	 */
+	const Hint = () => {
+		const Identity = Store.State.Session?.Identity;
+
+		return Identity === null || Identity === undefined
+			? Props.Hint
+			: `Private workspace - signed in as @${Identity.Name}`;
+	};
 
 	const Publish_ = (Key: string) => {
 		const Column = Props.Columns.find((Candidate) => Candidate.Key === Key);
 		const Entry =
-			Column?.Entries.find((Candidate) => Candidate.Id === Open()) ?? Column?.Entries[0];
+			Column?.Entries.find((Candidate) => Candidate.Id === Store.State.Record) ??
+			Column?.Entries[0];
 
-		if (Entry === undefined) {
-			return;
-		}
-
-		if (Published().some((Tile) => Tile.Id === Entry.Id)) {
-			return;
-		}
-
-		const Seat = FreeSeat(Published());
-
-		if (Seat === undefined) {
+		if (Column === undefined || Entry === undefined) {
 			return;
 		}
 
@@ -154,59 +174,62 @@ export default function Workspace(Props: Props) {
 			return;
 		}
 
-		SetPublished((Current) => [
-			...Current,
-			{
-				...Seat,
-				Id: Entry.Id,
-				Eyebrow: Column?.Label ?? "",
-				Title: Entry.Title,
-				Meta: Entry.Meta,
-			},
-		]);
+		Store.Publish(Column, Entry);
 	};
 
 	return (
-		<div class="workspace">
-			<Provenance
-				Stages={Props.Stages}
-				Selected={Stage()}
-				Note={Props.Note}
-				OnSelect={(Key) => SetStage(Key)}
+		<div class="workspace__body">
+			<ContextSwitch
+				Contexts={Slot().Contexts}
+				Selected={Contract().Context}
+				State={Contract().State}
+				AsOf={Contract().AsOf}
+				OnSelect={(Next) => Store.Switch(Next)}
 			/>
 
-			<div class="workspace__body">
-				<ContextSwitch
-					Contexts={Session.Slot().Contexts}
-					Selected={Contract().Context}
-					State={Contract().State}
-					AsOf={Contract().AsOf}
-					OnSelect={Session.Select}
+			<Drawer
+				Eyebrow={Props.Eyebrow}
+				Title={Props.Title}
+				Hint={Hint()}
+				Columns={Props.Columns}
+				Active={Store.State.Column}
+				View={Store.State.View}
+				OnActivate={(Key) => Store.Activate(Key)}
+				OnView={(Next) => Store.Show(Next)}
+				OnOpen={(Id) => Store.Open(Id)}
+				OnAdd={() => undefined}
+				OnPublish={Publish_}
+			/>
+
+			<Publish
+				Label={Contract().Destination}
+				Note={Props.Instruction}
+				Context={StageName()}
+			/>
+
+			<Bento Tiles={Contract().Canvas} />
+
+			<div class="workspace__bands">
+				<Swimlanes
+					Lanes={Props.Bands.Lanes}
+					Eyebrow={Props.Bands.Words.Swimlanes.Eyebrow}
+					Title={Props.Bands.Words.Swimlanes.Title}
+					Note={Props.Bands.Words.Swimlanes.Note}
 				/>
 
-				<Drawer
-					Eyebrow={Props.Eyebrow}
-					Title={Props.Title}
-					Hint={Props.Hint}
-					Columns={Props.Columns}
-					Active={Active()}
-					View={View()}
-					OnActivate={(Key) => SetActive(Key)}
-					OnView={(Next) => SetView(Next)}
-					OnOpen={(Id) => SetOpen(Id)}
-					OnAdd={() => undefined}
-					OnPublish={(Key) => Publish_(Key)}
+				<Spectrometer
+					Peers={Props.Bands.Peers}
+					Eyebrow={Props.Bands.Words.Spectrometer.Eyebrow}
+					Title={Props.Bands.Words.Spectrometer.Title}
+					Note={Props.Bands.Words.Spectrometer.Note}
+					RowLabel={Props.Bands.Words.Spectrometer.RowLabel}
 				/>
 
-				<Publish
-					Label={Contract().Destination}
-					Note={Props.Instruction}
-					Context={StageName()}
+				<StatusFooter
+					Items={Props.Bands.Status}
+					Eyebrow={Props.Bands.Words.Footer.Eyebrow}
+					Label={Props.Bands.Words.Footer.Label}
 				/>
-
-				<Show when={View() === "list"} fallback={<Bento Tiles={Published()} />}>
-					<Bento Tiles={Published()} />
-				</Show>
 			</div>
 		</div>
 	);

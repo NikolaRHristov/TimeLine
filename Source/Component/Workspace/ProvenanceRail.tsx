@@ -1,14 +1,14 @@
-import { createSignal } from "solid-js";
+import { store } from "@Script/Workspace/Store.ts";
 import Provenance, { type Stage } from "./Provenance.tsx";
 
 /**
- * The rail as a page draws it: the drum, and the one signal the drum needs.
+ * The rail as a page draws it: the drum, reading the workspace store.
  *
  * `Provenance` is a function of its props - it draws thirteen bands and marks
- * the selected one - so the selection lives with whoever mounts it. The
- * workspace holds that signal itself, because the stage also drives its drawer;
- * a page that reads one record's trail has nothing else to coordinate, so the
- * signal lives here.
+ * the selected one - so the selection lives in the store, and a page that mounts
+ * this hands over only what the build produced. That is what lets a rail and a
+ * body be separate islands on one page: both read the same stage, so a press here
+ * is a selection there, without either component passing a value to the other.
  *
  * This exists so the rail is never drawn unwired: the bands are `<button>`s, and
  * a button that answers a press with nothing is a control that lies about being
@@ -24,14 +24,16 @@ interface Props {
 }
 
 export default function ProvenanceRail(Props: Props) {
-	const [Selected, SetSelected] = createSignal(Props.Initial);
+	const Store = store();
+
+	Store.Adopt({ Stages: Props.Stages, Stage: Props.Initial });
 
 	return (
 		<Provenance
 			Stages={Props.Stages}
-			Selected={Selected()}
+			Selected={Store.State.Stage}
 			Note={Props.Note}
-			OnSelect={(Key) => SetSelected(Key)}
+			OnSelect={(Key) => Store.Select(Key)}
 		/>
 	);
 }

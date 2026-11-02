@@ -5,7 +5,7 @@
 // Run it from the repository root; it reads the paths it names and nothing else.
 // Archived: 2026-11-02 by Documentation/Skill/Tool-Archive/Reference/archive_tool.py
 /**
- * The token contract: five checks that fail the build when the design system
+ * The token contract: eight checks that fail the build when the design system
  * drifts.
  *
  * A token set is a convention until something enforces it, and the edit that
@@ -14,7 +14,7 @@
  * and the components under `Source/` and reports every place the token set
  * stopped being the only place a colour is stated.
  *
- * The five checks, and the failure each one prevents:
+ * The eight checks, and the failure each one prevents:
  *
  * 1. No stray literal. A hex or an `rgb()` in any sheet but `Global.css` is a
  *    second palette, and the two drift the moment one is edited.
@@ -29,6 +29,21 @@
  *    disagree.
  * 5. One material. A sheet that redefines a `Material` mixin overrides the one
  *    place the material is defined, so the two definitions drift invisibly.
+ * 6. One state vocabulary. The seven component states (RFC-0049) and the six
+ *    data states (RFC-0050) are declared in `Source/Library/`, and nothing else
+ *    may name a state. A sheet that invents `--pressed`, a component that
+ *    publishes `data-control-state="hovered"` or a read passed as an `IsEmpty`
+ *    flag is the drift eleven components make into eleven systems. The state
+ *    sheet's mixins are compared to the module, so the two cannot disagree about
+ *    which states exist or which channel each one moves.
+ * 7. One failure vocabulary. A page that prints a code the CLI never emits names
+ *    a failure the operator cannot look up. The site's codes are read from
+ *    `Source/Library/DataState.ts` and checked against the CLI's own
+ *    declaration, because the site must not import the tool layer to agree with
+ *    it.
+ * 8. Focus is never removed. `outline: none` in a component sheet, with nothing
+ *    put back, removes the only affordance a keyboard reader has (RFC-0049 rule
+ *    3). The global `img` reset is out of scope: an image is not focusable.
  *
  * Every message names the file and the line. A check that reports only "failed"
  * costs more to diagnose than it saves.
@@ -52,6 +67,11 @@ const STYLESHEET = join("Source", "Stylesheet");
 const GLOBAL = "Source/Stylesheet/Global.css";
 const MATERIAL = "Source/Stylesheet/Material.scss";
 const STAGE_MODULE = "Source/Library/Stage.ts";
+const STATE_MODULE = "Source/Library/ComponentState.ts";
+const STATE_SHEET = "Source/Stylesheet/State.scss";
+const DATA_MODULE = "Source/Library/DataState.ts";
+const FAILURE_MODULE = "Maintain/Source/CLI/Parser/Output/Failure.ts";
+const COMPONENT_SHEETS = "Source/Stylesheet/Component/";
 
 const SHEET_EXTENSIONS = new Set([".css", ".scss"]);
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".astro"]);
@@ -69,6 +89,9 @@ const CHECK_TITLES = [
 	"no undefined token",
 	"one stage map",
 	"one material",
+	"one state vocabulary",
+	"one failure vocabulary",
+	"focus is never removed",
 ];
 
 /* ------------------------------------------------------------------ reading */
@@ -242,6 +265,43 @@ function normalizeHex(hex) {
 	return `#${digits}`;
 }
 
+/**
+ * The quoted names in `export const Name = [ ... ]`.
+ *
+ * The closed sets are read from the modules that declare them rather than
+ * restated here, so adding a state is one edit in one file and this check
+ * follows it. A set that is not an array any more returns `null`, which the
+ * caller reports: a check that silently accepted a renamed export would stop
+ * checking anything.
+ */
+function arrayOf(text, name) {
+	const match = new RegExp(`export const ${name}\\b[^=]*=\\s*\\[([\\s\\S]*?)\\]`, "m").exec(text);
+
+	if (match === null) {
+		return null;
+	}
+
+	return [...match[1].matchAll(/"([^"]*)"/g)].map((entry) => entry[1]);
+}
+
+/** The `name: "value"` pairs in `export const Name = { ... };`. */
+function recordOf(text, name) {
+	const match = new RegExp(`export const ${name}\\b[^=]*=\\s*\\{([\\s\\S]*?)\\n\\};`, "m").exec(
+		text,
+	);
+
+	if (match === null) {
+		return null;
+	}
+
+	return new Map(
+		[...match[1].matchAll(/([A-Za-z][A-Za-z0-9]*)\s*:\s*"([^"]*)"/g)].map((entry) => [
+			entry[1],
+			entry[2],
+		]),
+	);
+}
+
 const DECLARATION = /^[ \t]*(--[A-Za-z0-9-]+)[ \t]*:[ \t]*([^;\n]*);/gm;
 const READ = /\bvar\(\s*(--[A-Za-z0-9-]+)\s*(,)?/g;
 const SETTER = /["'`]?(--[A-Za-z0-9-]+)["'`]?[ \t]*:/g;
@@ -249,6 +309,19 @@ const HEX = /#[0-9a-fA-F]{3,8}\b/g;
 const FUNCTIONAL = /\b(?:rgba?|hsla?|oklch|lch|lab)\([^()]*\)/g;
 const MIXIN = /@mixin[ \t]+([A-Za-z0-9_-]+)/g;
 const STAGE_REFERENCE = /--stage-[A-Za-z0-9-]+/g;
+
+/** A published state: `data-control-state="x"`, `data-read="x"`, `[data-read="x"]`. */
+const STATE_ATTRIBUTE = /data-(control-state|read|state)\s*=\s*["']([^"']*)["']/g;
+
+/** A state passed as a flag instead of derived. */
+const STATE_FLAG =
+	/\bIs(Empty|Error|Failed|Partial|Stale|Ready|Pending|Loading|Selected|Locked|Busy)\b/g;
+
+/** A focus ring removed and nothing put back. */
+const FOCUS_REMOVED = /\boutline(?:-[a-z]+)?\s*:\s*(?:none|0)\b|@apply[^;\n]*\boutline-none\b/g;
+
+/** A mixin with its parameter list, so a state's arity can be counted. */
+const MIXIN_SIGNATURE = /@mixin[ \t]+([A-Za-z0-9_-]+)[ \t]*\(([^)]*)\)/g;
 
 function main() {
 	const argument = process.argv.slice(2);
@@ -530,6 +603,241 @@ function main() {
 					`@mixin ${match[1]} redefines Material.${match[1]} - write @include Material.${match[1]}, or rename it if it is a different rule`,
 				);
 			}
+		}
+	}
+
+	/* 6. One state vocabulary --------------------------------------------- */
+
+	const stateModule = sources.get(STATE_MODULE);
+	const dataModule = sources.get(DATA_MODULE);
+
+	if (stateModule === undefined) {
+		report(
+			6,
+			STATE_MODULE,
+			1,
+			"the component state model is missing - it is the one module allowed to name a state (RFC-0049)",
+		);
+	}
+
+	if (dataModule === undefined) {
+		report(
+			6,
+			DATA_MODULE,
+			1,
+			"the data state model is missing - it is the one module allowed to name what a read found (RFC-0050)",
+		);
+	}
+
+	const states =
+		stateModule === undefined ? [] : (arrayOf(stateModule.text, "ComponentState") ?? []);
+	const channels =
+		stateModule === undefined
+			? new Map()
+			: (recordOf(stateModule.text, "StateChannel") ?? new Map());
+	const reads = dataModule === undefined ? [] : (arrayOf(dataModule.text, "DataState") ?? []);
+	const codes = dataModule === undefined ? [] : (arrayOf(dataModule.text, "FailureCode") ?? []);
+
+	if (stateModule !== undefined && states.length === 0) {
+		report(
+			6,
+			STATE_MODULE,
+			1,
+			"no `ComponentState` array was found - the set is read from it, so it stays an exported array of names",
+		);
+	}
+
+	if (dataModule !== undefined && reads.length === 0) {
+		report(
+			6,
+			DATA_MODULE,
+			1,
+			"no `DataState` array was found - the set is read from it, so it stays an exported array of names",
+		);
+	}
+
+	const stateSet = new Set(states);
+	const readSet = new Set(reads);
+	const mixins = new Map();
+	const stateSheet = sheets.get(STATE_SHEET);
+
+	if (stateSheet === undefined) {
+		report(
+			6,
+			STATE_SHEET,
+			1,
+			"the state sheet is missing - it is the one place a state is drawn (RFC-0049 rule 1)",
+		);
+	} else {
+		for (const match of stateSheet.text.matchAll(MIXIN_SIGNATURE)) {
+			const parameters = match[2]
+				.split(",")
+				.map((parameter) => parameter.trim())
+				.filter((parameter) => parameter !== "");
+
+			mixins.set(match[1], {
+				line: lineAt(stateSheet.text, match.index),
+				arity: parameters.length,
+			});
+		}
+
+		for (const [name, site] of mixins) {
+			if (!stateSet.has(name)) {
+				report(
+					6,
+					STATE_SHEET,
+					site.line,
+					`@mixin ${name} is not a state - the set is read from ${STATE_MODULE}, so an eighth state is a change there and not a new mixin`,
+				);
+				continue;
+			}
+
+			if (channels.get(name) === "none") {
+				report(
+					6,
+					STATE_SHEET,
+					site.line,
+					`@mixin ${name} draws a state that changes no channel - ${name} is the baseline, so the rule that draws it is the component's own base rule`,
+				);
+			}
+
+			if (site.arity !== 1) {
+				report(
+					6,
+					STATE_SHEET,
+					site.line,
+					`@mixin ${name} takes ${site.arity} parameter(s) - a state takes exactly one, named for the single channel it moves (RFC-0049 rule 7)`,
+				);
+			}
+		}
+
+		for (const name of stateSet) {
+			if (channels.get(name) !== "none" && !mixins.has(name)) {
+				report(
+					6,
+					STATE_SHEET,
+					1,
+					`${name} is a state in ${STATE_MODULE} and has no mixin here - add one, or the state exists in the module and nowhere on the page`,
+				);
+			}
+		}
+	}
+
+	for (const [file, { text }] of [...sheets, ...sources]) {
+		for (const match of text.matchAll(STATE_ATTRIBUTE)) {
+			const [, attribute, value] = match;
+			const line = lineAt(text, match.index);
+
+			if (attribute === "control-state" && !stateSet.has(value)) {
+				report(
+					6,
+					file,
+					line,
+					`data-control-state="${value}" is not one of the seven (${states.join(", ")}) - a state outside the set is a vocabulary change in ${STATE_MODULE}`,
+				);
+			}
+
+			if (attribute === "read" && !readSet.has(value)) {
+				report(
+					6,
+					file,
+					line,
+					`data-read="${value}" is not one of the six (${reads.join(", ")}) - a read's state is derived by ${DATA_MODULE}, never named by hand`,
+				);
+			}
+
+			if (attribute === "state" && (stateSet.has(value) || readSet.has(value))) {
+				report(
+					6,
+					file,
+					line,
+					`"${value}" is published under the bare data-state, which is the capability set's (RFC-0046) - write data-control-state or data-read so the three sets stay apart`,
+				);
+			}
+		}
+	}
+
+	for (const [file, { text }] of sheets) {
+		const use = /@use[ 	]+["'][^"']*State\.scss["'][ 	]+as[ 	]+([A-Za-z0-9_-]+)/.exec(text);
+
+		if (use === null) {
+			continue;
+		}
+
+		for (const match of text.matchAll(
+			new RegExp(`@include[ \	]+${use[1]}\\.([A-Za-z0-9_-]+)`, "g"),
+		)) {
+			if (!mixins.has(match[1])) {
+				report(
+					6,
+					file,
+					lineAt(text, match.index),
+					`${use[1]}.${match[1]} is not a state - the set is ${states.join(", ")} (${STATE_MODULE})`,
+				);
+			}
+		}
+	}
+
+	for (const [file, { text }] of sources) {
+		for (const match of text.matchAll(STATE_FLAG)) {
+			report(
+				6,
+				file,
+				lineAt(text, match.index),
+				`Is${match[1]} is a state passed as a flag - a boolean cannot carry the ratio, the time, the code or the reason, so derive it with ${STATE_MODULE} or ${DATA_MODULE}`,
+			);
+		}
+	}
+
+	/* 7. One failure vocabulary ------------------------------------------- */
+
+	const failurePath = join(root, FAILURE_MODULE);
+	const declared = isFile(failurePath)
+		? new Set(
+				[...readFileSync(failurePath, "utf8").matchAll(/"([a-z][a-z0-9-]*)"/g)].map(
+					(match) => match[1],
+				),
+			)
+		: null;
+
+	if (declared === null) {
+		report(
+			7,
+			FAILURE_MODULE,
+			1,
+			"the CLI's failure codes could not be read - the site and the CLI share one vocabulary, so the file that declares them must exist",
+		);
+	} else {
+		for (const code of codes) {
+			if (declared.has(code)) {
+				continue;
+			}
+
+			const at = dataModule === undefined ? -1 : dataModule.text.indexOf(`"${code}"`);
+
+			report(
+				7,
+				DATA_MODULE,
+				at === -1 ? 1 : lineAt(dataModule.text, at),
+				`"${code}" is printed by the site and is not a code ${FAILURE_MODULE} declares - one vocabulary, or the page names a failure the operator cannot look up`,
+			);
+		}
+	}
+
+	/* 8. Focus is never removed ------------------------------------------- */
+
+	for (const [file, { text }] of sheets) {
+		if (!file.startsWith(COMPONENT_SHEETS)) {
+			continue;
+		}
+
+		for (const match of text.matchAll(FOCUS_REMOVED)) {
+			report(
+				8,
+				file,
+				lineAt(text, match.index),
+				`"${match[0].trim()}" removes the focus ring and puts nothing back - draw it with @include State.focus(<line>), or the control has no keyboard affordance at all (RFC-0049 rule 3)`,
+			);
 		}
 	}
 

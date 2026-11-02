@@ -1,0 +1,89 @@
+// The seven component states, drawn once (RFC-0049).
+//
+// A component's sheet does not decide what "hover" means. It names the state and
+// the one value that state is drawn with, and the shape of the change - which
+// channel moves - comes from here. That is what makes eleven components read as
+// one design instead of eleven.
+//
+// The rule that keeps a state to one channel is carried by the signature rather
+// than by a comment: every mixin below takes exactly one argument, named for the
+// channel it moves, so a caller cannot pass a face colour to `selected` or a
+// line colour to `hover`. A state that wants a second channel is a vocabulary
+// change in `Source/Library/ComponentState.ts`, and the token contract fails the
+// build when the two files disagree about which states exist.
+//
+// `rest` has no mixin on purpose. It is the baseline every other state is a
+// change from, so the rule that draws it is the component's own base rule; a
+// `rest` mixin would be a second place to state what "no state" looks like.
+//
+// The values are arguments rather than tokens read here, because the same state
+// is drawn on both ramps: `hover` on the chrome is one step up the surface ramp
+// and on the paper it is another, and the sheet that knows which material it is
+// on is the one that says which. The colour still resolves from `Global.css` at
+// paint time - a caller passes `var(--chrome-raised)`, never a hex.
+
+// The pointer is over the control. One channel: the face, one step above the
+// ground it sits on.
+@mixin hover($face) {
+	background: $face;
+}
+
+// The pointer or the key is down, right now. One channel: the face, one step
+// further than `hover`.
+//
+// Never the line: the line belongs to `selected`, and a pressed row that drew a
+// border would read as a chosen one. Collapsing the two is the bug RFC-0049
+// rule 2 names - a row that has been chosen looks pressed, and a row that is
+// being pressed looks chosen.
+@mixin active($face) {
+	background: $face;
+}
+
+// This record is the one the surface is showing. One channel: the line.
+//
+// The edge the control already has changes colour, so a selected row keeps its
+// face and its corner and reads as the same row in a different state. The
+// composition tints that line with the stage accent, which is why the argument
+// is a `var(...)` the caller names rather than a token this sheet reads.
+@mixin selected($line) {
+	border-color: $line;
+}
+
+// The control has keyboard focus. One channel: the line, drawn outside the
+// element so the ring cannot be mistaken for a border the design owns.
+//
+// `:focus-visible` is the only selector this state is drawn for - a pointer
+// press does not raise it - and the width and the offset are tokens, so a dense
+// surface tightens the ring without a second rule and without a literal. A sheet
+// that removes the outline without replacing it removes the only affordance a
+// keyboard reader has, which is why the token contract refuses `outline: none`
+// anywhere under `Source/Stylesheet/Component/`.
+@mixin focus($line) {
+	outline: var(--state-ring-width) solid $line;
+	outline-offset: var(--state-ring-offset);
+}
+
+// This control applies here and this actor may not use it. One channel: the ink.
+//
+// It keeps its face and its edge, which is the whole difference from `disabled`:
+// a disabled control is quieter and needs no explanation, and a locked one is
+// legible, gains a lock glyph and states the grant or the audience that would
+// open it. Most product interfaces use one grey for both, and the result is a
+// screen of dead controls with no way to tell a permission from a bug.
+//
+// The cursor is an affordance rather than a channel - it says the press will do
+// nothing without changing how the control is drawn.
+@mixin locked($ink) {
+	color: $ink;
+	cursor: not-allowed;
+}
+
+// The control is working. One channel: the line.
+//
+// No width, height, padding, font-size or font-weight is set here, so the
+// control's bounding box is unchanged across the state and its neighbours do not
+// move. A busy control keeps its label and gains a mark beside it; a spinner that
+// replaces the label turns one action into a layout event (RFC-0049 rule 5).
+@mixin busy($line) {
+	border-color: $line;
+}

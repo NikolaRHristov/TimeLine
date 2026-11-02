@@ -1,0 +1,240 @@
+@use "../Material.scss" as Material;
+
+// The trust swimlanes: the band directly under the canvas.
+//
+// It is a panel on the canvas's own paper, inset by the canvas's 48px so its
+// left edge lines up with the first tile, and its corner is the tile's 24px -
+// the band is the second half of the published surface, not a footer (RFC-0046
+// §4 says the same of the spectrometer below it, and the two read as one).
+//
+// The horizontal axis is `--band-columns`, declared once in `Global.css` and read
+// here and by the spectrometer. That is what makes a lane's four steps and the
+// table's four capabilities the same four tracks at the same widths: two sheets
+// each holding the literal would be two diagrams of the same thing, which is the
+// failure RFC-0047 §5 names.
+//
+// The lane pitch is 28px, deliberately greater than the canvas's 20px grid gap
+// (RFC-0047 §5). A lane carries a direction, and a diagram needs air between its
+// rows to read as flow rather than as a table. `verify-composition.mjs` measures
+// the air against the canvas's own gap rather than against this number, so the
+// invariant survives a change to either.
+//
+// A state is drawn as the shape of the mark, never as a tint: filled is running,
+// an outline is available, a dashed outline is a step the lane has not reached,
+// a dotted one is a record the client could not read. Four shapes at one ink
+// survive a monochrome print, a colour-blind reader and a screenshot in a review
+// document, which a tint does not.
+.swimlanes {
+	margin-inline: var(--rhythm-block);
+	padding: var(--space-6);
+	background: var(--color-surface);
+	border: 1px solid var(--color-line-faint);
+	border-radius: var(--radius-tile);
+	color: var(--color-ink);
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-4);
+		padding-bottom: var(--space-4);
+		border-bottom: var(--hairline-faint);
+	}
+
+	&__eyebrow {
+		@include Material.label(var(--text-2xs), var(--color-ink-faint));
+
+		margin: 0;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--text-lg);
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
+	&__note {
+		margin: 0 0 0 auto;
+		max-width: 32rem;
+		font-size: var(--text-xs);
+		line-height: 1.4;
+		text-align: right;
+		color: var(--color-ink-muted);
+	}
+
+	// The two directions. The head glyph and the rule swap ends between the
+	// inbound and the outbound arrow, so the pair reads as one handshake rather
+	// than as two labels: `→ provider authenticates the network ----` above
+	// `---- network authorises the provider to see ←`.
+	&__flow {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		padding-block: var(--space-4);
+	}
+
+	&__arrow {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin: 0;
+		font-size: var(--text-3xs);
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--color-ink-faint);
+
+		&[data-direction="out"] {
+			.swimlanes__arrow-rule {
+				order: -1;
+			}
+
+			.swimlanes__arrow-head {
+				order: 1;
+			}
+		}
+	}
+
+	&__arrow-head {
+		font-size: var(--text-xs);
+		line-height: 1;
+		color: var(--color-ink);
+	}
+
+	&__arrow-step {
+		color: var(--color-ink-muted);
+	}
+
+	&__arrow-rule {
+		flex: 1 1 auto;
+		height: 1px;
+		background: var(--color-line);
+	}
+
+	// The axis: the four steps as column heads, so a lane read on its own still
+	// says which step a cell is. Decorative for a screen reader - the steps are
+	// named in the spectrometer's column heads and in the arrows - so it is
+	// hidden from the accessibility tree at the component.
+	&__axis {
+		display: grid;
+		grid-template-columns: var(--band-columns);
+		gap: var(--space-4);
+		padding-bottom: var(--space-2);
+		border-bottom: var(--hairline-faint);
+		font-size: var(--text-3xs);
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--color-ink-faint);
+
+		p {
+			margin: 0;
+		}
+	}
+
+	&__lanes {
+		display: flex;
+		flex-direction: column;
+		gap: 1.75rem;
+		margin: 0;
+		padding: var(--space-4) 0 0;
+		list-style: none;
+	}
+
+	@media (max-width: 900px) {
+		margin-inline: var(--space-4);
+		padding: var(--space-4);
+
+		&__head {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-2);
+		}
+
+		&__note {
+			margin: 0;
+			text-align: left;
+		}
+
+		&__axis {
+			display: none;
+		}
+	}
+}
+
+// One actor: what it is, what layer it reaches, and the four steps in the axis's
+// own columns.
+.swimlane {
+	display: grid;
+	grid-template-columns: var(--band-columns);
+	align-items: center;
+	gap: var(--space-4);
+
+	&__actor {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__kind {
+		@include Material.label(var(--text-3xs), var(--color-ink-faint));
+
+		margin: 0;
+	}
+
+	&__name {
+		margin: 0;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
+	&__layer {
+		@include Material.label(var(--text-3xs), var(--color-ink-muted));
+
+		margin: 0;
+	}
+
+	&__step {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding-block: var(--space-2);
+		border-top: var(--hairline-faint);
+	}
+
+	&__mark {
+		width: 8px;
+		height: 8px;
+		flex-shrink: 0;
+		border: 1px solid var(--color-line-strong);
+		border-radius: 2px;
+	}
+
+	&__state {
+		@include Material.label(var(--text-3xs), var(--color-ink-muted));
+
+		margin: 0;
+	}
+
+	&__step[data-state="running"] &__mark {
+		background: var(--color-ink);
+		border-color: var(--color-ink);
+	}
+
+	&__step[data-state="available"] &__mark {
+		border-color: var(--color-ink-muted);
+	}
+
+	&__step[data-state="absent"] &__mark {
+		border-style: dashed;
+	}
+
+	&__step[data-state="unknown"] &__mark {
+		border-style: dotted;
+	}
+
+	@media (max-width: 900px) {
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-2);
+	}
+}
