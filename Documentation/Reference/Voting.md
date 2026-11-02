@@ -221,5 +221,4 @@ ranks, and why approval is a human action.
 | A tombstone stays dead               | `reject` then `approve` → `{"error":"tombstone"}`; `nominate` the same id → `tombstone`                    |
 | Curated cannot be rejected           | `reject` a curated id → `{"error":"already-curated"}`                                                      |
 | Ranks are dense and unique           | `node --test Maintain/Target/Test/Vote.test.js` → rank-density tests pass                                  |
-| The homepage leads with Curated      | `grep -o 'Rank [0-9]*' Target/index.html \| head -1` prints `Rank 1`                                       |
-| A thin archive still draws a canvas  | `node Documentation/Skill/Progressive-Enhancement/Reference/no-js-audit.mjs --route /` → PASS, ten seats   |
+| The index is written, not rendered   | `grep -c '"text"' Source/Content/Curated/*.json` is 0 - the payload stays in `Bookmark` or `Voted`         |

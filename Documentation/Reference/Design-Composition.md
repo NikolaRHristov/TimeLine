@@ -23,13 +23,6 @@ positioned. The dark chrome is the top band only; everything below it is light.
 
 The 16px between the rail and the drawer is the ground showing through, not a gap inside a flex row.
 
-The front page mounts this frame with the drawer's band replaced. The rail, the seam and the canvas
-are the same three parts, and the band above the seam carries the page's masthead - its title, the
-sentence that counts the archive and the routes out - instead of the four private columns. Nothing
-else moves: the seam is still 40 tall directly under that band and the canvas is still 900 tall
-directly under the seam, so the page is the composition with one band swapped rather than a second
-design.
-
 ---
 
 ## The rail

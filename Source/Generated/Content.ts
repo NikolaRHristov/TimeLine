@@ -273,7 +273,6 @@ export const Strings: Readonly<Record<string, string>> = {
 	"CONTENT_STRING_WORD_LIST": "list",
 	"CONTENT_STRING_WORD_LISTS": "lists",
 	"CONTENT_STRING_WORD_MOTION": "motion",
-	"CONTENT_STRING_WORD_MOTIONS": "motions",
 	"CONTENT_STRING_WORD_POST": "post",
 	"CONTENT_STRING_WORD_POSTS": "posts",
 	"CONTENT_STRING_WORD_RECORDED": "recorded",

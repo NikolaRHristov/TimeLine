@@ -60,17 +60,11 @@ import { extname, join, normalize, relative, resolve } from "node:path";
 const Profiles = [
 	{
 		Path: "/",
-		Title: "h1.showcase__title",
+		Title: "h1.board__title",
 		Require: [
 			{ Selector: ".provenance__band", Min: 1 },
-			{ Selector: ".publish__label", Min: 1 },
-			{ Selector: "article.bento__tile", Min: 1 },
-		],
-		Some: [
-			[
-				{ Selector: ".bento__tile--filled", Min: 1 },
-				{ Selector: ".note", Min: 1 },
-			],
+			{ Selector: "section.board__box", Min: 1 },
+			{ Selector: ".board__open[href]", Min: 1 },
 		],
 	},
 	{
