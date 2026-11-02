@@ -6,8 +6,7 @@ every component under `Source/Component/`, every page under `Source/pages/`, and
 none **Task dependencies:** RFC-0009 (the build that compiles a sheet), RFC-0010 (documentation
 voice), RFC-0017 (the client surface this material dresses), RFC-0019 (vocabulary); `t_15d5d8fd`
 (the token set promoted to the whole site), `t_30030978` (the token contract tests), `t_6b11bda7`
-(the fidelity pass), `t_bd4c07b0`, `t_e2a377d0`, `t_52a99949` (the surfaces that adopt the
-material)
+(the fidelity pass), `t_bd4c07b0`, `t_e2a377d0`, `t_52a99949` (the surfaces that adopt the material)
 
 ## Decision
 
@@ -25,14 +24,14 @@ defect in the change rather than a preference about the design.
 Six nouns describe every drawn thing on the site. A part is one of them or a composition of them;
 there is no seventh.
 
-| Noun           | What it is                                                    | Mixin     | Fill                 | Edge                          | Corner                |
-| -------------- | ------------------------------------------------------------- | --------- | -------------------- | ----------------------------- | --------------------- |
-| **Surface**    | the ground a workspace region sits on                         | `panel`   | `--chrome-void`      | none                          | none                  |
-| **Face**       | a region that sits above the ground                           | `face`    | `--chrome-deep`      | 1px `--chrome-line`           | `--radius-column`     |
-| **Live face**  | the face a person is working in                               | `face`    | `--chrome-raised`    | 1px `--chrome-line-strong`    | square top-left       |
-| **Card**       | a record inside a face                                        | `card`    | `--chrome-control`   | 1px `--chrome-line-strong`    | `--radius-card`       |
-| **Control**    | a pressable that holds no record                              | `control` | `--chrome-control`   | 1px `--chrome-line-strong`    | `--radius-card`       |
-| **Inset**      | a groove that carries a fill rather than content              | `inset`   | `--chrome-control`   | none                          | 2px                   |
+| Noun          | What it is                                       | Mixin     | Fill               | Edge                       | Corner            |
+| ------------- | ------------------------------------------------ | --------- | ------------------ | -------------------------- | ----------------- |
+| **Surface**   | the ground a workspace region sits on            | `panel`   | `--chrome-void`    | none                       | none              |
+| **Face**      | a region that sits above the ground              | `face`    | `--chrome-deep`    | 1px `--chrome-line`        | `--radius-column` |
+| **Live face** | the face a person is working in                  | `face`    | `--chrome-raised`  | 1px `--chrome-line-strong` | square top-left   |
+| **Card**      | a record inside a face                           | `card`    | `--chrome-control` | 1px `--chrome-line-strong` | `--radius-card`   |
+| **Control**   | a pressable that holds no record                 | `control` | `--chrome-control` | 1px `--chrome-line-strong` | `--radius-card`   |
+| **Inset**     | a groove that carries a fill rather than content | `inset`   | `--chrome-control` | none                       | 2px               |
 
 Three consequences follow from the table and are part of the contract:
 
@@ -55,13 +54,13 @@ a pill is `control` with the same pair and `--radius-full`. A surface on the pub
 Depth is a value step, an edge, a corner, a coloured edge or a transparency. It is never simulated.
 The five ways, and the one thing each is for:
 
-| Way               | How it is drawn                                                                    | Where it is used                                  |
-| ----------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------- |
-| **Value step**    | the next step of a ramp: `void` < `deep` < `raised` < `control` < `active`          | a face on a surface, a card on a face             |
-| **Edge**          | 1px of a line token; the strong weight where a person has to find the edge          | every face, card and control                      |
-| **Corner**        | a radius step, or the squared top-left of a live face                              | faces, cards, the live column                     |
-| **Coloured edge** | 3px of a stage accent along a tile's top edge; 1px of it around a selected row      | a published tile, a selected drawer row           |
-| **Transparency**  | the stage's own accent at 8%, or a fade from the surface to its zero-alpha form     | the selected band's plate, the drum's two fades   |
+| Way               | How it is drawn                                                                 | Where it is used                                |
+| ----------------- | ------------------------------------------------------------------------------- | ----------------------------------------------- |
+| **Value step**    | the next step of a ramp: `void` < `deep` < `raised` < `control` < `active`      | a face on a surface, a card on a face           |
+| **Edge**          | 1px of a line token; the strong weight where a person has to find the edge      | every face, card and control                    |
+| **Corner**        | a radius step, or the squared top-left of a live face                           | faces, cards, the live column                   |
+| **Coloured edge** | 3px of a stage accent along a tile's top edge; 1px of it around a selected row  | a published tile, a selected drawer row         |
+| **Transparency**  | the stage's own accent at 8%, or a fade from the surface to its zero-alpha form | the selected band's plate, the drum's two fades |
 
 The prohibitions are as binding as the ways:
 
@@ -78,8 +77,8 @@ The prohibitions are as binding as the ways:
 
 ### The drum
 
-The rail's perspective is one table indexed by distance from the selected stage. It is data, held
-by the component, not styling held by the sheet: a stage further away than the last entry reuses the
+The rail's perspective is one table indexed by distance from the selected stage. It is data, held by
+the component, not styling held by the sheet: a stage further away than the last entry reuses the
 last entry, which is what lets the rail hold any number of stages without a new rule.
 
 | Distance | Height | Opacity | Marker | Marker radius | Border | Track | Label |
@@ -103,16 +102,16 @@ avoid.
 `Source/Stylesheet/Material.scss` holds one mixin per noun plus three that are vocabulary rather
 than shape. A component sheet states structure and reads a mixin for everything else.
 
-| Mixin      | What it draws                                              | Parameters                                                    |
-| ---------- | ---------------------------------------------------------- | ------------------------------------------------------------- |
-| `panel`    | a surface: the void fill and the body ink                   | none                                                          |
-| `face`     | a face: fill, 1px edge, column radius                      | `$surface`, `$line`, `$radius`                                |
-| `card`     | a card: fill, 1px edge, card radius                        | `$surface`, `$line`, `$radius`                                |
-| `control`  | a control: fill, 1px edge, card radius, muted ink          | `$surface`, `$line`, `$ink`, `$radius`                        |
-| `inset`    | a groove: a fill with no edge and a 2px corner             | `$height`, `$radius`, `$track`                                |
-| `label`    | the eyebrow voice: uppercase, tracked, faint               | `$size`, `$ink`                                               |
-| `ellipsis` | one-line truncation                                        | none                                                          |
-| `reset`    | a `<button>` made to look like the row it replaced         | none                                                          |
+| Mixin      | What it draws                                      | Parameters                             |
+| ---------- | -------------------------------------------------- | -------------------------------------- |
+| `panel`    | a surface: the void fill and the body ink          | none                                   |
+| `face`     | a face: fill, 1px edge, column radius              | `$surface`, `$line`, `$radius`         |
+| `card`     | a card: fill, 1px edge, card radius                | `$surface`, `$line`, `$radius`         |
+| `control`  | a control: fill, 1px edge, card radius, muted ink  | `$surface`, `$line`, `$ink`, `$radius` |
+| `inset`    | a groove: a fill with no edge and a 2px corner     | `$height`, `$radius`, `$track`         |
+| `label`    | the eyebrow voice: uppercase, tracked, faint       | `$size`, `$ink`                        |
+| `ellipsis` | one-line truncation                                | none                                   |
+| `reset`    | a `<button>` made to look like the row it replaced | none                                   |
 
 Each mixin defaults to the chrome ramp and takes the ramp's values as arguments, so the same shapes
 are available on the paper ramp. A sheet that names a fill or a line directly instead of calling a
@@ -125,80 +124,80 @@ declares one. The set is two ramps plus the scales.
 
 ### The paper ramp
 
-| Token                  | Value     | Reads                                                      |
-| ---------------------- | --------- | ---------------------------------------------------------- |
-| `--color-surface`      | `#ffffff` | `Note.scss` (a panel's fill), `Pill.scss` (a pill's fill)   |
+| Token                    | Value     | Reads                                                     |
+| ------------------------ | --------- | --------------------------------------------------------- |
+| `--color-surface`        | `#ffffff` | `Note.scss` (a panel's fill), `Pill.scss` (a pill's fill) |
 | `--color-surface-sunken` | `#f5f5f5` | `Note.scss` (the inline-code fill)                        |
-| `--canvas`             | `#fafafa` | `Bento.scss` (the mosaic ground)                            |
-| `--tile-1`             | `#e2e2e2` | `Bento.scss` (the `sunken` tone)                            |
-| `--tile-2`             | `#e9e9e9` | `Bento.scss` (the `plain` tone, the default)                |
-| `--tile-3`             | `#eee`    | `Bento.scss` (the `quiet` tone, an empty tile)              |
+| `--canvas`               | `#fafafa` | `Bento.scss` (the mosaic ground)                          |
+| `--tile-1`               | `#e2e2e2` | `Bento.scss` (the `sunken` tone)                          |
+| `--tile-2`               | `#e9e9e9` | `Bento.scss` (the `plain` tone, the default)              |
+| `--tile-3`               | `#eee`    | `Bento.scss` (the `quiet` tone, an empty tile)            |
 
 ### The line ramp
 
-| Token                | Value     | Reads                                                            |
-| -------------------- | --------- | ---------------------------------------------------------------- |
-| `--color-line-faint` | `#f5f5f5` | `Global.css`, through `--hairline-faint`                          |
-| `--color-line`       | `#e5e5e5` | `Global.css`, through `--hairline`; `Note.scss`; `Pill.scss`       |
+| Token                 | Value     | Reads                                                             |
+| --------------------- | --------- | ----------------------------------------------------------------- |
+| `--color-line-faint`  | `#f5f5f5` | `Global.css`, through `--hairline-faint`                          |
+| `--color-line`        | `#e5e5e5` | `Global.css`, through `--hairline`; `Note.scss`; `Pill.scss`      |
 | `--color-line-strong` | `#d4d4d4` | `Roster.scss` (a label's underline); `Pill.scss` (a hovered edge) |
 
 ### The ink ramp
 
-| Token                | Value     | Reads                                                     |
-| -------------------- | --------- | --------------------------------------------------------- |
+| Token                | Value     | Reads                                                              |
+| -------------------- | --------- | ------------------------------------------------------------------ |
 | `--color-ink`        | `#171717` | `Note.scss`, `Bento.scss`, `Roster.scss`, `Pill.scss`, `Page.scss` |
 | `--color-ink-muted`  | `#525252` | `Note.scss`, `Bento.scss`, `Roster.scss`, `Pill.scss`, `Page.scss` |
-| `--color-ink-faint`  | `#737373` | `Bento.scss`, `Roster.scss`, `Page.scss`                   |
-| `--color-accent`     | `#171717` | no reader - see the orphan rule                            |
-| `--color-accent-ink` | `#ffffff` | no reader - see the orphan rule                            |
+| `--color-ink-faint`  | `#737373` | `Bento.scss`, `Roster.scss`, `Page.scss`                           |
+| `--color-accent`     | `#171717` | no reader - see the orphan rule                                    |
+| `--color-accent-ink` | `#ffffff` | no reader - see the orphan rule                                    |
 
 ### The scales
 
-| Token                                   | Value                    | Reads                                                      |
-| --------------------------------------- | ------------------------ | ---------------------------------------------------------- |
-| `--space-1`                             | `0.25rem`                | `Note.scss`, `Roster.scss`, `Pill.scss`, `Shell.scss`, `Page.scss` |
-| `--space-2`                             | `0.5rem`                 | `Note.scss`, `Bento.scss`, `Roster.scss`, `Pill.scss`, `Provenance.scss`, `Shell.scss`, `Page.scss` |
-| `--space-3`                             | `0.75rem`                | `Note.scss`, `Roster.scss`, `Pill.scss`, `Drawer.scss`, `Provenance.scss`, `Shell.scss`, `Page.scss` |
-| `--space-4`                             | `1rem`                   | `Bento.scss`, `Drawer.scss`, `Provenance.scss`, `Shell.scss`, `Page.scss` |
-| `--space-6`                             | `1.5rem`                 | `Note.scss`, `Pill.scss`, `Shell.scss`                     |
-| `--space-8`                             | `2rem`                   | `Pill.scss`                                                |
-| `--space-10`                            | `2.5rem`                 | `Shell.scss`, `Page.scss`                                  |
-| `--text-3xs`                            | `0.625rem`               | `Shell.scss` (a sitemap's smallest line)                   |
-| `--text-2xs`                            | `0.6875rem`              | `Material.scss`, the `label` mixin's default               |
-| `--text-xs`                             | `0.75rem`                | `Note.scss`, `Roster.scss`, `Pill.scss`, `Shell.scss`, `Page.scss` |
-| `--text-sm`                             | `0.875rem`               | `Note.scss`, `Roster.scss`, `Shell.scss`, `Page.scss`      |
-| `--text-base`                           | `1rem`                   | `Note.scss` (a note's title)                               |
-| `--text-lg`                             | `1.125rem`               | `Page.scss` (a section heading)                            |
-| `--text-2xl`                            | `1.5rem`                 | `Page.scss` (a page title)                                 |
-| `--font-mono`                           | the system mono stack    | `Note.scss` (inline code), `Shell.scss` (the brand mark)    |
-| `--font-sans`                           | the system sans stack    | no reader - see the orphan rule                            |
-| `--radius-sm`                           | `0.25rem`                | `Note.scss`, `Shell.scss`                                  |
-| `--radius-card`                         | `0.5rem`                 | `Material.scss`, the `card` and `control` defaults         |
-| `--radius-column`                       | `0.75rem`                | `Material.scss`, the `face` default                        |
-| `--radius-tile`                         | `1.5rem`                 | `Bento.scss`                                               |
-| `--radius-full`                         | `9999px`                 | `Pill.scss`                                                |
-| `--hairline`                            | `1px solid var(--color-line)` | `Page.scss` (a heading's rule, a footer's rule)        |
-| `--hairline-faint`                      | `1px solid var(--color-line-faint)` | `Roster.scss` (the rule between rows)             |
-| `--header-height`                       | `3.5rem`                 | `Shell.scss`                                               |
-| `--rhythm-block`                        | `3rem`                   | `Shell.scss`, `Page.scss`                                  |
-| `--content-width`                       | `48rem`                  | `Shell.scss`, the `.page` column                           |
+| Token              | Value                               | Reads                                                                                                |
+| ------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `--space-1`        | `0.25rem`                           | `Note.scss`, `Roster.scss`, `Pill.scss`, `Shell.scss`, `Page.scss`                                   |
+| `--space-2`        | `0.5rem`                            | `Note.scss`, `Bento.scss`, `Roster.scss`, `Pill.scss`, `Provenance.scss`, `Shell.scss`, `Page.scss`  |
+| `--space-3`        | `0.75rem`                           | `Note.scss`, `Roster.scss`, `Pill.scss`, `Drawer.scss`, `Provenance.scss`, `Shell.scss`, `Page.scss` |
+| `--space-4`        | `1rem`                              | `Bento.scss`, `Drawer.scss`, `Provenance.scss`, `Shell.scss`, `Page.scss`                            |
+| `--space-6`        | `1.5rem`                            | `Note.scss`, `Pill.scss`, `Shell.scss`                                                               |
+| `--space-8`        | `2rem`                              | `Pill.scss`                                                                                          |
+| `--space-10`       | `2.5rem`                            | `Shell.scss`, `Page.scss`                                                                            |
+| `--text-3xs`       | `0.625rem`                          | `Shell.scss` (a sitemap's smallest line)                                                             |
+| `--text-2xs`       | `0.6875rem`                         | `Material.scss`, the `label` mixin's default                                                         |
+| `--text-xs`        | `0.75rem`                           | `Note.scss`, `Roster.scss`, `Pill.scss`, `Shell.scss`, `Page.scss`                                   |
+| `--text-sm`        | `0.875rem`                          | `Note.scss`, `Roster.scss`, `Shell.scss`, `Page.scss`                                                |
+| `--text-base`      | `1rem`                              | `Note.scss` (a note's title)                                                                         |
+| `--text-lg`        | `1.125rem`                          | `Page.scss` (a section heading)                                                                      |
+| `--text-2xl`       | `1.5rem`                            | `Page.scss` (a page title)                                                                           |
+| `--font-mono`      | the system mono stack               | `Note.scss` (inline code), `Shell.scss` (the brand mark)                                             |
+| `--font-sans`      | the system sans stack               | no reader - see the orphan rule                                                                      |
+| `--radius-sm`      | `0.25rem`                           | `Note.scss`, `Shell.scss`                                                                            |
+| `--radius-card`    | `0.5rem`                            | `Material.scss`, the `card` and `control` defaults                                                   |
+| `--radius-column`  | `0.75rem`                           | `Material.scss`, the `face` default                                                                  |
+| `--radius-tile`    | `1.5rem`                            | `Bento.scss`                                                                                         |
+| `--radius-full`    | `9999px`                            | `Pill.scss`                                                                                          |
+| `--hairline`       | `1px solid var(--color-line)`       | `Page.scss` (a heading's rule, a footer's rule)                                                      |
+| `--hairline-faint` | `1px solid var(--color-line-faint)` | `Roster.scss` (the rule between rows)                                                                |
+| `--header-height`  | `3.5rem`                            | `Shell.scss`                                                                                         |
+| `--rhythm-block`   | `3rem`                              | `Shell.scss`, `Page.scss`                                                                            |
+| `--content-width`  | `48rem`                             | `Shell.scss`, the `.page` column                                                                     |
 
 ### The chrome ramp
 
-| Token                 | Value     | Reads                                                              |
-| --------------------- | --------- | ------------------------------------------------------------------ |
-| `--chrome-void`       | `#1c1c1e` | `Material.scss` (`panel`), `Drawer.scss`, `Provenance.scss`, `Workspace.scss` |
-| `--chrome-deep`       | `#1f1f21` | `Material.scss` (the `face` default)                                |
-| `--chrome-raised`     | `#232325` | `Drawer.scss` (the live column)                                     |
-| `--chrome-control`    | `#2c2c2e` | `Material.scss` (`card`, `control`, `inset`), `Drawer.scss`, `Provenance.scss`, `Shell.scss` |
-| `--chrome-active`     | `#48484a` | `Drawer.scss` (the active view chip)                                |
-| `--chrome-line`       | `#2e2e30` | `Material.scss` (the `face` default), `Drawer.scss`, `Provenance.scss`, `Shell.scss` |
-| `--chrome-line-strong` | `#3a3a3c` | `Material.scss` (`card`, `control`), `Drawer.scss`, `Shell.scss`   |
-| `--chrome-ink-white`  | `#ffffff` | `Provenance.scss` (a label on a stage's own colour)                 |
-| `--chrome-ink-bright` | `#e5e5ea` | `Drawer.scss`, `Provenance.scss`, `Shell.scss`                      |
-| `--chrome-ink`        | `#d1d1d6` | `Material.scss` (`panel`), `Drawer.scss`, `Workspace.scss`          |
-| `--chrome-ink-muted`  | `#8e8e93` | `Material.scss` (`control`, `label`), `Drawer.scss`, `Provenance.scss`, `Shell.scss` |
-| `--chrome-ink-faint`  | `#636366` | `Drawer.scss`, `Provenance.scss`                                    |
+| Token                  | Value     | Reads                                                                                        |
+| ---------------------- | --------- | -------------------------------------------------------------------------------------------- |
+| `--chrome-void`        | `#1c1c1e` | `Material.scss` (`panel`), `Drawer.scss`, `Provenance.scss`, `Workspace.scss`                |
+| `--chrome-deep`        | `#1f1f21` | `Material.scss` (the `face` default)                                                         |
+| `--chrome-raised`      | `#232325` | `Drawer.scss` (the live column)                                                              |
+| `--chrome-control`     | `#2c2c2e` | `Material.scss` (`card`, `control`, `inset`), `Drawer.scss`, `Provenance.scss`, `Shell.scss` |
+| `--chrome-active`      | `#48484a` | `Drawer.scss` (the active view chip)                                                         |
+| `--chrome-line`        | `#2e2e30` | `Material.scss` (the `face` default), `Drawer.scss`, `Provenance.scss`, `Shell.scss`         |
+| `--chrome-line-strong` | `#3a3a3c` | `Material.scss` (`card`, `control`), `Drawer.scss`, `Shell.scss`                             |
+| `--chrome-ink-white`   | `#ffffff` | `Provenance.scss` (a label on a stage's own colour)                                          |
+| `--chrome-ink-bright`  | `#e5e5ea` | `Drawer.scss`, `Provenance.scss`, `Shell.scss`                                               |
+| `--chrome-ink`         | `#d1d1d6` | `Material.scss` (`panel`), `Drawer.scss`, `Workspace.scss`                                   |
+| `--chrome-ink-muted`   | `#8e8e93` | `Material.scss` (`control`, `label`), `Drawer.scss`, `Provenance.scss`, `Shell.scss`         |
+| `--chrome-ink-faint`   | `#636366` | `Drawer.scss`, `Provenance.scss`                                                             |
 
 ### The rules
 
@@ -207,9 +206,9 @@ declares one. The set is two ramps plus the scales.
    defect: it is invisible to a token change, so a theme edit reaches the sheets and not that file.
    The single exception is the `theme-color` meta tag in `Base.astro`, which is HTML metadata rather
    than a style, cannot read a custom property, and must equal `--color-surface`.
-2. **A transparency is derived, not written.** A tint or a fade is `color-mix(in srgb, var(--token)
-   <percent>%, transparent)`. An `rgb()`, `rgba()` or `hsl()` triple is a hex with its digits
-   rearranged and is a defect.
+2. **A transparency is derived, not written.** A tint or a fade is
+   `color-mix(in srgb, var(--token) <percent>%, transparent)`. An `rgb()`, `rgba()` or `hsl()`
+   triple is a hex with its digits rearranged and is a defect.
 3. **No orphan token.** Every declared token is read by at least one sheet, mixin or component. A
    stage token is read when the stage map names it. A token with no reader is deleted or given a
    reader; it is never kept for a future use. Three are orphaned today: `--color-accent`,
@@ -239,69 +238,69 @@ three kinds are the forms a record takes when it leaves a step. Each is a token 
 an entry in `Source/Library/Stage.ts`, which is the only place that answers which colour a stage
 draws.
 
-| Stage          | Kind  | Token               | Value     | What it names                                                        | Where it is read                     |
-| -------------- | ----- | ------------------- | --------- | -------------------------------------------------------------------- | ------------------------------------ |
-| **source**     | step  | `--stage-source`    | `#6366f1` | a record as it was captured: the post, its author, its metrics        | the rail's first band, the Bookmarks column, a selected row, a tile's edge |
-| **ingestion**  | step  | `--stage-ingestion` | `#34d399` | the event row recording the capture: its time, its transport          | the rail's second band               |
-| **processing** | step  | `--stage-processing` | `#f59e0b` | a scored record: a nomination, a vote count, a rank candidate         | the rail's third band                |
-| **review**     | step  | `--stage-review`    | `#ec4899` | the owner's decision: curated, ranked, approved                       | the rail's fourth band               |
-| **file**       | kind  | `--stage-file`      | `#f0a045` | a record stored as a file in the drawer                               | the Voted column                     |
-| **template**   | kind  | `--stage-template`  | `#9b77fa` | a shape reused: a list, a column, a bento arrangement                 | the Curated column                   |
-| **publish**    | kind  | `--stage-publish`   | `#6e9efa` | a record that has left the private side: the canvas, a public handle  | the Authors column, the canvas       |
+| Stage          | Kind | Token                | Value     | What it names                                                        | Where it is read                                                           |
+| -------------- | ---- | -------------------- | --------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **source**     | step | `--stage-source`     | `#6366f1` | a record as it was captured: the post, its author, its metrics       | the rail's first band, the Bookmarks column, a selected row, a tile's edge |
+| **ingestion**  | step | `--stage-ingestion`  | `#34d399` | the event row recording the capture: its time, its transport         | the rail's second band                                                     |
+| **processing** | step | `--stage-processing` | `#f59e0b` | a scored record: a nomination, a vote count, a rank candidate        | the rail's third band                                                      |
+| **review**     | step | `--stage-review`     | `#ec4899` | the owner's decision: curated, ranked, approved                      | the rail's fourth band                                                     |
+| **file**       | kind | `--stage-file`       | `#f0a045` | a record stored as a file in the drawer                              | the Voted column                                                           |
+| **template**   | kind | `--stage-template`   | `#9b77fa` | a shape reused: a list, a column, a bento arrangement                | the Curated column                                                         |
+| **publish**    | kind | `--stage-publish`    | `#6e9efa` | a record that has left the private side: the canvas, a public handle | the Authors column, the canvas                                             |
 
 Three rules bind the set:
 
-- **A colour is a claim about identity.** A band, a column head and an event row that share an accent
-  are naming the same stage. None of the seven is decoration, so an element takes a stage accent
-  only when it can say which stage it means.
+- **A colour is a claim about identity.** A band, a column head and an event row that share an
+  accent are naming the same stage. None of the seven is decoration, so an element takes a stage
+  accent only when it can say which stage it means.
 - **The map is the only mapping.** A page passes a token reference - `StageAccent.source`,
   `ColumnAccent("bookmark")` - and never a value. A sheet may read a stage token directly, because
   that is a use rather than a map; a second module that names a stage accent is a defect.
 - **A column feeds a stage; it is not a stage.** `ColumnStage` binds each drawer column to the stage
-  it publishes into, and `StageKey` stays the four steps. Adding a step is a token, a map entry and a
-  place in the pipeline, in that order; adding a column is one entry in `ColumnStage`.
+  it publishes into, and `StageKey` stays the four steps. Adding a step is a token, a map entry and
+  a place in the pipeline, in that order; adding a column is one entry in `ColumnStage`.
 
 ## The component API
 
 A component under `Source/Component/Workspace/` receives everything it draws. The page derives; the
 component renders.
 
-| Component      | Prop           | Kind  | Type                          |
-| -------------- | -------------- | ----- | ----------------------------- |
-| **Workspace**  | `Stages`       | data  | `Stage[]`                     |
-|                | `Columns`      | data  | `Column[]`                    |
-|                | `Tiles`        | data  | `Tile[]`                      |
-|                | `Note`         | data  | `string` - the rail's standing note |
-|                | `Eyebrow`      | data  | `string` - the drawer's depth path |
-|                | `Title`        | data  | `string`                      |
-|                | `Hint`         | data  | `string` - the lock line      |
-|                | `Destination`  | data  | `string` - what a drop lands on |
-|                | `Instruction`  | data  | `string` - the seam's standing line |
-| **Provenance** | `Stages`       | data  | `Stage[]`                     |
-|                | `Selected`     | state | `string` - a stage key        |
-|                | `Note`         | data  | `string`                      |
-|                | `OnSelect`     | state | `(Key: string) => void`       |
-| **Drawer**     | `Eyebrow`, `Title`, `Hint` | data | `string`            |
-|                | `Columns`      | data  | `Column[]`                    |
-|                | `Active`       | state | `string` - a column key       |
-|                | `View`         | state | `"graph" \| "list"`           |
-|                | `OnActivate`   | state | `(Key: string) => void`       |
-|                | `OnView`       | state | `(View: DrawerView) => void`  |
-|                | `OnOpen`       | state | `(Id: string) => void`        |
-|                | `OnAdd`        | state | `() => void`                  |
-|                | `OnPublish`    | state | `(Key: string) => void`       |
-| **DrawerColumn** | `Column`     | data  | `Column`                      |
-|                | `Active`       | state | `boolean`                     |
-|                | `OnActivate`, `OnOpen`, `OnPublish` | state | as above       |
-| **DrawerItem** | `Entry`        | data  | `Entry`                       |
-|                | `OnOpen`       | state | `(Id: string) => void`        |
-| **Bento**      | `Tiles`        | data  | `Tile[]`                      |
-|                | `Column`, `Row` | data | `number` - the grid the empty fill is computed against |
-| **Publish**    | `Label`        | data  | `string` - the destination    |
-|                | `Note`         | data  | `string` - the standing instruction |
-|                | `Armed`        | state | `string \| undefined` - the record a drop would file |
-| **Icon**       | `Name`         | data  | `string` - a key of the closed set |
-|                | `Class`        | data  | `string`                      |
+| Component        | Prop                                | Kind  | Type                                                   |
+| ---------------- | ----------------------------------- | ----- | ------------------------------------------------------ |
+| **Workspace**    | `Stages`                            | data  | `Stage[]`                                              |
+|                  | `Columns`                           | data  | `Column[]`                                             |
+|                  | `Tiles`                             | data  | `Tile[]`                                               |
+|                  | `Note`                              | data  | `string` - the rail's standing note                    |
+|                  | `Eyebrow`                           | data  | `string` - the drawer's depth path                     |
+|                  | `Title`                             | data  | `string`                                               |
+|                  | `Hint`                              | data  | `string` - the lock line                               |
+|                  | `Destination`                       | data  | `string` - what a drop lands on                        |
+|                  | `Instruction`                       | data  | `string` - the seam's standing line                    |
+| **Provenance**   | `Stages`                            | data  | `Stage[]`                                              |
+|                  | `Selected`                          | state | `string` - a stage key                                 |
+|                  | `Note`                              | data  | `string`                                               |
+|                  | `OnSelect`                          | state | `(Key: string) => void`                                |
+| **Drawer**       | `Eyebrow`, `Title`, `Hint`          | data  | `string`                                               |
+|                  | `Columns`                           | data  | `Column[]`                                             |
+|                  | `Active`                            | state | `string` - a column key                                |
+|                  | `View`                              | state | `"graph" \| "list"`                                    |
+|                  | `OnActivate`                        | state | `(Key: string) => void`                                |
+|                  | `OnView`                            | state | `(View: DrawerView) => void`                           |
+|                  | `OnOpen`                            | state | `(Id: string) => void`                                 |
+|                  | `OnAdd`                             | state | `() => void`                                           |
+|                  | `OnPublish`                         | state | `(Key: string) => void`                                |
+| **DrawerColumn** | `Column`                            | data  | `Column`                                               |
+|                  | `Active`                            | state | `boolean`                                              |
+|                  | `OnActivate`, `OnOpen`, `OnPublish` | state | as above                                               |
+| **DrawerItem**   | `Entry`                             | data  | `Entry`                                                |
+|                  | `OnOpen`                            | state | `(Id: string) => void`                                 |
+| **Bento**        | `Tiles`                             | data  | `Tile[]`                                               |
+|                  | `Column`, `Row`                     | data  | `number` - the grid the empty fill is computed against |
+| **Publish**      | `Label`                             | data  | `string` - the destination                             |
+|                  | `Note`                              | data  | `string` - the standing instruction                    |
+|                  | `Armed`                             | state | `string \| undefined` - the record a drop would file   |
+| **Icon**         | `Name`                              | data  | `string` - a key of the closed set                     |
+|                  | `Class`                             | data  | `string`                                               |
 
 The four shapes a page builds are the component's public surface: `Stage`, `Column`, `Entry` and
 `Tile`. A page constructs them from the content collections; a component does not reshape them.
@@ -345,17 +344,17 @@ Prose keeps `--content-width` (48rem). An application surface opts into `.page--
   one can name. `max-width` appears in the shell and in two media queries, and nowhere else.
 
 The reason is one decision in one place. A drawer of columns and a six-track mosaic are laid out
-against the viewport, not against a measure: a 48rem cap squeezes both, and the same cap is right for
-a page of prose. Making the measure the shell's default and the release a page's single flag keeps
-the decision in the shell, where a reader looks for it, and out of every component that would
+against the viewport, not against a measure: a 48rem cap squeezes both, and the same cap is right
+for a page of prose. Making the measure the shell's default and the release a page's single flag
+keeps the decision in the shell, where a reader looks for it, and out of every component that would
 otherwise repeat it.
 
 ## Fidelity
 
 The Figma frame is the reference. `Documentation/Assets/Full Composition.png` is the frame, 1440 x
 1300, and `Documentation/Reference/Design-Composition.md` holds its measured geometry - the four
-bands, the drum's ladder, the drawer's header, columns and items, the seam and the canvas - read from
-the file's own layer tree rather than estimated from the picture.
+bands, the drum's ladder, the drawer's header, columns and items, the seam and the canvas - read
+from the file's own layer tree rather than estimated from the picture.
 
 - **The numbers in the reference are the specification.** A component is checked against them, not
   against an impression of the image.
@@ -393,15 +392,15 @@ passed a page carrying eight hex literals and a sheet carrying a second stage ma
 
 ## Alternatives considered
 
-| Option                                          | Why not chosen                                                                                                        |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Tailwind utilities as the design system         | a utility is a value, not a name: a token change cannot reach it, and two surfaces agree only by coincidence           |
-| A theme object in TypeScript                    | a second palette in a second language, which is the arrangement the stage map exists to prevent                       |
-| A component library with its own elevation      | it brings a shadow-and-blur language that contradicts drawn depth, and the composition would be restyled around it     |
-| Shadow-based elevation (Material Design)        | a cast shadow asserts a light source the composition does not have, and at 9px type a blur reads as dirt               |
-| One stylesheet per page                         | the material is copied per page and two pages drift the first time one is edited                                       |
-| A `.page--wide` per component                   | every part would negotiate its own width against the shell, and the column would differ by a few pixels nothing names  |
-| A token per geometry value                      | a band's height belongs to one part; tokenising it makes the ladder a stylesheet edit and the component's data a lie   |
+| Option                                     | Why not chosen                                                                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Tailwind utilities as the design system    | a utility is a value, not a name: a token change cannot reach it, and two surfaces agree only by coincidence          |
+| A theme object in TypeScript               | a second palette in a second language, which is the arrangement the stage map exists to prevent                       |
+| A component library with its own elevation | it brings a shadow-and-blur language that contradicts drawn depth, and the composition would be restyled around it    |
+| Shadow-based elevation (Material Design)   | a cast shadow asserts a light source the composition does not have, and at 9px type a blur reads as dirt              |
+| One stylesheet per page                    | the material is copied per page and two pages drift the first time one is edited                                      |
+| A `.page--wide` per component              | every part would negotiate its own width against the shell, and the column would differ by a few pixels nothing names |
+| A token per geometry value                 | a band's height belongs to one part; tokenising it makes the ladder a stylesheet edit and the component's data a lie  |
 
 ## Consequences
 
@@ -422,19 +421,19 @@ passed a page carrying eight hex literals and a sheet carrying a second stage ma
 
 ## Verification
 
-| Claim                                  | Test                                                                                                                                     |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Every colour is a token                | `grep -rnE '#[0-9a-fA-F]{3,8}' Source --include=*.scss --include=*.tsx --include=*.astro` returns only `Global.css` and the `theme-color` meta |
-| No rgb or hsl triple is written        | `grep -rn 'rgb(\|hsl(' Source/Stylesheet` returns only the two fade rules and the selected plate (intent: all three become `color-mix`)  |
-| No orphan token                        | the token contract script reports none; until it exists, `comm -23` of declared against read names returns the three tokens named in Context |
-| No undefined token                     | every `var(--x)` resolves to a declaration or to the closed component-scoped set (script, intent)                                        |
-| One stage map                          | `grep -rn 'stage-' Source --include=*.ts --include=*.tsx --include=*.scss \| grep -v Library/Stage.ts` shows reads only, no second mapping |
-| A component never reads a collection   | `grep -rn 'astro:content' Source/Component` returns nothing (true today)                                                                  |
-| The shell owns the measure             | `grep -rn 'max-width' Source/Stylesheet Source/Component` returns `Shell.scss` and two media queries, nothing else                        |
-| Depth is drawn, never simulated        | `grep -rn 'box-shadow\|blur(\|linear-gradient' Source/Stylesheet` returns the two fade rules and nothing else                            |
-| One sheet per component                | `find Source/Stylesheet -name '*.css'` returns `Base.css` and `Global.css` only                                                          |
-| A drawn control is wired               | `grep -rn '=> undefined' Source/Component` returns nothing (intent: the drawer's add control)                                            |
-| The index lists what exists            | `ls Documentation/RFC/proposed \| wc -l` equals the written count the index states                                                       |
+| Claim                                | Test                                                                                                                                           |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Every colour is a token              | `grep -rnE '#[0-9a-fA-F]{3,8}' Source --include=*.scss --include=*.tsx --include=*.astro` returns only `Global.css` and the `theme-color` meta |
+| No rgb or hsl triple is written      | `grep -rn 'rgb(\|hsl(' Source/Stylesheet` returns only the two fade rules and the selected plate (intent: all three become `color-mix`)        |
+| No orphan token                      | the token contract script reports none; until it exists, `comm -23` of declared against read names returns the three tokens named in Context   |
+| No undefined token                   | every `var(--x)` resolves to a declaration or to the closed component-scoped set (script, intent)                                              |
+| One stage map                        | `grep -rn 'stage-' Source --include=*.ts --include=*.tsx --include=*.scss \| grep -v Library/Stage.ts` shows reads only, no second mapping     |
+| A component never reads a collection | `grep -rn 'astro:content' Source/Component` returns nothing (true today)                                                                       |
+| The shell owns the measure           | `grep -rn 'max-width' Source/Stylesheet Source/Component` returns `Shell.scss` and two media queries, nothing else                             |
+| Depth is drawn, never simulated      | `grep -rn 'box-shadow\|blur(\|linear-gradient' Source/Stylesheet` returns the two fade rules and nothing else                                  |
+| One sheet per component              | `find Source/Stylesheet -name '*.css'` returns `Base.css` and `Global.css` only                                                                |
+| A drawn control is wired             | `grep -rn '=> undefined' Source/Component` returns nothing (intent: the drawer's add control)                                                  |
+| The index lists what exists          | `ls Documentation/RFC/proposed \| wc -l` equals the written count the index states                                                             |
 
 ## Open questions
 

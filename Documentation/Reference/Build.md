@@ -19,13 +19,13 @@ Maintain/
 
 ## Commands
 
-| From the root                 | What it does                                      |
-| ----------------------------- | ------------------------------------------------- |
-| `pnpm build`                  | `astro build` - the site, nothing else            |
-| `pnpm Build`                  | compiles the tool layer into `Maintain/Target/**` |
-| `pnpm maintain <group> <cmd>` | runs the compiled CLI                             |
-| `pnpm tool <group> <cmd>`     | the same, through the Maintain package's `tool`   |
-| `pnpm Run`                    | `astro dev --host`                                |
+| From the root                 | What it does                                                        |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `pnpm build`                  | `astro build` - the site, nothing else                              |
+| `pnpm Build`                  | compiles the tool layer into `Maintain/Target/**`                   |
+| `pnpm maintain <group> <cmd>` | runs the compiled CLI                                               |
+| `pnpm tool <group> <cmd>`     | the same, through the Maintain package's `tool`                     |
+| `pnpm Run`                    | `astro dev --host`                                                  |
 | `pnpm check`                  | the compatibility guard, then the tool layer's type-check and tests |
 
 `Maintain/package.json`:
