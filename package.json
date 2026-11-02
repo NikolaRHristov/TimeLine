@@ -21,7 +21,8 @@
 		"Format": "prettier --write .",
 		"Format:Check": "prettier --check .",
 		"maintain": "node Maintain/Target/Index.js",
-		"Deploy": "firebase deploy --only hosting",
+		"Deploy:Rules": "firebase deploy --only firestore:rules,firestore:indexes,storage",
+		"Emulators": "firebase emulators:start",
 		"prepublishOnly": "pnpm run build",
 		"tool": "pnpm --filter @nikolarhristov/timeline-maintain run tool"
 	},

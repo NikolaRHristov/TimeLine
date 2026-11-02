@@ -32,5 +32,10 @@ node_modules/
 .env
 .env.*
 !.env.example
-firebase-debug.log
+
+# Firebase project pin. It names one project, so it is per-clone, not shared.
 .firebaserc
+firebase-debug.log
+.firebase/logs/vsce-debug.log
+
+!AGENTS.md

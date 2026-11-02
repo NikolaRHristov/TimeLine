@@ -1,27 +1,16 @@
 {
-	"hosting": {
-		"public": "Target",
-		"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-		"cleanUrls": true,
-		"trailingSlash": false,
-		"headers": [
-			{
-				"source": "**",
-				"headers": [
-					{ "key": "X-Content-Type-Options", "value": "nosniff" },
-					{ "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-					{ "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-					{ "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
-				]
-			},
-			{
-				"source": "**/*.@(js|css|woff2|svg|png|jpg|jpeg|webp|avif)",
-				"headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-			},
-			{
-				"source": "/index.html",
-				"headers": [{ "key": "Cache-Control", "value": "no-cache" }]
-			}
-		]
+	"firestore": {
+		"rules": "Firestore.rules",
+		"indexes": "Firestore.indexes.json"
+	},
+	"storage": {
+		"rules": "Storage.rules"
+	},
+	"emulators": {
+		"auth": { "port": 9099 },
+		"firestore": { "port": 8080 },
+		"storage": { "port": 9199 },
+		"ui": { "enabled": true, "port": 4000 },
+		"singleProjectMode": true
 	}
 }

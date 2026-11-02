@@ -10,7 +10,7 @@
 		"publish": "spacetime publish"
 	},
 	"dependencies": {
-		"spacetimedb": "2.14.*"
+		"spacetimedb": "2.14.0"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2"

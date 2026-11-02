@@ -181,7 +181,7 @@ spacetime publish my-database --delete-data=always --yes
 ```bash
 # SQL queries
 spacetime sql my-database "SELECT * FROM users"
-spacetime sql my-database --interactive   # REPL mode
+spacetime sql my-database --interactive # REPL mode
 
 # Call reducers (each argument is a separate positional arg)
 spacetime call my-database my_reducer '"value"' '123'
@@ -190,13 +190,13 @@ spacetime call my-database my_reducer '"value"' '123'
 spacetime subscribe my-database "SELECT * FROM users" --num-updates 10
 
 # View logs
-spacetime logs my-database -f              # follow logs
-spacetime logs my-database -n 100          # up to 100 log lines
+spacetime logs my-database -f     # follow logs
+spacetime logs my-database -n 100 # up to 100 log lines
 
 # Describe schema
 # (without --json, output is human-readable text)
 spacetime describe my-database --json
-spacetime describe my-database tables --json   # also views, reducers, procedures, routes, env, types
+spacetime describe my-database tables --json # also views, reducers, procedures, routes, env, types
 spacetime describe my-database tables users --json
 spacetime describe my-database reducers my_reducer --json
 ```
@@ -211,7 +211,7 @@ spacetime list
 spacetime delete my-database
 
 # Rename database
-spacetime rename <database-identity> --to new-name
+spacetime rename new-name < database-identity > --to
 ```
 
 ### Server Management
