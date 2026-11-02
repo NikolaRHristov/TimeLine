@@ -7,15 +7,11 @@ import { List as ListModel } from "../../../Model/List/List.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["page", "list", "open"],
-	summary:
-		"Show one configured list; the id comes from the identifier map, never argv.",
+	summary: "Show one configured list; the id comes from the identifier map, never argv.",
 	options: [
-		option(
-			"name",
-			"string",
-			"Slug of a list declared in the identifier map.",
-			{ required: true },
-		),
+		option("name", "string", "Slug of a list declared in the identifier map.", {
+			required: true,
+		}),
 	],
 	async run(values): Promise<unknown> {
 		// The slug is not validated against a hardcoded set: `requireList` knows

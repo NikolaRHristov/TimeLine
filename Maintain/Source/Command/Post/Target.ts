@@ -12,10 +12,7 @@ export const targetOptions = [
 	}),
 ];
 
-export const dryRun = flag(
-	"dry-run",
-	"Resolve the post and print it without touching it.",
-);
+export const dryRun = flag("dry-run", "Resolve the post and print it without touching it.");
 
 /** `--url`, or `--tab` together with `--index`. */
 export const targetAlternatives = [["url"], ["tab", "index"]] as const;

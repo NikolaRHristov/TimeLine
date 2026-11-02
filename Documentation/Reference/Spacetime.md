@@ -1,14 +1,14 @@
 # SpacetimeDB - local live projection
 
-A local SpacetimeDB instance holds the same archive as the JSON files, so an
-observation is queryable the moment it happens instead of only after someone
-opens a file. The files stay the source of truth; this is a projection.
+A local SpacetimeDB instance holds the same archive as the JSON files, so an observation is
+queryable the moment it happens instead of only after someone opens a file. The files stay the
+source of truth; this is a projection.
 
 ## Install
 
-The vendor's Homebrew tap is stale - its formula pins `1.0.0-rc3-hotfix6`, whose
-release asset 404s - and `https://spacetimedb.com/install` serves an HTML page,
-so piping it to `sh` does nothing. Install the release binary instead:
+The vendor's Homebrew tap is stale - its formula pins `1.0.0-rc3-hotfix6`, whose release asset
+404s - and `https://spacetimedb.com/install` serves an HTML page, so piping it to `sh` does nothing.
+Install the release binary instead:
 
 ```sh
 curl -sSL -o /tmp/spacetime.tar.gz \
@@ -18,8 +18,8 @@ chmod +x ~/.local/bin/spacetimedb-cli ~/.local/bin/spacetimedb-standalone
 ln -sf spacetimedb-cli ~/.local/bin/spacetime
 ```
 
-The tarball ships `spacetimedb-cli` and `spacetimedb-standalone`; `spacetime` is
-a symlink to the CLI. Verified: `spacetime --version` → `2.14.0`.
+The tarball ships `spacetimedb-cli` and `spacetimedb-standalone`; `spacetime` is a symlink to the
+CLI. Verified: `spacetime --version` → `2.14.0`.
 
 ## Run
 
@@ -27,12 +27,12 @@ a symlink to the CLI. Verified: `spacetime --version` → `2.14.0`.
 spacetime start --listen-addr 127.0.0.1:3010
 ```
 
-Port 3000 is SpacetimeDB's default and is usually taken (VS Code held it on this
-machine), and `spacetime start` prompts interactively when the port is busy -
-pass `--listen-addr` so it never asks.
+Port 3000 is SpacetimeDB's default and is usually taken (VS Code held it on this machine), and
+`spacetime start` prompts interactively when the port is busy - pass `--listen-addr` so it never
+asks.
 
-Bind to loopback only. The module has no auth beyond the server's own identity
-handling, so exposing the port exposes the archive.
+Bind to loopback only. The module has no auth beyond the server's own identity handling, so exposing
+the port exposes the archive.
 
 ## Project
 
@@ -45,10 +45,9 @@ Maintain/Spacetime/
     package.json           # spacetimedb 2.14.*
 ```
 
-`spacetime init` writes `spacetime.local.json` with a generated name
-(`timeline-<suffix>`), which does **not** match the database that `publish`
-creates (`timeline`). Every `sql`/`call` then fails with
-`failed to find database timeline-<suffix>`. Fix the file, not the command:
+`spacetime init` writes `spacetime.local.json` with a generated name (`timeline-<suffix>`), which
+does **not** match the database that `publish` creates (`timeline`). Every `sql`/`call` then fails
+with `failed to find database timeline-<suffix>`. Fix the file, not the command:
 
 ```json
 { "database": "timeline" }
@@ -80,39 +79,38 @@ Reducers: `observe`, `record`, `setVisibility`, `classify`, `attach`.
 
 ## Ingest: the archive into the projection
 
-`maintain store push` is the bridge: it reads the shadow store and calls
-`observe` once per post. The files remain the source of truth, so the database
-can be deleted and rebuilt from them at any time.
+`maintain store push` is the bridge: it reads the shadow store and calls `observe` once per post.
+The files remain the source of truth, so the database can be deleted and rebuilt from them at any
+time.
 
 ```sh
 pnpm maintain store push --source bookmark
 # {"pushed":205,"skipped":0,"failed":0,"source":"bookmark","url":"http://127.0.0.1:3010"}
 ```
 
-Two details of the wire shape are easy to get wrong, and both fail the whole
-call rather than one field:
+Two details of the wire shape are easy to get wrong, and both fail the whole call rather than one
+field:
 
-- The body is a JSON **array** of positional arguments in reducer order, not an
-  object keyed by argument name.
-- `postedAt` is an `option<string>`, and the JSON surface takes an option as a
-  _tagged_ value: `{"some":"<ISO>"}` for a value, `null` for none. A bare string
-  is rejected (`invalid type: string …, expected sum type`), and `null` sent for
-  a present timestamp decodes as `none` - the call succeeds and the timestamp is
-  silently lost.
+- The body is a JSON **array** of positional arguments in reducer order, not an object keyed by
+  argument name.
+- `postedAt` is an `option<string>`, and the JSON surface takes an option as a _tagged_ value:
+  `{"some":"<ISO>"}` for a value, `null` for none. A bare string is rejected
+  (`invalid type: string …, expected sum type`), and `null` sent for a present timestamp decodes as
+  `none` - the call succeeds and the timestamp is silently lost.
 
-`at` is the record's `lastScrapedAt`, never the wall clock: the observation row
-is keyed `<postId>:<source>:<at>`, so a clock would append one row per run.
+`at` is the record's `lastScrapedAt`, never the wall clock: the observation row is keyed
+`<postId>:<source>:<at>`, so a clock would append one row per run.
 
 ## Invariants
 
-- **Derived ids, never auto-increment.** `.autoInc()` still requires `id` on
-  insert in this TypeScript API, so every derived table keys on a string built
-  from its content. Replaying a scrape writes nothing new.
-- **Observations and events are append-only.** A re-scrape updates `post`
-  metrics in place and appends an observation; it never rewrites history.
+- **Derived ids, never auto-increment.** `.autoInc()` still requires `id` on insert in this
+  TypeScript API, so every derived table keys on a string built from its content. Replaying a scrape
+  writes nothing new.
+- **Observations and events are append-only.** A re-scrape updates `post` metrics in place and
+  appends an observation; it never rewrites history.
 - **`visibility` gates the site.** Only `public` may reach `Source/Content/`.
-- **The module is not the source of truth.** Deleting the database loses no data
-  that the JSON files do not hold.
+- **The module is not the source of truth.** Deleting the database loses no data that the JSON files
+  do not hold.
 
 ## Claim → test
 

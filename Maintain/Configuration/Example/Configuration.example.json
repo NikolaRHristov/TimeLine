@@ -13,7 +13,8 @@
 		"root": "Source/Content"
 	},
 	"storage": {
-		"shadow": "Maintain/Storage/Shadow"
+		"shadow": "Maintain/Storage/Shadow",
+		"vote": "Maintain/Storage/Vote"
 	},
 	"spacetime": {
 		"url": "http://127.0.0.1:3010",

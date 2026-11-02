@@ -12,6 +12,28 @@ import { getCollection } from "astro:content";
 
 const bookmarks = await getCollection("Bookmark");
 const events = await getCollection("Event");
+const curated = await getCollection("Curated");
+const voted = await getCollection("Voted");
+
+/**
+ * The Curated index: the owner's picks, in the owner's order.
+ *
+ * Joined by id, never copied: `Curated/<id>.json` carries the rank and the
+ * vote count frozen at approval time, and the payload comes from the bookmark
+ * - or from the Voted entry when the post was curated without being published
+ * as a bookmark. An entry whose payload has vanished is dropped rather than
+ * rendered as a dead link.
+ */
+const ranked = [...curated]
+	.sort((left, right) => left.data.rank - right.data.rank || left.id.localeCompare(right.id))
+	.map((entry) => ({
+		rank: entry.data.rank,
+		votes: entry.data.votes,
+		id: entry.id,
+		bookmark: bookmarks.find((bookmark) => bookmark.id === entry.id) ?? null,
+		voted: voted.find((candidate) => candidate.id === entry.id) ?? null,
+	}))
+	.filter((entry) => entry.bookmark !== null || entry.voted !== null);
 
 const newest = [...bookmarks]
 	.sort((left, right) =>
@@ -22,9 +44,7 @@ const newest = [...bookmarks]
 	.slice(0, 5);
 
 /** The slugs this archive actually uses - the person's lists, not a fixed set. */
-const lists = [
-	...new Set(bookmarks.flatMap((entry) => entry.data.lists)),
-].sort();
+const lists = [...new Set(bookmarks.flatMap((entry) => entry.data.lists))].sort();
 
 const total = bookmarks.length;
 
@@ -37,12 +57,8 @@ const total = bookmarks.length;
  * space before the comma, visible exactly in the empty state this page is
  * supposed to make look deliberate.
  */
-const summary = `${total} saved ${
-	total === 1 ? "post" : "posts"
-}${
-	lists.length > 0
-		? ` across ${lists.length} ${lists.length === 1 ? "list" : "lists"}`
-		: ""
+const summary = `${total} saved ${total === 1 ? "post" : "posts"}${
+	lists.length > 0 ? ` across ${lists.length} ${lists.length === 1 ? "list" : "lists"}` : ""
 }, ${events.length} ${events.length === 1 ? "event" : "events"} recorded.`;
 
 const excerpt = (text: string): string =>
@@ -50,9 +66,7 @@ const excerpt = (text: string): string =>
 const day = (value: string): string => value.slice(0, 10);
 ---
 
-<Base
-	Title="Bookmarks"
-	Description={`${total} saved posts, grouped by list and author.`}>
+<Base Title="Bookmarks" Description={`${total} saved posts, grouped by list and author.`}>
 	<main class="container mx-auto max-w-3xl px-6 py-10">
 		<header class="mb-10">
 			<h1 class="text-2xl font-semibold">Bookmarks</h1>
@@ -63,9 +77,8 @@ const day = (value: string): string => value.slice(0, 10);
 			<section class="rounded border border-neutral-200 p-6 text-sm text-neutral-700">
 				<h2 class="mb-2 text-base font-semibold">No bookmarks yet</h2>
 				<p class="mb-3">
-					Nothing has been published into this archive. Scrape your
-					own bookmarks into the shadow store, then publish what you
-					want to show:
+					Nothing has been published into this archive. Scrape your own bookmarks into the
+					shadow store, then publish what you want to show:
 				</p>
 				<ol class="space-y-1">
 					<li>
@@ -79,19 +92,49 @@ const day = (value: string): string => value.slice(0, 10);
 						</code>
 					</li>
 					<li>
-						<code class="rounded bg-neutral-100 px-1">
-							pnpm run build
-						</code>
+						<code class="rounded bg-neutral-100 px-1">pnpm run build</code>
 					</li>
 				</ol>
 				<p class="mt-3">
-					The commands need a browser exposing the DevTools Protocol
-					and a configured identifier map - see
+					The commands need a browser exposing the DevTools Protocol and a configured
+					identifier map - see
 					<code class="mx-1 rounded bg-neutral-100 px-1">
 						Documentation/Reference/Configure.md
 					</code>
 					.
 				</p>
+			</section>
+		)}
+
+		{ranked.length > 0 && (
+			<section class="mb-10">
+				<h2 class="mb-3 border-b border-neutral-200 pb-2 text-lg font-semibold">Curated</h2>
+				<ol class="space-y-3">
+					{ranked.map((entry) => (
+						<li class="flex flex-wrap items-baseline gap-x-3 leading-snug">
+							<span class="min-w-6 text-sm font-semibold tabular-nums text-neutral-500">
+								{entry.rank}
+							</span>
+							{entry.bookmark !== null ? (
+								<a
+									class="underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-900"
+									href={`/Bookmark/${entry.id}/`}>
+									{excerpt(entry.bookmark.data.text)}
+								</a>
+							) : (
+								<a
+									class="underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-900"
+									href={entry.voted?.data.url}
+									rel="noopener noreferrer">
+									{entry.voted?.data.title ?? entry.voted?.data.url}
+								</a>
+							)}
+							<span class="ml-auto whitespace-nowrap text-xs text-neutral-500">
+								{entry.votes} {entry.votes === 1 ? "vote" : "votes"}
+							</span>
+						</li>
+					))}
+				</ol>
 			</section>
 		)}
 
@@ -109,9 +152,7 @@ const day = (value: string): string => value.slice(0, 10);
 
 		{newest.length > 0 && (
 			<section>
-				<h2 class="mb-3 border-b border-neutral-200 pb-2 text-lg font-semibold">
-					Latest
-				</h2>
+				<h2 class="mb-3 border-b border-neutral-200 pb-2 text-lg font-semibold">Latest</h2>
 				<ul class="space-y-3">
 					{newest.map((entry) => (
 						<li class="leading-snug">
@@ -122,10 +163,7 @@ const day = (value: string): string => value.slice(0, 10);
 							</a>
 							<span class="ml-2 whitespace-nowrap text-xs text-neutral-500">
 								@{entry.data.author.handle} ·{" "}
-								{day(
-									entry.data.postedAt ??
-										entry.data.firstSeenAt,
-								)}
+								{day(entry.data.postedAt ?? entry.data.firstSeenAt)}
 							</span>
 						</li>
 					))}

@@ -54,20 +54,12 @@ function inPage(request: {
 	/** "1.2K" -> 1200; "9 Likes. Like" -> 9; anything unreadable -> 0. */
 	const count = (value: string | null): number => {
 		if (!value) return 0;
-		const match = /^([\d.]+)\s*([KMB])?/i.exec(
-			String(value).replace(/,/g, "").trim(),
-		);
+		const match = /^([\d.]+)\s*([KMB])?/i.exec(String(value).replace(/,/g, "").trim());
 		if (!match) return 0;
 		const base = Number.parseFloat(match[1] ?? "0");
 		const suffix = (match[2] ?? "").toUpperCase();
 		const factor =
-			suffix === "K"
-				? 1000
-				: suffix === "M"
-					? 1000000
-					: suffix === "B"
-						? 1000000000
-						: 1;
+			suffix === "K" ? 1000 : suffix === "M" ? 1000000 : suffix === "B" ? 1000000000 : 1;
 		return Math.round(base * factor);
 	};
 
@@ -81,15 +73,11 @@ function inPage(request: {
 	 */
 	const metric = (text: string, keyword: string): number => {
 		if (text === "") return 0;
-		const match = new RegExp(
-			"([\\d.,]+\\s*[KMB]?)\\s*" + keyword,
-			"i",
-		).exec(text);
+		const match = new RegExp("([\\d.,]+\\s*[KMB]?)\\s*" + keyword, "i").exec(text);
 		return count(match?.[1] ?? text);
 	};
 
-	const articles = (): Element[] =>
-		Array.from(document.querySelectorAll("article"));
+	const articles = (): Element[] => Array.from(document.querySelectorAll("article"));
 
 	/** The status id of one article, from its permalink - never from its text. */
 	const idOf = (node: Element): string => {
@@ -117,53 +105,37 @@ function inPage(request: {
 				? ""
 				: (Array.from(userBlock.querySelectorAll("a[href]"))
 						.map((anchor) => anchor.getAttribute("href") ?? "")
-						.find((href) =>
-							/^\/[A-Za-z0-9_]{1,30}\/?$/.test(href),
-						) ?? "");
+						.find((href) => /^\/[A-Za-z0-9_]{1,30}\/?$/.test(href)) ?? "");
 		const handle = profileHref.replace(/\//g, "");
-		const rawName =
-			userBlock === null ? "" : (userBlock.textContent ?? "").trim();
+		const rawName = userBlock === null ? "" : (userBlock.textContent ?? "").trim();
 		const name = (rawName.split("@")[0] ?? "").trim() || handle;
 		const verified =
-			userBlock !== null &&
-			userBlock.querySelector('[data-testid="icon-verified"]') !== null;
+			userBlock !== null && userBlock.querySelector('[data-testid="icon-verified"]') !== null;
 
 		const textNode = node.querySelector('[data-testid="tweetText"]');
-		const text =
-			textNode === null ? "" : (textNode.textContent ?? "").trim();
+		const text = textNode === null ? "" : (textNode.textContent ?? "").trim();
 
 		const timeNode = node.querySelector("time[datetime]");
-		const postedAt =
-			timeNode === null ? null : timeNode.getAttribute("datetime");
+		const postedAt = timeNode === null ? null : timeNode.getAttribute("datetime");
 
 		const media: { kind: string; url: string }[] = [];
-		for (const image of Array.from(
-			node.querySelectorAll('[data-testid="tweetPhoto"] img'),
-		)) {
+		for (const image of Array.from(node.querySelectorAll('[data-testid="tweetPhoto"] img'))) {
 			const url = image.getAttribute("src") ?? "";
-			if (url !== "" && !url.startsWith("data:"))
-				media.push({ kind: "image", url });
+			if (url !== "" && !url.startsWith("data:")) media.push({ kind: "image", url });
 		}
 		for (const video of Array.from(node.querySelectorAll("video"))) {
-			const url =
-				video.getAttribute("src") ?? video.getAttribute("poster") ?? "";
+			const url = video.getAttribute("src") ?? video.getAttribute("poster") ?? "";
 			if (url !== "") media.push({ kind: "video", url });
 		}
-		for (const link of Array.from(
-			node.querySelectorAll('[data-testid="tweetText"] a[href]'),
-		)) {
+		for (const link of Array.from(node.querySelectorAll('[data-testid="tweetText"] a[href]'))) {
 			const url = link.getAttribute("href") ?? "";
 			if (/^https?:\/\//i.test(url)) media.push({ kind: "link", url });
 		}
 
 		const reply = node.querySelector('[data-testid="reply"]');
 		const repost = node.querySelector('[data-testid="retweet"]');
-		const likeButton = node.querySelector(
-			'[data-testid="like"], [data-testid="unlike"]',
-		);
-		const viewsNode = node.querySelector(
-			'[aria-label*="Views"], [aria-label*="views"]',
-		);
+		const likeButton = node.querySelector('[data-testid="like"], [data-testid="unlike"]');
+		const viewsNode = node.querySelector('[aria-label*="Views"], [aria-label*="views"]');
 
 		return {
 			id: idOf(node),
@@ -222,20 +194,12 @@ function inPage(request: {
 	}
 
 	const article =
-		request.id !== undefined
-			? byId(request.id)
-			: (articles()[request.index] ?? null);
-	if (article === null)
-		return { found: false, count: articles().length, clicked: false };
+		request.id !== undefined ? byId(request.id) : (articles()[request.index] ?? null);
+	if (article === null) return { found: false, count: articles().length, clicked: false };
 
 	/** State comes from `data-testid` first and the aria-label second. */
-	const controls = (): Record<
-		string,
-		{ present: boolean; active: boolean }
-	> => {
-		const like = article.querySelector(
-			'[data-testid="like"], [data-testid="unlike"]',
-		);
+	const controls = (): Record<string, { present: boolean; active: boolean }> => {
+		const like = article.querySelector('[data-testid="like"], [data-testid="unlike"]');
 		const bookmark = article.querySelector(
 			'[data-testid="bookmark"], [data-testid="removeBookmark"]',
 		);
@@ -253,8 +217,7 @@ function inPage(request: {
 				present: bookmark !== null,
 				active:
 					bookmark !== null &&
-					((bookmark.getAttribute("data-testid") ?? "") ===
-						"removeBookmark" ||
+					((bookmark.getAttribute("data-testid") ?? "") === "removeBookmark" ||
 						/remove bookmark/i.test(bookmarkLabel)),
 			},
 		};

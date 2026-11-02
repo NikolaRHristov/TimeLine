@@ -19,6 +19,12 @@ export type FailureCode =
 	| "spacetime-unreachable"
 	| "spacetime-auth"
 	| "spacetime-reducer"
+	| "no-transport"
+	| "vote-unreachable"
+	| "no-entry"
+	| "not-curated"
+	| "already-curated"
+	| "tombstone"
 	| "usage"
 	| "io-error"
 	| "internal";
@@ -33,11 +39,7 @@ export class Failure extends Error {
 	readonly detail: string | undefined;
 	readonly extra: Record<string, unknown>;
 
-	constructor(
-		code: FailureCode,
-		detail?: string,
-		extra: Record<string, unknown> = {},
-	) {
+	constructor(code: FailureCode, detail?: string, extra: Record<string, unknown> = {}) {
 		super(detail ?? code);
 		this.name = "Failure";
 		this.code = code;

@@ -31,10 +31,7 @@ const sleep = (milliseconds: number): Promise<void> =>
  * would detach the extension's own debugger, which is the one thing this tool
  * layer must never do.
  */
-export async function attach(
-	tab: Tab,
-	options: { timeout?: number } = {},
-): Promise<Session> {
+export async function attach(tab: Tab, options: { timeout?: number } = {}): Promise<Session> {
 	if (tab.attached) {
 		throw fail("no-tab", "that tab is attached by a browser extension", {
 			id: tab.id,
@@ -137,20 +134,12 @@ export async function attach(
 			}
 			return false;
 		},
-		async waitFor(
-			expression: string,
-			waitOptions: WaitOptions = {},
-		): Promise<boolean> {
+		async waitFor(expression: string, waitOptions: WaitOptions = {}): Promise<boolean> {
 			const deadline = Date.now() + (waitOptions.timeout ?? 15_000);
 			const interval = waitOptions.interval ?? 150;
 			while (Date.now() < deadline) {
 				try {
-					if (
-						(await evaluate<boolean>(
-							client,
-							`Boolean(${expression})`,
-						)) === true
-					)
+					if ((await evaluate<boolean>(client, `Boolean(${expression})`)) === true)
 						return true;
 				} catch {
 					// A navigation destroys the execution context for a moment; poll again.

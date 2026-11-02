@@ -36,8 +36,7 @@ export async function evaluate<T = unknown>(
 
 	if (response.exceptionDetails !== undefined) {
 		const details = response.exceptionDetails;
-		const description =
-			details.exception?.description ?? details.text ?? "evaluate failed";
+		const description = details.exception?.description ?? details.text ?? "evaluate failed";
 		throw fail("cdp-error", description.split("\n")[0], {
 			expression: expression.slice(0, 200),
 		});

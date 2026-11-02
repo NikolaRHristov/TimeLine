@@ -16,7 +16,7 @@ export type Configuration = {
 	/** One route per ingest source. `likes` needs `profile` to be known. */
 	routes: { bookmarks: string; likes: string; history: string };
 	content: { root: string };
-	storage: { shadow: string };
+	storage: { shadow: string; vote: string };
 	/** The live projection: where the server listens and which database to write. */
 	spacetime: { url: string; database: string };
 };
@@ -25,12 +25,12 @@ export const DEFAULT_BOOKMARKS = "https://x.com/i/bookmarks";
 export const DEFAULT_HISTORY = "https://x.com/i/history";
 export const DEFAULT_CONTENT = "Source/Content";
 export const DEFAULT_SHADOW = "Maintain/Storage/Shadow";
+export const DEFAULT_VOTE = "Maintain/Storage/Vote";
 export const DEFAULT_SPACETIME_URL = "http://127.0.0.1:3010";
 export const DEFAULT_SPACETIME_DATABASE = "timeline";
 
 function record(value: unknown): Record<string, unknown> | null {
-	if (value === null || typeof value !== "object" || Array.isArray(value))
-		return null;
+	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
 	return value as Record<string, unknown>;
 }
 
@@ -39,32 +39,22 @@ function text(value: unknown): string | null {
 }
 
 function count(value: unknown): number | null {
-	if (typeof value === "number" && Number.isFinite(value))
-		return Math.trunc(value);
+	if (typeof value === "number" && Number.isFinite(value)) return Math.trunc(value);
 	if (typeof value === "string" && /^\d+$/.test(value)) return Number(value);
 	return null;
 }
 
 /** One list from a `{slug,name,id}` object, or from a bare id string. */
-function one(
-	entry: unknown,
-	source: string,
-	field: string,
-	slug: string | null,
-): List {
+function one(entry: unknown, source: string, field: string, slug: string | null): List {
 	const bare = text(entry);
 	if (bare !== null && slug !== null) return { slug, name: slug, id: bare };
 
 	const detail = record(entry);
 	if (detail === null) {
-		throw fail(
-			"schema-invalid",
-			`\`${field}\` must be a list id or a {slug,name,id} object`,
-			{
-				path: source,
-				field,
-			},
-		);
+		throw fail("schema-invalid", `\`${field}\` must be a list id or a {slug,name,id} object`, {
+			path: source,
+			field,
+		});
 	}
 
 	const id = text(detail["id"]);
@@ -104,19 +94,16 @@ function lists(value: unknown, source: string): List[] {
 	};
 
 	if (Array.isArray(value)) {
-		value.forEach((entry, index) =>
-			push(one(entry, source, `lists[${index}]`, null)),
-		);
+		value.forEach((entry, index) => push(one(entry, source, `lists[${index}]`, null)));
 		return collected;
 	}
 
 	const map = record(value);
 	if (map === null) {
-		throw fail(
-			"schema-invalid",
-			"`lists` must be an array of {slug,name,id}",
-			{ path: source, field: "lists" },
-		);
+		throw fail("schema-invalid", "`lists` must be an array of {slug,name,id}", {
+			path: source,
+			field: "lists",
+		});
 	}
 	for (const [slug, entry] of Object.entries(map))
 		push(one(entry, source, `lists.${slug}`, slug));
@@ -127,11 +114,7 @@ function lists(value: unknown, source: string): List[] {
 export function validate(value: unknown, source: string): Configuration {
 	const root = record(value);
 	if (root === null) {
-		throw fail(
-			"schema-invalid",
-			"the identifier map must be a JSON object",
-			{ path: source },
-		);
+		throw fail("schema-invalid", "the identifier map must be a JSON object", { path: source });
 	}
 
 	const cdpValue = record(root["cdp"]) ?? {};
@@ -160,11 +143,13 @@ export function validate(value: unknown, source: string): Configuration {
 			history: text(routesValue["history"]) ?? DEFAULT_HISTORY,
 		},
 		content: { root: text(contentValue["root"]) ?? DEFAULT_CONTENT },
-		storage: { shadow: text(storageValue["shadow"]) ?? DEFAULT_SHADOW },
+		storage: {
+			shadow: text(storageValue["shadow"]) ?? DEFAULT_SHADOW,
+			vote: text(storageValue["vote"]) ?? DEFAULT_VOTE,
+		},
 		spacetime: {
 			url: text(spacetimeValue["url"]) ?? DEFAULT_SPACETIME_URL,
-			database:
-				text(spacetimeValue["database"]) ?? DEFAULT_SPACETIME_DATABASE,
+			database: text(spacetimeValue["database"]) ?? DEFAULT_SPACETIME_DATABASE,
 		},
 	};
 }
@@ -175,15 +160,12 @@ export function validate(value: unknown, source: string): Configuration {
  * Only keys the map actually declares are emitted, so a written file reads as
  * the person's configuration rather than as a schema dump.
  */
-export function document(
-	configuration: Configuration,
-): Record<string, unknown> {
+export function document(configuration: Configuration): Record<string, unknown> {
 	const routes: Record<string, string> = {
 		bookmarks: configuration.routes.bookmarks,
 		history: configuration.routes.history,
 	};
-	if (configuration.routes.likes.length > 0)
-		routes["likes"] = configuration.routes.likes;
+	if (configuration.routes.likes.length > 0) routes["likes"] = configuration.routes.likes;
 
 	return {
 		cdp: { host: configuration.cdp.host, port: configuration.cdp.port },
@@ -195,7 +177,10 @@ export function document(
 		})),
 		routes,
 		content: { root: configuration.content.root },
-		storage: { shadow: configuration.storage.shadow },
+		storage: {
+			shadow: configuration.storage.shadow,
+			vote: configuration.storage.vote,
+		},
 		spacetime: {
 			url: configuration.spacetime.url,
 			database: configuration.spacetime.database,

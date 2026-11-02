@@ -13,24 +13,18 @@ import { getCollection } from "astro:content";
 const events = (await getCollection("Event")).sort((left, right) =>
 	right.data.at.localeCompare(left.data.at),
 );
-const bookmarks = new Set(
-	(await getCollection("Bookmark")).map((entry) => entry.id),
-);
+const bookmarks = new Set((await getCollection("Bookmark")).map((entry) => entry.id));
 
-const moment = (value: string): string =>
-	`${value.slice(0, 10)} ${value.slice(11, 19)}Z`;
+const moment = (value: string): string => `${value.slice(0, 10)} ${value.slice(11, 19)}Z`;
 const isPost = (subject: string): boolean => bookmarks.has(subject);
 ---
 
-<Base
-	Title="Activity"
-	Description="What the bookmark pipeline did, newest first.">
+<Base Title="Activity" Description="What the bookmark pipeline did, newest first.">
 	<main class="container mx-auto max-w-3xl px-6 py-10">
 		<header class="mb-8">
 			<h1 class="text-2xl font-semibold">Activity</h1>
 			<p class="mt-1 text-sm text-neutral-600">
-				{events.length} {events.length === 1 ? "event" : "events"},
-				newest first.
+				{events.length} {events.length === 1 ? "event" : "events"}, newest first.
 			</p>
 		</header>
 
@@ -65,8 +59,7 @@ const isPost = (subject: string): boolean => bookmarks.has(subject);
 
 		{events.length === 0 && (
 			<p class="text-sm text-neutral-600">
-				Nothing recorded yet. Events appear here once a post is
-				published.
+				Nothing recorded yet. Events appear here once a post is published.
 			</p>
 		)}
 

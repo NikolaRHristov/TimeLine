@@ -1,0 +1,16 @@
+{
+	"id": "example-post",
+	"url": "https://x.com/example/status/0",
+	"title": "A synthetic post that ships with this repository",
+	"note": "Synthetic fixture: approved, so the Curated section renders on a fresh clone.",
+	"author": {
+		"handle": "example",
+		"name": "Example Author",
+		"verified": false
+	},
+	"lists": ["example"],
+	"votes": 3,
+	"votedAt": "2026-01-01T00:00:00.000Z",
+	"nominatedAt": "2026-01-01T00:00:00.000Z",
+	"status": "approved"
+}

@@ -1,24 +1,10 @@
-import {
-	execute,
-	withListMember,
-} from "../../../Browser/Session/ListMember.ts";
+import { execute, withListMember } from "../../../Browser/Session/ListMember.ts";
 import { flag } from "../../../Cli/Parser/Argument/Flag.ts";
 import { fail } from "../../../Cli/Parser/Output/Failure.ts";
 import type { CommandDefinition, Values } from "../../../Cli/Parser/Parser.ts";
-import {
-	configurationPath,
-	optional,
-	requireList,
-} from "../../../Configuration/Load/Load.ts";
-import {
-	load as loadRules,
-	scope,
-} from "../../../Configuration/Rules/Rules.ts";
-import {
-	apply as applyPlan,
-	resolve,
-	SPACING,
-} from "../../../Model/Author/Distribute.ts";
+import { configurationPath, optional, requireList } from "../../../Configuration/Load/Load.ts";
+import { load as loadRules, scope } from "../../../Configuration/Rules/Rules.ts";
+import { apply as applyPlan, resolve, SPACING } from "../../../Model/Author/Distribute.ts";
 import { handle as normalize } from "../../../Model/List/Member.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
@@ -49,24 +35,17 @@ function pause(ms: number): Promise<void> {
  */
 export const Definition: CommandDefinition = {
 	path: ["author", "distribute", "apply"],
-	summary:
-		"Write the resolved decisions, then add their memberships when --apply is passed.",
+	summary: "Write the resolved decisions, then add their memberships when --apply is passed.",
 	options: [
 		flag(
 			"apply",
 			"Write the decision records and add the memberships. Without this flag nothing is written.",
 		),
-		flag(
-			"dry-run",
-			"Report the plan. This is the default; the flag only makes it explicit.",
-		),
+		flag("dry-run", "Report the plan. This is the default; the flag only makes it explicit."),
 	],
 	async run(values: Values): Promise<unknown> {
 		if (values["apply"] === true && values["dry-run"] === true) {
-			throw fail(
-				"usage",
-				"--apply and --dry-run ask for opposite things; pass one",
-			);
+			throw fail("usage", "--apply and --dry-run ask for opposite things; pass one");
 		}
 		const apply = values["apply"] === true;
 
@@ -88,22 +67,12 @@ export const Definition: CommandDefinition = {
 		const rules = scope(loadRules(), configuration);
 		const store = openAuthors(contentDirectory());
 		const collection = collect();
-		const resolution = resolve(
-			collection.authors,
-			rules.rules,
-			rules.slugs,
-			store.all(),
-		);
+		const resolution = resolve(collection.authors, rules.rules, rules.slugs, store.all());
 
-		const evidence = new Map(
-			collection.authors.map((entry) => [entry.handle, entry]),
-		);
+		const evidence = new Map(collection.authors.map((entry) => [entry.handle, entry]));
 		const at = new Date().toISOString();
 
-		const add = async (
-			handle: string,
-			list: string,
-		): Promise<"added" | "already"> => {
+		const add = async (handle: string, list: string): Promise<"added" | "already"> => {
 			const normalized = normalize(handle);
 			if (normalized === null) {
 				// A handle goes into a URL path, so it is validated before it
@@ -114,11 +83,10 @@ export const Definition: CommandDefinition = {
 				// Unreachable: `--apply` refused above without a map. Named
 				// anyway, because a membership must never be attempted against a
 				// list nothing declares.
-				throw fail(
-					"no-config",
-					"no identifier map, so there is no list name to add to",
-					{ handle, list },
-				);
+				throw fail("no-config", "no identifier map, so there is no list name to add to", {
+					handle,
+					list,
+				});
 			}
 
 			const name = requireList(configuration, list).name;
@@ -128,9 +96,7 @@ export const Definition: CommandDefinition = {
 					name,
 					apply: true,
 				});
-				return report.dryRun === false && report.added
-					? "added"
-					: "already";
+				return report.dryRun === false && report.added ? "added" : "already";
 			});
 		};
 
@@ -157,8 +123,7 @@ export const Definition: CommandDefinition = {
 			spacing: SPACING,
 			counts: {
 				authors: collection.authors.length,
-				handles: new Set(resolution.plan.map((entry) => entry.handle))
-					.size,
+				handles: new Set(resolution.plan.map((entry) => entry.handle)).size,
 				memberships: resolution.plan.length,
 				manual: resolution.preserved.length,
 				declined: resolution.declined.length,

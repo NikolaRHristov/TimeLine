@@ -20,19 +20,15 @@ function inPage(): unknown {
 		}
 	};
 
-	const tabs = Array.from(document.querySelectorAll('[role="tab"]')).map(
-		(node) => {
-			const anchor =
-				node.tagName === "A" ? node : node.querySelector("a[href]");
-			const href =
-				anchor === null ? "" : (anchor.getAttribute("href") ?? "");
-			return {
-				text: (node.textContent ?? "").trim(),
-				href: href === "" ? "" : absolute(href),
-				selected: node.getAttribute("aria-selected") === "true",
-			};
-		},
-	);
+	const tabs = Array.from(document.querySelectorAll('[role="tab"]')).map((node) => {
+		const anchor = node.tagName === "A" ? node : node.querySelector("a[href]");
+		const href = anchor === null ? "" : (anchor.getAttribute("href") ?? "");
+		return {
+			text: (node.textContent ?? "").trim(),
+			href: href === "" ? "" : absolute(href),
+			selected: node.getAttribute("aria-selected") === "true",
+		};
+	});
 
 	const heading = document.querySelector(
 		'[data-testid="primaryColumn"] h2, [data-testid="primaryColumn"] h1',

@@ -1,14 +1,13 @@
 # Storage Model - shadow store and public projection
 
-Two stores, one direction of flow. Scraped data lands in the shadow store and
-stays there until something is explicitly published.
+Two stores, one direction of flow. Scraped data lands in the shadow store and stays there until
+something is explicitly published.
 
 ## Why
 
-A saved post and a post that is safe to show the world are different facts. The
-archive should hold everything, the website should hold only what was chosen.
-Making "private" the default means an accidental build cannot leak a like, and
-"hide this one" is a state, not a deletion.
+A saved post and a post that is safe to show the world are different facts. The archive should hold
+everything, the website should hold only what was chosen. Making "private" the default means an
+accidental build cannot leak a like, and "hide this one" is a state, not a deletion.
 
 ## Layout
 
@@ -45,8 +44,7 @@ Source/Content/                     # tracked, rendered by Astro
 }
 ```
 
-`visibility` is the only field that decides whether anything leaves the shadow
-store.
+`visibility` is the only field that decides whether anything leaves the shadow store.
 
 | Value    | Meaning                                                   |
 | -------- | --------------------------------------------------------- |
@@ -63,28 +61,24 @@ store.
 | `store hide --id <id>`                                         | delete any public file, set `visibility:"hidden"`        |
 | `store status`                                                 | counts per store, per visibility, per source             |
 
-`store publish` and `store hide` are the only commands that write to
-`Source/Content/`. Both are idempotent: publishing a published post rewrites the
-same bytes, hiding a hidden post is a no-op.
+`store publish` and `store hide` are the only commands that write to `Source/Content/`. Both are
+idempotent: publishing a published post rewrites the same bytes, hiding a hidden post is a no-op.
 
 ## Invariants
 
-- A post's identity is its status id. Two sources observing it produce one
-  record with two observations.
+- A post's identity is its status id. Two sources observing it produce one record with two
+  observations.
 - Shadow writes are append-only for observations and merge-only for posts.
-- Nothing in the shadow store is ever imported by the site build - the site's
-  content config globs `Source/Content/` only.
-- `Maintain/Storage/` is ignored by git; a leaked shadow path in a tracked file
-  is a bug.
-- **Paths are repository-relative.** Every path a tool records - in a content
-  file, an event payload, an index, a log line - is written as
-  `Source/Content/Bookmark/<id>.json`, never as `file:///…` and never as an
-  absolute path. The repository is public, so an absolute path publishes the
-  machine's directory layout and account name. Astro's own cache (`.astro/`)
-  writes `file://` URLs, which is exactly why it is gitignored and never
-  committed.
-- Hiding beats scraping: `hidden` is checked before any publish, so a later
-  re-scrape cannot republish something withheld.
+- Nothing in the shadow store is ever imported by the site build - the site's content config globs
+  `Source/Content/` only.
+- `Maintain/Storage/` is ignored by git; a leaked shadow path in a tracked file is a bug.
+- **Paths are repository-relative.** Every path a tool records - in a content file, an event
+  payload, an index, a log line - is written as `Source/Content/Bookmark/<id>.json`, never as
+  `file:///…` and never as an absolute path. The repository is public, so an absolute path publishes
+  the machine's directory layout and account name. Astro's own cache (`.astro/`) writes `file://`
+  URLs, which is exactly why it is gitignored and never committed.
+- Hiding beats scraping: `hidden` is checked before any publish, so a later re-scrape cannot
+  republish something withheld.
 
 ## Claim → test
 

@@ -1,6 +1,5 @@
 ---
 import "@Stylesheet/Base.css";
-
 import { Head } from "astro-capo";
 import { ClientRouter } from "astro:transitions";
 
@@ -33,17 +32,9 @@ interface Props {
 		<meta name="twitter:dnt" content="on" />
 
 		<!-- Links -->
-		<link
-			rel="preconnect"
-			href="https://fonts.googleapis.com"
-			crossorigin
-		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			rel="manifest"
-			href="/Manifest.json"
-			crossorigin="use-credentials"
-		/>
+		<link rel="manifest" href="/Manifest.json" crossorigin="use-credentials" />
 
 		<style is:global>
 			@import "@Stylesheet/Global.css";
@@ -58,8 +49,5 @@ interface Props {
 		<div class="grow">
 			<slot />
 		</div>
-		<script>
-			import "@Script/Firebase";
-		</script>
 	</body>
 </html>

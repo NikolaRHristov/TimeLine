@@ -1,13 +1,8 @@
 import { existsSync } from "node:fs";
-
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
 import { fail, isFailure } from "../../../Cli/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
-import {
-	configurationPath,
-	example,
-	load,
-} from "../../../Configuration/Load/Load.ts";
+import { configurationPath, example, load } from "../../../Configuration/Load/Load.ts";
 import type { Configuration } from "../../../Configuration/Schema/Schema.ts";
 import { save } from "../../../Configuration/Write/Write.ts";
 import type { List } from "../../../Model/List/List.ts";
@@ -31,11 +26,10 @@ function parseList(raw: string): List {
 	const slug = raw.slice(0, split).trim();
 	const id = raw.slice(split + 1).trim();
 	if (!SLUG.test(slug)) {
-		throw fail(
-			"usage",
-			`--list slug must match ${SLUG.source}, got ${slug}`,
-			{ value: raw, slug },
-		);
+		throw fail("usage", `--list slug must match ${SLUG.source}, got ${slug}`, {
+			value: raw,
+			slug,
+		});
 	}
 	if (!/^\S+$/.test(id)) {
 		throw fail("usage", `--list id must be one token, got ${id}`, {
@@ -77,8 +71,7 @@ function base(force: boolean): Configuration {
 			// A corrupt map is exactly what `--force` is for: start over rather
 			// than refusing to repair it, but never silently.
 			if (!(isFailure(error) && error.code === "no-config")) {
-				const detail =
-					error instanceof Error ? error.message : String(error);
+				const detail = error instanceof Error ? error.message : String(error);
 				process.stderr.write(
 					`maintain: ${configurationPath()} is unreadable (${detail}); starting from the example\n`,
 				);
@@ -99,31 +92,16 @@ function base(force: boolean): Configuration {
  */
 export const Definition: CommandDefinition = {
 	path: ["config", "init"],
-	summary:
-		"Write the local identifier map from the tracked example; every value is a flag.",
+	summary: "Write the local identifier map from the tracked example; every value is a flag.",
 	options: [
-		option(
-			"profile",
-			"string",
-			"The handle whose bookmarks are being archived.",
-			{ format: "handle" },
-		),
-		option(
-			"list",
-			"string",
-			"One configured list, as <slug>=<id>. Repeat for more.",
-			{ repeat: true },
-		),
-		option(
-			"cdp-port",
-			"integer",
-			"Port of the browser's debugging endpoint.",
-		),
-		option(
-			"force",
-			"boolean",
-			"Replace an existing map, keeping its values as the base.",
-		),
+		option("profile", "string", "The handle whose bookmarks are being archived.", {
+			format: "handle",
+		}),
+		option("list", "string", "One configured list, as <slug>=<id>. Repeat for more.", {
+			repeat: true,
+		}),
+		option("cdp-port", "integer", "Port of the browser's debugging endpoint."),
+		option("force", "boolean", "Replace an existing map, keeping its values as the base."),
 	],
 	async run(values): Promise<unknown> {
 		const force = values["force"] === true;
@@ -133,14 +111,10 @@ export const Definition: CommandDefinition = {
 		if (profile !== undefined) {
 			const handle = String(profile).trim().replace(/^@/, "");
 			if (!HANDLE.test(handle)) {
-				throw fail(
-					"usage",
-					`--profile expects a handle, got ${String(profile)}`,
-					{
-						value: String(profile),
-						form: "--profile your-handle",
-					},
-				);
+				throw fail("usage", `--profile expects a handle, got ${String(profile)}`, {
+					value: String(profile),
+					form: "--profile your-handle",
+				});
 			}
 			configuration.profile = handle;
 			// The likes route follows the handle, and only now is it known.
@@ -149,14 +123,10 @@ export const Definition: CommandDefinition = {
 
 		// One slug is one entry: `--list` replaces the entry it names and appends
 		// the ones it does not, so wiring a second list does not drop the first.
-		const lists = Array.isArray(values["list"])
-			? (values["list"] as string[])
-			: [];
+		const lists = Array.isArray(values["list"]) ? (values["list"] as string[]) : [];
 		for (const raw of lists) {
 			const list = parseList(raw);
-			const at = configuration.lists.findIndex(
-				(entry) => entry.slug === list.slug,
-			);
+			const at = configuration.lists.findIndex((entry) => entry.slug === list.slug);
 			if (at === -1) configuration.lists.push(list);
 			else configuration.lists[at] = list;
 		}

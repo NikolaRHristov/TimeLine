@@ -1,10 +1,7 @@
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
 import { fail } from "../../../Cli/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
-import {
-	Source as Sources,
-	type Source,
-} from "../../../Model/Source/Source.ts";
+import { Source as Sources, type Source } from "../../../Model/Source/Source.ts";
 import { project, type ShadowPost } from "../../../Store/Model/Model.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
@@ -32,17 +29,10 @@ export const Definition: CommandDefinition = {
 	summary: "Copy shadow records into the site's Bookmark collection.",
 	options: [
 		option("id", "string", "Publish one post by status id."),
-		option(
-			"source",
-			"enum",
-			"Publish every post first seen through this source.",
-			{ values: Sources },
-		),
-		option(
-			"since",
-			"string",
-			"Publish every post first seen at or after this date.",
-		),
+		option("source", "enum", "Publish every post first seen through this source.", {
+			values: Sources,
+		}),
+		option("since", "string", "Publish every post first seen at or after this date."),
 		option("all", "boolean", "Publish every post that is not hidden."),
 	],
 	async run(values): Promise<unknown> {
@@ -52,31 +42,18 @@ export const Definition: CommandDefinition = {
 			typeof values["since"] === "string" ||
 			values["all"] === true;
 		if (hasSelector !== true) {
-			throw fail(
-				"usage",
-				"say what to publish: --id, --source, --since or --all",
-			);
+			throw fail("usage", "say what to publish: --id, --source, --since or --all");
 		}
 
-		const since =
-			typeof values["since"] === "string"
-				? moment(values["since"])
-				: null;
-		const source =
-			typeof values["source"] === "string"
-				? (values["source"] as Source)
-				: null;
+		const since = typeof values["since"] === "string" ? moment(values["since"]) : null;
+		const source = typeof values["source"] === "string" ? (values["source"] as Source) : null;
 		const shadow = openShadow(shadowDirectory());
 		const publicStore = openPublic(contentDirectory());
 		const at = new Date().toISOString();
 
 		const matches = (post: ShadowPost): boolean => {
-			if (typeof values["id"] === "string")
-				return post.id === values["id"];
-			if (source !== null)
-				return post.observations.some(
-					(entry) => entry.source === source,
-				);
+			if (typeof values["id"] === "string") return post.id === values["id"];
+			if (source !== null) return post.observations.some((entry) => entry.source === source);
 			if (since !== null) return post.firstSeenAt >= since;
 			return true;
 		};
@@ -103,8 +80,7 @@ export const Definition: CommandDefinition = {
 
 			// The post's own trail goes with it: `bookmark.added` says when the
 			// archive first saw it, `bookmark.published` says when the site did.
-			for (const event of shadow.events(post.id))
-				publicStore.copyEvent(event.file);
+			for (const event of shadow.events(post.id)) publicStore.copyEvent(event.file);
 			shadow.write({ ...post, visibility: "public" });
 			shadow.observe({
 				at,
@@ -112,12 +88,7 @@ export const Definition: CommandDefinition = {
 				statusId: post.id,
 				action: "published",
 			});
-			publicStore.event(
-				"bookmark.published",
-				post.id,
-				{ url: post.url, publishedAt },
-				at,
-			);
+			publicStore.event("bookmark.published", post.id, { url: post.url, publishedAt }, at);
 			published += 1;
 		}
 

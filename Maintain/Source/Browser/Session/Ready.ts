@@ -32,9 +32,7 @@ export function assertReady(result: boolean, readiness: Readiness): void {
 	if (result === true) return;
 	const detail = `the page never became ready within ${readiness.timeout} ms: ${readiness.expression}`;
 	if (readiness.mode === "warn") {
-		process.stderr.write(
-			`maintain: ${detail} (${readiness.url}); continuing\n`,
-		);
+		process.stderr.write(`maintain: ${detail} (${readiness.url}); continuing\n`);
 		return;
 	}
 	throw fail("page-not-ready", detail, {

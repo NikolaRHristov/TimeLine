@@ -1,18 +1,10 @@
 import assert from "node:assert/strict";
-import {
-	existsSync,
-	mkdirSync,
-	mkdtempSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
-
 import { Definition } from "../Command/Author/Classify/Infer.ts";
 import { root } from "../Configuration/Load/Load.ts";
 import { DEFAULT_RULES } from "../Configuration/Rules/Rules.ts";
@@ -43,20 +35,14 @@ function temporary(): string {
 
 after(async () => {
 	for (const close of servers) await close();
-	for (const path of directories)
-		rmSync(path, { recursive: true, force: true });
+	for (const path of directories) rmSync(path, { recursive: true, force: true });
 });
 
 function authorOf(handle: string): Author {
 	return { handle, name: handle.toUpperCase(), verified: false };
 }
 
-function reading(
-	handle: string,
-	id: string,
-	text: string,
-	links: string[] = [],
-): Post {
+function reading(handle: string, id: string, text: string, links: string[] = []): Post {
 	return {
 		id,
 		url: `https://x.com/${handle}/status/${id}`,
@@ -69,9 +55,7 @@ function reading(
 }
 
 /** An archive on disk, one bookmarked post per entry. */
-function archive(
-	entries: [handle: string, id: string, text: string, links?: string[]][],
-): string {
+function archive(entries: [handle: string, id: string, text: string, links?: string[]][]): string {
 	const directory = temporary();
 	const store = openShadow(directory);
 	for (const [handle, id, text, links] of entries) {
@@ -118,11 +102,7 @@ function content(
 }
 
 /** One evidence record, built by hand so a test says what it means. */
-function evidence(
-	handle: string,
-	text: string,
-	links: string[] = [],
-): Evidence {
+function evidence(handle: string, text: string, links: string[] = []): Evidence {
 	const posts = [reading(handle, "1", text, links)];
 	return {
 		handle,
@@ -156,9 +136,7 @@ type Stub = {
  * does with a reply that is not JSON. `handler` sees the user message and the
  * call index, so a test can make the second batch misbehave.
  */
-async function stub(
-	handler: (user: string, index: number) => Answer,
-): Promise<Stub> {
+async function stub(handler: (user: string, index: number) => Answer): Promise<Stub> {
 	const calls: { system: string; user: string }[] = [];
 
 	const server = createServer((request, response) => {
@@ -206,9 +184,7 @@ async function stub(
 		});
 	});
 
-	await new Promise<void>((resolve) =>
-		server.listen(0, "127.0.0.1", resolve),
-	);
+	await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
 	const address = server.address() as AddressInfo;
 
 	const close = (): Promise<void> =>
@@ -284,9 +260,7 @@ async function run(
 
 /** Every handle a request asked about, in the order the prompt listed them. */
 function asked(user: string): string[] {
-	return [...user.matchAll(/^handle: (.+)$/gm)].map(
-		(match) => match[1] ?? "",
-	);
+	return [...user.matchAll(/^handle: (.+)$/gm)].map((match) => match[1] ?? "");
 }
 
 /** A well-formed reply for whatever the request asked about. */
@@ -313,9 +287,7 @@ function ambiguous(count: number): [string, string, string][] {
 }
 
 test("a batch never carries more than the limit, and the last one carries the rest", () => {
-	const records = ambiguous(60).map(([handle]) =>
-		evidence(handle, "figma typography compiler"),
-	);
+	const records = ambiguous(60).map(([handle]) => evidence(handle, "figma typography compiler"));
 	const grouped = batches(records);
 
 	assert.equal(BATCH_LIMIT, 25);
@@ -344,9 +316,7 @@ test("a batch limit below one is refused instead of looping", () => {
 
 test("the prompt is per author over aggregated evidence, not per post", () => {
 	const posts = [
-		reading("designer", "1", "figma typography", [
-			"https://dribbble.com/shots",
-		]),
+		reading("designer", "1", "figma typography", ["https://dribbble.com/shots"]),
 		reading("designer", "2", "figma figma", ["https://dribbble.com/x"]),
 	];
 	const record: Evidence = {
@@ -391,9 +361,7 @@ test("every answer is cached on disk with by:model, and the run says how many it
 	assert.equal(output.counts.deferred, 0);
 	assert.equal(output.batches, 2);
 
-	const record = JSON.parse(
-		readFileSync(join(directory, "Author", "alpha07.json"), "utf8"),
-	) as {
+	const record = JSON.parse(readFileSync(join(directory, "Author", "alpha07.json"), "utf8")) as {
 		handle: string;
 		lists: string[];
 		decision: {
@@ -520,10 +488,7 @@ test("a manual decision is never asked about and never rewritten", async () => {
 			reason: "I know this account",
 		},
 	]);
-	const before = readFileSync(
-		join(directory, "Author", "alpha01.json"),
-		"utf8",
-	);
+	const before = readFileSync(join(directory, "Author", "alpha01.json"), "utf8");
 	const server = await stub((user) => ({ content: answer(user, "CODE") }));
 
 	const output = await run({ storage, content: directory, url: server.url });
@@ -533,10 +498,7 @@ test("a manual decision is never asked about and never rewritten", async () => {
 		server.calls.flatMap((call) => asked(call.user)),
 		["alpha02"],
 	);
-	assert.equal(
-		readFileSync(join(directory, "Author", "alpha01.json"), "utf8"),
-		before,
-	);
+	assert.equal(readFileSync(join(directory, "Author", "alpha01.json"), "utf8"), before);
 	assert.deepEqual(output.preserved, [
 		{ handle: "alpha01", list: "UI", reason: "I know this account" },
 	]);
@@ -558,9 +520,7 @@ test("a decline is a decision too: cached, list untouched, and not asked twice",
 	assert.equal(first.counts.declined, 1);
 	assert.equal(first.counts.placed, 0);
 
-	const record = JSON.parse(
-		readFileSync(join(directory, "Author", "alpha01.json"), "utf8"),
-	) as {
+	const record = JSON.parse(readFileSync(join(directory, "Author", "alpha01.json"), "utf8")) as {
 		lists: string[];
 		decision: { by: string; confidence: number };
 	};
@@ -579,10 +539,7 @@ test("--limit prices a partial run, and the rest is reported as deferred", async
 	const directory = temporary();
 	const server = await stub((user) => ({ content: answer(user) }));
 
-	const output = await run(
-		{ storage, content: directory, url: server.url },
-		{ limit: 10 },
-	);
+	const output = await run({ storage, content: directory, url: server.url }, { limit: 10 });
 
 	assert.equal(output.counts.asked, 10);
 	assert.equal(output.counts.deferred, 20);
@@ -595,10 +552,7 @@ test("--dry-run asks nothing and spends nothing", async () => {
 	const directory = temporary();
 	const server = await stub((user) => ({ content: answer(user) }));
 
-	const output = await run(
-		{ storage, content: directory, url: server.url },
-		{ "dry-run": true },
-	);
+	const output = await run({ storage, content: directory, url: server.url }, { "dry-run": true });
 
 	assert.equal(server.calls.length, 0);
 	assert.equal(output.counts.asked, 0);
@@ -649,11 +603,7 @@ test("a fenced reply is still JSON, and a bare array is accepted", () => {
 		lists,
 	);
 	assert.deepEqual(
-		fenced.decisions.map((decision) => [
-			decision.handle,
-			decision.list,
-			decision.by,
-		]),
+		fenced.decisions.map((decision) => [decision.handle, decision.list, decision.by]),
 		[["alpha01", "recipes", "model"]],
 	);
 	assert.deepEqual(fenced.unanswered, []);
@@ -710,9 +660,9 @@ test("the model pass takes its notion of ambiguity from the rules file", async (
 	// A threshold raised to an impossible height: every author must become
 	// ambiguous, which can only happen if the command reads the file rather
 	// than restating a cut-off in code.
-	const rules = JSON.parse(
-		readFileSync(join(root(), DEFAULT_RULES), "utf8"),
-	) as { threshold: unknown };
+	const rules = JSON.parse(readFileSync(join(root(), DEFAULT_RULES), "utf8")) as {
+		threshold: unknown;
+	};
 	rules.threshold = { score: 1000, gap: 1000 };
 	const file = join(temporary(), "Rules.json");
 	writeFileSync(file, JSON.stringify(rules), "utf8");

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-
 import { flag } from "../Cli/Parser/Argument/Flag.ts";
 import { option } from "../Cli/Parser/Argument/Option.ts";
 import { isFailure } from "../Cli/Parser/Output/Failure.ts";
@@ -82,14 +81,8 @@ test("defaults apply when an option is absent", () => {
 });
 
 test("--name=value and --name value are the same", () => {
-	const inline = parse(
-		["post", "like", "--url=https://x.com/a/status/2"],
-		commands,
-	);
-	const spaced = parse(
-		["post", "like", "--url", "https://x.com/a/status/2"],
-		commands,
-	);
+	const inline = parse(["post", "like", "--url=https://x.com/a/status/2"], commands);
+	const spaced = parse(["post", "like", "--url", "https://x.com/a/status/2"], commands);
 	assert.equal(inline.values["url"], spaced.values["url"]);
 });
 
@@ -131,22 +124,13 @@ test("a required option is enforced", () => {
 
 test("the real `post like` schema is draft 2020-12 and names its flags", () => {
 	const document = schema(PostLike) as Record<string, unknown>;
-	assert.equal(
-		document["$schema"],
-		"https://json-schema.org/draft/2020-12/schema",
-	);
+	assert.equal(document["$schema"], "https://json-schema.org/draft/2020-12/schema");
 	const properties = document["properties"] as Record<string, unknown>;
 	for (const name of ["--url", "--tab", "--index", "--dry-run"]) {
 		assert.ok(name in properties, `missing ${name}`);
 	}
-	assert.equal(
-		(properties["--dry-run"] as Record<string, unknown>)["type"],
-		"boolean",
-	);
-	assert.equal(
-		(properties["--index"] as Record<string, unknown>)["type"],
-		"integer",
-	);
+	assert.equal((properties["--dry-run"] as Record<string, unknown>)["type"], "boolean");
+	assert.equal((properties["--index"] as Record<string, unknown>)["type"], "integer");
 	assert.deepEqual(document["anyOf"], [
 		{ required: ["--url"] },
 		{ required: ["--tab", "--index"] },

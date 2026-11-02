@@ -1,17 +1,11 @@
-import {
-	scrape,
-	type ScrapeOptions,
-} from "../../Command/Page/Bookmarks/Scrape/Scrape.ts";
+import { scrape, type ScrapeOptions } from "../../Command/Page/Bookmarks/Scrape/Scrape.ts";
 import { load } from "../../Configuration/Load/Load.ts";
 import { route, type Source } from "../../Model/Source/Source.ts";
 import { merge } from "../../Store/Merge/Merge.ts";
 import { shadowDirectory } from "../../Store/Path/Path.ts";
 import { open } from "../../Store/Shadow/Shadow.ts";
 
-export type IngestOptions = Pick<
-	ScrapeOptions,
-	"tab" | "limit" | "maxIdle" | "wait"
->;
+export type IngestOptions = Pick<ScrapeOptions, "tab" | "limit" | "maxIdle" | "wait">;
 
 export type IngestResult = {
 	source: Source;
@@ -30,10 +24,7 @@ export type IngestResult = {
  * a second run over the same page finds every post already on file, reports
  * `new: 0`, and writes no `bookmark.added` event.
  */
-export async function ingest(
-	source: Source,
-	options: IngestOptions = {},
-): Promise<IngestResult> {
+export async function ingest(source: Source, options: IngestOptions = {}): Promise<IngestResult> {
 	const configuration = load();
 	const target = route(configuration, source);
 	const store = open(shadowDirectory());

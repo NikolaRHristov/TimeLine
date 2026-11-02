@@ -1,0 +1,14 @@
+{
+	"rules": {
+		"votes": {
+			".read": true,
+			"$id": {
+				".write": true,
+				".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000 && newData.val() === math.floor(newData.val()) && $id.matches(/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/)"
+			}
+		},
+		"$other": {
+			".validate": false
+		}
+	}
+}

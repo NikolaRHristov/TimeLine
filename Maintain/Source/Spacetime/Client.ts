@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-
 import { fail } from "../Cli/Parser/Output/Failure.ts";
 
 /**
@@ -94,11 +93,7 @@ function base(url: string): string {
 }
 
 /** One request, with every transport failure collapsed into one error code. */
-async function request(
-	url: string,
-	init: RequestInit,
-	timeout: number,
-): Promise<Response> {
+async function request(url: string, init: RequestInit, timeout: number): Promise<Response> {
 	try {
 		return await fetch(url, {
 			...init,
@@ -107,23 +102,15 @@ async function request(
 	} catch (error) {
 		// Connection refused, DNS failure, timeout: all mean the same thing to a
 		// caller - the server is not answering - and none of them is a crash.
-		throw fail(
-			"spacetime-unreachable",
-			"the SpacetimeDB server did not answer",
-			{
-				url,
-				reason: reason(error),
-			},
-		);
+		throw fail("spacetime-unreachable", "the SpacetimeDB server did not answer", {
+			url,
+			reason: reason(error),
+		});
 	}
 }
 
 /** A response that is not `ok` becomes the matching error code. */
-async function checked(
-	response: Response,
-	url: string,
-	what: string,
-): Promise<Response> {
+async function checked(response: Response, url: string, what: string): Promise<Response> {
 	if (response.ok) return response;
 
 	const body = (await response.text().catch(() => "")).trim().slice(0, 500);
@@ -152,10 +139,7 @@ async function checked(
  * the identity there carries a `0x` prefix that `spacetime list` does not
  * print, so it is stripped and both spellings read the same.
  */
-export async function databaseIdentity(
-	url: string,
-	database: string,
-): Promise<string> {
+export async function databaseIdentity(url: string, database: string): Promise<string> {
 	const endpoint = `${base(url)}/v1/database/${encodeURIComponent(database)}`;
 	const response = await request(
 		endpoint,
@@ -174,17 +158,12 @@ export async function databaseIdentity(
 		});
 	}
 
-	const identity = (
-		body as { database_identity?: { __identity__?: unknown } } | null
-	)?.database_identity?.__identity__;
+	const identity = (body as { database_identity?: { __identity__?: unknown } } | null)
+		?.database_identity?.__identity__;
 	if (typeof identity !== "string" || identity.length === 0) {
-		throw fail(
-			"spacetime-reducer",
-			"the database metadata carries no identity",
-			{
-				url: endpoint,
-			},
-		);
+		throw fail("spacetime-reducer", "the database metadata carries no identity", {
+			url: endpoint,
+		});
 	}
 	return identity.replace(/^0x/, "");
 }
@@ -219,11 +198,7 @@ export function open(url: string, database: string): Client {
 				},
 				CALL_TIMEOUT,
 			);
-			await checked(
-				response,
-				endpoint,
-				`reducer ${JSON.stringify(reducer)}`,
-			);
+			await checked(response, endpoint, `reducer ${JSON.stringify(reducer)}`);
 		},
 	};
 

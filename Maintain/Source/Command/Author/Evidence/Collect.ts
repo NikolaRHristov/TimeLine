@@ -1,5 +1,4 @@
 import { relative } from "node:path";
-
 import { loadVocabulary } from "../../../Configuration/Keyword/Load.ts";
 import { root } from "../../../Configuration/Load/Load.ts";
 import { build, type Evidence } from "../../../Model/Author/Evidence.ts";

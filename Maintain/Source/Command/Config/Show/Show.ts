@@ -1,10 +1,6 @@
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
-import {
-	configurationPath,
-	load,
-	requireList,
-} from "../../../Configuration/Load/Load.ts";
+import { configurationPath, load, requireList } from "../../../Configuration/Load/Load.ts";
 
 /**
  * A list id, masked.
@@ -20,15 +16,10 @@ function mask(id: string): string {
 
 export const Definition: CommandDefinition = {
 	path: ["config", "show"],
-	summary:
-		"Print the resolved identifier map; list ids are masked unless --reveal.",
+	summary: "Print the resolved identifier map; list ids are masked unless --reveal.",
 	options: [
 		option("reveal", "boolean", "Print list ids instead of masking them."),
-		option(
-			"list",
-			"string",
-			"Show only the configured list with this slug.",
-		),
+		option("list", "string", "Show only the configured list with this slug."),
 	],
 	async run(values): Promise<unknown> {
 		const configuration = load();
@@ -38,9 +29,7 @@ export const Definition: CommandDefinition = {
 		// A slug is resolved through the map, never against a hardcoded set: an
 		// unconfigured slug fails `unknown-list` naming what *is* configured.
 		const shown =
-			slug === undefined
-				? configuration.lists
-				: [requireList(configuration, String(slug))];
+			slug === undefined ? configuration.lists : [requireList(configuration, String(slug))];
 
 		return {
 			path: configurationPath(),

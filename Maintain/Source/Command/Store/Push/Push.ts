@@ -2,10 +2,7 @@ import { option } from "../../../Cli/Parser/Argument/Option.ts";
 import { fail, isFailure } from "../../../Cli/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { load } from "../../../Configuration/Load/Load.ts";
-import {
-	Source as Sources,
-	type Source,
-} from "../../../Model/Source/Source.ts";
+import { Source as Sources, type Source } from "../../../Model/Source/Source.ts";
 import { open as openClient, type Client } from "../../../Spacetime/Client.ts";
 import type { ShadowPost } from "../../../Store/Model/Model.ts";
 import { shadowDirectory } from "../../../Store/Path/Path.ts";
@@ -44,17 +41,12 @@ type Planned = { post: ShadowPost; source: Source; at: string };
  * passed: a post seen through two sources must land on the same row whichever
  * `--source` selected it, or the idempotency above stops holding.
  */
-function channel(
-	post: ShadowPost,
-	filter: Source | null,
-): { source: Source; at: string } | null {
+function channel(post: ShadowPost, filter: Source | null): { source: Source; at: string } | null {
 	const candidates =
 		filter === null
 			? post.observations
 			: post.observations.filter((entry) => entry.source === filter);
-	const first = [...candidates].sort((left, right) =>
-		left.at.localeCompare(right.at),
-	)[0];
+	const first = [...candidates].sort((left, right) => left.at.localeCompare(right.at))[0];
 	if (first === undefined) return null;
 
 	// The metrics on the record are the ones from `lastScrapedAt`, so that is the
@@ -176,9 +168,7 @@ async function drain(
 	};
 
 	await Promise.all(
-		Array.from({ length: Math.min(CONCURRENCY, planned.length) }, () =>
-			worker(),
-		),
+		Array.from({ length: Math.min(CONCURRENCY, planned.length) }, () => worker()),
 	);
 	return { failure };
 }
@@ -187,41 +177,24 @@ export const Definition: CommandDefinition = {
 	path: ["store", "push"],
 	summary: "Project shadow records into the live SpacetimeDB database.",
 	options: [
-		option(
-			"source",
-			"enum",
-			"Push only posts observed through this source.",
-			{ values: Sources },
-		),
+		option("source", "enum", "Push only posts observed through this source.", {
+			values: Sources,
+		}),
 		option("limit", "integer", "Push at most this many posts."),
-		option(
-			"dry-run",
-			"boolean",
-			"Count what would be pushed; contact nothing, write nothing.",
-		),
-		option(
-			"url",
-			"string",
-			"SpacetimeDB server URL (default: the identifier map's).",
-			{ format: "uri" },
-		),
+		option("dry-run", "boolean", "Count what would be pushed; contact nothing, write nothing."),
+		option("url", "string", "SpacetimeDB server URL (default: the identifier map's).", {
+			format: "uri",
+		}),
 	],
 	async run(values): Promise<unknown> {
 		// The server's address is the identifier map's business, so a missing map
 		// is `no-config` with the copy command attached, as everywhere else.
 		const configuration = load();
 
-		const url =
-			typeof values["url"] === "string"
-				? values["url"]
-				: configuration.spacetime.url;
+		const url = typeof values["url"] === "string" ? values["url"] : configuration.spacetime.url;
 		const database = configuration.spacetime.database;
-		const filter =
-			typeof values["source"] === "string"
-				? (values["source"] as Source)
-				: null;
-		const limit =
-			typeof values["limit"] === "number" ? values["limit"] : null;
+		const filter = typeof values["source"] === "string" ? (values["source"] as Source) : null;
+		const limit = typeof values["limit"] === "number" ? values["limit"] : null;
 
 		if (limit !== null && limit < 0) {
 			throw fail("usage", "--limit must not be negative", {
@@ -231,11 +204,7 @@ export const Definition: CommandDefinition = {
 
 		const shadow = openShadow(shadowDirectory());
 
-		const { planned: selected, skipped } = plan(
-			shadow.all(),
-			filter,
-			limit,
-		);
+		const { planned: selected, skipped } = plan(shadow.all(), filter, limit);
 		const source = filter ?? "all";
 
 		if (values["dry-run"] === true) {
@@ -265,22 +234,15 @@ export const Definition: CommandDefinition = {
 			// words about the first rejection ride along - "No such procedure" and
 			// "invalid arguments" need different fixes.
 			const rejection = isFailure(failure) ? failure : null;
-			throw fail(
-				"spacetime-reducer",
-				"some records were rejected by the reducer",
-				{
-					pushed: counts.pushed,
-					skipped,
-					failed: counts.failed,
-					source,
-					url,
-					reason:
-						failure instanceof Error
-							? failure.message
-							: String(failure),
-					body: rejection?.extra["body"],
-				},
-			);
+			throw fail("spacetime-reducer", "some records were rejected by the reducer", {
+				pushed: counts.pushed,
+				skipped,
+				failed: counts.failed,
+				source,
+				url,
+				reason: failure instanceof Error ? failure.message : String(failure),
+				body: rejection?.extra["body"],
+			});
 		}
 		if (failure !== null) throw failure;
 

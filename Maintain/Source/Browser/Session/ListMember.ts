@@ -6,11 +6,7 @@ import {
 	type MemberRequest,
 } from "../../Model/List/Member.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
-import {
-	expression,
-	readyExpression,
-	type ListMemberResult,
-} from "../Selector/ListMember.ts";
+import { expression, readyExpression, type ListMemberResult } from "../Selector/ListMember.ts";
 import { withPage } from "./Page.ts";
 import type { Session } from "./Session.ts";
 
@@ -48,9 +44,7 @@ function stateOf(result: ListMemberResult | undefined): ListSurfaceState {
 
 /** The dialog, as a surface the decision can drive. */
 export function surfaceOf(session: Session): ListSurface {
-	const ask = async (
-		request: Parameters<typeof expression>[0],
-	): Promise<ListSurfaceState> =>
+	const ask = async (request: Parameters<typeof expression>[0]): Promise<ListSurfaceState> =>
 		stateOf(await session.evaluate<ListMemberResult>(expression(request)));
 
 	return {
@@ -76,10 +70,7 @@ export function surfaceOf(session: Session): ListSurface {
  * before the click that would stage a change. A limit is reported as its own
  * failure code so a caller looping over handles stops instead of retrying.
  */
-export async function execute(
-	surface: ListSurface,
-	request: MemberRequest,
-): Promise<MemberReport> {
+export async function execute(surface: ListSurface, request: MemberRequest): Promise<MemberReport> {
 	const opened = await surface.open();
 	if (opened.rows.length === 0) {
 		// A menu that never appeared and a dialog that rendered empty are
@@ -88,16 +79,12 @@ export async function execute(
 		// page failing to fetch the lists. Reporting them as one code sends the
 		// caller looking in the wrong place.
 		if (opened.opened !== true) {
-			throw fail(
-				"no-list-menu",
-				"no Add/remove from Lists control in the profile header",
-				{
-					handle: request.handle,
-					list: request.name,
-					alerts: opened.alerts,
-					hint: "an account's own profile has no such control; only another account's profile does",
-				},
-			);
+			throw fail("no-list-menu", "no Add/remove from Lists control in the profile header", {
+				handle: request.handle,
+				list: request.name,
+				alerts: opened.alerts,
+				hint: "an account's own profile has no such control; only another account's profile does",
+			});
 		}
 		throw fail("no-list-surface", "the list dialog rendered no rows", {
 			handle: request.handle,
@@ -108,27 +95,19 @@ export async function execute(
 
 	const matches = opened.rows.filter((row) => row.name === request.name);
 	if (matches.length > 1) {
-		throw fail(
-			"unknown-list",
-			`more than one list is called ${request.name}`,
-			{
-				handle: request.handle,
-				list: request.name,
-				matches: matches.length,
-			},
-		);
+		throw fail("unknown-list", `more than one list is called ${request.name}`, {
+			handle: request.handle,
+			list: request.name,
+			matches: matches.length,
+		});
 	}
 	const row = matches[0];
 	if (row === undefined) {
-		throw fail(
-			"unknown-list",
-			`no list named ${request.name} is offered for this handle`,
-			{
-				handle: request.handle,
-				list: request.name,
-				offered: opened.rows.map((candidate) => candidate.name),
-			},
-		);
+		throw fail("unknown-list", `no list named ${request.name} is offered for this handle`, {
+			handle: request.handle,
+			list: request.name,
+			offered: opened.rows.map((candidate) => candidate.name),
+		});
 	}
 
 	if (row.checked) {
@@ -171,9 +150,7 @@ export async function execute(
 			stage: "pick",
 		});
 	}
-	const staged = picked.rows.find(
-		(candidate) => candidate.name === request.name,
-	);
+	const staged = picked.rows.find((candidate) => candidate.name === request.name);
 	if (staged === undefined || staged.checked !== true) {
 		throw fail("cdp-error", "the row did not flip to checked", {
 			handle: request.handle,
@@ -193,14 +170,8 @@ export async function execute(
 	}
 	// A row that is back to unchecked while the dialog is still open means the
 	// page reverted the staging: report that instead of claiming a write.
-	const reverted = saved.rows.find(
-		(candidate) => candidate.name === request.name,
-	);
-	if (
-		saved.rows.length > 0 &&
-		reverted !== undefined &&
-		reverted.checked !== true
-	) {
+	const reverted = saved.rows.find((candidate) => candidate.name === request.name);
+	if (saved.rows.length > 0 && reverted !== undefined && reverted.checked !== true) {
 		throw fail("cdp-error", "the row reverted after Save", {
 			handle: request.handle,
 			list: request.name,

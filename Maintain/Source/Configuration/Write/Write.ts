@@ -40,7 +40,9 @@ export function save(configuration: Configuration, options: { force?: boolean } 
 
 	const temporary = join(directory, `.${basename(path)}.${process.pid}.tmp`);
 	try {
-		writeFileSync(temporary, `${JSON.stringify(document(configuration), null, "\t")}\n`, { mode: 0o600 });
+		writeFileSync(temporary, `${JSON.stringify(document(configuration), null, "\t")}\n`, {
+			mode: 0o600,
+		});
 		renameSync(temporary, path);
 	} catch (error) {
 		try {
@@ -48,7 +50,10 @@ export function save(configuration: Configuration, options: { force?: boolean } 
 		} catch {
 			// The temporary file is already gone; the real failure is below.
 		}
-		throw fail("io-error", "could not write the identifier map", { path, reason: reason(error) });
+		throw fail("io-error", "could not write the identifier map", {
+			path,
+			reason: reason(error),
+		});
 	}
 
 	return path;

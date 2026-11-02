@@ -166,16 +166,31 @@ An unconfigured slug is a named failure, not a guess:
 Posts carry their slugs in `Source/Content/Bookmark/<id>.json`; the site groups by whatever slugs
 are there and files the rest under `Unsorted`.
 
+## Curate a front page
+
+The homepage can lead with a Curated index: an entry has to be nominated, visitors can vote on it,
+and **only you can approve it** - a vote ranks a candidate and publishes nothing. Approval is one
+command, and rejection is a tombstone that a later vote cannot undo. Voting needs a Firebase project
+of your own (or nothing at all - the Curated index works without one):
+
+```bash
+maintain vote nominate --id <status-id> --list <slug>
+maintain vote queue && maintain vote approve --id <status-id> --rank 1
+```
+
+Setup, the database rules and the honest anti-abuse caveat are in
+`Documentation/Reference/Voting.md`.
+
 ## Your private data
 
 Four paths are gitignored and hold everything machine-specific:
 
-| Path                            | Holds                                      |
-| ------------------------------- | ------------------------------------------ |
-| `Maintain/Configuration/Local/` | your handle and list ids                   |
-| `Maintain/Storage/`             | everything scraped, including hidden posts |
-| `Maintain/Target/`              | the compiled CLI                           |
-| `Target/`                       | the built site                             |
+| Path                            | Holds                                                             |
+| ------------------------------- | ----------------------------------------------------------------- |
+| `Maintain/Configuration/Local/` | your handle and list ids                                          |
+| `Maintain/Storage/`             | everything scraped, including hidden posts and pulled vote counts |
+| `Maintain/Target/`              | the compiled CLI                                                  |
+| `Target/`                       | the built site                                                    |
 
 Nothing in this repository names an account. Keep it that way: a tracked file that contains a real
 handle, list id or post id is a bug.
@@ -217,6 +232,7 @@ The full command surface, JSON shapes and error codes are in
 - `Documentation/Reference/Maintain-Cli.md` - the command table.
 - `Documentation/Reference/Storage-Model.md` - the two stores and why there are two.
 - `Documentation/Reference/Spacetime.md` - the optional SpacetimeDB projection.
+- `Documentation/Reference/Voting.md` - the Voted index, owner approval, and the Firebase setup.
 - `Documentation/Skill/Timeline-Bookmarks/SKILL.md` - an operating procedure any agent can load.
 
 ## Built with

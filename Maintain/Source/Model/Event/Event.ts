@@ -17,6 +17,13 @@ export const EventKind = [
 	"list.removed",
 	"bookmark.published",
 	"bookmark.hidden",
+	// The vote index: a nomination, a count that moved, and the owner's three
+	// decisions. `vote.cast` carries the total, never who cast it.
+	"vote.nominated",
+	"vote.cast",
+	"vote.approved",
+	"vote.rejected",
+	"vote.ranked",
 ] as const;
 
 export type EventKind = (typeof EventKind)[number];

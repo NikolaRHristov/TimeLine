@@ -1,15 +1,8 @@
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import {
-	fail,
-	toFailure,
-	type Failure,
-} from "../../../Cli/Parser/Output/Failure.ts";
+import { fail, toFailure, type Failure } from "../../../Cli/Parser/Output/Failure.ts";
 import type { CommandDefinition, Values } from "../../../Cli/Parser/Parser.ts";
 import { optional } from "../../../Configuration/Load/Load.ts";
-import {
-	load as loadRules,
-	scope,
-} from "../../../Configuration/Rules/Rules.ts";
+import { load as loadRules, scope } from "../../../Configuration/Rules/Rules.ts";
 import { classify, type Preserved } from "../../../Model/Author/Decision.ts";
 import type { Evidence } from "../../../Model/Author/Evidence.ts";
 import {
@@ -22,10 +15,7 @@ import {
 	type Parsed,
 	type Rejected,
 } from "../../../Model/Author/Infer.ts";
-import {
-	open as openModel,
-	type Complete,
-} from "../../../Model/Inference/Client.ts";
+import { open as openModel, type Complete } from "../../../Model/Inference/Client.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { collect } from "../Evidence/Collect.ts";
@@ -82,19 +72,10 @@ function limit(values: Values): number {
  */
 export const Definition: CommandDefinition = {
 	path: ["author", "classify", "infer"],
-	summary:
-		"Ask the model about the authors the rules left ambiguous; cache every answer.",
+	summary: "Ask the model about the authors the rules left ambiguous; cache every answer.",
 	options: [
-		option(
-			"limit",
-			"integer",
-			"Ask about at most this many authors this run.",
-		),
-		option(
-			"dry-run",
-			"boolean",
-			"Report what would be asked and spend nothing.",
-		),
+		option("limit", "integer", "Ask about at most this many authors this run."),
+		option("dry-run", "boolean", "Report what would be asked and spend nothing."),
 	],
 	async run(values: Values): Promise<unknown> {
 		// The map is the authority on the slug set, so it also decides what the
@@ -105,17 +86,11 @@ export const Definition: CommandDefinition = {
 		const collection = collect();
 		const store = openAuthors(content);
 
-		const result = classify(
-			collection.authors,
-			scoped.rules,
-			manual(content),
-		);
+		const result = classify(collection.authors, scoped.rules, manual(content));
 		const preserved: Preserved[] = [...result.preserved];
 		const held = new Set(preserved.map((entry) => entry.handle));
 
-		const evidence = new Map(
-			collection.authors.map((entry) => [entry.handle, entry]),
-		);
+		const evidence = new Map(collection.authors.map((entry) => [entry.handle, entry]));
 		const pending: Evidence[] = [];
 		let cached = 0;
 
@@ -132,8 +107,7 @@ export const Definition: CommandDefinition = {
 					preserved.push({
 						handle: entry.handle,
 						list: record.lists[0] ?? null,
-						reason:
-							record.decision.reason ?? "manual decision on file",
+						reason: record.decision.reason ?? "manual decision on file",
 					});
 				}
 				continue;
@@ -246,10 +220,7 @@ export const Definition: CommandDefinition = {
 		// did nothing, and a caller reading `asked: 0` must not mistake it for
 		// a cache hit.
 		if (grouped.length > 0 && failed.length === grouped.length) {
-			throw (
-				first ??
-				toFailure(new Error("the model pass produced no answer"))
-			);
+			throw first ?? toFailure(new Error("the model pass produced no answer"));
 		}
 
 		decisions.sort((left, right) => compare(left.handle, right.handle));
@@ -262,10 +233,8 @@ export const Definition: CommandDefinition = {
 				asked: sent,
 				cached,
 				manual: preserved.length,
-				placed: decisions.filter((decision) => decision.list !== null)
-					.length,
-				declined: decisions.filter((decision) => decision.list === null)
-					.length,
+				placed: decisions.filter((decision) => decision.list !== null).length,
+				declined: decisions.filter((decision) => decision.list === null).length,
 				unanswered: unanswered.length,
 				rejected: rejected.length,
 				failed: failed.length,

@@ -28,14 +28,10 @@ export function route(configuration: Configuration, source: Source): Route {
 			return { url: configuration.routes.bookmarks, followTabs: false };
 		case "like":
 			if (configuration.routes.likes === "") {
-				throw fail(
-					"no-config",
-					"`profile` is not set, so the likes route is unknown",
-					{
-						expected: configurationPath(),
-						field: "profile",
-					},
-				);
+				throw fail("no-config", "`profile` is not set, so the likes route is unknown", {
+					expected: configurationPath(),
+					field: "profile",
+				});
 			}
 			return { url: configuration.routes.likes, followTabs: false };
 		case "history":

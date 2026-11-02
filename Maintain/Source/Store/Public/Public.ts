@@ -8,13 +8,8 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
-import {
-	fileName,
-	type EventKind,
-	type EventRecord,
-} from "../../Model/Event/Event.ts";
+import { fileName, type EventKind, type EventRecord } from "../../Model/Event/Event.ts";
 import { stringify } from "../../Output/Json/Json.ts";
 import type { PublicBookmark } from "../Model/Model.ts";
 
@@ -30,12 +25,7 @@ export type PublicStore = {
 	removeBookmark(id: string): boolean;
 	ids(): string[];
 	/** Write one event into the site's Event collection. */
-	event(
-		kind: EventKind,
-		subject: string,
-		payload?: Record<string, unknown>,
-		at?: string,
-	): string;
+	event(kind: EventKind, subject: string, payload?: Record<string, unknown>, at?: string): string;
 	/** Copy an already-written event file into the site's Event collection. */
 	copyEvent(file: string): string | null;
 	/** Every published event, oldest first. */
@@ -57,8 +47,7 @@ function readJson(path: string): unknown {
 }
 
 function record(value: unknown): Record<string, unknown> | null {
-	if (value === null || typeof value !== "object" || Array.isArray(value))
-		return null;
+	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
 	return value as Record<string, unknown>;
 }
 
@@ -88,20 +77,16 @@ export function open(content: string): PublicStore {
 
 		bookmark(id: string): PublicBookmark | null {
 			if (!STATUS_ID.test(id)) return null;
-			const value = record(
-				readJson(join(bookmarkDirectory(), `${id}.json`)),
-			);
+			const value = record(readJson(join(bookmarkDirectory(), `${id}.json`)));
 			if (value === null || typeof value["id"] !== "string") return null;
 			return value as unknown as PublicBookmark;
 		},
 
 		writeBookmark(bookmark: PublicBookmark): string {
 			if (!STATUS_ID.test(bookmark.id)) {
-				throw fail(
-					"io-error",
-					"a post id must be numeric before it becomes a filename",
-					{ id: bookmark.id },
-				);
+				throw fail("io-error", "a post id must be numeric before it becomes a filename", {
+					id: bookmark.id,
+				});
 			}
 			const path = join(bookmarkDirectory(), `${bookmark.id}.json`);
 			try {
@@ -110,8 +95,7 @@ export function open(content: string): PublicStore {
 			} catch (error) {
 				throw fail("io-error", "could not write the published record", {
 					path,
-					reason:
-						error instanceof Error ? error.message : String(error),
+					reason: error instanceof Error ? error.message : String(error),
 				});
 			}
 			return path;
@@ -124,17 +108,10 @@ export function open(content: string): PublicStore {
 			try {
 				rmSync(path);
 			} catch (error) {
-				throw fail(
-					"io-error",
-					"could not remove the published record",
-					{
-						path,
-						reason:
-							error instanceof Error
-								? error.message
-								: String(error),
-					},
-				);
+				throw fail("io-error", "could not remove the published record", {
+					path,
+					reason: error instanceof Error ? error.message : String(error),
+				});
 			}
 			return true;
 		},
@@ -157,23 +134,15 @@ export function open(content: string): PublicStore {
 			try {
 				mkdirSync(eventDirectory(), { recursive: true });
 				let path = join(eventDirectory(), name);
-				for (
-					let attempt = 2;
-					existsSync(path) && attempt < 100;
-					attempt += 1
-				) {
-					path = join(
-						eventDirectory(),
-						name.replace(/\.json$/, `-${attempt}.json`),
-					);
+				for (let attempt = 2; existsSync(path) && attempt < 100; attempt += 1) {
+					path = join(eventDirectory(), name.replace(/\.json$/, `-${attempt}.json`));
 				}
 				writeFileSync(path, `${stringify(event)}\n`, "utf8");
 				return path;
 			} catch (error) {
 				throw fail("io-error", "could not write the published event", {
 					directory: eventDirectory(),
-					reason:
-						error instanceof Error ? error.message : String(error),
+					reason: error instanceof Error ? error.message : String(error),
 				});
 			}
 		},

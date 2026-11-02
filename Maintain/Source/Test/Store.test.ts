@@ -3,7 +3,6 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
-
 import type { Post } from "../Model/Post/Post.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { project, type ShadowPost } from "../Store/Model/Model.ts";
@@ -158,18 +157,8 @@ test("events are found by subject", () => {
 	const directory = temporary();
 	const store = openShadow(directory);
 
-	store.event(
-		"bookmark.added",
-		"42",
-		{ source: "bookmark" },
-		"2026-11-01T10:00:00.000Z",
-	);
-	store.event(
-		"scrape.finished",
-		"bookmark",
-		{ new: 1 },
-		"2026-11-01T10:00:01.000Z",
-	);
+	store.event("bookmark.added", "42", { source: "bookmark" }, "2026-11-01T10:00:00.000Z");
+	store.event("scrape.finished", "bookmark", { new: 1 }, "2026-11-01T10:00:01.000Z");
 
 	const about = store.events("42");
 	assert.equal(about.length, 1);

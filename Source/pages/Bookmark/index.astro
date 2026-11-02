@@ -49,32 +49,25 @@ const excerpt = (text: string): string =>
 	text.length > 180 ? `${text.slice(0, 180).trimEnd()}…` : text;
 ---
 
-<Base
-	Title="Bookmarks"
-	Description={`${total} saved posts, grouped by list and author.`}>
+<Base Title="Bookmarks" Description={`${total} saved posts, grouped by list and author.`}>
 	<main class="container mx-auto max-w-3xl px-6 py-10">
 		<header class="mb-10">
 			<h1 class="text-2xl font-semibold">Bookmarks</h1>
 			<p class="mt-1 text-sm text-neutral-600">
-				{total} saved {total === 1 ? "post" : "posts"}, grouped by list
-				and author.
+				{total} saved {total === 1 ? "post" : "posts"}, grouped by list and author.
 			</p>
 		</header>
 
 		{sections.map(([list, authors]) => (
 			<section class="mb-12">
-				<h2 class="mb-4 border-b border-neutral-200 pb-2 text-lg font-semibold">
-					{list}
-				</h2>
+				<h2 class="mb-4 border-b border-neutral-200 pb-2 text-lg font-semibold">{list}</h2>
 				{[...authors]
 					.sort(([left], [right]) => left.localeCompare(right))
 					.map(([handle, entries]) => (
 						<div class="mb-8">
 							<h3 class="mb-2 text-sm font-medium text-neutral-700">
 								@{handle}{" "}
-								<span class="font-normal text-neutral-500">
-									({entries.length})
-								</span>
+								<span class="font-normal text-neutral-500">({entries.length})</span>
 							</h3>
 							<ul class="space-y-3">
 								{entries.map((entry) => (
@@ -86,14 +79,8 @@ const excerpt = (text: string): string =>
 										</a>
 										<span class="ml-2 whitespace-nowrap text-xs text-neutral-500">
 											{entry.data.postedAt
-												? entry.data.postedAt.slice(
-														0,
-														10,
-													)
-												: entry.data.firstSeenAt.slice(
-														0,
-														10,
-													)}
+												? entry.data.postedAt.slice(0, 10)
+												: entry.data.firstSeenAt.slice(0, 10)}
 										</span>
 									</li>
 								))}
@@ -105,16 +92,13 @@ const excerpt = (text: string): string =>
 
 		{total === 0 && (
 			<p class="text-sm text-neutral-600">
-				No bookmarks yet. Scrape your own into the shadow store, then
-				publish what you want to show:
+				No bookmarks yet. Scrape your own into the shadow store, then publish what you want
+				to show:
 				<code class="mx-1 rounded bg-neutral-100 px-1">
 					maintain store scrape --source bookmark
 				</code>
 				then
-				<code class="mx-1 rounded bg-neutral-100 px-1">
-					maintain store publish --all
-				</code>
-				.
+				<code class="mx-1 rounded bg-neutral-100 px-1">maintain store publish --all</code>.
 			</p>
 		)}
 

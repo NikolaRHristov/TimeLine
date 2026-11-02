@@ -1,12 +1,7 @@
 import { relative } from "node:path";
-
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { optional, root } from "../../../Configuration/Load/Load.ts";
-import {
-	load as loadRules,
-	rulesPath,
-	scope,
-} from "../../../Configuration/Rules/Rules.ts";
+import { load as loadRules, rulesPath, scope } from "../../../Configuration/Rules/Rules.ts";
 import { classify, type Preserved } from "../../../Model/Author/Decision.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
@@ -55,8 +50,7 @@ export function manual(content: string): Map<string, Preserved> {
  */
 export const Definition: CommandDefinition = {
 	path: ["author", "classify", "rules"],
-	summary:
-		"Place authors into lists with weighted rules; leave the ambiguous ones unassigned.",
+	summary: "Place authors into lists with weighted rules; leave the ambiguous ones unassigned.",
 	options: [],
 	async run(): Promise<unknown> {
 		// The identifier map decides which lists exist; the rules file only says
@@ -64,11 +58,7 @@ export const Definition: CommandDefinition = {
 		// weights file decide the taxonomy, so the rules are narrowed first.
 		const scoped = scope(loadRules(), optional());
 		const collection = collect();
-		const result = classify(
-			collection.authors,
-			scoped.rules,
-			manual(contentDirectory()),
-		);
+		const result = classify(collection.authors, scoped.rules, manual(contentDirectory()));
 
 		return {
 			rules: shown(rulesPath()),

@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
-
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
 import type { Rules } from "../../Model/Author/Decision.ts";
 import type { Vocabulary } from "../../Model/Author/Evidence.ts";
@@ -20,23 +19,18 @@ export const DEFAULT_RULES = "Maintain/Configuration/Rules/Rules.json";
  */
 export function rulesPath(): string {
 	const configured = process.env["MAINTAIN_RULES"];
-	if (configured === undefined || configured.length === 0)
-		return join(root(), DEFAULT_RULES);
-	return isAbsolute(configured)
-		? configured
-		: resolve(process.cwd(), configured);
+	if (configured === undefined || configured.length === 0) return join(root(), DEFAULT_RULES);
+	return isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
 }
 
 function record(value: unknown): Record<string, unknown> | null {
-	if (value === null || typeof value !== "object" || Array.isArray(value))
-		return null;
+	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
 	return value as Record<string, unknown>;
 }
 
 /** A weight: a finite number that is not negative. */
 function amount(value: unknown): number | null {
-	if (typeof value !== "number" || !Number.isFinite(value) || value < 0)
-		return null;
+	if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return null;
 	return value;
 }
 
@@ -47,19 +41,14 @@ function amount(value: unknown): number | null {
  * host, and a bad entry is dropped with a warning rather than taking the whole
  * file down: one typo in a long weights list must not stop a run.
  */
-function amounts(
-	value: unknown,
-	field: string,
-	source: string,
-): Record<string, number> {
+function amounts(value: unknown, field: string, source: string): Record<string, number> {
 	if (value === undefined || value === null) return {};
 	const map = record(value);
 	if (map === null) {
-		throw fail(
-			"schema-invalid",
-			`\`${field}\` must be an object of name → weight`,
-			{ path: source, field },
-		);
+		throw fail("schema-invalid", `\`${field}\` must be an object of name → weight`, {
+			path: source,
+			field,
+		});
 	}
 
 	const collected: Record<string, number> = {};
@@ -94,14 +83,10 @@ export function validate(value: unknown, source: string): Rules {
 
 	const threshold = record(document["threshold"]);
 	if (threshold === null) {
-		throw fail(
-			"schema-invalid",
-			"`threshold` must be an object with `score` and `gap`",
-			{
-				path: source,
-				field: "threshold",
-			},
-		);
+		throw fail("schema-invalid", "`threshold` must be an object with `score` and `gap`", {
+			path: source,
+			field: "threshold",
+		});
 	}
 	const score = amount(threshold["score"]);
 	if (score === null) {
@@ -120,11 +105,10 @@ export function validate(value: unknown, source: string): Rules {
 
 	const declared = record(document["lists"]);
 	if (declared === null) {
-		throw fail(
-			"schema-invalid",
-			"`lists` must be an object keyed by list slug",
-			{ path: source, field: "lists" },
-		);
+		throw fail("schema-invalid", "`lists` must be an object keyed by list slug", {
+			path: source,
+			field: "lists",
+		});
 	}
 
 	const lists: Rules["lists"] = {};
@@ -138,16 +122,8 @@ export function validate(value: unknown, source: string): Rules {
 			continue;
 		}
 		lists[name] = {
-			keywords: amounts(
-				detail["keywords"],
-				`lists.${name}.keywords`,
-				source,
-			),
-			domains: amounts(
-				detail["domains"],
-				`lists.${name}.domains`,
-				source,
-			),
+			keywords: amounts(detail["keywords"], `lists.${name}.keywords`, source),
+			domains: amounts(detail["domains"], `lists.${name}.domains`, source),
 		};
 	}
 
@@ -189,10 +165,7 @@ export type Scope = {
  * rules file's own keys are the only list vocabulary available and every
  * command keeps working.
  */
-export function scope(
-	rules: Rules,
-	configuration: Configuration | null,
-): Scope {
+export function scope(rules: Rules, configuration: Configuration | null): Scope {
 	const source = rulesPath();
 	const declared = configuration?.lists.map((entry) => entry.slug) ?? [];
 
@@ -210,9 +183,7 @@ export function scope(
 		if (rule !== undefined) kept[slug] = rule;
 	}
 
-	const dropped = Object.keys(rules.lists).filter(
-		(slug) => !configured.has(slug),
-	);
+	const dropped = Object.keys(rules.lists).filter((slug) => !configured.has(slug));
 	if (dropped.length > 0) {
 		process.stderr.write(
 			`maintain: ${source}: dropping weights for ${sample(dropped)}; the identifier map does not declare ${dropped.length === 1 ? "that list" : "those lists"}\n`,
@@ -225,9 +196,7 @@ export function scope(
 /** The first few of a list, with a count of the rest. */
 function sample(entries: readonly string[]): string {
 	const shown = entries.slice(0, 5).join(", ");
-	return entries.length > 5
-		? `${shown}, and ${entries.length - 5} more`
-		: shown;
+	return entries.length > 5 ? `${shown}, and ${entries.length - 5} more` : shown;
 }
 
 /**
@@ -238,20 +207,13 @@ function sample(entries: readonly string[]): string {
  * evidence has no bucket for, a weight naming a term the vocabulary never
  * counts, and a vocabulary term the file forgot to weight.
  */
-export function warn(
-	rules: Rules,
-	source: string,
-	vocabulary: Vocabulary = Keyword,
-): void {
+export function warn(rules: Rules, source: string, vocabulary: Vocabulary = Keyword): void {
 	const buckets = new Set<string>(Object.keys(vocabulary));
 	const notes: string[] = [];
 
 	for (const [list, rule] of Object.entries(rules.lists)) {
-		if (buckets.has(list) || Object.keys(rule.keywords ?? {}).length === 0)
-			continue;
-		notes.push(
-			`keyword weights for "${list}" are inert: the evidence has no "${list}" bucket`,
-		);
+		if (buckets.has(list) || Object.keys(rule.keywords ?? {}).length === 0) continue;
+		notes.push(`keyword weights for "${list}" are inert: the evidence has no "${list}" bucket`);
 	}
 
 	const dead: string[] = [];
@@ -260,27 +222,18 @@ export function warn(
 		const rule = rules.lists[bucket];
 		if (rule === undefined) continue;
 		const weighted = rule.keywords ?? {};
-		const terms = (vocabulary[bucket] ?? []).map((term) =>
-			term.toLowerCase().trim(),
-		);
+		const terms = (vocabulary[bucket] ?? []).map((term) => term.toLowerCase().trim());
 		const known = new Set(terms);
 		for (const term of Object.keys(weighted))
 			if (!known.has(term)) dead.push(`${bucket}:${term}`);
 		for (const term of terms)
-			if (weighted[term] === undefined)
-				unweighted.push(`${bucket}:${term}`);
+			if (weighted[term] === undefined) unweighted.push(`${bucket}:${term}`);
 	}
-	if (dead.length > 0)
-		notes.push(
-			`weights terms the vocabulary does not count: ${sample(dead)}`,
-		);
+	if (dead.length > 0) notes.push(`weights terms the vocabulary does not count: ${sample(dead)}`);
 	if (unweighted.length > 0)
-		notes.push(
-			`does not weight every vocabulary term (they score 0): ${sample(unweighted)}`,
-		);
+		notes.push(`does not weight every vocabulary term (they score 0): ${sample(unweighted)}`);
 
-	if (notes.length > 0)
-		process.stderr.write(`maintain: ${source}: ${notes.join("; ")}\n`);
+	if (notes.length > 0) process.stderr.write(`maintain: ${source}: ${notes.join("; ")}\n`);
 }
 
 /** Read, validate and report on the rules file. */

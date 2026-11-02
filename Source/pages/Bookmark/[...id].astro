@@ -21,6 +21,14 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { author, media, metrics } = entry.data;
 
+/**
+ * The owner's opinion, when there is one. Joined from the Curated collection by
+ * id - the curated file carries the rank and the votes frozen at approval time,
+ * never a copy of the post.
+ */
+const curated = await getCollection("Curated");
+const rank = curated.find((candidate) => candidate.id === entry.id) ?? null;
+
 const images = media.filter((item) => item.kind === "image");
 const links = media.filter((item) => item.kind === "link");
 
@@ -36,9 +44,7 @@ const measured = [
 <Base Title={`${author.name} on X`} Description={entry.data.text.slice(0, 160)}>
 	<main class="container mx-auto max-w-3xl px-6 py-10">
 		<nav class="mb-8 text-sm">
-			<a
-				class="underline decoration-neutral-300 underline-offset-2"
-				href="/Bookmark/">
+			<a class="underline decoration-neutral-300 underline-offset-2" href="/Bookmark/">
 				← Bookmarks
 			</a>
 		</nav>
@@ -48,24 +54,24 @@ const measured = [
 				<h1 class="text-lg font-semibold">{author.name}</h1>
 				<span class="text-sm text-neutral-600">@{author.handle}</span>
 				{author.verified && (
-					<span
-						class="text-sm text-neutral-500"
-						title="Verified account">
+					<span class="text-sm text-neutral-500" title="Verified account">
 						✓
 					</span>
 				)}
 				{entry.data.postedAt && (
-					<time
-						class="ml-auto text-xs text-neutral-500"
-						datetime={entry.data.postedAt}>
+					<time class="ml-auto text-xs text-neutral-500" datetime={entry.data.postedAt}>
 						posted {day(entry.data.postedAt)}
 					</time>
 				)}
+				{rank !== null && (
+					<p class="w-full text-xs text-neutral-500">
+						Curated · rank {rank.data.rank} ·{" "}
+						{rank.data.votes === 1 ? "1 vote" : `${rank.data.votes} votes`}
+					</p>
+				)}
 			</header>
 
-			<p class="whitespace-pre-wrap text-base leading-relaxed">
-				{entry.data.text}
-			</p>
+			<p class="whitespace-pre-wrap text-base leading-relaxed">{entry.data.text}</p>
 
 			{images.length > 0 && (
 				<div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -101,9 +107,7 @@ const measured = [
 					{measured.map(([label, value]) => (
 						<div class="flex gap-1">
 							<dt class="text-neutral-500">{label}</dt>
-							<dd class="font-medium">
-								{value.toLocaleString("en")}
-							</dd>
+							<dd class="font-medium">{value.toLocaleString("en")}</dd>
 						</div>
 					))}
 				</dl>
@@ -112,17 +116,13 @@ const measured = [
 
 		<footer class="mt-10 space-y-1 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
 			<p>
-				<a
-					class="underline"
-					href={entry.data.url}
-					rel="noopener noreferrer">
+				<a class="underline" href={entry.data.url} rel="noopener noreferrer">
 					Open on X
 				</a>
 			</p>
 			<p>
-				Saved at or after {day(entry.data.firstSeenAt)} - the first time
-				this archive saw the post. The interface does not expose the
-				moment it was saved.
+				Saved at or after {day(entry.data.firstSeenAt)} - the first time this archive saw
+				the post. The interface does not expose the moment it was saved.
 			</p>
 			<p>Last read {day(entry.data.scrapedAt)}.</p>
 		</footer>

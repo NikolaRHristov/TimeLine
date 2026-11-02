@@ -1,10 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-
-import {
-	argumentsOf,
-	plan,
-} from "../Command/Store/Push/Push.ts";
+import { argumentsOf, plan } from "../Command/Store/Push/Push.ts";
 import type { ShadowPost } from "../Store/Model/Model.ts";
 
 /**

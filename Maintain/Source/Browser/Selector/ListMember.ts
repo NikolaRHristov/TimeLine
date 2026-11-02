@@ -40,25 +40,18 @@ export type ListMemberResult = {
 	alerts: string[];
 };
 
-async function inPage(request: {
-	op: string;
-	name?: string;
-}): Promise<unknown> {
-	const sleep = (ms: number): Promise<void> =>
-		new Promise((resolve) => setTimeout(resolve, ms));
+async function inPage(request: { op: string; name?: string }): Promise<unknown> {
+	const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 	const text = (node: Element | null): string =>
 		node === null ? "" : (node.textContent ?? "").trim();
 
 	/** The dialog with the most nodes: the page keeps smaller ones mounted too. */
 	const dialog = (): Element | null => {
 		let best: Element | null = null;
-		for (const candidate of Array.from(
-			document.querySelectorAll('[role="dialog"]'),
-		)) {
+		for (const candidate of Array.from(document.querySelectorAll('[role="dialog"]'))) {
 			if (
 				best === null ||
-				candidate.querySelectorAll("*").length >
-					best.querySelectorAll("*").length
+				candidate.querySelectorAll("*").length > best.querySelectorAll("*").length
 			) {
 				best = candidate;
 			}
@@ -68,9 +61,7 @@ async function inPage(request: {
 
 	const cells = (): Element[] => {
 		const root = dialog();
-		return root === null
-			? []
-			: Array.from(root.querySelectorAll('[data-testid="listCell"]'));
+		return root === null ? [] : Array.from(root.querySelectorAll('[data-testid="listCell"]'));
 	};
 
 	/** "Alpha·70 membersExample Person@example_handle" -> "Alpha". */
@@ -86,9 +77,7 @@ async function inPage(request: {
 		}));
 
 	const alerts = (): string[] =>
-		Array.from(
-			document.querySelectorAll('[role="alert"], [data-testid="toast"]'),
-		)
+		Array.from(document.querySelectorAll('[role="alert"], [data-testid="toast"]'))
 			.map((node) => text(node))
 			.filter((message) => message !== "");
 
@@ -96,8 +85,8 @@ async function inPage(request: {
 		const root = dialog();
 		if (root === null) return null;
 		return (
-			Array.from(root.querySelectorAll('[role="button"], button')).find(
-				(node) => /^save$/i.test(text(node)),
+			Array.from(root.querySelectorAll('[role="button"], button')).find((node) =>
+				/^save$/i.test(text(node)),
 			) ?? null
 		);
 	};
@@ -133,9 +122,7 @@ async function inPage(request: {
 	if (request.op === "close") {
 		const root = dialog();
 		const closeButton =
-			root === null
-				? null
-				: root.querySelector('[data-testid="app-bar-close"]');
+			root === null ? null : root.querySelector('[data-testid="app-bar-close"]');
 		const clicked = press(closeButton);
 		if (!clicked) {
 			document.dispatchEvent(
@@ -162,17 +149,15 @@ async function inPage(request: {
 		for (let attempt = 0; attempt < 25 && item === null; attempt += 1) {
 			await sleep(120);
 			item =
-				Array.from(document.querySelectorAll('[role="menuitem"]')).find(
-					(node) =>
-						/add\/remove from lists/i.test(node.textContent ?? ""),
+				Array.from(document.querySelectorAll('[role="menuitem"]')).find((node) =>
+					/add\/remove from lists/i.test(node.textContent ?? ""),
 				) ?? null;
 		}
 		if (item === null) return snapshot({ opened: false });
 		press(item);
 
 		/** The dialog fetches the account's lists before it has any row. */
-		for (let attempt = 0; attempt < 50 && rows().length === 0; attempt += 1)
-			await sleep(150);
+		for (let attempt = 0; attempt < 50 && rows().length === 0; attempt += 1) await sleep(150);
 		return snapshot({ opened: true });
 	}
 

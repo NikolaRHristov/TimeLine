@@ -41,10 +41,7 @@ export async function snapshot(
 	);
 }
 
-function controlOf(
-	state: InPageSnapshot,
-	control: ControlName,
-): InPageControl | undefined {
+function controlOf(state: InPageSnapshot, control: ControlName): InPageControl | undefined {
 	if (state.controls === undefined) return undefined;
 	return state.controls[control];
 }
@@ -83,15 +80,10 @@ async function persisted(
 		await context.session.waitForIdle({ quiet: 600, timeout: 8000 });
 		const reloaded = await context.session.reload();
 		if (reloaded !== true) return observed;
-		await context.session.waitFor(
-			'document.querySelectorAll("article").length > 0',
-			{ timeout: 20_000 },
-		);
-		const state = await snapshot(
-			context.session,
-			context.index,
-			context.post.id,
-		);
+		await context.session.waitFor('document.querySelectorAll("article").length > 0', {
+			timeout: 20_000,
+		});
+		const state = await snapshot(context.session, context.index, context.post.id);
 		const entry = controlOf(state, control);
 		if (entry === undefined) return observed;
 		observed = entry.active;
@@ -141,11 +133,7 @@ export async function toggle(
 
 	await settle(context.session, context.index, control, want);
 
-	const after = await snapshot(
-		context.session,
-		context.index,
-		context.post.id,
-	);
+	const after = await snapshot(context.session, context.index, context.post.id);
 	const state = controlOf(after, control);
 	let now = state === undefined ? want : state.active;
 
@@ -186,11 +174,7 @@ export async function withPost<T>(
 			const tabs = await discover(endpoint);
 			let existing: Tab | null = null;
 			try {
-				existing = select(
-					tabs,
-					{ url: values["url"] },
-					{ exact: true },
-				);
+				existing = select(tabs, { url: values["url"] }, { exact: true });
 			} catch {
 				existing = null;
 			}
@@ -200,10 +184,7 @@ export async function withPost<T>(
 				tab = await open(values["url"], endpoint);
 				temporary = true;
 			}
-		} else if (
-			typeof values["tab"] === "string" &&
-			values["tab"].length > 0
-		) {
+		} else if (typeof values["tab"] === "string" && values["tab"].length > 0) {
 			const tabs = await discover(endpoint);
 			tab = selectHandle(tabs, values["tab"]);
 		} else {
@@ -211,12 +192,9 @@ export async function withPost<T>(
 		}
 
 		session = await attach(tab, endpoint);
-		const ready = await session.waitFor(
-			'document.querySelectorAll("article").length > 0',
-			{
-				timeout: 25_000,
-			},
-		);
+		const ready = await session.waitFor('document.querySelectorAll("article").length > 0', {
+			timeout: 25_000,
+		});
 		if (ready !== true) {
 			throw fail("no-post", "the page showed no posts", {
 				tab: tab.id,
@@ -225,11 +203,7 @@ export async function withPost<T>(
 		}
 
 		const state = await snapshot(session, index);
-		if (
-			state.found !== true ||
-			state.post === undefined ||
-			state.controls === undefined
-		) {
+		if (state.found !== true || state.post === undefined || state.controls === undefined) {
 			throw fail("no-post", `no post at index ${index}`, {
 				count: state.count,
 				tab: tab.id,

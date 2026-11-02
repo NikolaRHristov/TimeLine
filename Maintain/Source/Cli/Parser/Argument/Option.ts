@@ -56,22 +56,17 @@ export function parseValue(definition: Option, raw: string): unknown {
 			} catch (error) {
 				throw fail("usage", `--${definition.name} expects JSON`, {
 					value: raw,
-					reason:
-						error instanceof Error ? error.message : String(error),
+					reason: error instanceof Error ? error.message : String(error),
 				});
 			}
 		}
 		case "enum": {
 			const values = definition.values ?? [];
 			if (!values.includes(raw)) {
-				throw fail(
-					"usage",
-					`--${definition.name} expects one of ${values.join(", ")}`,
-					{
-						value: raw,
-						values,
-					},
-				);
+				throw fail("usage", `--${definition.name} expects one of ${values.join(", ")}`, {
+					value: raw,
+					values,
+				});
 			}
 			return raw;
 		}

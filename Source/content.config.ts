@@ -80,9 +80,57 @@ const Event = defineCollection({
 			"list.removed",
 			"bookmark.published",
 			"bookmark.hidden",
+			// The vote index. `vote.cast` carries the total, never who cast it.
+			"vote.nominated",
+			"vote.cast",
+			"vote.approved",
+			"vote.rejected",
+			"vote.ranked",
 		]),
 		subject: z.string(),
 		payload: z.record(z.string(), z.unknown()).default({}),
+	}),
+});
+
+/**
+ * A candidate in the Voted index.
+ *
+ * `votes` and `votedAt` are the counts on file, refreshed by `maintain vote
+ * sync` - never a live number, because the site is a static build. `lists`
+ * accepts any string for the same reason `Bookmark.lists` does: the slugs are
+ * configuration, not vocabulary.
+ */
+const Voted = defineCollection({
+	loader: glob({ pattern: "**/*.json", base: "./Source/Content/Voted" }),
+	schema: z.object({
+		id: z.string(),
+		url: z.url(),
+		title: z.string().optional(),
+		note: z.string().optional(),
+		author: Author,
+		lists: z.array(z.string()),
+		votes: z.number().int().nonnegative(),
+		votedAt: Timestamp,
+		nominatedAt: Timestamp,
+		status: z.enum(["candidate", "approved", "rejected"]),
+	}),
+});
+
+/**
+ * One entry of the Curated index - the only thing the homepage leads with.
+ *
+ * It points at the `Voted`/`Bookmark` record by `id` instead of copying it, and
+ * `rank` is written by the owner rather than derived from votes, because
+ * curation exists to be able to overrule a crowd.
+ */
+const Curated = defineCollection({
+	loader: glob({ pattern: "**/*.json", base: "./Source/Content/Curated" }),
+	schema: z.object({
+		id: z.string(),
+		rank: z.number().int().positive(),
+		votes: z.number().int().nonnegative(),
+		approvedAt: Timestamp,
+		approvedBy: z.string(),
 	}),
 });
 
@@ -103,4 +151,10 @@ const Person = defineCollection({
 	}),
 });
 
-export const collections = { Bookmark, Event, Author: Person };
+export const collections = {
+	Bookmark,
+	Event,
+	Author: Person,
+	Voted,
+	Curated,
+};

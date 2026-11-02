@@ -1,7 +1,4 @@
-import {
-	execute,
-	withListMember,
-} from "../../../../Browser/Session/ListMember.ts";
+import { execute, withListMember } from "../../../../Browser/Session/ListMember.ts";
 import { flag } from "../../../../Cli/Parser/Argument/Flag.ts";
 import { option } from "../../../../Cli/Parser/Argument/Option.ts";
 import { fail } from "../../../../Cli/Parser/Output/Failure.ts";
@@ -21,22 +18,13 @@ export const Definition: CommandDefinition = {
 	path: ["page", "list", "member", "add"],
 	summary: "Add one handle to one curated list; a dry run unless --apply.",
 	options: [
-		option(
-			"name",
-			"string",
-			"Slug of a list declared in the identifier map.",
-			{ required: true },
-		),
-		option(
-			"handle",
-			"string",
-			"Handle to add, with or without the leading @.",
-			{ required: true },
-		),
-		flag(
-			"apply",
-			"Write the membership. Without this flag nothing is changed.",
-		),
+		option("name", "string", "Slug of a list declared in the identifier map.", {
+			required: true,
+		}),
+		option("handle", "string", "Handle to add, with or without the leading @.", {
+			required: true,
+		}),
+		flag("apply", "Write the membership. Without this flag nothing is changed."),
 		flag(
 			"dry-run",
 			"Report what would happen. This is the default; the flag only makes it explicit.",
@@ -58,11 +46,9 @@ export const Definition: CommandDefinition = {
 		}
 
 		if (values["apply"] === true && values["dry-run"] === true) {
-			throw fail(
-				"usage",
-				"--apply and --dry-run ask for opposite things; pass one",
-				{ handle: normalized },
-			);
+			throw fail("usage", "--apply and --dry-run ask for opposite things; pass one", {
+				handle: normalized,
+			});
 		}
 
 		const apply = values["apply"] === true;

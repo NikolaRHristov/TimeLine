@@ -1,10 +1,6 @@
 import { resolve } from "node:path";
-
 import { optional, root } from "../../Configuration/Load/Load.ts";
-import {
-	DEFAULT_CONTENT,
-	DEFAULT_SHADOW,
-} from "../../Configuration/Schema/Schema.ts";
+import { DEFAULT_CONTENT, DEFAULT_SHADOW } from "../../Configuration/Schema/Schema.ts";
 
 export { DEFAULT_CONTENT, DEFAULT_SHADOW };
 
@@ -19,8 +15,7 @@ function absolute(path: string): string {
  */
 export function shadowDirectory(): string {
 	const configured = process.env["MAINTAIN_STORAGE"];
-	if (configured !== undefined && configured.length > 0)
-		return absolute(configured);
+	if (configured !== undefined && configured.length > 0) return absolute(configured);
 	return absolute(optional()?.storage.shadow ?? DEFAULT_SHADOW);
 }
 
@@ -33,7 +28,6 @@ export function shadowDirectory(): string {
  */
 export function contentDirectory(): string {
 	const configured = process.env["MAINTAIN_CONTENT"];
-	if (configured !== undefined && configured.length > 0)
-		return absolute(configured);
+	if (configured !== undefined && configured.length > 0) return absolute(configured);
 	return absolute(optional()?.content.root ?? DEFAULT_CONTENT);
 }

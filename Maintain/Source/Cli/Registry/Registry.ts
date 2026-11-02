@@ -22,6 +22,12 @@ import { Definition as StoreScrape } from "../../Command/Store/Scrape/Scrape.ts"
 import { Definition as StoreStatus } from "../../Command/Store/Status/Status.ts";
 import { Definition as TabFocus } from "../../Command/Tab/Focus/Focus.ts";
 import { Definition as TabList } from "../../Command/Tab/List/List.ts";
+import { Definition as VoteApprove } from "../../Command/Vote/Approve/Approve.ts";
+import { Definition as VoteNominate } from "../../Command/Vote/Nominate/Nominate.ts";
+import { Definition as VoteQueue } from "../../Command/Vote/Queue/Queue.ts";
+import { Definition as VoteRank } from "../../Command/Vote/Rank/Rank.ts";
+import { Definition as VoteReject } from "../../Command/Vote/Reject/Reject.ts";
+import { Definition as VoteSync } from "../../Command/Vote/Sync/Sync.ts";
 import type { CommandDefinition } from "../Parser/Parser.ts";
 
 /**
@@ -49,6 +55,12 @@ export const commands: readonly CommandDefinition[] = [
 	StoreHide,
 	StoreStatus,
 	StorePush,
+	VoteNominate,
+	VoteQueue,
+	VoteSync,
+	VoteApprove,
+	VoteReject,
+	VoteRank,
 	AuthorEvidenceBuild,
 	AuthorClassifyRules,
 	AuthorClassifyInfer,

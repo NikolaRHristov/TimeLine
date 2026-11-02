@@ -1,0 +1,16 @@
+{
+	"id": "example-rejected",
+	"url": "https://x.com/example/status/2",
+	"title": "A synthetic rejected entry",
+	"note": "Synthetic fixture: a tombstone. It renders nowhere and cannot be nominated again.",
+	"author": {
+		"handle": "example",
+		"name": "Example Author",
+		"verified": false
+	},
+	"lists": ["example"],
+	"votes": 0,
+	"votedAt": "2026-01-01T00:00:00.000Z",
+	"nominatedAt": "2026-01-01T00:00:00.000Z",
+	"status": "rejected"
+}

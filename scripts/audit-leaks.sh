@@ -22,8 +22,14 @@ set -u
 
 REPO=${1:-$(cd "$(dirname "$0")/.." && pwd)}
 ALLOW=${2:-'^Update\.sh$'}
-cd "$REPO" 2>/dev/null || { echo "FAIL cannot cd $REPO"; exit 2; }
-git rev-parse --git-dir >/dev/null 2>&1 || { echo "FAIL not a git repo: $REPO"; exit 2; }
+cd "$REPO" 2>/dev/null || {
+	echo "FAIL cannot cd $REPO"
+	exit 2
+}
+git rev-parse --git-dir >/dev/null 2>&1 || {
+	echo "FAIL not a git repo: $REPO"
+	exit 2
+}
 
 # The pattern is assembled from pieces so this file cannot match itself: a
 # checker that spells the forbidden form is the first thing it would flag.

@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
-
 import type { Vocabulary } from "../../Model/Author/Evidence.ts";
 import { Keyword } from "./Keyword.ts";
 
@@ -15,8 +14,7 @@ import { Keyword } from "./Keyword.ts";
 export const VOCABULARY_ENV = "MAINTAIN_VOCABULARY";
 
 function record(value: unknown): Record<string, unknown> | null {
-	if (value === null || typeof value !== "object" || Array.isArray(value))
-		return null;
+	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
 	return value as Record<string, unknown>;
 }
 
@@ -62,9 +60,7 @@ export function validate(value: unknown, source: string): Vocabulary | null {
 	}
 
 	if (Object.keys(vocabulary).length === 0) {
-		process.stderr.write(
-			`maintain: ${source}: names no bucket; ignoring it\n`,
-		);
+		process.stderr.write(`maintain: ${source}: names no bucket; ignoring it\n`);
 		return null;
 	}
 
@@ -83,9 +79,7 @@ export function loadVocabulary(): Vocabulary {
 	const configured = process.env[VOCABULARY_ENV];
 	if (configured === undefined || configured.trim() === "") return Keyword;
 
-	const path = isAbsolute(configured)
-		? configured
-		: resolve(process.cwd(), configured);
+	const path = isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
 
 	let raw: string;
 	try {

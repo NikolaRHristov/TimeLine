@@ -1,17 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-
 import { execute, type ListSurface } from "../Browser/Session/ListMember.ts";
 import { isFailure } from "../Cli/Parser/Output/Failure.ts";
 import { parse } from "../Cli/Parser/Parser.ts";
 import { schema } from "../Cli/Schema/Schema.ts";
 import { Definition as MemberAdd } from "../Command/Page/List/Member/Add.ts";
-import {
-	handle,
-	rateLimit,
-	type ListRow,
-	type ListSurfaceState,
-} from "../Model/List/Member.ts";
+import { handle, rateLimit, type ListRow, type ListSurfaceState } from "../Model/List/Member.ts";
 
 /**
  * The dialog as a scripted surface.
@@ -275,51 +269,23 @@ test("the command documents --apply as a flag and --name/--handle as required", 
 	for (const name of ["--name", "--handle", "--apply", "--dry-run"]) {
 		assert.ok(name in properties, `missing ${name}`);
 	}
-	assert.equal(
-		(properties["--apply"] as Record<string, unknown>)["type"],
-		"boolean",
-	);
-	assert.equal(
-		(properties["--dry-run"] as Record<string, unknown>)["type"],
-		"boolean",
-	);
+	assert.equal((properties["--apply"] as Record<string, unknown>)["type"], "boolean");
+	assert.equal((properties["--dry-run"] as Record<string, unknown>)["type"], "boolean");
 	// A slug is configuration, not code: the schema cannot enumerate the set.
-	assert.equal(
-		(properties["--name"] as Record<string, unknown>)["type"],
-		"string",
-	);
+	assert.equal((properties["--name"] as Record<string, unknown>)["type"], "string");
 	assert.deepEqual(document["required"], ["--name", "--handle"]);
 });
 
 test("argv without a flag leaves the write unarmed", () => {
 	const quiet = parse(
-		[
-			"page",
-			"list",
-			"member",
-			"add",
-			"--name",
-			"UI",
-			"--handle",
-			"someone",
-		],
+		["page", "list", "member", "add", "--name", "UI", "--handle", "someone"],
 		[MemberAdd],
 	);
 	assert.equal(quiet.values["apply"], undefined);
 	assert.equal(quiet.values["dry-run"], undefined);
 
 	const armed = parse(
-		[
-			"page",
-			"list",
-			"member",
-			"add",
-			"--name",
-			"UI",
-			"--handle",
-			"someone",
-			"--apply",
-		],
+		["page", "list", "member", "add", "--name", "UI", "--handle", "someone", "--apply"],
 		[MemberAdd],
 	);
 	assert.equal(armed.values["apply"], true);

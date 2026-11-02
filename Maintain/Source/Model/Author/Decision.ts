@@ -96,10 +96,7 @@ function covers(host: string, key: string): boolean {
  * Longest, because `gist.github.com` is a better answer than `github.com` when
  * a rules file weights both, and a host must never score twice for one list.
  */
-function mostSpecific(
-	host: string,
-	weights: Record<string, number>,
-): string | null {
+function mostSpecific(host: string, weights: Record<string, number>): string | null {
 	let found: string | null = null;
 	for (const key of Object.keys(weights)) {
 		if (!covers(host, key)) continue;
@@ -154,8 +151,7 @@ export function score(evidence: Evidence, rules: Rules): ListScore[] {
 		}
 
 		contributions.sort(
-			(left, right) =>
-				right.points - left.points || compare(left.name, right.name),
+			(left, right) => right.points - left.points || compare(left.name, right.name),
 		);
 		scored.push({
 			list,
@@ -180,9 +176,7 @@ function detail(scored: ListScore): string {
 }
 
 function runnerUpText(scored: ListScore | undefined): string {
-	return scored === undefined
-		? "no other list"
-		: `${scored.list} ${points(scored.score)}`;
+	return scored === undefined ? "no other list" : `${scored.list} ${points(scored.score)}`;
 }
 
 /**
@@ -194,8 +188,7 @@ function runnerUpText(scored: ListScore | undefined): string {
  */
 export function decide(evidence: Evidence, rules: Rules): Decision | Ambiguous {
 	const ranked = score(evidence, rules).sort(
-		(left, right) =>
-			right.score - left.score || compare(left.list, right.list),
+		(left, right) => right.score - left.score || compare(left.list, right.list),
 	);
 	const best = ranked[0];
 
@@ -213,11 +206,7 @@ export function decide(evidence: Evidence, rules: Rules): Decision | Ambiguous {
 	const gap = round(best.score - (runnerUp?.score ?? 0));
 	const threshold = rules.threshold;
 
-	if (
-		best.score > 0 &&
-		best.score >= threshold.score &&
-		gap >= threshold.gap
-	) {
+	if (best.score > 0 && best.score >= threshold.score && gap >= threshold.gap) {
 		return {
 			handle: evidence.handle,
 			list: best.list,

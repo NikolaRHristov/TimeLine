@@ -6,12 +6,7 @@ export const Definition: CommandDefinition = {
 	path: ["post", "extract"],
 	summary: "Read one post out of a tab.",
 	options: [
-		option(
-			"tab",
-			"string",
-			"CDP target id from `tab list`, or its index.",
-			{ required: true },
-		),
+		option("tab", "string", "CDP target id from `tab list`, or its index.", { required: true }),
 		option("index", "integer", "Zero-based article index on the page.", {
 			default: 0,
 		}),

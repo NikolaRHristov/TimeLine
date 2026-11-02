@@ -3,7 +3,6 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
-
 import { Definition } from "../Command/Author/Evidence/Build.ts";
 import { Keyword } from "../Configuration/Keyword/Keyword.ts";
 import { root } from "../Configuration/Load/Load.ts";
@@ -50,11 +49,7 @@ function reading(id: string, overrides: Partial<Post> = {}): Post {
 	};
 }
 
-function post(
-	id: string,
-	text: string,
-	media: EvidencePost["media"] = [],
-): EvidencePost {
+function post(id: string, text: string, media: EvidencePost["media"] = []): EvidencePost {
 	return { id, text, media };
 }
 
@@ -173,10 +168,7 @@ test("the record shape is fixed, whatever the data says", async () => {
 		"excerpts",
 	]);
 	// The counts print in vocabulary order, whatever that vocabulary is.
-	assert.deepEqual(
-		Object.keys((record as Evidence).keywords),
-		Object.keys(Keyword),
-	);
+	assert.deepEqual(Object.keys((record as Evidence).keywords), Object.keys(Keyword));
 	// JSON-serialisable as it stands: no dates, no class instances.
 	assert.deepEqual(JSON.parse(JSON.stringify(record)), record);
 });
@@ -190,44 +182,23 @@ test("two runs on one archive print the same bytes", async () => {
 });
 
 test("an excerpt never exceeds the cap, even when the post does", () => {
-	const record = build(
-		"alpha",
-		author,
-		[post("1", "a".repeat(5_000))],
-		Keyword,
-	);
+	const record = build("alpha", author, [post("1", "a".repeat(5_000))], Keyword);
 	const excerpt = record.excerpts[0] ?? "";
 
 	assert.equal(record.excerpts.length, 1);
-	assert.ok(
-		excerpt.length <= EXCERPT_LIMIT,
-		`${excerpt.length} > ${EXCERPT_LIMIT}`,
-	);
+	assert.ok(excerpt.length <= EXCERPT_LIMIT, `${excerpt.length} > ${EXCERPT_LIMIT}`);
 	assert.ok(excerpt.endsWith("…"));
 });
 
 test("the cut never splits an emoji", () => {
 	// Each emoji is two UTF-16 code units, so the cap lands mid-pair.
-	const record = build(
-		"alpha",
-		author,
-		[post("1", "😀".repeat(300))],
-		Keyword,
-	);
+	const record = build("alpha", author, [post("1", "😀".repeat(300))], Keyword);
 	const excerpt = record.excerpts[0] ?? "";
 	const last = excerpt.charCodeAt(excerpt.length - 1);
 
 	assert.ok(excerpt.length <= EXCERPT_LIMIT);
-	assert.equal(
-		last >= 0xd800 && last <= 0xdbff,
-		false,
-		"a lone high surrogate was kept",
-	);
-	assert.equal(
-		last >= 0xdc00 && last <= 0xdfff,
-		false,
-		"a lone low surrogate was kept",
-	);
+	assert.equal(last >= 0xd800 && last <= 0xdbff, false, "a lone high surrogate was kept");
+	assert.equal(last >= 0xdc00 && last <= 0xdfff, false, "a lone low surrogate was kept");
 });
 
 test("at most three excerpts, shortest prose first", () => {
@@ -262,10 +233,7 @@ test("a repost never spends a second slot", () => {
 
 test("domains are ranked, counted once per post, and shorteners are ignored", () => {
 	const posts = [
-		post(
-			"1",
-			"see https://github.com/a/b and https://github.com/c/d and https://t.co/xyz",
-		),
+		post("1", "see https://github.com/a/b and https://github.com/c/d and https://t.co/xyz"),
 		post("2", "https://www.github.com/e/f, then https://vercel.com/x", [
 			{ kind: "link", url: "https://t.co/abc" },
 		]),
@@ -280,8 +248,8 @@ test("domains are ranked, counted once per post, and shorteners are ignored", ()
 });
 
 test("domains are capped at five", () => {
-	const posts = ["a.com", "b.com", "c.com", "d.com", "e.com", "f.com"].map(
-		(host, index) => post(String(index), `https://${host}/x`),
+	const posts = ["a.com", "b.com", "c.com", "d.com", "e.com", "f.com"].map((host, index) =>
+		post(String(index), `https://${host}/x`),
 	);
 
 	assert.equal(domains(posts).length, 5);
@@ -310,10 +278,7 @@ test("keywords are counted on word boundaries, per bucket", () => {
 
 test("terms are counted per keyword, and the totals are their sum", () => {
 	const vocabulary = { first: ["ai"], second: ["figma"], third: ["rust"] };
-	const posts = [
-		post("1", "an ai post about figma and rust"),
-		post("2", "rust again"),
-	];
+	const posts = [post("1", "an ai post about figma and rust"), post("2", "rust again")];
 	const record = build("alpha", author, posts, vocabulary);
 
 	// Sparse: a term that never fired is absent, not zero.
@@ -330,10 +295,7 @@ test("no inference module is imported and no network call is made", async () => 
 		"Configuration/Keyword/Keyword.ts",
 	];
 	for (const relative of sources) {
-		const source = readFileSync(
-			join(root(), "Maintain", "Source", relative),
-			"utf8",
-		);
+		const source = readFileSync(join(root(), "Maintain", "Source", relative), "utf8");
 		assert.doesNotMatch(
 			source,
 			/from\s+["'][^"']*(?:infer|classify|openai|anthropic|node:https?|node:net|node:child_process)[^"']*["']/i,

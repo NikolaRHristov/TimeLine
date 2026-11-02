@@ -10,6 +10,8 @@ node_modules/
 # Local-only data and identifiers
 Maintain/Storage/
 Maintain/Configuration/Local/
+# Gitignored scratch: probes and throwaway trees, never part of the repository.
+.hermes/
 
 # Dependencies and locks
 pnpm-lock.yaml

@@ -18,14 +18,7 @@ function scalar(definition: Option): Record<string, unknown> {
 			shape["enum"] = [...(definition.values ?? [])];
 			break;
 		case "json":
-			shape["type"] = [
-				"object",
-				"array",
-				"string",
-				"number",
-				"boolean",
-				"null",
-			];
+			shape["type"] = ["object", "array", "string", "number", "boolean", "null"];
 			break;
 		default:
 			shape["type"] = "string";

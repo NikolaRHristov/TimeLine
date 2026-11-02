@@ -1,11 +1,7 @@
 import { relative } from "node:path";
-
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
-import {
-	Source as Sources,
-	type Source,
-} from "../../../Model/Source/Source.ts";
+import { Source as Sources, type Source } from "../../../Model/Source/Source.ts";
 import type { Visibility } from "../../../Store/Model/Model.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
@@ -43,8 +39,7 @@ export const Definition: CommandDefinition = {
 		};
 
 		for (const post of posts) {
-			byVisibility[post.visibility] =
-				(byVisibility[post.visibility] ?? 0) + 1;
+			byVisibility[post.visibility] = (byVisibility[post.visibility] ?? 0) + 1;
 			for (const source of Sources) {
 				if (post.observations.some((entry) => entry.source === source))
 					bySource[source] += 1;

@@ -1,37 +1,14 @@
 import assert from "node:assert/strict";
-import {
-	mkdirSync,
-	mkdtempSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
-
 import { Definition } from "../Command/Author/Classify/Rules.ts";
 import { root } from "../Configuration/Load/Load.ts";
-import {
-	DEFAULT_RULES,
-	load,
-	validate,
-	warn,
-} from "../Configuration/Rules/Rules.ts";
+import { DEFAULT_RULES, load, validate, warn } from "../Configuration/Rules/Rules.ts";
 import type { Author } from "../Model/Author/Author.ts";
-import {
-	classify,
-	decide,
-	score,
-	type Decision,
-	type Rules,
-} from "../Model/Author/Decision.ts";
-import {
-	totals,
-	type DomainHit,
-	type Evidence,
-	type TermHits,
-} from "../Model/Author/Evidence.ts";
+import { classify, decide, score, type Decision, type Rules } from "../Model/Author/Decision.ts";
+import { totals, type DomainHit, type Evidence, type TermHits } from "../Model/Author/Evidence.ts";
 import type { Post } from "../Model/Post/Post.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
@@ -104,12 +81,7 @@ function authorOf(handle: string): Author {
 	return { handle, name: handle.toUpperCase(), verified: false };
 }
 
-function reading(
-	handle: string,
-	id: string,
-	text: string,
-	links: string[] = [],
-): Post {
+function reading(handle: string, id: string, text: string, links: string[] = []): Post {
 	return {
 		id,
 		url: `https://x.com/${handle}/status/${id}`,
@@ -122,9 +94,7 @@ function reading(
 }
 
 /** An archive on disk, one bookmarked post per entry. */
-function archive(
-	entries: [handle: string, id: string, text: string, links?: string[]][],
-): string {
+function archive(entries: [handle: string, id: string, text: string, links?: string[]][]): string {
 	const directory = temporary();
 	const store = openShadow(directory);
 	for (const [handle, id, text, links] of entries) {
@@ -171,16 +141,8 @@ function content(
 }
 
 /** Run the command with every path it reads pointed at a temporary directory. */
-async function run(paths: {
-	storage: string;
-	content: string;
-	rules?: string;
-}): Promise<Output> {
-	const keys = [
-		"MAINTAIN_STORAGE",
-		"MAINTAIN_CONTENT",
-		"MAINTAIN_RULES",
-	] as const;
+async function run(paths: { storage: string; content: string; rules?: string }): Promise<Output> {
+	const keys = ["MAINTAIN_STORAGE", "MAINTAIN_CONTENT", "MAINTAIN_RULES"] as const;
 	const previous = new Map(keys.map((key) => [key, process.env[key]]));
 
 	process.env["MAINTAIN_STORAGE"] = paths.storage;
@@ -217,11 +179,9 @@ function capture<T>(work: () => T): { value: T; text: string } {
 
 test("a design portfolio is placed in UI", () => {
 	const rules = tracked();
-	const portfolio = evidence(
-		"designer",
-		{ UI: { figma: 2, typography: 1 } },
-		[{ domain: "dribbble.com", count: 1 }],
-	);
+	const portfolio = evidence("designer", { UI: { figma: 2, typography: 1 } }, [
+		{ domain: "dribbble.com", count: 1 },
+	]);
 
 	const outcome = decide(portfolio, rules);
 
@@ -259,9 +219,9 @@ test("a genuinely mixed account stays ambiguous, with no list assigned", () => {
 
 test("the threshold and the weights are read from the file, not from the code", () => {
 	const rules = tracked();
-	const onDisk = JSON.parse(
-		readFileSync(join(root(), DEFAULT_RULES), "utf8"),
-	) as { threshold: { score: number; gap: number } };
+	const onDisk = JSON.parse(readFileSync(join(root(), DEFAULT_RULES), "utf8")) as {
+		threshold: { score: number; gap: number };
+	};
 
 	assert.deepEqual(rules.threshold, onDisk.threshold);
 	assert.deepEqual(Object.keys(rules.lists).sort(), ["AI", "CODE", "UI"]);
@@ -270,20 +230,14 @@ test("the threshold and the weights are read from the file, not from the code", 
 	assert.equal(decide(portfolio, rules).list, "UI");
 
 	// A gap the file raises above the margin: the same author is ambiguous.
-	assert.equal(
-		decide(portfolio, { ...rules, threshold: { score: 3, gap: 99 } }).list,
-		null,
-	);
+	assert.equal(decide(portfolio, { ...rules, threshold: { score: 3, gap: 99 } }).list, null);
 
 	// A weight the file removes: the same author scores nothing for UI.
 	const unwighted = {
 		...rules,
 		lists: { ...rules.lists, UI: { keywords: { figma: 0 }, domains: {} } },
 	};
-	assert.equal(
-		score(portfolio, unwighted).find((entry) => entry.list === "UI")?.score,
-		0,
-	);
+	assert.equal(score(portfolio, unwighted).find((entry) => entry.list === "UI")?.score, 0);
 });
 
 test("a domain rule covers its subdomains and nothing that merely ends the same", () => {
@@ -311,10 +265,7 @@ test("a manual decision is preserved, never re-decided, and never rewritten", as
 			reason: "I know this account",
 		},
 	]);
-	const before = readFileSync(
-		join(directory, "Author", "alpha.json"),
-		"utf8",
-	);
+	const before = readFileSync(join(directory, "Author", "alpha.json"), "utf8");
 
 	const output = await run({ storage, content: directory });
 
@@ -330,10 +281,7 @@ test("a manual decision is preserved, never re-decided, and never rewritten", as
 		{ handle: "alpha", list: "CODE", reason: "I know this account" },
 	]);
 	// Untouched on disk: this command has no business writing there.
-	assert.equal(
-		readFileSync(join(directory, "Author", "alpha.json"), "utf8"),
-		before,
-	);
+	assert.equal(readFileSync(join(directory, "Author", "alpha.json"), "utf8"), before);
 });
 
 test("a model decision is a previous guess, so the rules may supersede it", async () => {
@@ -368,10 +316,7 @@ test("every decision carries a one-line reason, and the ambiguous ones are marke
 
 	for (const decision of [...output.decisions, ...output.ambiguous]) {
 		assert.equal(typeof decision.reason, "string");
-		assert.ok(
-			decision.reason.length > 0,
-			`${decision.handle} has no reason`,
-		);
+		assert.ok(decision.reason.length > 0, `${decision.handle} has no reason`);
 		assert.doesNotMatch(
 			decision.reason,
 			/[\r\n]/,
@@ -455,10 +400,7 @@ test("a weight naming a term the vocabulary never counts is reported, not silent
 	);
 	// `design system` is not in the vocabulary, so the rules loader is the only
 	// place that can say the weight is inert.
-	assert.match(
-		warned,
-		/weights terms the vocabulary does not count: UI:design system/,
-	);
+	assert.match(warned, /weights terms the vocabulary does not count: UI:design system/);
 });
 
 test("a missing rules file is a named failure, not a crash", () => {
@@ -481,11 +423,7 @@ test("a missing rules file is a named failure, not a crash", () => {
 
 test("a threshold that is not in the file is a failure, never a default", () => {
 	assert.throws(
-		() =>
-			validate(
-				{ lists: { UI: { keywords: { figma: 3 } } } },
-				"the test rules",
-			),
+		() => validate({ lists: { UI: { keywords: { figma: 3 } } } }, "the test rules"),
 		(error: unknown) =>
 			typeof error === "object" &&
 			error !== null &&
@@ -496,9 +434,7 @@ test("a threshold that is not in the file is a failure, never a default", () => 
 
 test("classify() leaves the manual author out of both buckets", () => {
 	const rules = tracked();
-	const manual = new Map([
-		["designer", { handle: "designer", list: "CODE", reason: "kept" }],
-	]);
+	const manual = new Map([["designer", { handle: "designer", list: "CODE", reason: "kept" }]]);
 	const result = classify(
 		[
 			evidence("designer", { UI: { figma: 3 } }),
@@ -512,26 +448,16 @@ test("classify() leaves the manual author out of both buckets", () => {
 		result.decisions.map((decision) => decision.handle),
 		["compilerdev"],
 	);
-	assert.deepEqual(result.preserved, [
-		{ handle: "designer", list: "CODE", reason: "kept" },
-	]);
+	assert.deepEqual(result.preserved, [{ handle: "designer", list: "CODE", reason: "kept" }]);
 });
 
 test("a manual decision whose author left the archive is still reported", () => {
 	const rules = tracked();
-	const manual = new Map([
-		["gone", { handle: "gone", list: "UI", reason: "kept" }],
-	]);
+	const manual = new Map([["gone", { handle: "gone", list: "UI", reason: "kept" }]]);
 
-	const result = classify(
-		[evidence("compilerdev", { CODE: { compiler: 1 } })],
-		rules,
-		manual,
-	);
+	const result = classify([evidence("compilerdev", { CODE: { compiler: 1 } })], rules, manual);
 
-	assert.deepEqual(result.preserved, [
-		{ handle: "gone", list: "UI", reason: "kept" },
-	]);
+	assert.deepEqual(result.preserved, [{ handle: "gone", list: "UI", reason: "kept" }]);
 	assert.equal(result.decisions.length, 1);
 });
 
@@ -543,10 +469,7 @@ test("the classifier imports no inference or transport module and calls no netwo
 		"Store/Author/Author.ts",
 	];
 	for (const relative of sources) {
-		const source = readFileSync(
-			join(root(), "Maintain", "Source", relative),
-			"utf8",
-		);
+		const source = readFileSync(join(root(), "Maintain", "Source", relative), "utf8");
 		assert.doesNotMatch(
 			source,
 			/from\s+["'][^"']*(?:infer|openai|anthropic|node:https?|node:net|node:child_process)[^"']*["']/i,

@@ -6,9 +6,7 @@ import { load } from "../../../Configuration/Load/Load.ts";
 export const Definition: CommandDefinition = {
 	path: ["page", "bookmarks", "open"],
 	summary: "Show the saved-posts page and report how many posts it has.",
-	options: [
-		option("tab", "string", "CDP target id from `tab list`, or its index."),
-	],
+	options: [option("tab", "string", "CDP target id from `tab list`, or its index.")],
 	async run(values): Promise<unknown> {
 		const configuration = load();
 		// `fail`: the count is the answer, so a page that never painted must not

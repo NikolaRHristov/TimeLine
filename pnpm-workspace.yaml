@@ -1,13 +1,13 @@
 packages:
-    - "."
+  - "."
 
-    - "Maintain"
+  - "Maintain"
 
 # esbuild ships the compiler through a platform package; the post-install hook
 # only fetches it when that package is missing, so approving it is what makes
 # the build work offline.
 allowBuilds:
-    "@firebase/util": true
-    esbuild: true
-    protobufjs: true
-    sharp: true
+  "@firebase/util": true
+  esbuild: true
+  protobufjs: true
+  sharp: true

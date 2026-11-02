@@ -130,9 +130,7 @@ export function resolve(
 		manual.set(record.handle, {
 			handle: record.handle,
 			list: record.lists[0] ?? null,
-			reason: oneLine(
-				record.decision.reason ?? "manual decision on file",
-			),
+			reason: oneLine(record.decision.reason ?? "manual decision on file"),
 		});
 	}
 
@@ -218,9 +216,7 @@ export function resolve(
 	}
 
 	plan.sort(
-		(left, right) =>
-			compare(left.handle, right.handle) ||
-			compare(left.list, right.list),
+		(left, right) => compare(left.handle, right.handle) || compare(left.list, right.list),
 	);
 
 	return {
@@ -233,10 +229,7 @@ export function resolve(
 }
 
 /** One handle into one list, through the single-handle primitive. */
-export type Add = (
-	handle: string,
-	list: string,
-) => Promise<"added" | "already">;
+export type Add = (handle: string, list: string) => Promise<"added" | "already">;
 
 export type Attempt = { handle: string; list: string; by: DecidedBy };
 
@@ -300,10 +293,7 @@ export type Deps = {
  * than one writer, and a record that appeared between `resolve` reading the
  * collection and this line is the person's answer, which wins over a rule.
  */
-function write(
-	plan: readonly Planned[],
-	deps: Deps,
-): { written: string[]; blocked: Set<string> } {
+function write(plan: readonly Planned[], deps: Deps): { written: string[]; blocked: Set<string> } {
 	const written: string[] = [];
 	const blocked = new Set<string>();
 	const seen = new Set<string>();
@@ -362,10 +352,7 @@ function write(
  * must not end a distribution - unless it repeats, which is the `repeated-failure`
  * stop above.
  */
-export async function apply(
-	plan: readonly Planned[],
-	deps: Deps,
-): Promise<Applied> {
+export async function apply(plan: readonly Planned[], deps: Deps): Promise<Applied> {
 	const attempted: Attempt[] = plan.map(({ handle, list, by }) => ({
 		handle,
 		list,

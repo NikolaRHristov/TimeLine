@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-
 import { assertReady } from "../Browser/Session/Ready.ts";
 import { isFailure } from "../Cli/Parser/Output/Failure.ts";
 
@@ -75,10 +74,7 @@ test("a scrape warns instead of failing, so the posts that did render are read",
 	);
 
 	assert.equal(value, undefined);
-	assert.match(
-		text,
-		/^maintain: the page never became ready within 25000 ms: /,
-	);
+	assert.match(text, /^maintain: the page never became ready within 25000 ms: /);
 	assert.match(text, /article/);
 	assert.match(text, /https:\/\/x\.com\/example/);
 	assert.match(text, /continuing\n$/);

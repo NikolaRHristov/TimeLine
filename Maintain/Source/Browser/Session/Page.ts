@@ -89,9 +89,7 @@ export async function withPage<T>(
 				mode: options.onNotReady,
 			});
 		}
-		const href = await session
-			.evaluate<string>("location.href")
-			.catch(() => url);
+		const href = await session.evaluate<string>("location.href").catch(() => url);
 		return await body({
 			session,
 			tab,
@@ -99,10 +97,7 @@ export async function withPage<T>(
 		});
 	} finally {
 		session.close();
-		if (
-			opened === true &&
-			(options.close === true || options.ephemeral === true)
-		) {
+		if (opened === true && (options.close === true || options.ephemeral === true)) {
 			try {
 				await close(tab.id, endpoint);
 			} catch {

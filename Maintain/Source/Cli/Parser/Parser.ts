@@ -52,10 +52,7 @@ function isFlag(token: string): boolean {
  * option. The path must match in full, so `post like` never swallows
  * `post like remove`.
  */
-export function parse(
-	argv: readonly string[],
-	commands: readonly CommandDefinition[],
-): Parsed {
+export function parse(argv: readonly string[], commands: readonly CommandDefinition[]): Parsed {
 	const tokens = [...argv];
 	let split = tokens.findIndex(isFlag);
 	if (split === -1) split = tokens.length;
@@ -63,9 +60,7 @@ export function parse(
 	const rest = tokens.slice(split);
 
 	if (words.length === 0) {
-		const onlyHelp = rest.every(
-			(token) => token === "--help" || token === "--json",
-		);
+		const onlyHelp = rest.every((token) => token === "--help" || token === "--json");
 		if (!onlyHelp) {
 			throw fail("usage", "no command given", {
 				commands: commands.map((command) => command.path.join(" ")),
@@ -124,8 +119,7 @@ export function parse(
 			});
 		}
 		if (!takesValue(definition)) {
-			values[rawName] =
-				inline === undefined ? true : parseValue(definition, inline);
+			values[rawName] = inline === undefined ? true : parseValue(definition, inline);
 			continue;
 		}
 		const raw = inline ?? rest[index + 1];
@@ -140,9 +134,7 @@ export function parse(
 			values[rawName] = value;
 			continue;
 		}
-		const bucket = Array.isArray(values[rawName])
-			? (values[rawName] as unknown[])
-			: [];
+		const bucket = Array.isArray(values[rawName]) ? (values[rawName] as unknown[]) : [];
 		bucket.push(value);
 		values[rawName] = bucket;
 	}
@@ -152,10 +144,7 @@ export function parse(
 	// to document itself before the caller knows what to pass.
 	if (values["help"] !== true && values["schema"] !== true) {
 		for (const definition of command.options) {
-			if (
-				definition.required === true &&
-				values[definition.name] === undefined
-			) {
+			if (definition.required === true && values[definition.name] === undefined) {
 				throw fail("usage", `--${definition.name} is required`, {
 					command: command.path.join(" "),
 					options: command.options.map((item) => `--${item.name}`),
