@@ -1,6 +1,6 @@
 import "@Stylesheet/Component/Workspace.scss";
 import { createMemo, createSignal, Show } from "solid-js";
-import Bento, { type Tile } from "./Bento.tsx";
+import Bento, { Seats, type Tile } from "./Bento.tsx";
 import Drawer, { type DrawerView } from "./Drawer.tsx";
 import { type Column } from "./DrawerColumn.tsx";
 import { type Entry } from "./DrawerItem.tsx";
@@ -17,10 +17,10 @@ import Publish from "./Publish.tsx";
  * full one, and a page decides what the workspace is looking at.
  *
  * Publishing is the composition's core gesture, and it is modelled rather than
- * mocked: an open record is placed into the first free cell of the canvas that
- * fits it, so the drawer's queue and the canvas's layout cannot disagree. A
- * record that is already published is not placed twice - a second drop opens it
- * instead, which is what a person pressing the same row twice expects.
+ * mocked: an open record takes the next seat the canvas has empty, so the
+ * drawer's queue and the canvas's layout cannot disagree. A record that is
+ * already published is not placed twice - a second drop opens it instead, which
+ * is what a person pressing the same row twice expects.
  */
 interface Props {
 	Stages: Stage[];
@@ -40,9 +40,6 @@ interface Props {
 	Instruction: string;
 }
 
-const GridColumn = 6;
-const GridRow = 4;
-
 /** The cells a tile occupies, as `column:row` keys. */
 function Occupy(Tile: Tile): string[] {
 	const Cells: string[] = [];
@@ -57,38 +54,18 @@ function Occupy(Tile: Tile): string[] {
 }
 
 /**
- * The first free block that fits.
+ * The next seat the canvas has empty.
  *
- * Scanning column-major keeps a published tile next to the left edge instead of
- * scattering it wherever the last free cell happens to be, so a session's
- * publishes accumulate as a readable mosaic. A canvas with no room left returns
- * the origin, and the caller treats that as "already full" rather than stacking
- * tiles on top of each other.
+ * The mosaic is fixed, so a publish cannot choose its own geometry: it takes the
+ * first seat no record has landed on, in the composition's own order. That is why
+ * the drawer's queue and the canvas cannot disagree - there is one seat table and
+ * one cursor into it. A full canvas returns nothing, and the caller treats that
+ * as "already full" rather than stacking a record on top of another.
  */
-function FreeSlot(
-	Tiles: Tile[],
-	Width: number,
-	Height: number,
-): { Column: number; Row: number } | null {
+function FreeSeat(Tiles: Tile[]): Tile | undefined {
 	const Taken = new Set(Tiles.flatMap(Occupy));
 
-	for (let Column = 1; Column + Width - 1 <= GridColumn; Column++) {
-		for (let Row = 1; Row + Height - 1 <= GridRow; Row++) {
-			let Free = true;
-
-			for (let Across = Column; Across < Column + Width && Free; Across++) {
-				for (let Down = Row; Down < Row + Height && Free; Down++) {
-					Free = !Taken.has(`${Across}:${Down}`);
-				}
-			}
-
-			if (Free) {
-				return { Column, Row };
-			}
-		}
-	}
-
-	return null;
+	return Seats.find((Seat) => !Occupy(Seat).some((Cell) => Taken.has(Cell)));
 }
 
 export default function Workspace(Props: Props) {
@@ -124,21 +101,17 @@ export default function Workspace(Props: Props) {
 			return;
 		}
 
-		const Slot = FreeSlot(Published(), 2, 2);
+		const Seat = FreeSeat(Published());
 
-		if (Slot === null) {
+		if (Seat === undefined) {
 			return;
 		}
 
 		SetPublished((Current) => [
 			...Current,
 			{
+				...Seat,
 				Id: Entry.Id,
-				Column: Slot.Column,
-				Row: Slot.Row,
-				ColumnSpan: 2,
-				RowSpan: 2,
-				Tone: "plain",
 				Eyebrow: Column?.Label ?? "",
 				Title: Entry.Title,
 				Meta: Entry.Meta,
@@ -179,8 +152,8 @@ export default function Workspace(Props: Props) {
 
 				<Show
 					when={View() === "list"}
-					fallback={<Bento Tiles={Published()} Column={GridColumn} Row={GridRow} />}>
-					<Bento Tiles={Published()} Column={GridColumn} Row={GridRow} />
+					fallback={<Bento Tiles={Published()} />}>
+					<Bento Tiles={Published()} />
 				</Show>
 			</div>
 		</div>

@@ -29,10 +29,34 @@ export interface Tile {
 
 interface Props {
 	Tiles: Tile[];
-	/** The column and row count the empty fill is computed against. */
-	Column: number;
-	Row: number;
 }
+
+/**
+ * The composition's canvas, as ten seats.
+ *
+ * The mosaic is the design, not a consequence of how many records exist: a hero
+ * three columns wide beside a stacked pair, a tall column closing the right edge,
+ * then that rhythm mirrored underneath. Stating it as a table is what lets a thin
+ * archive draw the same page - a record takes the next seat and the seats after it
+ * stay empty at their own grey, so the layout never reflows around the data.
+ *
+ * The three greys are the seat's rank rather than its state: `sunken` is the
+ * loudest at `#e2e2e2`, `plain` the middle at `#e9e9e9`, `quiet` the softest at
+ * `#eee`. A seat keeps its grey whether or not a record has landed on it, which
+ * is what makes the hierarchy readable on an empty canvas.
+ */
+export const Seats: Tile[] = [
+	{ Id: "seat-1", Column: 1, Row: 1, ColumnSpan: 3, RowSpan: 2, Tone: "plain" },
+	{ Id: "seat-2", Column: 4, Row: 1, ColumnSpan: 2, RowSpan: 1, Tone: "quiet" },
+	{ Id: "seat-3", Column: 6, Row: 1, ColumnSpan: 1, RowSpan: 2, Tone: "plain" },
+	{ Id: "seat-4", Column: 4, Row: 2, ColumnSpan: 1, RowSpan: 1, Tone: "sunken" },
+	{ Id: "seat-5", Column: 5, Row: 2, ColumnSpan: 1, RowSpan: 1, Tone: "plain" },
+	{ Id: "seat-6", Column: 1, Row: 3, ColumnSpan: 1, RowSpan: 2, Tone: "quiet" },
+	{ Id: "seat-7", Column: 2, Row: 3, ColumnSpan: 2, RowSpan: 1, Tone: "plain" },
+	{ Id: "seat-8", Column: 4, Row: 3, ColumnSpan: 3, RowSpan: 2, Tone: "sunken" },
+	{ Id: "seat-9", Column: 2, Row: 4, ColumnSpan: 1, RowSpan: 1, Tone: "sunken" },
+	{ Id: "seat-10", Column: 3, Row: 4, ColumnSpan: 1, RowSpan: 1, Tone: "quiet" },
+];
 
 const Tone = {
 	plain: "bento__tile--plain",
@@ -54,39 +78,22 @@ function Occupy(Tile: Tile): string[] {
 }
 
 /**
- * The empty cells the mosaic still needs.
+ * The seats the mosaic still has empty.
  *
- * A thin archive is a normal state, so the grid is completed with the quietest
- * tiles rather than left ragged - a page with three posts still reads as a
- * composed layout. The fill is derived from the placed tiles, never stored, so a
- * tile that arrives in the data simply takes its cells and the fill shrinks.
+ * A thin archive is a normal state, so the canvas is completed from its own seat
+ * table rather than left ragged or reflowed: a seat is empty when none of its
+ * cells carry a record, and it keeps the grey its rank gives it. The fill is
+ * derived from the placed tiles, never stored, so a tile that arrives in the data
+ * simply takes its seat and the empty set shrinks by one.
  */
-function Empty(Tiles: Tile[], Column: number, Row: number): Tile[] {
+function Empty(Tiles: Tile[]): Tile[] {
 	const Taken = new Set(Tiles.flatMap(Occupy));
-	const Cells: Tile[] = [];
 
-	for (let Index = 1; Index <= Column; Index++) {
-		for (let Track = 1; Track <= Row; Track++) {
-			if (Taken.has(`${Index}:${Track}`)) {
-				continue;
-			}
-
-			Cells.push({
-				Id: `empty-${Index}-${Track}`,
-				Column: Index,
-				Row: Track,
-				ColumnSpan: 1,
-				RowSpan: 1,
-				Tone: "quiet",
-			});
-		}
-	}
-
-	return Cells;
+	return Seats.filter((Seat) => !Occupy(Seat).some((Cell) => Taken.has(Cell)));
 }
 
 export default function Bento(Props: Props) {
-	const All = () => [...Props.Tiles, ...Empty(Props.Tiles, Props.Column, Props.Row)];
+	const All = () => [...Props.Tiles, ...Empty(Props.Tiles)];
 
 	return (
 		<div class="bento" role="list">

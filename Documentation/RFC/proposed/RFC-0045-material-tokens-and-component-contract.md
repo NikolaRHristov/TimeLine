@@ -348,6 +348,11 @@ Prose keeps `--content-width` (48rem). An application surface opts into `.page--
   `Base.astro` takes `Wide?: boolean` and applies it to the `<main>` column only: the header and the
   footer keep the measure while the application surface is released, because the release is about
   the surface a person works in, not about the site's frame.
+- **A surface that owns the screen drops the frame.** `Bare?: boolean` renders the page with no
+  header, no footer and no block padding, because the workspace's rail starts at the viewport's
+  top-left and a sticky header above it would break every proportion the composition states in
+  absolute pixels. `Bare` and `Wide` answer different questions - one removes the frame, the other
+  releases the measure - and a page that needs both states both.
 - **No component sets its own width.** A component that capped itself would negotiate against the
   shell at every viewport, and two surfaces would disagree about the column by a few pixels that no
   one can name. `max-width` appears in the shell and in two media queries, and nowhere else.
@@ -404,6 +409,11 @@ The rest of the rules are review rules. A script cannot see that a component rea
 that a gradient is the third one, and a reviewer comparing two files cannot see a hex that should
 have been a token, because the defect looks like a value that works. The verification table below
 says which claim each mechanism is responsible for.
+
+The record is written in the voice RFC-0010 fixes for this tree: declarative, no identifiers, no
+borrowed phrasing, and every claim carrying its test. Its geometry cross-references
+`Documentation/Reference/Design-Composition.md` rather than restating a measurement the reference
+already holds.
 
 ## Alternatives considered
 
