@@ -77,16 +77,16 @@ attempt.
 
 ## Query and browse
 
-There is no built-in web console — `curl http://127.0.0.1:<port>/` answers 404 — so the CLI is the
+There is no built-in web console - `curl http://127.0.0.1:<port>/` answers 404 - so the CLI is the
 browser. Reach for `describe` before writing any query.
 
 | Task                   | Command                                                                    |
 | ---------------------- | -------------------------------------------------------------------------- |
-| Schema, types, indexes | `spacetime describe <db> --server <url>`                                   |
-| One-shot query         | `spacetime sql <db> --server <url> "select * from <table>"`                |
+| Schema, types, indexes | `spacetime describe <db> --server <URL>`                                   |
+| One-shot query         | `spacetime sql <db> --server <URL> "select * from <table>"`                |
 | Machine-readable rows  | the same plus `--format json`                                              |
-| Interactive prompt     | `spacetime sql <db> --server <url> --interactive`                          |
-| Live tail              | `spacetime subscribe <db> --server <url> "select * from <table>"`          |
+| Interactive prompt     | `spacetime sql <db> --server <URL> --interactive`                          |
+| Live tail              | `spacetime subscribe <db> --server <URL> "select * from <table>"`          |
 | Typed client           | `spacetime generate --lang typescript --module-path <dir> --out-dir <dir>` |
 
 Three limits of the query surface read as failures, not as syntax you can fix:
@@ -95,7 +95,7 @@ Three limits of the query surface read as failures, not as syntax you can fix:
   `count(*)` on its own works; every breakdown is a client-side count over
   `select <column> from <table>`.
 - **A subscription takes a table, not a projection.** `select id, author from post` is rejected with
-  `Column projections are not supported in subscriptions; Subscriptions must return a table type` —
+  `Column projections are not supported in subscriptions; Subscriptions must return a table type` -
   subscribe to `select * from <table>` and filter in the client.
 - **Columns are snake_case at the SQL surface.** A module declares `firstSeenAt` and `postCount`,
   but `describe` and `sql` expose `first_seen_at` and `post_count`; the camelCase spelling fails as
@@ -105,7 +105,7 @@ Three limits of the query surface read as failures, not as syntax you can fix:
 
 - **Derived ids, never auto-increment.** `.autoInc()` in the TypeScript schema API still requires
   the `id` field on `insert`, so an auto-inc column does not save you a key. Build the key from the
-  content instead — `<postId>:<source>:<at>`, `<at>:<kind>:<subject>` — and look the row up by key
+  content instead - `<postId>:<source>:<at>`, `<at>:<kind>:<subject>` - and look the row up by key
   before inserting. A replay then writes nothing rather than duplicating history.
 - **Append-only stays append-only.** Update the mutable entity (a post's metrics) in place; append
   an observation row for every scrape that saw it.
@@ -117,7 +117,7 @@ Three limits of the query surface read as failures, not as syntax you can fix:
 ## The module is a projection, never the source of truth
 
 Keep the files (or the existing store) authoritative and treat the database as rebuildable. An
-exporter reads the database and writes the same files a static site already consumes — the site
+exporter reads the database and writes the same files a static site already consumes - the site
 build must never connect to the database, or a static/CI build acquires a live service dependency.
 
 ## Pitfalls
@@ -125,17 +125,17 @@ build must never connect to the database, or a static/CI build acquires a live s
 - **`failed to find database <name>-<suffix>` is a config mismatch, not a missing database.**
   `spacetime init` writes a generated name into `spacetime.local.json` that does not match what
   `publish` created; every `sql` and `call` then resolves the wrong name. Fix the file to the
-  published name, and confirm the truth with `spacetime list --server <url>`.
+  published name, and confirm the truth with `spacetime list --server <URL>`.
 - **An option-typed reducer argument is a sum type, in both directions.** A bare string for a
   `t.string().optional()` parameter fails with `invalid type: string …, expected sum type`, and
   `null` is accepted but means _none_ - so a value sent as `null` succeeds with the field silently
   dropped. The wire shape is `{"some":"<value>"}` for a value and `null` for none; check the
   parameter index the error names.
 - **A program calls a reducer over HTTP, not through the CLI.** The CLI's own transport is
-  `POST <url>/v1/database/<identity>/call/<reducer>` with `Authorization: Bearer <token>` and a JSON
+  `POST <URL>/v1/database/<identity>/call/<reducer>` with `Authorization: Bearer <token>` and a JSON
   **array** of positional arguments (not an object keyed by name), answering `200` with an empty
   body. The token is the `spacetimedb_token` line in `~/.config/spacetime/cli.toml`; the identity is
-  `GET <url>/v1/database/<name>` -> `database_identity.__identity__` with the `0x` prefix stripped,
+  `GET <URL>/v1/database/<name>` -> `database_identity.__identity__` with the `0x` prefix stripped,
   which equals the identity `spacetime list` prints. Resolve it once per run rather than hardcoding
   a hex string. A wrong argument shape answers `400 invalid arguments for reducer <name>: [<index>]`
     - the index is the whole diagnosis.
@@ -146,9 +146,9 @@ build must never connect to the database, or a static/CI build acquires a live s
   database has never seen: a push that ran before the last scrape leaves `select count(*)` smaller
   than the store's own count, and a push that sends only entities leaves the derived tables
   (observations, events) empty. When asked whether the data "is in the database", count both layers
-  and report the difference —
-  `spacetime sql <db> -s <url> "select count(*) as n from <table>" --format json` against
-  `ls <store>/<Entity> | wc -l` — instead of answering from the schema. A push command's own
+  and report the difference -
+  `spacetime sql <db> -s <URL> "select count(*) as n from <table>" --format json` against
+  `ls <store>/<Entity> | wc -l` - instead of answering from the schema. A push command's own
   `--dry-run` count is the third number worth quoting.
 - **A publish is an upload, not a migration.** Breaking schema changes need `--delete-data` and
   destroy rows; publish to a fresh database name while iterating instead.
@@ -167,5 +167,5 @@ build must never connect to the database, or a static/CI build acquires a live s
 | Replay is idempotent          | a second identical `call` leaves `count(*)` unchanged                                                                              |
 | Optional argument round-trips | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())` |
 | Config matches reality        | the name in `spacetime.local.json` equals the row in `spacetime list`                                                              |
-| Schema is discoverable        | `spacetime describe <db> --server <url>` lists tables, columns and indexes                                                         |
+| Schema is discoverable        | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                         |
 | Aggregation is client-side    | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                     |

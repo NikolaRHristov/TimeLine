@@ -7,11 +7,11 @@ Public, anonymised documentation for this site's tooling and data model.
 | `Plan/Bookmark-Pipeline.md`         | The three-stage plan: tool layer, ingest, distribution             |
 | `Reference/Configure.md`            | Every configuration key, its default, and the env overrides        |
 | `Reference/Agent-Quickstart.md`     | The five onboarding steps, written for a generic agent             |
-| `Reference/Maintain-Cli.md`         | Command surface, JSON shapes, schema export                        |
+| `Reference/Maintain-CLI.md`         | Command surface, JSON shapes, schema export                        |
 | `Reference/Storage-Model.md`        | The shadow store and the published collection, and why two         |
 | `Reference/Transport.md`            | CDP as primary transport, the store as the read-only fallback      |
 | `Reference/Build.md`                | How the tool layer and the site are built                          |
-| `Reference/Url-And-Shell.md`        | URL targeting and shell quoting rules for argv                     |
+| `Reference/URL-And-Shell.md`        | URL targeting and shell quoting rules for argv                     |
 | `Reference/Voting.md`               | The Voted index, owner approval, and bringing your own Firebase    |
 | `Skill/Timeline-Bookmarks/SKILL.md` | An operating procedure any agent can load before using the tooling |
 

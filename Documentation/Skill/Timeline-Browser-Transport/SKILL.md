@@ -99,7 +99,7 @@ a relaunch loses the person's tabs even though the session files exist. Reopen t
 the titles prove the session:
 
 ```sh
-curl -s -X PUT "http://127.0.0.1:9222/json/new?<url-encoded-url>" > /dev/null
+curl -s -X PUT "http://127.0.0.1:9222/json/new?<URL-encoded-URL>" > /dev/null
 ```
 
 A logged-in title (the person's handle, not `@undefined`) is the evidence that the profile still

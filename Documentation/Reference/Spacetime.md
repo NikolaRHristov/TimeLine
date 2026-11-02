@@ -70,7 +70,7 @@ with `failed to find database timeline-<suffix>`. Fix the file, not the command:
 | ------------- | ------------------------ | ------------------------------------------------------------------------------------------------ |
 | `post`        | `id` (status id)         | url, author, text, postedAt, firstSeenAt, lastScrapedAt, visibility, replies/reposts/likes/views |
 | `author`      | `handle`                 | name, verified, firstSeenAt, postCount                                                           |
-| `media`       | `<postId>:<url>`         | kind, url                                                                                        |
+| `media`       | `<postId>:<URL>`         | kind, url                                                                                        |
 | `observation` | `<postId>:<source>:<at>` | append-only metric sample per scrape                                                             |
 | `event`       | `<at>:<kind>:<subject>`  | kind, subject, opaque JSON payload                                                               |
 | `membership`  | `<list>:<handle>`        | by (rule/model/manual), confidence, reason                                                       |
@@ -79,9 +79,9 @@ Reducers: `observe`, `record`, `setVisibility`, `classify`, `attach`.
 
 ## Ingest: the archive into the projection
 
-`maintain store push` is the bridge: it reads the shadow store and calls `observe` once per post.
-The files remain the source of truth, so the database can be deleted and rebuilt from them at any
-time.
+`pnpm maintain store push` is the bridge: it reads the shadow store and calls `observe` once per
+post. The files remain the source of truth, so the database can be deleted and rebuilt from them at
+any time.
 
 ```sh
 pnpm maintain store push --source bookmark
@@ -114,15 +114,15 @@ field:
 
 ## Claim → test
 
-| Claim                | Test                                                                                            |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| CLI installed        | `spacetime --version` → `2.14.0`                                                                |
-| Server up            | `lsof -nP -iTCP:3010 -sTCP:LISTEN` shows `spacetime`                                            |
-| Module compiles      | `spacetime build` → `Build finished successfully.`                                              |
-| Database published   | `spacetime list --server http://127.0.0.1:3010` shows `timeline`                                |
-| Reducer writes       | `spacetime call timeline observe …` then `select id, author, likes from post` returns the row   |
-| Append-only          | a second identical `observe` leaves `select count(*) from observation` unchanged                |
-| Push is idempotent   | a second `maintain store push` leaves `select count(*) from observation` unchanged              |
-| Push is a projection | `maintain store push --dry-run` prints a count and writes no file                               |
-| Server down          | `maintain store push --url http://127.0.0.1:3999` → `{"error":"spacetime-unreachable"}`, exit 2 |
-| Optional args        | `postedAt` is an option: `{"some":"<ISO>"}` for a value, `null` for none - never a bare string  |
+| Claim                | Test                                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| CLI installed        | `spacetime --version` → `2.14.0`                                                                     |
+| Server up            | `lsof -nP -iTCP:3010 -sTCP:LISTEN` shows `spacetime`                                                 |
+| Module compiles      | `spacetime build` → `Build finished successfully.`                                                   |
+| Database published   | `spacetime list --server http://127.0.0.1:3010` shows `timeline`                                     |
+| Reducer writes       | `spacetime call timeline observe …` then `select id, author, likes from post` returns the row        |
+| Append-only          | a second identical `observe` leaves `select count(*) from observation` unchanged                     |
+| Push is idempotent   | a second `pnpm maintain store push` leaves `select count(*) from observation` unchanged              |
+| Push is a projection | `pnpm maintain store push --dry-run` prints a count and writes no file                               |
+| Server down          | `pnpm maintain store push --url http://127.0.0.1:3999` → `{"error":"spacetime-unreachable"}`, exit 2 |
+| Optional args        | `postedAt` is an option: `{"some":"<ISO>"}` for a value, `null` for none - never a bare string       |

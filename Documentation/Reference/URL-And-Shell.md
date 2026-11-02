@@ -32,13 +32,18 @@ One source of truth, one generator, two emitted copies:
 
 ## The shape to adopt here
 
+Nothing in the **Applied to this site** column below is built yet, except the shell and the service
+worker. There is no route map module, no generator, no `Public/_redirects` and no `Public/_headers`
+in the tree; the pages that exist are `/`, `/Bookmark/`, `/Bookmark/<id>/`, `/Activity/` and
+`/Voted/`.
+
 | Piece                | Take from                               | Applied to this site                                                                                                              |
 | -------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Route map            | Site A                                  | `/Bookmark`, `/Bookmark/<id>`, `/Activity`, `/List/<Slug>` - PascalCase; aliases `/bookmarks`, `/saved`, `/activity`, `/lists/ai` |
-| Generator            | Site A                                  | `Maintain/Script/GenerateRedirects.ts`, writing `Public/_redirects` + `Target/_redirects`                                         |
-| Headers              | Site B                                  | same four headers, plus a cache policy for `_astro/*`                                                                             |
+| Route map            | Site A                                  | not built - pages are `/Bookmark`, `/Bookmark/<id>`, `/Activity`, `/Voted`; there is no `/List/<Slug>` page and no alias redirect |
+| Generator            | Site A                                  | not built - no `_redirects` generator exists under `Maintain/Source`                                                              |
+| Headers              | Site B                                  | not built - `Public/_headers` does not exist                                                                                      |
 | Service worker       | Sites B and C, `astrojs-service-worker` | already wired - add precache scope + version bump on build                                                                        |
-| Shell and formatting | Site C                                  | `Source/Layout/Base.astro` shell, `Source/Stylesheet/{Layout,Component}/` split, `prettier.config.mjs`                            |
+| Shell and formatting | Site C                                  | `Source/Layout/Base.astro` shell, `Source/Stylesheet/{Global,Base}.css`, `prettier.config.mjs`                                    |
 
 ## Invariants
 
@@ -59,11 +64,11 @@ One source of truth, one generator, two emitted copies:
 
 ## Claim → test
 
-| Claim                   | Test                                                                       |
-| ----------------------- | -------------------------------------------------------------------------- |
-| Redirects are generated | delete `Public/_redirects`, run the generator, file returns byte-identical |
-| Aliases are 301s        | `curl -sI http://localhost:9999/bookmarks` → `301` + `Location: /Bookmark` |
-| Canonical is PascalCase | `grep -E '^/[a-z]' Public/_redirects` matches only alias sources           |
-| Headers are served      | `Public/_headers` exists and lists the four security headers               |
-| SW is production-only   | `Target/` build contains a registered worker; dev server does not          |
-| No private origin named | `scripts/audit-leaks.sh .` → `== private origins` `PASS none`, exit 0      |
+| Claim                   | Test                                                                       | Status                          |
+| ----------------------- | -------------------------------------------------------------------------- | ------------------------------- |
+| Redirects are generated | delete `Public/_redirects`, run the generator, file returns identical      | not run: nothing generates it   |
+| Aliases are 301s        | `curl -sI http://localhost:9999/bookmarks` → `301` + `Location: /Bookmark` | not run: no alias exists        |
+| Canonical is PascalCase | every page under `Source/pages` is PascalCase                              | runnable today                  |
+| Headers are served      | `Public/_headers` exists and lists the four security headers               | not run: the file is absent     |
+| SW is production-only   | `Target/` build contains a registered worker; dev server does not          | runnable after `pnpm run build` |
+| No private origin named | `scripts/audit-leaks.sh .` → `== private origins` `PASS none`, exit 0      | runnable today                  |

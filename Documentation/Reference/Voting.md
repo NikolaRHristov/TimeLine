@@ -11,7 +11,7 @@ candidate --nominate--> Voted index --visitors vote--> ranked
                             reject  --> tombstone, never resurrected
 ```
 
-**A vote never publishes anything.** The Curated index is written by `maintain vote approve`, a
+**A vote never publishes anything.** The Curated index is written by `pnpm maintain vote approve`, a
 command a human runs. Visitors can rank what is already on the table; they cannot put anything on
 it.
 
@@ -55,8 +55,8 @@ be overruled. Ranks are dense and unique: 1..N with no gaps, renumbered by every
 The payload is never duplicated. `Curated/<id>.json` points at the `Voted` (or `Bookmark`) record by
 `id`, and the pages join them.
 
-`votes` and `votedAt` are a **snapshot**, refreshed by `maintain vote sync`. Nothing is fetched at
-build time, so the published site is reproducible even after the live count moves on.
+`votes` and `votedAt` are a **snapshot**, refreshed by `pnpm maintain vote sync`. Nothing is fetched
+at build time, so the published site is reproducible even after the live count moves on.
 
 Four fixtures ship with the repository, one per state, so a fresh clone renders every branch of this
 feature: `Voted/example-post.json` (approved), `Voted/example-candidate.json` (candidate),
@@ -66,13 +66,13 @@ contain no real post; delete them as you add your own.
 ## Commands
 
 ```bash
-maintain vote nominate --id <status-id> [--list <slug>] [--note <text>] [--title <text>]
-maintain vote nominate --url <url> [--list <slug>] [--note <text>]
-maintain vote queue [--json] [--limit <n>]
-maintain vote sync [--json]
-maintain vote approve --id <status-id> [--rank <n>]
-maintain vote reject --id <status-id> [--reason <text>]
-maintain vote rank --id <status-id> --rank <n>
+pnpm maintain vote nominate --id <status-id> [--list <slug>] [--note <text>] [--title <text>]
+pnpm maintain vote nominate --url <URL> [--list <slug>] [--note <text>]
+pnpm maintain vote queue [--json] [--limit <n>]
+pnpm maintain vote sync [--json]
+pnpm maintain vote approve --id <status-id> [--rank <n>]
+pnpm maintain vote reject --id <status-id> [--reason <text>]
+pnpm maintain vote rank --id <status-id> --rank <n>
 ```
 
 Every command prints one JSON object, accepts `--json` (implied when stdout is not a TTY), and fails
@@ -98,14 +98,14 @@ and `store hide` use.
 
 ```bash
 # 1. what is waiting
-maintain vote queue
+pnpm maintain vote queue
 
 # 2. refresh the counts from the vote store (needs a project, see below)
-maintain vote sync
+pnpm maintain vote sync
 
 # 3. decide
-maintain vote approve --id <status-id> --rank 1
-maintain vote reject --id <status-id> --reason "off topic"
+pnpm maintain vote approve --id <status-id> --rank 1
+pnpm maintain vote reject --id <status-id> --reason "off topic"
 
 # 4. publish
 pnpm run build
@@ -159,7 +159,7 @@ publishes and renders - you just have no vote buttons.
 
     ```json
     {
-    	"apiKey": "<api-key>",
+    	"apiKey": "<API-key>",
     	"databaseURL": "https://<project-id>-default-rtdb.<region>.firebasedatabase.app",
     	"projectId": "<project-id>"
     }
@@ -168,7 +168,7 @@ publishes and renders - you just have no vote buttons.
     The environment wins over the file, per key.
 
 6. **Rebuild.** `pnpm run build` embeds the public configuration into `/Voted/`;
-   `maintain vote sync` starts answering with real counts.
+   `pnpm maintain vote sync` starts answering with real counts.
 
 `MAINTAIN_VOTE_TRANSPORT=none` forces the read-only path even with a project configured - it is how
 you check that the no-voting build still works.
@@ -191,7 +191,7 @@ What is implemented:
   cap the value, and restrict keys to `[A-Za-z0-9_-]`.
 - **Rejection is permanent.** A tombstone cannot be re-nominated and cannot be approved.
 - **Approval is manual.** No code path publishes an entry without a person running
-  `maintain vote approve`.
+  `pnpm maintain vote approve`.
 
 What is **not** implemented, stated plainly: client-side checks are not security. A determined
 visitor can clear site data, or write to the database directly, and stuff the box. The rules bound
@@ -216,8 +216,8 @@ ranks, and why approval is a human action.
 | No real project in the tree          | `git grep -niE 'apiKey\|projectId' -- .` → placeholders only                                               |
 | A fresh clone builds with no project | `pnpm run build` with no `MAINTAIN_VOTE_*` → `Target/Voted/index.html` contains "Voting is not configured" |
 | The page still ranks                 | the same build renders every candidate, sorted by `votes`                                                  |
-| `sync` without a transport is named  | `maintain vote sync` → `{"error":"no-transport"}`, exit 2, nothing written                                 |
-| Approval is idempotent               | a second `maintain vote approve --id <id>` → `"unchanged": true`, same bytes                               |
+| `sync` without a transport is named  | `pnpm maintain vote sync` → `{"error":"no-transport"}`, exit 2, nothing written                            |
+| Approval is idempotent               | a second `pnpm maintain vote approve --id <id>` → `"unchanged": true`, same bytes                          |
 | A tombstone stays dead               | `reject` then `approve` → `{"error":"tombstone"}`; `nominate` the same id → `tombstone`                    |
 | Curated cannot be rejected           | `reject` a curated id → `{"error":"already-curated"}`                                                      |
 | Ranks are dense and unique           | `node --test Maintain/Target/Test/Vote.test.js` → rank-density tests pass                                  |

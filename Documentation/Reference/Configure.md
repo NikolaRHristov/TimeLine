@@ -37,13 +37,13 @@ exact copy command:
 | `cdp.port`           | integer                      | `9222`                      | Port of that endpoint                                                   |
 | `profile`            | string                       | `""` (unknown)              | Your handle, without `@`. Fills the `likes` route                       |
 | `lists`              | array of `{slug,name,id}`    | `[]`                        | Your lists. Empty is valid - commands that need one fail `unknown-list` |
-| `routes.bookmarks`   | string (url)                 | `https://x.com/i/bookmarks` | Page the `bookmark` source is read from                                 |
-| `routes.likes`       | string (url)                 | derived from `profile`      | Page the `like` source is read from                                     |
-| `routes.history`     | string (url)                 | `https://x.com/i/history`   | Container page the `history` source walks                               |
+| `routes.bookmarks`   | string (URL)                 | `https://x.com/i/bookmarks` | Page the `bookmark` source is read from                                 |
+| `routes.likes`       | string (URL)                 | derived from `profile`      | Page the `like` source is read from                                     |
+| `routes.history`     | string (URL)                 | `https://x.com/i/history`   | Container page the `history` source walks                               |
 | `content.root`       | string (repository-relative) | `Source/Content`            | Where the site's collections live                                       |
 | `storage.shadow`     | string (repository-relative) | `Maintain/Storage/Shadow`   | Where the shadow store lives                                            |
 | `storage.vote`       | string (repository-relative) | `Maintain/Storage/Vote`     | Where `vote sync` parks the pulled counts (gitignored)                  |
-| `spacetime.url`      | string (url)                 | `http://127.0.0.1:3010`     | The SpacetimeDB server `store push` projects into                       |
+| `spacetime.url`      | string (URL)                 | `http://127.0.0.1:3010`     | The SpacetimeDB server `store push` projects into                       |
 | `spacetime.database` | string                       | `timeline`                  | The database module `store push` calls `observe` on                     |
 
 `routes.likes` is derived from `profile` on purpose: one key cannot drift from the other. Set it
@@ -103,8 +103,8 @@ Prints the resolved map - after defaults, after env overrides - with list ids ma
 prints them.
 
 ```bash
-maintain config show          # {"lists":[{"slug":"alpha","id":"*"}], …}
-maintain config show --reveal # {"lists":[{"slug":"alpha","id":"1"}], …}
+pnpm maintain config show          # {"lists":[{"slug":"alpha","id":"*"}], …}
+pnpm maintain config show --reveal # {"lists":[{"slug":"alpha","id":"1"}], …}
 ```
 
 `--list <slug>` narrows the output to one list. The slug is resolved against the map, never against
@@ -112,8 +112,8 @@ a hardcoded set, so an unconfigured slug is `unknown-list` whose message names t
 (`detail`) and repeats it in `configured`:
 
 ```bash
-maintain config show --list alpha # one entry
-maintain config show --list nope  # {"error":"unknown-list","configured":["alpha","beta"],…}
+pnpm maintain config show --list alpha # one entry
+pnpm maintain config show --list nope  # {"error":"unknown-list","configured":["alpha","beta"],…}
 ```
 
 ## Environment overrides

@@ -167,7 +167,7 @@ renames a button is exactly one file.
 | `page bookmarks open`  | `--tab <n>`?                                        | `{navigated:true,url,count}`            |
 | `page list open`       | `--name <slug>`                                     | `{navigated:true,slug,url}`             |
 | `page list member add` | `--name`, `--handle`, `--apply`                     | `{added:true,handle,list}`              |
-| `event append`         | `--kind`, `--subject`, `--payload <json>`           | `{written:true,path}`                   |
+| `event append`         | `--kind`, `--subject`, `--payload <JSON>`           | `{written:true,path}`                   |
 | `schema`               | `[command]`                                         | JSON Schema document                    |
 
 Every command also accepts `--schema` and prints its own schema instead of running. `--help` prints
@@ -284,7 +284,7 @@ counts only, so the caller's context stays small.
 `lists[]` then by author; detail page renders one post; activity page is the Event collection in
 reverse time. All static, no client JS.
 
-**Task 2.4 - Live dev feed.** Files: `Maintain/Command/Event/Tail/Tail.ts`,
+**Task 2.4 - Live dev feed.** Files: `Maintain/Source/Command/Event/Tail/Tail.ts`,
 `Source/pages/Activity/index.astro` (dev-only refresh). `event tail` polls the Event directory and
 prints new events as JSON lines; in dev the activity page polls a tiny `/Activity/Feed.json`
 endpoint written by the same command. Pub/sub stays file-based: the directory is the broker, so
@@ -348,10 +348,10 @@ command per handle behind `--apply`.
 
 | ------------------------------------------ | | CDP is reachable |
 `curl -s http://127.0.0.1:9222/json/version` → JSON with `Protocol-Version` | | CLI parses like clap
-| `maintain post like --help` lists `--url`, `--tab`, `--dry-run` | | Schema is machine-usable |
-`maintain post like --schema` validates under draft 2020-12 | | Like is idempotent | run twice →
-second prints `{was:true}` and does not toggle | | Scrape is idempotent | run twice → second prints
-`new:0`, post file count unchanged | | Docs leak nothing |
+| `pnpm maintain post like --help` lists `--url`, `--tab`, `--dry-run` | | Schema is machine-usable
+| `pnpm maintain post like --schema` validates under draft 2020-12 | | Like is idempotent | run
+twice → second prints `{was:true}` and does not toggle | | Scrape is idempotent | run twice → second
+prints `new:0`, post file count unchanged | | Docs leak nothing |
 `grep -rE "@[A-Za-z0-9_]{2,}                                                                                                                                       | /i/lists/[0-9]+" Documentation/`
 → no hits | | Distribution is cheap | second `author classify` run makes zero model calls | | A page
 that never readies fails | `page list open` on an id the page never shows →

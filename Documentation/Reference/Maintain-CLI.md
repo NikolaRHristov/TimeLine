@@ -106,11 +106,11 @@ something that is not on screen. Scraping is the exception: `page bookmarks scra
 A saved post and a post that is safe to show the world are different facts, so ingest writes to an
 archive and publishing is a separate, explicit step.
 
-| Source     | Route             | What it is                                 |
-| ---------- | ----------------- | ------------------------------------------ |
-| `bookmark` | `/i/bookmarks`    | posts saved explicitly                     |
-| `like`     | `/<handle>/likes` | posts liked, including old likes not saved |
-| `history`  | `/i/history`      | the container page, walked tab by tab      |
+| Source     | Route             | What it is                                                          |
+| ---------- | ----------------- | ------------------------------------------------------------------- |
+| `bookmark` | `/i/bookmarks`    | posts saved explicitly                                              |
+| `like`     | `/<handle>/likes` | posts liked, including old likes not saved                          |
+| `history`  | `/i/history`      | the container page: walked tab by tab, **Bookmarks** then **Likes** |
 
 `/i/bookmarks` redirects to `/i/history`, which presents `Bookmarks` and `Likes` as tabs; `history`
 follows those tabs, so it is the union of the other two. Navigation is confirmed by the page's own
@@ -122,8 +122,8 @@ that saw it. The interface never exposes when a post was saved, so nothing in th
 claim `bookmarkedAt` - `firstSeenAt` is a lower bound and is described as one.
 
 Scraping writes **only** to `Maintain/Storage/Shadow/` (gitignored). The whole `Maintain/Storage/`
-tree is ignored, so the code that reads and writes it lives next door in `Maintain/Store/` - a file
-dropped under `Storage/` would never be committed.
+tree is ignored, so the code that reads and writes it lives next door in `Maintain/Source/Store/` -
+a file dropped under `Storage/` would never be committed.
 
 ```
 Post/<statusId>.json              one record per post, merged across sources
@@ -178,9 +178,9 @@ rejected token `spacetime-auth`, and a refused call `spacetime-reducer` - each o
 ## Voting: a public ranking, a private gate
 
 `vote *` fills the site's Voted index and writes the Curated index the homepage leads with. A
-visitor's vote ranks a candidate and publishes nothing; approval is `maintain vote approve`, run by
-the owner. Rejection is a tombstone that stays on disk, so a later scrape, nomination or vote cannot
-resurrect it.
+visitor's vote ranks a candidate and publishes nothing; approval is `pnpm maintain vote approve`,
+run by the owner. Rejection is a tombstone that stays on disk, so a later scrape, nomination or vote
+cannot resurrect it.
 
 Ranks are positions, not scores: every write renumbers the Curated index to 1..N with no gaps and no
 duplicates, and `--rank` beyond the end means "last". `vote sync` is the only command that touches a

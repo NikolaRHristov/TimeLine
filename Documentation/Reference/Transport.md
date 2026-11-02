@@ -4,6 +4,11 @@ Every command in `Maintain/` speaks through a **transport**. The browser transpo
 primary and the only one allowed to change anything. The view transport is a read-only projection
 over the shadow store: same command surface, same JSON shapes, no browser.
 
+> **Status: not implemented.** No command in `pnpm maintain --help` accepts `--transport`, there is
+> no `Transport/` directory under `Maintain/Source`, and the only transport seam in the tree is
+> `Vote/Transport` (`firebase` or `none`), which carries vote counts and nothing else. This file
+> records the intended shape; every command in it is unrun because the flag does not exist.
+
 ## Why two
 
 The browser is the source of truth but it is also the fragile part: it can be closed, its debug port
@@ -29,10 +34,10 @@ export interface Transport {
 }
 ```
 
-| Transport | Path                       | `mutable` | Backed by                                               |
-| --------- | -------------------------- | --------- | ------------------------------------------------------- |
-| `cdp`     | `Maintain/Transport/Cdp/`  | `true`    | `GET /json/list` + the tab's `webSocketDebuggerUrl`     |
-| `view`    | `Maintain/Transport/View/` | `false`   | `Maintain/Storage/Shadow/` (posts, observations, index) |
+| Transport | Path          | `mutable` | Backed by                                               |
+| --------- | ------------- | --------- | ------------------------------------------------------- |
+| `cdp`     | not built yet | `true`    | `GET /json/list` + the tab's `webSocketDebuggerUrl`     |
+| `view`    | not built yet | `false`   | `Maintain/Storage/Shadow/` (posts, observations, index) |
 
 Commands never import a transport directly. They receive one:
 
@@ -45,7 +50,7 @@ export default async function run(context: CommandContext) {
 
 ## Selection
 
-- `--transport cdp|view`, default `cdp`.
+- `--transport cdp|view`, default `cdp`. Not in `--help` today.
 - `view` refuses every mutating command before touching anything:
   `{ "error": "read-only-transport", "transport": "view", "command": "post like" }`, exit 2.
 - Read commands produce the **same JSON** from either transport. A caller must never branch on which
@@ -78,10 +83,10 @@ export default async function run(context: CommandContext) {
 
 ## Claim → test
 
-| Claim                         | Test                                                                         |
-| ----------------------------- | ---------------------------------------------------------------------------- |
-| View is read-only             | `maintain post like --id X --transport view` → `read-only-transport`, exit 2 |
-| Read shapes match             | `post extract --id X` vs `--transport view` differ only in `source`          |
-| No silent fallback            | stop the browser, `tab list` → `cdp-unreachable` (not an empty list)         |
-| View needs no browser         | `post extract --id X --transport view` succeeds with the debug port closed   |
-| Commands stay transport-blind | `grep -rn "Transport/Cdp" Maintain/Command` returns nothing                  |
+| Claim                         | Test                                                                                | Status                             |
+| ----------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------- |
+| View is read-only             | `pnpm maintain post like --url <post-url> --transport view` → `read-only-transport` | not run: no `--transport` flag     |
+| Read shapes match             | `post extract` vs `post extract --transport view` differ only in `source`           | not run: no `--transport` flag     |
+| No silent fallback            | stop the browser, `pnpm maintain tab list` → `cdp-unreachable` (not an empty list)  | not run: needs the browser stopped |
+| View needs no browser         | `pnpm maintain post extract --transport view` succeeds with the debug port closed   | not run: no `--transport` flag     |
+| Commands stay transport-blind | `grep -rn "Transport/Cdp" Maintain/Source/Command` returns nothing                  | not run: no such directory         |

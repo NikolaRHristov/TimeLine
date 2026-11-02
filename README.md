@@ -12,12 +12,13 @@ synthetic post, and no real handle, list id or post id is committed.
 
 ## What you get
 
-| Route             | What it shows                                               |
-| ----------------- | ----------------------------------------------------------- |
-| `/`               | Counts, the lists in use, the five newest posts             |
-| `/Bookmark/`      | Every published post, grouped by list and then by author    |
-| `/Bookmark/<id>/` | One post: text, media, metrics, and when the archive saw it |
-| `/Activity/`      | The event log, newest first - a build-time read, no polling |
+| Route             | What it shows                                                     |
+| ----------------- | ----------------------------------------------------------------- |
+| `/`               | Counts, the lists in use, the five newest posts                   |
+| `/Bookmark/`      | Every published post, grouped by list and then by author          |
+| `/Bookmark/<id>/` | One post: text, media, metrics, and when the archive saw it       |
+| `/Activity/`      | The event log, newest first - a build-time read, no polling       |
+| `/Voted/`         | The candidates visitors rank, with their counts, and nothing else |
 
 Every page renders an empty state when its collection is empty, so a fresh clone builds before it
 has any bookmarks.
@@ -106,11 +107,14 @@ rather than failing.
 
 The pipeline reads three sources through the same CLI, and keeps them apart:
 
-| Source     | Route             | What it is                                  |
-| ---------- | ----------------- | ------------------------------------------- |
-| `bookmark` | `/i/bookmarks`    | posts you saved explicitly                  |
-| `like`     | `/<handle>/likes` | posts you liked, including ones never saved |
-| `history`  | `/i/history`      | the container page, walked tab by tab       |
+| Source     | Route             | What it is                                                                |
+| ---------- | ----------------- | ------------------------------------------------------------------------- |
+| `bookmark` | `/i/bookmarks`    | posts you saved explicitly                                                |
+| `like`     | `/<handle>/likes` | posts you liked, including ones never saved                               |
+| `history`  | `/i/history`      | the container page: it is walked tab by tab, **Bookmarks** then **Likes** |
+
+`/i/bookmarks` redirects to `/i/history` with the Bookmarks tab selected, so the `bookmark` source
+reads the first tab of the same page the `history` source walks in full.
 
 `pnpm maintain store scrape --source <source>` folds a page into the shadow store; `--limit` and
 `--max-idle` bound how far it scrolls. `store status` counts what is archived, what is public and
@@ -174,8 +178,8 @@ command, and rejection is a tombstone that a later vote cannot undo. Voting need
 of your own (or nothing at all - the Curated index works without one):
 
 ```bash
-maintain vote nominate --id <status-id> --list <slug>
-maintain vote queue && maintain vote approve --id <status-id> --rank 1
+pnpm maintain vote nominate --id <status-id> --list <slug>
+pnpm maintain vote queue && pnpm maintain vote approve --id <status-id> --rank 1
 ```
 
 Setup, the database rules and the honest anti-abuse caveat are in
@@ -211,7 +215,7 @@ about the model that wrote it:
   and the store is plain files.
 
 The full command surface, JSON shapes and error codes are in
-`Documentation/Reference/Maintain-Cli.md`; the configuration contract is in
+`Documentation/Reference/Maintain-CLI.md`; the configuration contract is in
 `Documentation/Reference/Configure.md`; an agent-oriented walkthrough is in
 `Documentation/Reference/Agent-Quickstart.md`.
 
@@ -229,7 +233,7 @@ The full command surface, JSON shapes and error codes are in
 - `Documentation/Reference/Configure.md` - every configuration key, its default, and the environment
   overrides.
 - `Documentation/Reference/Agent-Quickstart.md` - the five steps for a generic agent.
-- `Documentation/Reference/Maintain-Cli.md` - the command table.
+- `Documentation/Reference/Maintain-CLI.md` - the command table.
 - `Documentation/Reference/Storage-Model.md` - the two stores and why there are two.
 - `Documentation/Reference/Spacetime.md` - the optional SpacetimeDB projection.
 - `Documentation/Reference/Voting.md` - the Voted index, owner approval, and the Firebase setup.
