@@ -185,6 +185,29 @@ a dashed or dotted border.
 
 ---
 
+## The bands below the canvas
+
+The composition continues past the mosaic. Three bands and a cluster, each decided by its own
+record.
+
+- **The swimlanes** (RFC-0047) - 20px under the canvas, with a lane pitch of 28px so the band reads
+  as a diagram rather than a table. One lane per actor; two arrows always, the provider
+  authenticating the network inbound and the network authorising the provider to `see` outbound.
+- **The spectrometer** (RFC-0046) - 20px under the swimlanes. One row per peer, one column per
+  capability, cells `running` / `available` / `absent`, labels protocol-first.
+- **The status footer** (RFC-0048) - closes the composition, 20px under the spectrometer. Four
+  values stated as words: connection, sync, queued, failed.
+- **The rail's security cluster** - bottom-aligned inside the 224px rail, its marks sharing the
+  footer's baseline so one line of status runs across the left and bottom edges.
+
+The 20px rhythm is the canvas's own, so the bands continue it; the 28px lane pitch is deliberately
+larger, because air is what separates a flow from a grid.
+
+`Skill/Design-Verification/Reference/verify-composition.mjs` asserts the order, the 20px steps, the
+lane pitch, and the cluster's two alignments.
+
+---
+
 ## The palette
 
 - **Chrome** - `#1c1c1e` ground, `#1f1f21` inactive face, `#232325` active face, `#2c2c2e` control,

@@ -27,6 +27,7 @@ Implements the streamable-HTTP handshake: `initialize`, then
 `notifications/initialized`, then `tools/call`, matching JSON-RPC ids and
 accepting either a JSON body or an SSE stream.
 """
+
 import json
 import os
 import sys
@@ -38,14 +39,19 @@ def config():
     endpoint = os.environ.get("MCP_URL")
     token_file = os.environ.get("MCP_TOKEN_FILE")
 
-    missing = [name for name, value in (("MCP_URL", endpoint), ("MCP_TOKEN_FILE", token_file)) if not value]
+    missing = [
+        name
+        for name, value in (("MCP_URL", endpoint), ("MCP_TOKEN_FILE", token_file))
+        if not value
+    ]
 
     if missing:
         raise SystemExit(
             "error: %s unset.\n"
             "  MCP_URL        the MCP server endpoint, e.g. https://mcp.example.com/mcp\n"
-            "  MCP_TOKEN_FILE a JSON file holding {\"access_token\": \"...\"}, as written by\n"
-            "                 whichever client performed the OAuth flow." % ", ".join(missing)
+            '  MCP_TOKEN_FILE a JSON file holding {"access_token": "..."}, as written by\n'
+            "                 whichever client performed the OAuth flow."
+            % ", ".join(missing)
         )
 
     # Narrowed for the type checker: the guard above proves both are set, and a
@@ -94,7 +100,9 @@ class Client:
             messages = []
 
             for block in raw.split("\n\n"):
-                data = [line[5:] for line in block.splitlines() if line.startswith("data:")]
+                data = [
+                    line[5:] for line in block.splitlines() if line.startswith("data:")
+                ]
 
                 if not data:
                     continue
@@ -113,7 +121,9 @@ class Client:
         return json.loads(raw)
 
     def notify(self, method, params=None):
-        body = json.dumps({"jsonrpc": "2.0", "method": method, "params": params or {}}).encode()
+        body = json.dumps(
+            {"jsonrpc": "2.0", "method": method, "params": params or {}}
+        ).encode()
         request = urllib.request.Request(self.endpoint, data=body, method="POST")
         request.add_header("Authorization", "Bearer " + self.token)
         request.add_header("Content-Type", "application/json")
@@ -148,7 +158,11 @@ class Client:
 
     def call(self, tool, args):
         return self._post(
-            {"jsonrpc": "2.0", "method": "tools/call", "params": {"name": tool, "arguments": args}}
+            {
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {"name": tool, "arguments": args},
+            }
         )
 
 
@@ -164,7 +178,10 @@ def flatten(result):
         if chunk.get("type") == "text":
             parts.append(chunk.get("text", ""))
         elif chunk.get("type") == "image":
-            parts.append("[image %s %s bytes]" % (chunk.get("mimeType"), len(chunk.get("data", "") or "")))
+            parts.append(
+                "[image %s %s bytes]"
+                % (chunk.get("mimeType"), len(chunk.get("data", "") or ""))
+            )
         else:
             parts.append(json.dumps(chunk)[:500])
 
@@ -190,9 +207,23 @@ def main():
         handle.write(text)
 
     error = response.get("error") if isinstance(response, dict) else None
-    is_error = (response.get("result") or {}).get("isError") if isinstance(response, dict) else None
+    is_error = (
+        (response.get("result") or {}).get("isError")
+        if isinstance(response, dict)
+        else None
+    )
 
-    print(json.dumps({"tool": tool, "out": out, "bytes": len(text), "isError": is_error, "error": error}))
+    print(
+        json.dumps(
+            {
+                "tool": tool,
+                "out": out,
+                "bytes": len(text),
+                "isError": is_error,
+                "error": error,
+            }
+        )
+    )
     print(text[:600])
 
 

@@ -34,16 +34,16 @@ The interface is the same split. Everything private is chrome; everything public
 Each route is PascalCase and is the only spelling that is served. A lowercase or semantic alias
 answers with a `301` to the canonical path.
 
-- **`/`** - the workspace without the drawer: the rail, the publish seam, and the Curated index as a
-  bento canvas.
-- **`/Workspace`** - the full composition: rail, drawer, seam, canvas. The private side of the
-  archive.
-- **`/Bookmark`** - every published post, grouped by list and then by author.
+- **`/`** - the showcase: one hero claim, six dispersed boxes, three closing pillars. No records.
+- **`/Showcase`** - the same spread, mounted as the layout's own demonstration.
+- **`/Workspace`** - the full composition: rail, drawer, seam, canvas, swimlanes, spectrometer,
+  status footer. Public and anonymous by default; the only route that reads data.
+- **`/Bookmark`** - a showcase page: what a bookmark is and how one is filed.
 - **`/Bookmark/<id>`** - one post: text, media, metrics, and when the archive first saw it.
-- **`/List`** - every list the published posts carry, with its post count.
-- **`/List/<slug>`** - one list, newest first.
-- **`/Activity`** - the event log, newest first. A build-time read, never a poll.
-- **`/Voted`** - the candidates visitors rank, with their counts, and nothing else.
+- **`/List`** - a showcase page: what a list is and who may add to one.
+- **`/List/<slug>`** - one list, as a bento canvas of its posts.
+- **`/Activity`** - a showcase page: what the pipeline records and why the rail counts it.
+- **`/Voted`** - a showcase page: what a candidate is and what a vote does, and what it does not.
 
 Every page renders an empty state when its collection is empty, so a fresh clone builds before it
 holds a single bookmark.

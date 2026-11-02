@@ -10,7 +10,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 - **Filename** - `RFC-NNNN-kebab-case-title.md`.
 - **Location** - `proposed/` while open, `implemented/` once shipped.
-- **Numbering** - assigned on creation, never reused. `0057` is the next free number.
+- **Numbering** - assigned on creation, never reused. `0072` is the next free number.
 - **Supersession** - a new record marks the old one `Superseded by`, and both stay.
 - **Cards** - every record names the cards that implement it, by id.
 
@@ -18,7 +18,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 ## The records
 
-Fifty-six are written; none is implemented. A record moves to `implemented/` only when its
+Seventy-one are written; none is implemented. A record moves to `implemented/` only when its
 verification table passes against the shipped code.
 
 Every file in `proposed/` appears below, and the count above is the number of files there. A record
@@ -47,6 +47,9 @@ its entry.
 - **RFC-0049** - The component state model.
 - **RFC-0050** - The data states.
 - **RFC-0052** - The material states.
+- **RFC-0059** - One record, many references.
+- **RFC-0062** - An import is an archive, not an account.
+- **RFC-0065** - A digest chain, and a drill that runs.
 
 ### Product
 
@@ -66,6 +69,12 @@ its entry.
 - **RFC-0053** - The showcase surface.
 - **RFC-0054** - The anonymous workspace.
 - **RFC-0055** - DELO and the provider position.
+- **RFC-0058** - A room's public face, and no member directory.
+- **RFC-0061** - Bridges are out of scope; the export is the interface.
+- **RFC-0064** - A list is a signed, versioned object.
+- **RFC-0066** - What a person can see about their own data.
+- **RFC-0069** - The read surface a developer may build against.
+- **RFC-0070** - A room starts from a template the module ships.
 
 ### Policy
 
@@ -80,6 +89,10 @@ its entry.
 - **RFC-0038** - Legal posture.
 - **RFC-0056** - Identity carried by others.
 - **RFC-0041** - Analytics without reading content.
+- **RFC-0057** - Recovery restores the name, not the archive.
+- **RFC-0060** - Attribution survives re-encryption because it signs plaintext.
+- **RFC-0067** - Keep everything, compress, and name the cost.
+- **RFC-0068** - Language is content; accessibility is a contract.
 
 ### Governance
 
@@ -87,6 +100,8 @@ its entry.
 - **RFC-0019** - Vocabulary and terminology.
 - **RFC-0031** - Moderation and community governance.
 - **RFC-0036** - Naming, handles and namespace.
+- **RFC-0063** - Reputation of people, never of posts.
+- **RFC-0071** - Who may publish a library, and what revocation can reach.
 
 ### Methodology
 
@@ -106,8 +121,11 @@ who holds a key, how a room closes, what an export contains, what a host may obs
 system refuses to defend. Records 0021 to 0027 are the residuals a second reading found. Records
 0028 to 0042 are wave three - the operational and social layer a room needs once it exists:
 retention, search, sync, moderation, rate, migration, versions, attention, naming, testing, law,
-billing, time, analytics and extension. Records beyond 0042 extend the set and state their own
-dependencies.
+billing, time, analytics and extension. Records 0043 to 0056 are the surface records the site work
+added - workspace, toolchain, tokens, components, states, showcase, anonymous workspace, provider
+position and identity carried by others. Records 0057 to 0071 are wave four: the long tail of
+recovery, discovery, provenance, interop and governance. Records beyond 0071 extend the set and
+state their own dependencies.
 
 A card id above records what the record names. Those may be research cards or implementing cards -
 each record's own `Task dependencies` line says which - and an entry with no card means the record
@@ -156,6 +174,64 @@ its own `Task dependencies` line.
 Two of the fifteen are boundaries rather than features. RFC-0038 states what the operator owes and
 what it cannot owe, and RFC-0037 states what can be proven before a second host exists. Both exist
 so that the other thirteen do not have to hedge in every paragraph.
+
+### Wave four, 0057 to 0071
+
+The long tail: what happens to a person's keys, how a room is found, how the same post behaves in
+five rooms, what a bridge can and cannot carry, what a person can see about their own data, and who
+governs the code a room runs. Sixteen topics became fifteen records, because the digest and the
+drill are one property.
+
+```
+0013 keys + 0056 guardianship --+--> 0057 recovery: the archive, not the name
+                                +--> 0058 discovery: a face names no member
+                                +--> 0063 reputation: statements, not a score
+
+0059 duplicates --+--> 0060 attribution: a signature over plaintext
+                  +--> 0067 economics: dedupe inside one store
+
+0015 export --+--> 0061 interop: a bridge is a publication
+              +--> 0062 import: an archive, not an account
+              +--> 0064 lists: a list is a line type
+
+0001 store --+--> 0065 integrity and drills
+             +--> 0066 what a member sees
+             +--> 0067 what it costs to keep everything
+
+0025 module --+--> 0070 templates: structure, no content
+              +--> 0071 registry: admission, and the limit of revocation
+
+0017 client --+--> 0068 accessibility and language
+              +--> 0069 the read surface
+```
+
+| Topic the wave named               | Record                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------- |
+| Identity recovery                  | RFC-0057, extending RFC-0013's recovery clause and RFC-0056 §4 rather than restating either |
+| Room discovery                     | RFC-0058                                                                                    |
+| Cross-room duplicates              | RFC-0059                                                                                    |
+| Content provenance and attribution | RFC-0060                                                                                    |
+| Interop with existing protocols    | RFC-0061                                                                                    |
+| Import from platform exports       | RFC-0062, extending RFC-0015's adapter                                                      |
+| Reputation of people, not posts    | RFC-0063                                                                                    |
+| Curation as data                   | RFC-0064                                                                                    |
+| Archive integrity                  | RFC-0065, which also covers disaster recovery drills                                        |
+| Disaster recovery drills           | RFC-0065 - one record, because a digest nobody restores proves the wrong thing              |
+| Member-facing observability        | RFC-0066, extending RFC-0018's operational half                                             |
+| Storage growth economics           | RFC-0067                                                                                    |
+| Accessibility and localisation     | RFC-0068                                                                                    |
+| Third-party API and SDK surface    | RFC-0069                                                                                    |
+| Room templates and seeding         | RFC-0070                                                                                    |
+| Module registry governance         | RFC-0071, extending RFC-0042's admission and revocation                                     |
+
+Three of the fifteen are boundary records, and they exist for the same reason RFC-0038 and RFC-0037
+do: RFC-0061 states that no protocol bridge is in scope, RFC-0058 states that discovery publishes a
+room and never a membership, and RFC-0071 states the exact limit of a revocation. Each of the other
+twelve would otherwise hedge in every paragraph it touches.
+
+None of the fifteen names a card id. Each names its implementing card by title marked "to be
+created", so its entry above stays bare until that card exists on the board - the convention stated
+below.
 
 ---
 

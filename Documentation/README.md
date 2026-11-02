@@ -42,6 +42,9 @@ what is intended, the RFCs state what was decided, and the skills state how to d
   one verb across the seam, and the four states an island may name.
 - **`Reference/Showcase-Layout-Research.md`** - what four published pages do with their vertical
   space, and which of it the showcase surface took.
+- **`Reference/Network-Substrate.md`** - what SpacetimeDB actually provides for rooms, permissions
+  and federation, with a claim → source table, the configuration schema the network needs, and the
+  engine's limits.
 
 ---
 

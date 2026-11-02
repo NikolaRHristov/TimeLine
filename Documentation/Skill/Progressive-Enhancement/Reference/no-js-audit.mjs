@@ -459,24 +459,38 @@ async function capture(root, wait) {
 	let reason = "the tree was never read";
 
 	for (let attempt = 1; attempt <= 3; attempt += 1) {
+		// A build that never stops writing is its own diagnosis, so `settle`
+		// throws out of here rather than being retried as a bad copy.
 		await settle(root, wait);
-		const live = await discover(root);
+		let directory = null;
 
-		const directory = await mkdtemp(join(tmpdir(), "no-js-snapshot-"));
-		const copy = join(directory, "Target");
-		await cp(root, copy, { recursive: true });
+		try {
+			const live = await discover(root);
 
-		const copied = await discover(copy);
-		const intact = await complete(copy);
-		const same =
-			copied.length === live.length && copied.every((route, index) => route === live[index]);
+			directory = await mkdtemp(join(tmpdir(), "no-js-snapshot-"));
+			const copy = join(directory, "Target");
+			await cp(root, copy, { recursive: true });
 
-		if (intact && same && copied.length > 0) return { directory, copy, routes: copied };
+			const copied = await discover(copy);
+			const intact = await complete(copy);
+			const same =
+				copied.length === live.length &&
+				copied.every((route, index) => route === live[index]);
 
-		reason = intact
-			? "the route set changed while it was copied"
-			: "a copied document was incomplete";
-		await rm(directory, { recursive: true, force: true }).catch(() => {});
+			if (intact && same && copied.length > 0) return { directory, copy, routes: copied };
+
+			reason = intact
+				? "the route set changed while it was copied"
+				: "a copied document was incomplete";
+		} catch (error) {
+			// A build that deletes a directory mid-walk is the same situation as a
+			// changed route set: the tree moved, so the copy is not one build.
+			reason = error instanceof Error ? error.message : String(error);
+		}
+
+		if (directory !== null) {
+			await rm(directory, { recursive: true, force: true }).catch(() => {});
+		}
 		await sleep(250);
 	}
 

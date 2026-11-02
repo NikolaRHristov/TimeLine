@@ -60,7 +60,8 @@ def find_root() -> Path:
             return candidate
 
     raise SystemExit(
-        "no Documentation/Skill directory above %s; run this from inside the repository" % here
+        "no Documentation/Skill directory above %s; run this from inside the repository"
+        % here
     )
 
 
@@ -92,7 +93,9 @@ SHEBANG = re.compile(r"^#!")
 
 # Anything that names one machine: the POSIX home prefix, the Windows one, and
 # the current account's name wherever it appears inside a path.
-LEAK = re.compile(r"(/Users/[^/\s\"']+|/home/[^/\s\"']+|[A-Za-z]:\\\\?Users\\\\?[^\\\s\"']+)")
+LEAK = re.compile(
+    r"(/Users/[^/\s\"']+|/home/[^/\s\"']+|[A-Za-z]:\\\\?Users\\\\?[^\\\s\"']+)"
+)
 
 
 def comment_style(path: Path) -> tuple[str, str]:
@@ -187,7 +190,10 @@ def archive(args: argparse.Namespace) -> int:
 
     if not skill_dir.is_dir():
         print(f"error: no skill at {skill_dir.relative_to(ROOT)}", file=sys.stderr)
-        print("       create the skill first; the archive never invents one.", file=sys.stderr)
+        print(
+            "       create the skill first; the archive never invents one.",
+            file=sys.stderr,
+        )
         return 2
 
     source = Path(os.path.expanduser(args.file)).resolve()
@@ -197,7 +203,10 @@ def archive(args: argparse.Namespace) -> int:
         return 2
 
     if source.stat().st_size == 0:
-        print(f"error: {source} is empty; an archived stub is worse than none", file=sys.stderr)
+        print(
+            f"error: {source} is empty; an archived stub is worse than none",
+            file=sys.stderr,
+        )
         return 2
 
     name = args.as_ or source.name
@@ -214,7 +223,10 @@ def archive(args: argparse.Namespace) -> int:
     try:
         text = source.read_text(encoding="utf-8")
     except UnicodeDecodeError:
-        print(f"error: {source} is not UTF-8 text; the archive holds text only", file=sys.stderr)
+        print(
+            f"error: {source} is not UTF-8 text; the archive holds text only",
+            file=sys.stderr,
+        )
         return 2
 
     cleaned = scrub(text, source)
@@ -241,7 +253,9 @@ def archive(args: argparse.Namespace) -> int:
     if target.suffix in {".sh", ".py"}:
         target.chmod(target.stat().st_mode | 0o111)
 
-    print(f"archived {source.name} -> {target.relative_to(ROOT)} ({len(stamped)} bytes)")
+    print(
+        f"archived {source.name} -> {target.relative_to(ROOT)} ({len(stamped)} bytes)"
+    )
     record(skill_dir, name, args.summary, dry=False)
     return 0
 
@@ -315,11 +329,15 @@ def main() -> int:
     parser.add_argument("--file", help="the script to archive")
     parser.add_argument("--as", dest="as_", help="the filename it takes in Reference/")
     parser.add_argument("--summary", help="one sentence: what the tool does")
-    parser.add_argument("--force", action="store_true", help="replace an existing reference file")
+    parser.add_argument(
+        "--force", action="store_true", help="replace an existing reference file"
+    )
     parser.add_argument("--dry-run", action="store_true", help="report without writing")
     parser.add_argument("--list", action="store_true", help="list every archived tool")
     parser.add_argument("--show", metavar="FILE", help="print one archived tool")
-    parser.add_argument("--audit", action="store_true", help="fail when a reference names a machine")
+    parser.add_argument(
+        "--audit", action="store_true", help="fail when a reference names a machine"
+    )
 
     args = parser.parse_args()
 
