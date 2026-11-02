@@ -1,0 +1,31 @@
+@use "../Material.scss" as Material;
+
+// The archive frame: the head and the foot share the canvas's gutter.
+//
+// The canvas is full-bleed and pads itself, so a head on the shell's centred
+// 48rem measure stands on a second left edge - 313px away from the mosaic at
+// 1440 - and reads as an island floating above a field. The head takes the
+// canvas's edge instead, and keeps the site's one prose measure for its own
+// lines.
+//
+// The gutter below is the canvas's own geometry, restated: `Bento.scss` pads
+// the mosaic 3rem and folds to 1.5rem at 900px, and this block is meant to share
+// that edge, so the two numbers move together.
+.archive {
+	&__block {
+		padding-inline: 3rem;
+
+		/* A sentence set to the full bleed is a ruler, not a line of prose. The
+		   measure is the shell's own token, so the head and every other page
+		   agree about how wide a sentence gets. */
+		.sheet__lede {
+			max-width: var(--content-width);
+		}
+	}
+
+	@media (max-width: 900px) {
+		&__block {
+			padding-inline: 1.5rem;
+		}
+	}
+}

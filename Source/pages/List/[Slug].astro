@@ -1,22 +1,44 @@
 ---
 /**
- * One list, newest first.
+ * One list, drawn as a canvas.
  *
- * The same rows `/Bookmark` groups by list, filtered to a single slug. The two
- * pages exist because they answer different questions: the bookmark index is
- * "what is in this archive", and this one is "what did I file under this word".
+ * This page used to be the rows `/Bookmark` groups by list, filtered to a single
+ * slug. The rows said what the archive contains; they did not say what a list
+ * *is* in this design - a filter over the published canvas. So the list is now
+ * the canvas itself: the same seat table the homepage and `/Bookmark` draw, fed
+ * with one list's posts, so a list looks like a home that has been filtered
+ * rather than like a second kind of page.
+ *
+ * Placement is data. A record takes the seat its position in the order gives it
+ * (`Bento.Seats`), never a position the page invents - the page decides which
+ * records go on the canvas, the canvas decides where. The order is newest first,
+ * so the hero seat is the most recent post filed under the slug.
+ *
+ * The mosaic is ten seats. A list longer than that repeats the composition as
+ * another band rather than inventing a second layout: each band completes itself
+ * with its own empty seats, so a band holding two records still reads as a
+ * composed page. That is the same rule `/Bookmark` follows, and it is why a thin
+ * list is a normal state here instead of a broken grid.
+ *
+ * The tiles carry the template accent - the material's word for a shape that is
+ * reused - because a list is a filing decision, not a capture. The accent says
+ * the same thing on every tile here, which is the honest reading: this whole
+ * page is one list.
  *
  * The slug is a route parameter, so the path is `/List/<slug>` - one segment,
- * never nested. A slug comes from the person's configuration and is not
- * trusted to be URL-safe: `Canonical()` percent-encodes it when it builds the
- * link, and Astro encodes it again when it builds the path, so the two agree.
+ * never nested. A slug comes from the person's configuration and is not trusted
+ * to be URL-safe: `Canonical()` percent-encodes it when it builds the link, and
+ * Astro encodes it again when it builds the path, so the two agree. A slug with
+ * no published post has no page at all: `getStaticPaths` derives the set from the
+ * posts, so the route cannot exist for a name that resolves to nothing.
  */
+import Bento, { Seats, type Tile } from "@Component/Workspace/Bento.tsx";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
 import { BookmarkHref, Route } from "@Library/Link.ts";
+import { StageAccent } from "@Library/Stage.ts";
 import { fill } from "@Library/Text.ts";
 import "@Stylesheet/Component/Note.scss";
-import "@Stylesheet/Component/Roster.scss";
 import { getCollection } from "astro:content";
 
 /** The bucket a post lands in when no list has claimed it. */
@@ -62,40 +84,65 @@ const lede = fill(Content.Page.List.Detail.Lede, {
 	saved: Content.Word.Saved,
 	postNoun: entries.length === 1 ? Content.Word.Post : Content.Word.Posts,
 });
-const excerpt = (text: string): string =>
-	text.length > 180 ? `${text.slice(0, 180).trimEnd()}…` : text;
 const day = (value: string): string => value.slice(0, 10);
+
+/** One line of a post, short enough to sit in a tile. */
+const Line = (Text: string, Length = 64): string => {
+	const Flat = Text.replace(/\s+/g, " ").trim();
+
+	return Flat.length > Length ? `${Flat.slice(0, Length - 1)}…` : Flat;
+};
+
+/**
+ * One tile: the seat its position in the band gives it, and what the record says
+ * in it. The eyebrow is the account, the meta line is the count and the day the
+ * post was written - the two facts a reader uses to decide whether to open it.
+ */
+const Place = (entry: (typeof entries)[number], Index: number): Tile => ({
+	...Seats[Index],
+	Id: entry.id,
+	Eyebrow: `@${entry.data.author.handle}`,
+	Title: Line(entry.data.text),
+	Meta: `${entry.data.metrics.likes} ${Content.Page.Bookmark.Detail.Metric.Likes} · ${day(
+		entry.data.postedAt ?? entry.data.firstSeenAt,
+	)}`,
+	Href: BookmarkHref(entry.id),
+	Stage: StageAccent.template,
+});
+
+/**
+ * The bands the canvas is drawn in.
+ *
+ * A band is one full pass of the seat table. Slicing before mapping is what
+ * makes the seat index a rank within the band, so the second band opens with a
+ * hero again instead of running off the end of the table.
+ */
+const Bands = Array.from({ length: Math.ceil(entries.length / Seats.length) }, (_, Band) =>
+	entries.slice(Band * Seats.length, (Band + 1) * Seats.length).map(Place),
+);
 ---
 
-<Base Title={Slug} Description={description}>
-	<article class="sheet">
-		<header class="sheet__head">
+<Base Title={Slug} Description={description} Wide>
+	<article>
+		<header class="page sheet__head">
 			<h1 class="sheet__title">{Slug}</h1>
 			<p class="sheet__lede">{lede}</p>
 		</header>
 
-		<ul class="roster">
-			{entries.map((entry) => (
-				<li class="roster__row">
-					<a class="roster__label" href={BookmarkHref(entry.id)}>
-						{excerpt(entry.data.text)}
-					</a>
-					<span class="roster__meta">
-						@{entry.data.author.handle} ·{" "}
-						{day(entry.data.postedAt ?? entry.data.firstSeenAt)}
-					</span>
-				</li>
-			))}
-		</ul>
+		{Bands.map((Tiles) => (
+			<Bento Tiles={Tiles} />
+		))}
 
 		{entries.length === 0 && (
-			<section class="note">
-				<h2 class="note__title">{Content.Empty.List}</h2>
-				<p class="note__body">{Content.Page.List.Detail.EmptyBody}</p>
-			</section>
+			<div class="page">
+				<section class="note">
+					<h2 class="note__title">{Content.Empty.List}</h2>
+					<p class="note__body">{Content.Page.List.Detail.EmptyBody}</p>
+				</section>
+			</div>
 		)}
 
-		<footer class="sheet__foot">
+		<footer class="page sheet__foot">
 			<a href={Route.List}>{Content.Page.List.Detail.AllLists}</a>
 			<span>·</span>
 			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>

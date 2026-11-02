@@ -42,6 +42,7 @@ export default function DrawerItem(Props: Props) {
 			classList={{
 				"drawer-item--text": Props.Entry.Kind === "text",
 				"drawer-item--media": Props.Entry.Kind === "media",
+				"drawer-item--comment": Props.Entry.Kind === "comment",
 				"drawer-item--control": Props.Entry.Kind === "control",
 				"drawer-item--selected": Props.Entry.Selected === true,
 			}}

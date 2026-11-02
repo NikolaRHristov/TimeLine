@@ -68,14 +68,29 @@ export default function Provenance(Props: Props) {
 
 	const Empty: Stage = { Key: "", Label: "", Tone: "transparent", Events: 0 };
 
-	const Band = (Distance: number): Stage => {
+	/**
+	 * The stage a slot shows, and whether that stage is real.
+	 *
+	 * A slot inside the stage list is a real stage: it is data, it is labelled, and
+	 * it can be selected. A slot past either end is a ghost - it repeats the stage
+	 * its distance lands on, so the cylinder keeps a continuous palette instead of
+	 * ending in six empty rings, but it is depth rather than data and is therefore
+	 * never labelled. That distinction is what keeps a four-stage archive from
+	 * printing the same stage name twice in one stack.
+	 */
+	const Band = (Distance: number): { Entry: Stage; Real: boolean } => {
 		const Count = Props.Stages.length;
 
 		if (Count === 0) {
-			return Empty;
+			return { Entry: Empty, Real: false };
 		}
 
-		return Props.Stages[(((SelectedIndex() + Distance) % Count) + Count) % Count] ?? Empty;
+		const Index = SelectedIndex() + Distance;
+
+		return {
+			Entry: Props.Stages[Index] ?? Props.Stages[((Index % Count) + Count) % Count] ?? Empty,
+			Real: Index >= 0 && Index < Count,
+		};
 	};
 
 	const Step = (Distance: number) => Ladder[Math.min(Math.abs(Distance), Ladder.length - 1)];
@@ -92,7 +107,8 @@ export default function Provenance(Props: Props) {
 			<div class="provenance__drum" role="list">
 				<For each={Slots}>
 					{(Distance) => {
-						const Entry = () => Band(Distance);
+						const Slot = () => Band(Distance);
+						const Entry = () => Slot().Entry;
 						const Shape = () => Step(Distance);
 						const Active = () => Distance === 0;
 
@@ -116,7 +132,7 @@ export default function Provenance(Props: Props) {
 								}}
 								aria-pressed={Active()}
 								onClick={() => Props.OnSelect?.(Entry().Key)}>
-								<Show when={Shape().Label > 0 && Entry().Label !== ""}>
+								<Show when={Shape().Label > 0 && Slot().Real}>
 									<span class="provenance__band-label">{Entry().Label}</span>
 								</Show>
 

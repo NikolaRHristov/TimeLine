@@ -16,7 +16,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 4px;
+	gap: 2px;
 	height: 2.5rem;
 	padding-inline: 1.75rem;
 	background: var(--seam);
@@ -25,14 +25,14 @@
 	&__group {
 		display: flex;
 		align-items: center;
-		gap: 3px;
+		gap: 6px;
 		flex-shrink: 0;
 		white-space: nowrap;
 	}
 
-	// A step control: a white disc on the light band. The disc carries the whole
-	// affordance - the composition has no cast shadow anywhere, so the edge is a
-	// hairline and the value step does the work.
+	// A step control: white on the light band, and the one shadow in the whole
+	// composition. A 1px line alone is invisible against the seam's ground, so the
+	// chip needs a value step and a hairline of falloff to read as pressable.
 	&__step {
 		display: flex;
 		align-items: center;
@@ -41,7 +41,8 @@
 		height: 1.5rem;
 		background: var(--seam-control);
 		border: 1px solid var(--seam-control-line);
-		border-radius: var(--radius-full);
+		border-radius: 6px;
+		box-shadow: var(--seam-shadow);
 		color: var(--chrome-ink-faint);
 		flex-shrink: 0;
 
@@ -62,7 +63,7 @@
 	&__rule {
 		flex: 1 0 0;
 		min-width: 1px;
-		height: 2px;
+		height: 1px;
 		background: var(--seam-line);
 	}
 

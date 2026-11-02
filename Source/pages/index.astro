@@ -1,69 +1,166 @@
 ---
 /**
- * The front page: what this archive holds, in one screen.
+ * The front page: the workspace with its private half dropped.
  *
- * Everything here is a build-time read of the content collections, so the page
- * works the same whether the archive holds one synthetic post or ten thousand
- * scraped ones. An empty archive is a normal state, not an error - it renders
- * the commands that fill it instead of throwing.
+ * The composition `/Workspace` mounts is the product - a provenance rail, a seam
+ * and a bento canvas - and this page is that composition without the drawer. The
+ * drawer's four columns are the one part a reader never sees, so the band they
+ * occupied carries the page's own masthead instead, and the canvas takes
+ * everything under the seam.
  *
- * Every internal URL comes from `@Library/Link.ts`, which derives it from the
- * route map: the list pills point at `/List/<slug>` rather than at the bookmark
- * index, because a list has its own page now and a link that hid that would be
- * the one place the map is not the source of truth. Every word comes from
- * `@Library/Content.ts`, and the sentence that counts things is a `{{name}}`
- * template filled here, so the numbers stay in the code and the words stay in
- * `Content/`.
+ * The canvas is the Curated index. The owner's picks take the seats first, in
+ * rank order, because curation is the judgement this archive exists to publish;
+ * the Bookmark feed fills the seats the picks do not claim, newest first, so an
+ * archive with one pick still reads as a page rather than as one card. A seat
+ * neither reaches stays empty at its own grey, which is the canvas's stated
+ * state for a thin archive rather than a hole to fill.
+ *
+ * Everything is read at build time and handed to the island as plain data, so
+ * the page paints from the build and hydrates only to answer a press on the
+ * rail. The rule that keeps it honest - every route renders its content with
+ * scripts switched off - is audited by `Documentation/Skill/Progressive-
+ * Enhancement`.
+ *
+ * The rail's stages are counted exactly as `/Workspace` counts them: the
+ * bookmarks on file at `source`, the recorded events at `ingestion`, the queue at
+ * `processing`, the approved picks at `review`. The counts are collection sizes
+ * rather than anything the page computes, so the rail and the archive cannot
+ * disagree about how much work sits at each step.
  */
+import { Seats, type Tile } from "@Component/Workspace/Bento.tsx";
+import type { Stage } from "@Component/Workspace/Provenance.tsx";
+import Showcase from "@Component/Workspace/Showcase.tsx";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
-import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
+import { BookmarkHref, Primary } from "@Library/Link.ts";
+import { StageAccent } from "@Library/Stage.ts";
 import { fill } from "@Library/Text.ts";
-import "@Stylesheet/Component/Note.scss";
-import "@Stylesheet/Component/Pill.scss";
-import "@Stylesheet/Component/Roster.scss";
 import { getCollection } from "astro:content";
 
 const bookmarks = await getCollection("Bookmark");
-const events = await getCollection("Event");
 const curated = await getCollection("Curated");
 const voted = await getCollection("Voted");
+const events = await getCollection("Event");
+
+/** The first line of a post, short enough to be one tile's title. */
+const Line = (Text: string, Length = 64): string => {
+	const Flat = Text.replace(/\s+/g, " ").trim();
+
+	return Flat.length > Length ? `${Flat.slice(0, Length - 1)}…` : Flat;
+};
 
 /**
- * The Curated index: the owner's picks, in the owner's order.
+ * When a post is dated: when it was written, or when the pipeline first saw it.
  *
- * Joined by id, never copied: `Curated/<id>.json` carries the rank and the
- * vote count frozen at approval time, and the payload comes from the bookmark
- * - or from the Voted entry when the post was curated without being published
- * as a bookmark. An entry whose payload has vanished is dropped rather than
- * rendered as a dead link.
+ * The two are not the same fact and the fallback is the honest one - a post
+ * whose page never showed a timestamp is still in the archive as of the day it
+ * was filed, and a tile sorted by nothing at all would move on every build.
  */
-const ranked = [...curated]
-	.sort((left, right) => left.data.rank - right.data.rank || left.id.localeCompare(right.id))
-	.map((entry) => ({
-		rank: entry.data.rank,
-		votes: entry.data.votes,
-		id: entry.id,
-		bookmark: bookmarks.find((bookmark) => bookmark.id === entry.id) ?? null,
-		voted: voted.find((candidate) => candidate.id === entry.id) ?? null,
-	}))
-	.filter((entry) => entry.bookmark !== null || entry.voted !== null);
+const When = (Entry: (typeof bookmarks)[number]): string =>
+	Entry.data.postedAt ?? Entry.data.firstSeenAt;
 
-const newest = [...bookmarks]
-	.sort((left, right) =>
-		(right.data.postedAt ?? right.data.firstSeenAt).localeCompare(
-			left.data.postedAt ?? left.data.firstSeenAt,
-		),
+const Day = (Value: string): string => Value.slice(0, 10);
+
+/** `1 event` rather than `1 events`: the rail prints these next to a band. */
+const Count = (Value: number, One: string, Many: string): string =>
+	`${Value} ${Value === 1 ? One : Many}`;
+
+const Stages: Stage[] = [
+	{
+		Key: "source",
+		Label: `Source · ${Count(bookmarks.length, Content.Word.Event, Content.Word.Events)}`,
+		Tone: StageAccent.source,
+		Events: bookmarks.length,
+		Caption: `${Count(bookmarks.length, Content.Word.Event, Content.Word.Events)} · Source · Selected`,
+	},
+	{
+		Key: "ingestion",
+		Label: `Ingestion · ${Count(events.length, Content.Word.Event, Content.Word.Events)}`,
+		Tone: StageAccent.ingestion,
+		Events: events.length,
+	},
+	{
+		Key: "processing",
+		Label: `Processing · ${Count(voted.length, Content.Word.Event, Content.Word.Events)}`,
+		Tone: StageAccent.processing,
+		Events: voted.length,
+	},
+	{
+		Key: "review",
+		Label: `Review · ${Count(curated.length, Content.Word.Event, Content.Word.Events)}`,
+		Tone: StageAccent.review,
+		Events: curated.length,
+	},
+];
+
+/**
+ * The picks, joined to the record each one points at.
+ *
+ * `Curated/<id>.json` carries the rank and the vote count frozen at approval
+ * time, never the payload: the post itself comes from the Bookmark collection,
+ * or from the Voted entry when the owner curated a candidate that was never
+ * published as a bookmark. An entry whose payload has vanished is dropped rather
+ * than drawn as a dead link.
+ */
+const Picks = [...curated]
+	.sort((Left, Right) => Left.data.rank - Right.data.rank || Left.id.localeCompare(Right.id))
+	.map((Entry) => {
+		const Source = bookmarks.find((Record) => Record.data.id === Entry.data.id);
+		const Candidate = voted.find((Record) => Record.data.id === Entry.data.id);
+
+		if (Source === undefined && Candidate === undefined) {
+			return null;
+		}
+
+		return {
+			Id: Entry.data.id,
+			Eyebrow: `Rank ${Entry.data.rank}`,
+			Title:
+				Source === undefined
+					? Line(Candidate?.data.title ?? Candidate?.data.url ?? Entry.data.id)
+					: Line(Source.data.text),
+			Meta:
+				Source === undefined
+					? `${Count(Entry.data.votes, Content.Word.Vote, Content.Word.Votes)} at approval`
+					: `@${Source.data.author.handle} · ${Source.data.metrics.likes} likes`,
+			Href: Source === undefined ? (Candidate?.data.url ?? "") : BookmarkHref(Entry.data.id),
+		};
+	})
+	.filter((Entry) => Entry !== null);
+
+/** The feed, newest first: what fills the seats the picks leave. */
+const Feed = [...bookmarks]
+	.sort((Left, Right) => When(Right).localeCompare(When(Left)))
+	.map((Entry) => ({
+		Id: Entry.data.id,
+		Eyebrow: Content.Page.Index.Latest,
+		Title: Line(Entry.data.text),
+		Meta: `@${Entry.data.author.handle} · ${Day(When(Entry))}`,
+		Href: BookmarkHref(Entry.data.id),
+	}));
+
+/**
+ * The canvas: the picks, then the feed, one record per seat.
+ *
+ * A record is placed once - a post that is both picked and recent keeps its pick
+ * seat - and the list stops at the seat table's length, because the mosaic is the
+ * layout: a record without a seat would have nowhere to land, and a seat table
+ * longer than the data is drawn from the seats themselves.
+ */
+const Tiles: Tile[] = [...Picks, ...Feed]
+	.filter(
+		(Entry, Index, All) => All.findIndex((Candidate) => Candidate?.Id === Entry?.Id) === Index,
 	)
-	.slice(0, 5);
+	.slice(0, Seats.length)
+	.map((Entry, Index) => ({ ...Seats[Index], ...Entry }));
 
 /** The slugs this archive actually uses - the person's lists, not a fixed set. */
-const lists = [...new Set(bookmarks.flatMap((entry) => entry.data.lists))].sort();
+const lists = [...new Set(bookmarks.flatMap((Entry) => Entry.data.lists))].sort();
 
 const total = bookmarks.length;
 
 /**
- * One sentence for the header.
+ * One sentence for the masthead.
  *
  * Assembled from one template rather than as interleaved markup: the optional
  * `across N lists` clause used to sit between two text nodes, which left the
@@ -92,113 +189,50 @@ const description = fill(Content.Page.Index.Description, {
 	lists: String(lists.length),
 });
 
-const excerpt = (text: string): string =>
-	text.length > 160 ? `${text.slice(0, 160).trimEnd()}…` : text;
-const day = (value: string): string => value.slice(0, 10);
+/**
+ * The masthead: the page's name, what it holds, and the ways out.
+ *
+ * A `Bare` page has no shell header, so this band is the only navigation the
+ * reader gets - which is why it carries the primary routes rather than only the
+ * title. The words are the shell's own, so the header of every other page and
+ * this band name the same destinations with the same names.
+ */
+const Head = {
+	Eyebrow: Content.Brand.Short,
+	Title: Content.Route.Curated,
+	Lede: summary,
+	Label: Content.Shell.Primary,
+	Links: Primary,
+};
+
+/**
+ * An empty archive explains itself where the mosaic would be.
+ *
+ * The canvas draws ten grey seats whatever the data holds - that is the layout's
+ * own answer to a thin archive - but ten empty seats do not say what fills them.
+ * The note does, with the three commands in the order they run.
+ */
+const Empty =
+	total === 0
+		? {
+				Title: Content.Empty.Bookmarks,
+				Body: Content.Page.Index.EmptyBody,
+				Steps: [Content.Example.Scrape, Content.Example.Publish, Content.Example.Build],
+				Hint: Content.Page.Index.EmptyHint,
+				Reference: Content.Reference.Configure,
+			}
+		: undefined;
 ---
 
-<Base Description={description}>
-	<article class="sheet">
-		<header class="sheet__head">
-			<h1 class="sheet__title">{Content.Route.Curated}</h1>
-			<p class="sheet__lede">{summary}</p>
-		</header>
-
-		{total === 0 && (
-			<section class="note">
-				<h2 class="note__title">{Content.Empty.Bookmarks}</h2>
-				<p class="note__body">{Content.Page.Index.EmptyBody}</p>
-				<ol>
-					<li>
-						<code>{Content.Example.Scrape}</code>
-					</li>
-					<li>
-						<code>{Content.Example.Publish}</code>
-					</li>
-					<li>
-						<code>{Content.Example.Build}</code>
-					</li>
-				</ol>
-				<p class="note__body">
-					{Content.Page.Index.EmptyHint}
-					<code>{Content.Reference.Configure}</code>.
-				</p>
-			</section>
-		)}
-
-		{ranked.length > 0 && (
-			<section class="sheet__section">
-				<h2 class="sheet__heading">{Content.Page.Index.Picks}</h2>
-				<ol class="roster">
-					{ranked.map((entry) => (
-						<li class="roster__row">
-							<span class="roster__lead">{entry.rank}</span>
-							{entry.bookmark !== null ? (
-								<a class="roster__label" href={BookmarkHref(entry.id)}>
-									{excerpt(entry.bookmark.data.text)}
-								</a>
-							) : (
-								<a
-									class="roster__label"
-									href={entry.voted?.data.url}
-									rel="noopener noreferrer">
-									{entry.voted?.data.title ?? entry.voted?.data.url}
-								</a>
-							)}
-							<span class="roster__meta">
-								{entry.votes}{" "}
-								{entry.votes === 1 ? Content.Word.Vote : Content.Word.Votes}
-							</span>
-						</li>
-					))}
-				</ol>
-			</section>
-		)}
-
-		{lists.length > 0 && (
-			<ul class="pill__row">
-				{lists.map((list) => (
-					<li>
-						<a class="pill__link" href={ListHref(list)}>
-							{list}
-						</a>
-					</li>
-				))}
-			</ul>
-		)}
-
-		{newest.length > 0 && (
-			<section>
-				<h2 class="sheet__heading">{Content.Page.Index.Latest}</h2>
-				<ul class="roster">
-					{newest.map((entry) => (
-						<li class="roster__row">
-							<a class="roster__label" href={BookmarkHref(entry.id)}>
-								{excerpt(entry.data.text)}
-							</a>
-							<span class="roster__meta">
-								@{entry.data.author.handle} ·{" "}
-								{day(entry.data.postedAt ?? entry.data.firstSeenAt)}
-							</span>
-						</li>
-					))}
-				</ul>
-				<p class="mt-4 text-sm">
-					<a class="underline" href={Route.Bookmark}>
-						{Content.Page.Index.All}
-					</a>
-				</p>
-			</section>
-		)}
-
-		<footer class="sheet__foot">
-			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
-			<span>·</span>
-			<a href={Route.List}>{Content.Route.Lists}</a>
-			<span>·</span>
-			<a href={Route.Voted}>{Content.Route.Voted}</a>
-			<span>·</span>
-			<a href={Route.Activity}>{Content.Route.Activity}</a>
-		</footer>
-	</article>
+<Base Description={description} Wide Bare>
+	<Showcase
+		client:visible
+		Stages={Stages}
+		Tiles={Tiles}
+		Note="Scroll through source timelines"
+		Head={Head}
+		Destination="Showcase · Network"
+		Instruction="Owner's picks, in rank order"
+		Empty={Empty}
+	/>
 </Base>

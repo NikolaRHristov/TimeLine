@@ -151,6 +151,7 @@ export const Strings: Readonly<Record<string, string>> = {
 	"CONTENT_STRING_PAGE_LIST_DETAIL_LEDE": "{{count}} {{saved}} {{postNoun}}, newest first.",
 	"CONTENT_STRING_PAGE_LIST_EMPTYBODY": "A list exists once a published post carries its slug. Scrape and publish a post that has one, or leave it - the archive reads the same either way.",
 	"CONTENT_STRING_PAGE_LIST_LEDE": "{{listCount}} {{listNoun}} {{across}} {{total}} {{saved}} {{postNoun}}.",
+	"CONTENT_STRING_PAGE_LIST_RULE": "Every column here is a slug a published post carries, and only a slug that a post carries has a page - a name no post carries is absent from this index rather than linked to nowhere.",
 	"CONTENT_STRING_PAGE_VOTED_BUTTON": "Vote",
 	"CONTENT_STRING_PAGE_VOTED_DESCRIPTION": "{{count}} nominated posts, ranked by votes.",
 	"CONTENT_STRING_PAGE_VOTED_EMPTYBODY": "The candidate index is filled by the owner, one post at a time:",

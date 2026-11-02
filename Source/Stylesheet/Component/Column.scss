@@ -1,0 +1,121 @@
+@use "../Material.scss" as Material;
+
+/**
+ * The public column: the drawer's column geometry without its affordances.
+ *
+ * The drawer's column is a private shape. It carries the drop ghost that
+ * publishes, the tinted selection that names a stage, and a head that says where
+ * in the pipeline the column sits. A public list needs the same geometry and
+ * none of that - the same 12px corner, the same 10px inner padding, the same 6px
+ * between rows - because a reader who has seen the workspace should recognise
+ * the shape, and a second shape would be a second design.
+ *
+ * So this sheet states the geometry only, and it takes it from `Material.face`
+ * rather than importing `Drawer.scss`. Importing the drawer would bring the
+ * publish affordances with it, and a column that cannot publish has no business
+ * drawing a drop target.
+ *
+ * The face is the paper ramp's: `--color-surface` on the page's ground with one
+ * `--color-line` edge. A row inside it steps down to `--color-surface-sunken`,
+ * which is the drawn depth the material uses instead of a shadow - a card sits
+ * in a face the way a face sits on a ground.
+ *
+ * The head is the list's name and the count of posts filed under it, because
+ * that pair is what decides whether a reader opens the column at all. The rows
+ * below are the newest posts, one line each: the column is a preview of the page
+ * it leads to, not a second index.
+ */
+.column-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+	align-items: start;
+	gap: var(--space-3);
+	margin: 0;
+	padding-inline: var(--space-6);
+	list-style: none;
+
+	/* The rule the index states in words. A list exists because a published post
+	   carries its slug, so a name no post carries is absent from this grid rather
+	   than drawn as a link that resolves to nothing. */
+	&__note {
+		margin: var(--space-4) 0 0;
+		font-size: var(--text-xs);
+		color: var(--color-ink-faint);
+	}
+}
+
+.column {
+	@include Material.face(var(--color-surface), var(--color-line), var(--radius-column));
+
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	overflow: clip;
+
+	&__inner {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 10px;
+	}
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-2);
+		min-width: 0;
+	}
+
+	&__slug {
+		@include Material.ellipsis;
+
+		font-size: var(--text-sm);
+		font-weight: 600;
+		color: var(--color-ink);
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+			text-underline-offset: 2px;
+		}
+	}
+
+	&__count {
+		flex-shrink: 0;
+		font-size: var(--text-2xs);
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: var(--color-ink-faint);
+		white-space: nowrap;
+	}
+
+	&__item {
+		@include Material.card(var(--color-surface-sunken), var(--color-line), var(--radius-card));
+
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		padding: 6px 8px;
+		text-decoration: none;
+
+		&:hover {
+			border-color: var(--color-line-strong);
+		}
+	}
+
+	&__title {
+		@include Material.ellipsis;
+
+		flex: 1 1 auto;
+		min-width: 0;
+		font-size: var(--text-xs);
+		color: var(--color-ink-muted);
+	}
+
+	&__meta {
+		flex-shrink: 0;
+		font-size: var(--text-2xs);
+		color: var(--color-ink-faint);
+	}
+}

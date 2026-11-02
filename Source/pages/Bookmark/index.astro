@@ -26,6 +26,7 @@ import { Content } from "@Library/Content.ts";
 import { BookmarkHref, Route } from "@Library/Link.ts";
 import { StageAccent } from "@Library/Stage.ts";
 import { fill } from "@Library/Text.ts";
+import "@Stylesheet/Component/Archive.scss";
 import "@Stylesheet/Component/Note.scss";
 import { getCollection } from "astro:content";
 
@@ -114,7 +115,7 @@ const lede = fill(Content.Page.Bookmark.Lede, {
 
 <Base Title={Content.Route.Bookmarks} Description={description} Wide>
 	<article>
-		<header class="page sheet__head">
+		<header class="archive__block sheet__head">
 			<h1 class="sheet__title">{Content.Route.Bookmarks}</h1>
 			<p class="sheet__lede">{lede}</p>
 		</header>
@@ -124,7 +125,7 @@ const lede = fill(Content.Page.Bookmark.Lede, {
 		))}
 
 		{total === 0 && (
-			<div class="page">
+			<div class="archive__block">
 				<section class="note">
 					<h2 class="note__title">{Content.Empty.Bookmarks}</h2>
 					<p class="note__body">{Content.Document.EmptyBookmarks}</p>
@@ -140,7 +141,7 @@ const lede = fill(Content.Page.Bookmark.Lede, {
 			</div>
 		)}
 
-		<footer class="page sheet__foot">
+		<footer class="archive__block sheet__foot">
 			<a href={Route.List}>{Content.Route.Lists}</a>
 			<span>·</span>
 			<a href={Route.Activity}>{Content.Route.Activity}</a>

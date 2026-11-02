@@ -48,29 +48,33 @@ const Line = (Text: string, Length = 34) => {
 const Recent = <T,>(Items: T[], Read: (Item: T) => string) =>
 	[...Items].sort((Left, Right) => Read(Right).localeCompare(Read(Left)));
 
+/** `1 events` reads as a defect; every label on the rail is a sentence. */
+const Count = (Value: number, Singular: string) =>
+	`${Value} ${Value === 1 ? Singular : `${Singular}s`}`;
+
 const Stages = [
 	{
 		Key: "source",
-		Label: `Source · ${bookmarks.length} events`,
+		Label: `Source · ${Count(bookmarks.length, "event")}`,
 		Tone: StageAccent.source,
 		Events: bookmarks.length,
-		Caption: `${bookmarks.length} events · Source · Selected`,
+		Caption: `${Count(bookmarks.length, "event")} · Source · Selected`,
 	},
 	{
 		Key: "ingestion",
-		Label: `Ingestion · ${events.length} events`,
+		Label: `Ingestion · ${Count(events.length, "event")}`,
 		Tone: StageAccent.ingestion,
 		Events: events.length,
 	},
 	{
 		Key: "processing",
-		Label: `Processing · ${voted.length} events`,
+		Label: `Processing · ${Count(voted.length, "event")}`,
 		Tone: StageAccent.processing,
 		Events: voted.length,
 	},
 	{
 		Key: "review",
-		Label: `Review · ${curated.length} events`,
+		Label: `Review · ${Count(curated.length, "event")}`,
 		Tone: StageAccent.review,
 		Events: curated.length,
 	},

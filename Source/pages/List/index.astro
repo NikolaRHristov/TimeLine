@@ -1,12 +1,30 @@
 ---
 /**
- * The lists index: one entry per slug the published posts carry.
+ * The lists index: one column per slug the published posts carry.
  *
  * The set is derived from the posts, never from a fixed list of names - the
  * person who configured the archive decides what its lists are called, and this
  * page reads that decision back out of the published content. A clone with one
- * synthetic post therefore shows one list, and a clone with none shows the
+ * synthetic post therefore shows one column, and a clone with none shows the
  * empty state rather than a directory of links that go nowhere.
+ *
+ * A column is the drawer's column drawn as a public surface: the same face, the
+ * same 12px corner, the same 10px inner padding and the same one-line rows -
+ * without the drop ghost, the stage tint or the private hint. The geometry comes
+ * from `Material.face` in `Component/Column.scss`, not from
+ * `Component/Drawer.scss`: a page that imported the drawer would inherit its
+ * publish affordances along with its shape.
+ *
+ * The head of a column is the slug and the count, and the rows under it are the
+ * newest posts filed there, because that pair is what decides whether a reader
+ * opens the column at all. Four rows: the drawer shows four, and a longer
+ * preview would be a second index.
+ *
+ * A slug has a page only while a published post carries it, which is what keeps
+ * `/List/<slug>` from existing for a name that resolves to nothing. A derived
+ * index cannot show that absence, so the page states the rule in words under the
+ * grid rather than leaving a reader to wonder why a list they configured is
+ * missing.
  *
  * The unsorted bucket is for a post no list has claimed yet. It is listed like
  * any other list because it is one: a visitor looking for something they know
@@ -14,24 +32,48 @@
  */
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
-import { ListHref, Route } from "@Library/Link.ts";
+import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
 import { fill } from "@Library/Text.ts";
+import "@Stylesheet/Component/Column.scss";
 import "@Stylesheet/Component/Note.scss";
-import "@Stylesheet/Component/Roster.scss";
 import { getCollection } from "astro:content";
 
 /** The bucket a post lands in when no list has claimed it. */
 const Unsorted = Content.Word.Unsorted;
 
+/** How many rows a column previews before it stops: the drawer's own count. */
+const Preview = 4;
+
 const bookmarks = await getCollection("Bookmark");
 
 const counted = new Map<string, number>();
+const previews = new Map<string, (typeof bookmarks)[number][]>();
 
-for (const entry of bookmarks) {
+/**
+ * The newest first, before the buckets are filled.
+ *
+ * Walking one ordered archive and stopping each bucket at `Preview` is what
+ * makes a preview the newest four rather than the first four the filesystem
+ * happened to list.
+ */
+const newest = [...bookmarks].sort((left, right) =>
+	(right.data.postedAt ?? right.data.firstSeenAt).localeCompare(
+		left.data.postedAt ?? left.data.firstSeenAt,
+	),
+);
+
+for (const entry of newest) {
 	const lists = entry.data.lists.length > 0 ? entry.data.lists : [Unsorted];
 
 	for (const list of lists) {
 		counted.set(list, (counted.get(list) ?? 0) + 1);
+
+		const bucket = previews.get(list) ?? [];
+
+		if (bucket.length < Preview) {
+			bucket.push(entry);
+			previews.set(list, bucket);
+		}
 	}
 }
 
@@ -59,46 +101,69 @@ const lede = fill(Content.Page.List.Lede, {
 	saved: Content.Word.Saved,
 	postNoun: total === 1 ? Content.Word.Post : Content.Word.Posts,
 });
+
+/** One line of a post, short enough to sit in a column row. */
+const Line = (Text: string, Length = 48): string => {
+	const Flat = Text.replace(/\s+/g, " ").trim();
+
+	return Flat.length > Length ? `${Flat.slice(0, Length - 1)}…` : Flat;
+};
 ---
 
-<Base Title={Content.Route.Lists} Description={description}>
-	<article class="sheet">
-		<header class="sheet__head">
+<Base Title={Content.Route.Lists} Description={description} Wide>
+	<article>
+		<header class="page sheet__head">
 			<h1 class="sheet__title">{Content.Route.Lists}</h1>
 			<p class="sheet__lede">{lede}</p>
 		</header>
 
 		{lists.length > 0 && (
-			<ul class="roster">
+			<ul class="column-grid">
 				{lists.map(([list, count]) => (
-					<li class="roster__row">
-						<a class="roster__label" href={ListHref(list)}>
-							{list}
-						</a>
-						<span class="roster__meta">
-							{count} {count === 1 ? Content.Word.Post : Content.Word.Posts}
-						</span>
+					<li class="column">
+						<div class="column__inner">
+							<div class="column__head">
+								<a class="column__slug" href={ListHref(list)}>
+									{list}
+								</a>
+								<span class="column__count">
+									{count} {count === 1 ? Content.Word.Post : Content.Word.Posts}
+								</span>
+							</div>
+
+							{previews.get(list)?.map((entry) => (
+								<a class="column__item" href={BookmarkHref(entry.id)}>
+									<span class="column__title">{Line(entry.data.text)}</span>
+									<span class="column__meta">@{entry.data.author.handle}</span>
+								</a>
+							))}
+						</div>
 					</li>
 				))}
 			</ul>
 		)}
 
-		{lists.length === 0 && (
-			<section class="note">
-				<h2 class="note__title">{Content.Empty.Lists}</h2>
-				<p class="note__body">{Content.Page.List.EmptyBody}</p>
-				<ol>
-					<li>
-						<code>{Content.Example.Scrape}</code>
-					</li>
-					<li>
-						<code>{Content.Example.Publish}</code>
-					</li>
-				</ol>
-			</section>
-		)}
+		<div class="page">
+			{lists.length > 0 && <p class="column-grid__note">{Content.Page.List.Rule}</p>}
 
-		<footer class="sheet__foot">
+			{lists.length === 0 && (
+				<section class="note">
+					<h2 class="note__title">{Content.Empty.Lists}</h2>
+					<p class="note__body">{Content.Page.List.EmptyBody}</p>
+					<p class="note__body">{Content.Page.List.Rule}</p>
+					<ol>
+						<li>
+							<code>{Content.Example.Scrape}</code>
+						</li>
+						<li>
+							<code>{Content.Example.Publish}</code>
+						</li>
+					</ol>
+				</section>
+			)}
+		</div>
+
+		<footer class="page sheet__foot">
 			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
 			<span>·</span>
 			<a href={Route.Voted}>{Content.Route.Voted}</a>

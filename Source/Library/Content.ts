@@ -276,6 +276,10 @@ export const Content = {
 				process.env["CONTENT_STRING_PAGE_LIST_LEDE"],
 				"CONTENT_STRING_PAGE_LIST_LEDE",
 			),
+			Rule: content(
+				process.env["CONTENT_STRING_PAGE_LIST_RULE"],
+				"CONTENT_STRING_PAGE_LIST_RULE",
+			),
 		},
 		Voted: {
 			Button: content(

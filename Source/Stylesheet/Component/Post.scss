@@ -1,16 +1,36 @@
 @use "../Material.scss" as Material;
 
-// The post: one published record, drawn as a light tile on the workspace ground.
+// The detail page's surface: the workspace ground, the measured column the tile
+// hangs from, and the tile itself.
 //
-// The detail page mounts the workspace frame - the rail on the left, the ground
-// behind - so the record itself is the canvas, and a canvas is a tile. It is the
-// material's card on the paper ramp, one value above the ground it sits on, with
-// the tile's corner because a tile is the shape this side of the site gives a
-// record.
+// The ground is the workspace's - the same frame the drawer sits in - so the
+// page reuses `.workspace` and only states what a single record changes: the
+// column hangs off the rail instead of centring itself in the body, and the body
+// is padded so the tile is not welded to the rail's first pixel. The measure
+// itself still comes from the shell (`.page`); nothing here sets a width.
 //
-// Nothing here names a fill or a line: `Material.card` draws the face and the
-// three steps of the paper ramp colour the ink, so the note, the pill and this
-// tile cannot drift apart the first time one of them is edited.
+// The tile is the material's card on the paper ramp - one value above the ground
+// it sits on, the tile's corner because a tile is the shape this side of the
+// site gives a record. Nothing here names a fill or a line: `Material.card`
+// draws the face and the three steps of the paper ramp colour the ink, so the
+// note, the pill and this tile cannot drift apart the first time one is edited.
+.detail {
+	// The ground carries past the record to the footer: a frame that stops
+	// mid-page reads as a broken band rather than as the surface the page is on.
+	min-height: 100%;
+
+	.workspace__body {
+		padding-block: var(--space-6);
+	}
+
+	/* The shell centres its column. A record hangs off the rail, so the two
+	   share a gutter instead of floating apart with a field of ground between
+	   them. */
+	.page {
+		margin-inline: 0 auto;
+	}
+}
+
 .post {
 	@include Material.card(var(--color-surface), var(--color-line), var(--radius-tile));
 

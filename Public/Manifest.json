@@ -1,10 +1,10 @@
 {
-	"background_color": "// TODO Set the background color of the app",
-	"categories": [],
+	"background_color": "#f5f5f5",
+	"categories": ["productivity"],
 	"display": "minimal-ui",
-	"name": "// TODO Use the same title as in template.html",
+	"name": "TimeLine",
 	"orientation": "landscape",
-	"short_name": "// TODO Title but lowercase",
+	"short_name": "TimeLine",
 	"start_url": "/",
-	"theme_color": "// TODO Use the same theme color from template.html"
+	"theme_color": "#1c1c1e"
 }
