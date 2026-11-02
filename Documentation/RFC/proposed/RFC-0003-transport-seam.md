@@ -45,7 +45,7 @@ honest - a read from `view` and a read from `cdp` must differ only in the `sourc
 | `view` is read-only          | `post like --id X --transport view` exits 2 with `read-only-transport` |
 | Shapes match                 | `post extract` from both transports differs only in `source`           |
 | No silent fallback           | stop the browser, `tab list` returns `cdp-unreachable`                 |
-| Commands are transport-blind | `grep -rn "Transport/Cdp" Maintain/Source/Command` is empty            |
+| Commands are transport-blind | `grep -rn "Transport/CDP" Maintain/Source/Command` is empty            |
 
 ## Open questions
 

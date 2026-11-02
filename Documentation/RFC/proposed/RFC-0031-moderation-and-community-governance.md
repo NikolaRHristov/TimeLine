@@ -109,3 +109,8 @@ with a deadline - without adding a lifecycle state.
   and the tombstone deliberately does not keep it (RFC-0028 §2) - so an appeal can clear the record
   but cannot restore the content, and whether that is acceptable is a governance question this
   record leaves open.
+- Whether a host, as the database owner, can write a table directly instead of calling a reducer.
+  `AGENTS.md:46` makes a private table accessible to reducers and the database owner, and rule 4
+  denies the host a delete path - but a direct write would be a path no reducer authorizes. UNKNOWN.
+  Spike: as the owner's identity, attempt a table write on a local database without calling a
+  reducer.

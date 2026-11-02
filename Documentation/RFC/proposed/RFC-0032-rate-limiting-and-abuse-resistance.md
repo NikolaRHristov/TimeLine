@@ -91,14 +91,14 @@ rule 3 puts the cost there and RFC-0039 prices a membership row.
 
 ## Verification
 
-| Claim                                        | Test                                                                                                                                            |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rate is checked before the write             | submit past the per-identity limit from one identity; the row count is unchanged and the refusal reads `rate-limited` with the window (intent)  |
-| Quota exhaustion freezes rather than deletes | fill a fixture room to its quota; writes refuse, reads return every prior row, and the export still completes (intent)                          |
-| An invitation is bounded and expiring        | accept an invitation `maxUses + 1` times, and accept another after `expiresAt`; both refuse with `invite-spent` and `invite-expired` (RFC-0014) |
-| The invite ledger is readable                | `spacetime sql <room> "SELECT issuer, count(*) FROM invite GROUP BY issuer"` - aggregate client-side, since the engine has no GROUP BY (intent) |
-| A harvest job over budget is not claimed     | set a job's budget below its selector's size; the worker skips it and the completeness number for that identity drops (RFC-0021 §5, RFC-0004)   |
-| A room cannot set a quota above the host     | write a quota term above the host ceiling in a probe room; `config show` reports the validation code (RFC-0011)                                 |
+| Claim                                        | Test                                                                                                                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rate is checked before the write             | submit past the per-identity limit from one identity; the row count is unchanged and the refusal reads `rate-limited` with the window (intent)                                  |
+| Quota exhaustion freezes rather than deletes | fill a fixture room to its quota; writes refuse, reads return every prior row, and the export still completes (intent)                                                          |
+| An invitation is bounded and expiring        | accept an invitation `maxUses + 1` times, and accept another after `expiresAt`; both refuse with `invite-spent` and `invite-expired` (RFC-0014)                                 |
+| The invite ledger is readable                | `spacetime sql <room> "SELECT issuer FROM invite"` returns one row per invitation and the count per issuer is aggregated client-side, since the engine has no GROUP BY (intent) |
+| A harvest job over budget is not claimed     | set a job's budget below its selector's size; the worker skips it and the completeness number for that identity drops (RFC-0021 §5, RFC-0004)                                   |
+| A room cannot set a quota above the host     | write a quota term above the host ceiling in a probe room; `config show` reports the validation code (RFC-0011)                                                                 |
 
 ## Open questions
 

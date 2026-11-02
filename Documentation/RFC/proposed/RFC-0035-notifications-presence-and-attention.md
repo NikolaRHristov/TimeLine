@@ -105,3 +105,8 @@ in a large room - the budget is a product answer to a scale fact, not a preferen
   per-room budget protects the room. With many small rooms the global reading is the one a person
   wants and the per-room one is what a room can set, so the two need a rule this record does not
   give.
+- Whether a client can resume a subscription from a stored cursor, which is what a digest over a
+  period of absence would need. A subscription sends all matching rows on subscribe and updates
+  afterwards (`AGENTS.md` subscriptions section) and an event table keeps nothing for a late joiner
+  (`AGENTS.md:68`); whether a cursor exists is UNKNOWN. Spike: subscribe, disconnect, reconnect and
+  compare the first batch against the rows already held.

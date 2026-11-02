@@ -103,3 +103,7 @@ handle is only meaningful inside a room whose certificate issued it.
   a person who wants their name off the site is asking for a change to content they published under
   RFC-0012 - withdrawal is a narrowing, so the answer is probably yes, but the mechanism is
   undecided.
+- Whether an `Identity` can be turned into a verifying key inside a module, which is what lets a
+  fingerprint be derived from the key rather than stored beside it. `ctx.sender` is an identity
+  (`AGENTS.md` identity section) and whether it carries key material is UNKNOWN. Spike: compare a
+  module's view of `ctx.sender` against the client's public key for the same connection.
