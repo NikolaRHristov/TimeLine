@@ -281,6 +281,8 @@ The full command surface, JSON shapes and error codes are in
 - **`Documentation/Reference/Storage-Model.md`** - the two stores, and why there are two.
 - **`Documentation/Reference/Spacetime.md`** - the optional SpacetimeDB projection.
 - **`Documentation/Reference/Voting.md`** - the Voted index, owner approval, and the Firebase setup.
+- **`Documentation/Reference/Design-Composition.md`** - the measured geometry of the workspace
+  frame.
 - **`Documentation/Skill/`** - the operating procedures an agent loads before touching the tooling.
 
 ---

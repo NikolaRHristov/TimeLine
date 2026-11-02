@@ -34,6 +34,8 @@ what is intended, the RFCs state what was decided, and the skills state how to d
 - **`Reference/Content.md`** - the content layer: strings baked in from `Content/` at build time.
 - **`Reference/URL-And-Shell.md`** - URL targeting and the shell's quoting rules.
 - **`Reference/Voting.md`** - the Voted index, owner approval, and bringing your own Firebase.
+- **`Reference/Design-Composition.md`** - the measured geometry of the workspace frame: the rail's
+  depth table, the drawer's item heights, the canvas grid.
 
 ---
 
