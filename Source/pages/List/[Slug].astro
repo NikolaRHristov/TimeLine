@@ -20,11 +20,6 @@
  * composed page. That is the same rule `/Bookmark` follows, and it is why a thin
  * list is a normal state here instead of a broken grid.
  *
- * The tiles carry the template accent - the material's word for a shape that is
- * reused - because a list is a filing decision, not a capture. The accent says
- * the same thing on every tile here, which is the honest reading: this whole
- * page is one list.
- *
  * The slug is a route parameter, so the path is `/List/<slug>` - one segment,
  * never nested. A slug comes from the person's configuration and is not trusted
  * to be URL-safe: `Canonical()` percent-encodes it when it builds the link, and
@@ -36,7 +31,6 @@ import Bento, { Seats, type Tile } from "@Component/Workspace/Bento.tsx";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
 import { BookmarkHref, Route } from "@Library/Link.ts";
-import { StageAccent } from "@Library/Stage.ts";
 import { fill } from "@Library/Text.ts";
 import "@Stylesheet/Component/Note.scss";
 import { getCollection } from "astro:content";
@@ -107,7 +101,6 @@ const Place = (entry: (typeof entries)[number], Index: number): Tile => ({
 		entry.data.postedAt ?? entry.data.firstSeenAt,
 	)}`,
 	Href: BookmarkHref(entry.id),
-	Stage: StageAccent.template,
 });
 
 /**

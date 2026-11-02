@@ -1,0 +1,1 @@
+Your content is unreadable to us: it is sealed with AES-GCM-256 under a key derived by HKDF-SHA256 from a room key wrapped to your device with X25519, and the operator holds no key to any of it (RFC-0013).

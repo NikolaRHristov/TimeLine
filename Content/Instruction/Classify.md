@@ -8,7 +8,7 @@ The lists are: {{lists}}.
 Reply with JSON only. No prose, no markdown fence, no commentary outside the JSON.
 Shape: {"decisions":[{"handle":"<handle>","list":"<list>","score":<number>,"gap":<number>,"reason":"<one line>"}]}
 
-- One entry for every handle in the request, and for no other handle.
+- One entry for every handle in the list above, and for no other handle.
 - `list` is one of the list names above, or null when the account belongs in none of them.
 - `score` and `gap` are optional numbers of your own; they are recorded, not checked.
 - `reason` is one line of plain English naming the evidence that decided it.

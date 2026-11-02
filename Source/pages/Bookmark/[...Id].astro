@@ -132,7 +132,7 @@ const measured = [
 	Title={fill(Content.Page.Bookmark.Detail.Title, { name: author.name })}
 	Description={entry.data.text.slice(0, 160)}
 	Wide>
-	<div class="workspace">
+	<div class="workspace detail">
 		<ProvenanceRail
 			client:visible
 			Stages={Stages}
@@ -141,122 +141,128 @@ const measured = [
 		/>
 
 		<div class="workspace__body">
-			<article class="page post">
-				<nav class="post__back">
-					<a href={Route.Bookmark}>{Content.Page.Bookmark.Detail.Back}</a>
-				</nav>
+			<div class="page">
+				<article class="post">
+					<nav class="post__back">
+						<a href={Route.Bookmark}>{Content.Page.Bookmark.Detail.Back}</a>
+					</nav>
 
-				<header class="post__head">
-					<p class="post__eyebrow">
-						@{author.handle}
-						{author.verified && (
-							<span title={Content.Page.Bookmark.Detail.Verified}>✓</span>
-						)}
-					</p>
-					<h1 class="post__title">{author.name}</h1>
-					{entry.data.postedAt && (
-						<time class="post__time" datetime={entry.data.postedAt}>
-							{fill(Content.Page.Bookmark.Detail.Posted, {
-								day: day(entry.data.postedAt),
-							})}
-						</time>
-					)}
-					{rank !== null && (
-						<p class="post__rank">
-							{fill(Content.Page.Bookmark.Detail.Curated, {
-								rank: String(rank.data.rank),
-								count: String(rank.data.votes),
-								voteNoun:
-									rank.data.votes === 1 ? Content.Word.Vote : Content.Word.Votes,
-							})}
+					<header class="post__head">
+						<p class="post__eyebrow">
+							@{author.handle}
+							{author.verified && (
+								<span title={Content.Page.Bookmark.Detail.Verified}>✓</span>
+							)}
 						</p>
+						<h1 class="post__title">{author.name}</h1>
+						{entry.data.postedAt && (
+							<time class="post__time" datetime={entry.data.postedAt}>
+								{fill(Content.Page.Bookmark.Detail.Posted, {
+									day: day(entry.data.postedAt),
+								})}
+							</time>
+						)}
+						{rank !== null && (
+							<p class="post__rank">
+								{fill(Content.Page.Bookmark.Detail.Curated, {
+									rank: String(rank.data.rank),
+									count: String(rank.data.votes),
+									voteNoun:
+										rank.data.votes === 1
+											? Content.Word.Vote
+											: Content.Word.Votes,
+								})}
+							</p>
+						)}
+					</header>
+
+					<p class="post__text">{entry.data.text}</p>
+
+					{entry.data.lists.length > 0 && (
+						<ul class="pill__row">
+							{entry.data.lists.map((list) => (
+								<li>
+									<a class="pill__link" href={ListHref(list)}>
+										{list}
+									</a>
+								</li>
+							))}
+						</ul>
 					)}
-				</header>
 
-				<p class="post__text">{entry.data.text}</p>
+					{(pictures.length > 0 || videos.length > 0) && (
+						<ul class="post__media">
+							{pictures.map((item) => (
+								<li>
+									<img
+										src={item.url}
+										alt=""
+										loading="lazy"
+										decoding="async"
+										referrerpolicy="no-referrer"
+									/>
+								</li>
+							))}
+							{videos.map((item) => (
+								<li>
+									<video
+										src={item.url}
+										controls
+										preload="metadata"
+										playsinline
+										referrerpolicy="no-referrer"
+									/>
+								</li>
+							))}
+						</ul>
+					)}
 
-				{entry.data.lists.length > 0 && (
-					<ul class="pill__row">
-						{entry.data.lists.map((list) => (
-							<li>
-								<a class="pill__link" href={ListHref(list)}>
-									{list}
-								</a>
-							</li>
-						))}
-					</ul>
-				)}
+					{links.length > 0 && (
+						<ul class="post__links">
+							{links.map((item) => (
+								<li>
+									<a
+										class="post__link"
+										href={item.url}
+										rel="noopener noreferrer nofollow">
+										{item.url}
+									</a>
+								</li>
+							))}
+						</ul>
+					)}
 
-				{(pictures.length > 0 || videos.length > 0) && (
-					<ul class="post__media">
-						{pictures.map((item) => (
-							<li>
-								<img
-									src={item.url}
-									alt=""
-									loading="lazy"
-									decoding="async"
-									referrerpolicy="no-referrer"
-								/>
-							</li>
-						))}
-						{videos.map((item) => (
-							<li>
-								<video
-									src={item.url}
-									controls
-									preload="metadata"
-									playsinline
-									referrerpolicy="no-referrer"
-								/>
-							</li>
-						))}
-					</ul>
-				)}
+					{measured.length > 0 && (
+						<dl class="post__metrics">
+							{measured.map(([label, value]) => (
+								<div class="post__metric">
+									<dt class="post__metric-label">{label}</dt>
+									<dd class="post__metric-value">{value.toLocaleString("en")}</dd>
+								</div>
+							))}
+						</dl>
+					)}
 
-				{links.length > 0 && (
-					<ul class="post__links">
-						{links.map((item) => (
-							<li>
-								<a
-									class="post__link"
-									href={item.url}
-									rel="noopener noreferrer nofollow">
-									{item.url}
-								</a>
-							</li>
-						))}
-					</ul>
-				)}
-
-				{measured.length > 0 && (
-					<dl class="post__metrics">
-						{measured.map(([label, value]) => (
-							<div class="post__metric">
-								<dt class="post__metric-label">{label}</dt>
-								<dd class="post__metric-value">{value.toLocaleString("en")}</dd>
-							</div>
-						))}
-					</dl>
-				)}
-
-				<footer class="post__foot">
-					<a href={entry.data.url} rel="noopener noreferrer">
-						{Content.Page.Bookmark.Detail.Open}
-					</a>
-					<span>
-						{fill(Content.Page.Bookmark.Detail.Saved, {
-							day: day(entry.data.firstSeenAt),
-						})}
-					</span>
-					<span>
-						{fill(Content.Page.Bookmark.Detail.LastRead, {
-							day: day(entry.data.scrapedAt),
-						})}
-					</span>
-					<a href={BookmarkHref(entry.id)}>{Content.Page.Bookmark.Detail.Permalink}</a>
-				</footer>
-			</article>
+					<footer class="post__foot">
+						<a href={entry.data.url} rel="noopener noreferrer">
+							{Content.Page.Bookmark.Detail.Open}
+						</a>
+						<span>
+							{fill(Content.Page.Bookmark.Detail.Saved, {
+								day: day(entry.data.firstSeenAt),
+							})}
+						</span>
+						<span>
+							{fill(Content.Page.Bookmark.Detail.LastRead, {
+								day: day(entry.data.scrapedAt),
+							})}
+						</span>
+						<a href={BookmarkHref(entry.id)}>
+							{Content.Page.Bookmark.Detail.Permalink}
+						</a>
+					</footer>
+				</article>
+			</div>
 		</div>
 	</div>
 </Base>

@@ -1,0 +1,1 @@
+The operator answers for the network and not for what travels: availability, authenticated transport, and a status surface that reports only what it can observe - connection, sync, queue depth and failures (RFC-0048, RFC-0038).

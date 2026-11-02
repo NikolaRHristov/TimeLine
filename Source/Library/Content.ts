@@ -43,6 +43,20 @@ export const Repository = process.env["REPOSITORY_URL"] ?? "";
 
 export const Content = {
 	Brand: {
+		/**
+		 * The carrier's signature, and the only place the company is named
+		 * (RFC-0055 rule 3).
+		 *
+		 * The network is named by whoever runs it - `Brand.Title` - and the
+		 * company that carries it signs the footer once. A second mention
+		 * anywhere in the product surface is the advertising this rule exists
+		 * to prevent, and `Scripts/Position.mjs` counts the mentions so it
+		 * cannot creep in one component at a time.
+		 */
+		Attribution: content(
+			process.env["CONTENT_STRING_BRAND_ATTRIBUTION"],
+			"CONTENT_STRING_BRAND_ATTRIBUTION",
+		),
 		Description: content(
 			process.env["CONTENT_STRING_BRAND_DESCRIPTION"],
 			"CONTENT_STRING_BRAND_DESCRIPTION",
@@ -58,6 +72,25 @@ export const Content = {
 		),
 		Short: content(process.env["CONTENT_STRING_BRAND_SHORT"], "CONTENT_STRING_BRAND_SHORT"),
 		Title: content(process.env["CONTENT_STRING_BRAND_TITLE"], "CONTENT_STRING_BRAND_TITLE"),
+	},
+	/**
+	 * The capability claims a showcase page states (RFC-0053, RFC-0055 rule 4).
+	 *
+	 * A claim is not a slogan: it names the protocol that carries it or the
+	 * record it is computed from, so a reader can check it against the record
+	 * the way every other surface in this repository states a fact with the
+	 * command that proves it. `Scripts/Position.mjs` fails on a claim whose
+	 * sentence names neither.
+	 */
+	Claim: {
+		Cipher: content(process.env["CONTENT_STRING_CLAIM_CIPHER"], "CONTENT_STRING_CLAIM_CIPHER"),
+		Grant: content(process.env["CONTENT_STRING_CLAIM_GRANT"], "CONTENT_STRING_CLAIM_GRANT"),
+		Moderation: content(
+			process.env["CONTENT_STRING_CLAIM_MODERATION"],
+			"CONTENT_STRING_CLAIM_MODERATION",
+		),
+		Motion: content(process.env["CONTENT_STRING_CLAIM_MOTION"], "CONTENT_STRING_CLAIM_MOTION"),
+		Status: content(process.env["CONTENT_STRING_CLAIM_STATUS"], "CONTENT_STRING_CLAIM_STATUS"),
 	},
 	Document: {
 		EmptyBookmarks: content(
@@ -380,6 +413,17 @@ export const Content = {
 		Events: content(process.env["CONTENT_STRING_WORD_EVENTS"], "CONTENT_STRING_WORD_EVENTS"),
 		List: content(process.env["CONTENT_STRING_WORD_LIST"], "CONTENT_STRING_WORD_LIST"),
 		Lists: content(process.env["CONTENT_STRING_WORD_LISTS"], "CONTENT_STRING_WORD_LISTS"),
+		/**
+		 * The unit of action travelling through the network (RFC-0055 rule 2).
+		 *
+		 * `motion` is the copy's word for it, and it replaces `request`,
+		 * `action`, `job` and `event` wherever the product speaks about one. The
+		 * record that stores it keeps its own name - `Event`, `vote.cast` -
+		 * because renaming a table to match a brand is a migration with no
+		 * product benefit.
+		 */
+		Motion: content(process.env["CONTENT_STRING_WORD_MOTION"], "CONTENT_STRING_WORD_MOTION"),
+		Motions: content(process.env["CONTENT_STRING_WORD_MOTIONS"], "CONTENT_STRING_WORD_MOTIONS"),
 		Post: content(process.env["CONTENT_STRING_WORD_POST"], "CONTENT_STRING_WORD_POST"),
 		Posts: content(process.env["CONTENT_STRING_WORD_POSTS"], "CONTENT_STRING_WORD_POSTS"),
 		Recorded: content(
