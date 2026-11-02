@@ -84,7 +84,7 @@
 		width: 9px;
 		height: 9px;
 		margin-top: 0.3rem;
-		background: var(--row-tone);
+		background: var(--row-tone, var(--color-ink-faint));
 		border: 2px solid var(--color-surface);
 		border-radius: 1px;
 	}

@@ -907,10 +907,11 @@ export const Content = {
 		 * `action`, `job` and `event` wherever the product speaks about one. The
 		 * record that stores it keeps its own name - `Event`, `vote.cast` -
 		 * because renaming a table to match a brand is a migration with no
-		 * product benefit.
+		 * product benefit. The plural is not a separate string: a surface that
+		 * counts motions is a surface that does not exist yet, and a word the
+		 * site never prints is a word it should not ship.
 		 */
 		Motion: content(process.env["CONTENT_STRING_WORD_MOTION"], "CONTENT_STRING_WORD_MOTION"),
-		Motions: content(process.env["CONTENT_STRING_WORD_MOTIONS"], "CONTENT_STRING_WORD_MOTIONS"),
 		Post: content(process.env["CONTENT_STRING_WORD_POST"], "CONTENT_STRING_WORD_POST"),
 		Posts: content(process.env["CONTENT_STRING_WORD_POSTS"], "CONTENT_STRING_WORD_POSTS"),
 		Recorded: content(

@@ -31,8 +31,9 @@ Two words stay apart on purpose:
   publish, a build. The Activity page counts events because it reports the pipeline, not the
   network, and calling a scrape a motion would name a participant that does not exist.
 
-The noun lives in `Content/String/Word/Motion.md` and `Word/Motions.md` and reaches a page as
-`Content.Word.Motion`, so a surface that counts motions counts them in the same word.
+The noun lives in `Content/String/Word/Motion.md` and reaches the page as `Content.Word.Motion`,
+which is what the showcase's motion card is labelled with - the word is printed, not just declared.
+A surface that counts motions adds the plural in the same change that needs it.
 
 ## The brand appears once
 

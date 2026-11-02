@@ -73,6 +73,31 @@ status band that reports itself only in colour is the failure RFC-0048 exists to
 
 Those are the numbers that a screenshot cannot distinguish and a stylesheet can silently lose.
 
+The seam is also measured for its state, because `/Workspace` is public and the build's own state is
+the anonymous one (RFC-0054): the publish control must read `locked` with `aria-disabled="true"`,
+and its note must state the reason a drop cannot cross - a published record carries an author. A
+page whose seam silently offered the verb would pass every geometric invariant and still be wrong,
+which is why the state is asserted beside the frame.
+
+## The showcase pages
+
+The five pages that are not the workspace are showcases (RFC-0053), and they have their own script:
+
+```sh
+node Documentation/Skill/Design-Verification/Reference/verify-showcase.mjs
+```
+
+It serves the same build, probes `/`, `/Bookmark`, `/List`, `/Voted` and `/Activity` at 1440 wide,
+and asserts what a showcase page can be wrong about: the rail is 224 wide, sits at the page's left
+edge and stays in view while the page is read; the hero takes the one extra type step (48px); the
+page holds three boxes, each bleeding to the page's own edge with the tile's 24px corner on the side
+that is still inside the page, in the canvas's own three greys; the rail is a table of contents
+whose every band resolves to a section that exists; and no record is drawn at all - no canvas, no
+drawer, no seam.
+
+The last one is the point of the whole check. A showcase page that grew a tile would still look
+right, and would have become a data surface - the state RFC-0053 exists to keep it out of.
+
 ## Extending it
 
 An invariant is one line in the `Frame` table: a label, a reader over the measured box, and either a
@@ -85,6 +110,7 @@ proves the implementation agrees with itself.
 
 ## References
 
-| File                     | Covers                                                       |
-| ------------------------ | ------------------------------------------------------------ |
-| `verify-composition.mjs` | Serve, probe and assert the built workspace against the spec |
+| File                     | Covers                                                           |
+| ------------------------ | ---------------------------------------------------------------- |
+| `verify-composition.mjs` | Serve, probe and assert the built workspace against the spec     |
+| `verify-showcase.mjs`    | Serve, probe and assert the five showcase pages against RFC-0053 |

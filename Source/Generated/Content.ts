@@ -251,7 +251,7 @@ export const Strings: Readonly<Record<string, string>> = {
 	"CONTENT_STRING_REFERENCE_VOTING": "Documentation/Reference/Voting.md",
 	"CONTENT_STRING_ROUTE_ACTIVITY": "Activity",
 	"CONTENT_STRING_ROUTE_BOOKMARKS": "Bookmarks",
-	"CONTENT_STRING_ROUTE_CURATED": "Curated",
+	"CONTENT_STRING_ROUTE_CURATED": "Overview",
 	"CONTENT_STRING_ROUTE_LISTS": "Lists",
 	"CONTENT_STRING_ROUTE_VOTED": "Voted",
 	"CONTENT_STRING_SHELL_MARK": "TL",

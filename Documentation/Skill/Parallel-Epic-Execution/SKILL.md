@@ -83,6 +83,15 @@ At the end, one pass, in this order - each step cheap enough that failing early 
   after the tree stops moving.
 - **Skipping validation entirely is not the rule.** Deferring is not dropping: an epic that ends
   without the boundary pass is unfinished.
+- **A card that rewrites files another card owns mid-run is a blocked card, not a race.** When a
+  scope reversal puts two cards on the same file, the later record has to be amended before either
+  worker continues - guessing which record wins costs one of them the whole run. Stop and escalate;
+  the cost of one blocked card is smaller than two implementations of one page.
+- **A restore after a reversal is a byte-identical copy, proven by hash.** Take the file from the
+  commit or the preserved copy, write it, then compare `git hash-object <path>` with
+  `git rev-parse <commit>:<path>` (or `cmp` against the preserved copy). A restore that only looks
+  right is a second implementation, and the measurements made against the first one no longer
+  describe it.
 
 ## Claim → test
 
@@ -92,3 +101,4 @@ At the end, one pass, in this order - each step cheap enough that failing early 
 | Validation ran once            | one `pnpm run check` at the end, not N                               |
 | Storage untouched by code work | shadow post count unchanged by a code-only card                      |
 | Ownership was disjoint         | no two concurrent cards touched the same folder                      |
+| A restore is the original      | `git hash-object` of every restored file equals its source blob      |

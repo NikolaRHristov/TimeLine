@@ -57,16 +57,25 @@ import { extname, join, normalize, relative, resolve } from "node:path";
 // none, and both are complete first paints.
 // ---------------------------------------------------------------------------
 
+/**
+ * What every showcase page must show before a script runs (RFC-0053).
+ *
+ * The five pages that are not the workspace share one shape - a contents rail,
+ * three boxes and one way into the workspace - so they share one profile. A
+ * page that lost its rail, or grew a fourth box, is a change to the showcase
+ * surface, and this is where it is noticed.
+ */
+const Showcase = {
+	Title: "h1.board__title",
+	Require: [
+		{ Selector: ".provenance__band", Min: 1 },
+		{ Selector: "section.board__box", Min: 3 },
+		{ Selector: ".board__open[href]", Min: 1 },
+	],
+};
+
 const Profiles = [
-	{
-		Path: "/",
-		Title: "h1.board__title",
-		Require: [
-			{ Selector: ".provenance__band", Min: 1 },
-			{ Selector: "section.board__box", Min: 1 },
-			{ Selector: ".board__open[href]", Min: 1 },
-		],
-	},
+	{ Path: "/", ...Showcase },
 	{
 		Path: "/Workspace/",
 		Title: ".drawer__name",
@@ -94,20 +103,7 @@ const Profiles = [
 			{ Selector: ".security__mark", Min: 4 },
 		],
 	},
-	{
-		Path: "/Bookmark/",
-		Title: "h1.sheet__title",
-		Require: [
-			{ Selector: "article.sheet", Min: 1 },
-			{ Selector: ".sheet__lede", Min: 1 },
-		],
-		Some: [
-			[
-				{ Selector: ".roster__row", Min: 1 },
-				{ Selector: ".note", Min: 1 },
-			],
-		],
-	},
+	{ Path: "/Bookmark/", ...Showcase },
 	{
 		Path: "/Bookmark/:Id/",
 		Title: "h1",
@@ -117,17 +113,7 @@ const Profiles = [
 			{ Selector: "a[href]", Min: 3 },
 		],
 	},
-	{
-		Path: "/List/",
-		Title: "h1.sheet__title",
-		Require: [{ Selector: "article.sheet", Min: 1 }],
-		Some: [
-			[
-				{ Selector: ".roster__row", Min: 1 },
-				{ Selector: ".note", Min: 1 },
-			],
-		],
-	},
+	{ Path: "/List/", ...Showcase },
 	{
 		Path: "/List/:Slug/",
 		Title: "h1.sheet__title",
@@ -139,28 +125,8 @@ const Profiles = [
 			],
 		],
 	},
-	{
-		Path: "/Voted/",
-		Title: "h1.sheet__title",
-		Require: [{ Selector: "article.sheet", Min: 1 }],
-		Some: [
-			[
-				{ Selector: ".roster__row", Min: 1 },
-				{ Selector: ".note", Min: 1 },
-			],
-		],
-	},
-	{
-		Path: "/Activity/",
-		Title: "h1.sheet__title",
-		Require: [{ Selector: "article.sheet", Min: 1 }],
-		Some: [
-			[
-				{ Selector: ".roster__row", Min: 1 },
-				{ Selector: ".note", Min: 1 },
-			],
-		],
-	},
+	{ Path: "/Voted/", ...Showcase },
+	{ Path: "/Activity/", ...Showcase },
 ];
 
 /** The floor every route must clear, profile or not: real prose under `<main>`. */
