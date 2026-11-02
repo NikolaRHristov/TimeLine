@@ -78,6 +78,31 @@ creates (`timeline`). Every `sql`/`call` then fails with
 
 Reducers: `observe`, `record`, `setVisibility`, `classify`, `attach`.
 
+## Ingest: the archive into the projection
+
+`maintain store push` is the bridge: it reads the shadow store and calls
+`observe` once per post. The files remain the source of truth, so the database
+can be deleted and rebuilt from them at any time.
+
+```sh
+pnpm maintain store push --source bookmark
+# {"pushed":205,"skipped":0,"failed":0,"source":"bookmark","url":"http://127.0.0.1:3010"}
+```
+
+Two details of the wire shape are easy to get wrong, and both fail the whole
+call rather than one field:
+
+- The body is a JSON **array** of positional arguments in reducer order, not an
+  object keyed by argument name.
+- `postedAt` is an `option<string>`, and the JSON surface takes an option as a
+  _tagged_ value: `{"some":"<ISO>"}` for a value, `null` for none. A bare string
+  is rejected (`invalid type: string …, expected sum type`), and `null` sent for
+  a present timestamp decodes as `none` - the call succeeds and the timestamp is
+  silently lost.
+
+`at` is the record's `lastScrapedAt`, never the wall clock: the observation row
+is keyed `<postId>:<source>:<at>`, so a clock would append one row per run.
+
 ## Invariants
 
 - **Derived ids, never auto-increment.** `.autoInc()` still requires `id` on
@@ -91,12 +116,15 @@ Reducers: `observe`, `record`, `setVisibility`, `classify`, `attach`.
 
 ## Claim → test
 
-| Claim              | Test                                                                                          |
-| ------------------ | --------------------------------------------------------------------------------------------- |
-| CLI installed      | `spacetime --version` → `2.14.0`                                                              |
-| Server up          | `lsof -nP -iTCP:3010 -sTCP:LISTEN` shows `spacetime`                                          |
-| Module compiles    | `spacetime build` → `Build finished successfully.`                                            |
-| Database published | `spacetime list --server http://127.0.0.1:3010` shows `timeline`                              |
-| Reducer writes     | `spacetime call timeline observe …` then `select id, author, likes from post` returns the row |
-| Append-only        | a second identical `observe` leaves `select count(*) from observation` unchanged              |
-| Optional args      | `postedAt` is an option: pass `null`, not a bare string                                       |
+| Claim                | Test                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| CLI installed        | `spacetime --version` → `2.14.0`                                                                |
+| Server up            | `lsof -nP -iTCP:3010 -sTCP:LISTEN` shows `spacetime`                                            |
+| Module compiles      | `spacetime build` → `Build finished successfully.`                                              |
+| Database published   | `spacetime list --server http://127.0.0.1:3010` shows `timeline`                                |
+| Reducer writes       | `spacetime call timeline observe …` then `select id, author, likes from post` returns the row   |
+| Append-only          | a second identical `observe` leaves `select count(*) from observation` unchanged                |
+| Push is idempotent   | a second `maintain store push` leaves `select count(*) from observation` unchanged              |
+| Push is a projection | `maintain store push --dry-run` prints a count and writes no file                               |
+| Server down          | `maintain store push --url http://127.0.0.1:3999` → `{"error":"spacetime-unreachable"}`, exit 2 |
+| Optional args        | `postedAt` is an option: `{"some":"<ISO>"}` for a value, `null` for none - never a bare string  |

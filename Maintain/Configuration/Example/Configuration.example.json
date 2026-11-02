@@ -14,5 +14,9 @@
 	},
 	"storage": {
 		"shadow": "Maintain/Storage/Shadow"
+	},
+	"spacetime": {
+		"url": "http://127.0.0.1:3010",
+		"database": "timeline"
 	}
 }

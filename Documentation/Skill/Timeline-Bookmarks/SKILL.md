@@ -81,17 +81,25 @@ operating procedure.
    `byVisibility.shadow` falling while `public` rises is the only evidence that
    a publish did what was asked.
 
-8. **Open a list by slug.** `pnpm maintain page list open --name <slug>`
+8. **Project the archive, never move it.** `pnpm maintain store push` calls
+   `observe` once per archived post, so the database holds the same archive the
+   files do. It writes nothing under `Maintain/Storage/` and cannot make a post
+   public - every row lands `visibility:"shadow"`. Re-running is a repair:
+   `pushed` counts the calls, `select count(*) from observation` does not move,
+   because the observation is keyed `<postId>:<source>:<at>` from the record's
+   `lastScrapedAt`. `--dry-run` answers with the server down.
+
+9. **Open a list by slug.** `pnpm maintain page list open --name <slug>`
    resolves the id from the map. The id never appears on a command line, and an
    unconfigured slug fails `unknown-list` naming the configured set.
 
-9. **Apply the decisions - only when you mean to.**
-   `pnpm maintain author distribute apply` prints the plan and changes nothing
-   at all; add `--apply` to write the decision records and then add the
-   memberships, one at a time, three seconds apart. A `rate-limited` answer
-   stops the run and reports `remaining`: run it again later, because the
-   records are already on disk, so it re-derives the same plan and reports the
-   handles already on their list as `already` instead of adding them twice.
+10. **Apply the decisions - only when you mean to.**
+    `pnpm maintain author distribute apply` prints the plan and changes nothing
+    at all; add `--apply` to write the decision records and then add the
+    memberships, one at a time, three seconds apart. A `rate-limited` answer
+    stops the run and reports `remaining`: run it again later, because the
+    records are already on disk, so it re-derives the same plan and reports the
+    handles already on their list as `already` instead of adding them twice.
 
 ## Token-efficiency rules
 
@@ -152,6 +160,10 @@ The pipeline exists to keep model work out of the loop.
   under `Maintain/Storage/Shadow/`; `Source/Content/` changes only through
   `store publish`. A scrape that edits the collection is a bug, not a
   convenience.
+- **An optional argument is a tagged value.** The reducer's JSON surface takes
+  `postedAt` as `{"some":"<ISO>"}` or `null`; a bare string fails the whole call
+  and `null` sent for a present timestamp succeeds with the timestamp dropped. A
+  projection that "works" can therefore be losing a field.
 - **Code never lives under `Maintain/Storage/`.** That whole tree is gitignored
   as data, so a `.ts` file dropped there is invisible to git and never commits.
   The store code sits in `Maintain/Source/Store/`; only records go under
@@ -186,6 +198,8 @@ The pipeline exists to keep model work out of the loop.
 | Failures are one object            | any failing command exits 2 with `{error:<code>,…}` and nothing else on stdout                                             |
 | Scrape is idempotent               | run twice; second prints `new:0` and the post count is unchanged                                                           |
 | Scrape publishes nothing           | after `store scrape`, `git status --short Source/Content` prints nothing                                                   |
+| Projection is idempotent           | second `store push` prints `pushed` and `select count(*) from observation` is unchanged                                    |
+| Projection writes no file          | `store push --dry-run --json` prints `pushed`, and `git status --short Maintain/Storage` prints nothing                    |
 | Shadow store is untracked          | `git check-ignore -v Maintain/Storage/Shadow/Post/<id>.json`                                                               |
 | Build output is untracked          | `git ls-files Target` → empty; `git check-ignore -q Target` → exit 0                                                       |
 | Site builds                        | `pnpm run build` → `Target/Bookmark/index.html`, `Target/Activity/index.html`                                              |

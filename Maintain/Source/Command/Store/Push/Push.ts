@@ -69,8 +69,52 @@ function channel(
 	return at === "" ? null : { source: first.source, at };
 }
 
+/**
+ * The posts a run would push, and how many records it cannot represent.
+ *
+ * `skipped` counts a record the projection would have to invent a field for -
+ * no permalink, no author handle - rather than a post the flags excluded: an
+ * exclusion is the caller's own filter and loses nothing.
+ */
+export function plan(
+	posts: readonly ShadowPost[],
+	filter: Source | null,
+	limit: number | null,
+): { planned: Planned[]; skipped: number } {
+	const planned: Planned[] = [];
+	let skipped = 0;
+
+	for (const post of posts) {
+		const selected = channel(post, filter);
+		if (selected === null) continue;
+		if (post.url === "" || post.author.handle === "") {
+			skipped += 1;
+			continue;
+		}
+		planned.push({ post, source: selected.source, at: selected.at });
+	}
+
+	return {
+		planned: limit === null ? planned : planned.slice(0, limit),
+		skipped,
+	};
+}
+
+/**
+ * An `option<string>` argument on the wire.
+ *
+ * The reducer's JSON surface takes an option as a *tagged* value: a bare string
+ * is rejected ("invalid type: string …, expected sum type") and a bare `null`
+ * decodes as `none`. Sending the string therefore loses the timestamp only
+ * after failing the whole call, and sending `null` for a present timestamp
+ * loses it silently - so `some` is the only shape that carries a value.
+ */
+function optional(value: string | null): { some: string } | null {
+	return value === null || value === "" ? null : { some: value };
+}
+
 /** Positional arguments in the reducer's declared order. */
-function argumentsOf({ post, source, at }: Planned): readonly unknown[] {
+export function argumentsOf({ post, source, at }: Planned): readonly unknown[] {
 	return [
 		post.id,
 		post.url,
@@ -78,8 +122,7 @@ function argumentsOf({ post, source, at }: Planned): readonly unknown[] {
 		post.author.name,
 		post.author.verified,
 		post.text,
-		// `postedAt` is an option: the reducer rejects a bare string for `null`.
-		post.postedAt,
+		optional(post.postedAt),
 		source,
 		at,
 		whole(post.metrics.replies),
@@ -188,23 +231,11 @@ export const Definition: CommandDefinition = {
 
 		const shadow = openShadow(shadowDirectory());
 
-		// `skipped` is a record that cannot be projected at all - no permalink or no
-		// author - rather than a post the flags excluded. A record the projection
-		// would have to invent a field for is counted and left alone.
-		const planned: Planned[] = [];
-		let skipped = 0;
-
-		for (const post of shadow.all()) {
-			const selected = channel(post, filter);
-			if (selected === null) continue;
-			if (post.url === "" || post.author.handle === "") {
-				skipped += 1;
-				continue;
-			}
-			planned.push({ post, source: selected.source, at: selected.at });
-		}
-
-		const selected = limit === null ? planned : planned.slice(0, limit);
+		const { planned: selected, skipped } = plan(
+			shadow.all(),
+			filter,
+			limit,
+		);
 		const source = filter ?? "all";
 
 		if (values["dry-run"] === true) {
@@ -230,7 +261,10 @@ export const Definition: CommandDefinition = {
 
 		if (counts.failed > 0) {
 			// Partial success is still a failure: the caller gets exit 2 and the
-			// numbers, so a retry can be aimed at what is left.
+			// numbers, so a retry can be aimed at what is left. The server's own
+			// words about the first rejection ride along - "No such procedure" and
+			// "invalid arguments" need different fixes.
+			const rejection = isFailure(failure) ? failure : null;
 			throw fail(
 				"spacetime-reducer",
 				"some records were rejected by the reducer",
@@ -244,6 +278,7 @@ export const Definition: CommandDefinition = {
 						failure instanceof Error
 							? failure.message
 							: String(failure),
+					body: rejection?.extra["body"],
 				},
 			);
 		}

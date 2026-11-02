@@ -27,6 +27,24 @@ const lists = [
 ].sort();
 
 const total = bookmarks.length;
+
+/**
+ * One sentence for the header.
+ *
+ * Assembled as a string rather than as interleaved JSX expressions: the
+ * optional `across N lists` clause used to sit between two text nodes, which
+ * left the sentence reading `0 saved posts , 0 events recorded.` - a stray
+ * space before the comma, visible exactly in the empty state this page is
+ * supposed to make look deliberate.
+ */
+const summary = `${total} saved ${
+	total === 1 ? "post" : "posts"
+}${
+	lists.length > 0
+		? ` across ${lists.length} ${lists.length === 1 ? "list" : "lists"}`
+		: ""
+}, ${events.length} ${events.length === 1 ? "event" : "events"} recorded.`;
+
 const excerpt = (text: string): string =>
 	text.length > 160 ? `${text.slice(0, 160).trimEnd()}…` : text;
 const day = (value: string): string => value.slice(0, 10);
@@ -38,18 +56,7 @@ const day = (value: string): string => value.slice(0, 10);
 	<main class="container mx-auto max-w-3xl px-6 py-10">
 		<header class="mb-10">
 			<h1 class="text-2xl font-semibold">Bookmarks</h1>
-			<p class="mt-1 text-sm text-neutral-600">
-				{total}
-				saved {total === 1 ? "post" : "posts"}
-				{lists.length > 0 && (
-					<span>
-						across {lists.length}{" "}
-						{lists.length === 1 ? "list" : "lists"}
-					</span>
-				)}
-				, {events.length}
-				{events.length === 1 ? "event" : "events"} recorded.
-			</p>
+			<p class="mt-1 text-sm text-neutral-600">{summary}</p>
 		</header>
 
 		{total === 0 && (

@@ -54,6 +54,7 @@ export const Definition: CommandDefinition = {
 			routes: configuration.routes,
 			content: configuration.content,
 			storage: configuration.storage,
+			spacetime: configuration.spacetime,
 			masked: reveal !== true,
 		};
 	},

@@ -61,6 +61,7 @@ No command reads identifiers from argv.
 | `store publish`           | `--id` \| `--source` \| `--since` \| `--all`                            | `{published,unchanged,hidden}`                                          |
 | `store hide`              | `--id`                                                                  | `{hidden:true,id,removed,unchanged}`                                    |
 | `store status`            | -                                                                       | `{shadow:{…},public:{…}}`                                               |
+| `store push`              | `--source bookmark\|like\|history`, `--limit`, `--dry-run`, `--url`     | `{pushed,skipped,failed,source,url}`                                    |
 | `author evidence build`   | -                                                                       | `{archive,posts,authors:[…],skipped}`                                   |
 | `author classify rules`   | -                                                                       | `{rules,threshold,lists,counts,decisions,ambiguous,preserved}`          |
 | `author classify infer`   | `--limit`, `--dry-run`                                                  | `{counts,batches,asked,decisions,unanswered,rejected,failed,preserved}` |
@@ -138,6 +139,47 @@ post.
 
 `store status` answers the three questions worth asking before a publish: how
 much is archived, how much is out, and which channel each post came from.
+
+## Projection: the archive into SpacetimeDB
+
+`store push` copies the archive into the local SpacetimeDB database, so an
+observation is queryable the moment it is scraped. The JSON files stay the
+source of truth: this is a projection, never a move, and nothing under
+`Maintain/Storage/` changes.
+
+```bash
+pnpm maintain store push --source bookmark --limit 200
+# {"pushed":200,"skipped":0,"failed":0,"source":"bookmark","url":"http://127.0.0.1:3010"}
+```
+
+Every post becomes one `observe` call carrying its current metrics, at most four
+in flight. The reducer keys the observation on `<postId>:<source>:<at>`, so `at`
+is the record's `lastScrapedAt` and never the wall clock - a clock here would
+append a row per run and make `pushed` a synonym for `duplicated`. That is what
+makes a second run a repair: `pushed` counts the calls that ran,
+`select count(*) from observation` does not move.
+
+- `--source` narrows to the posts that channel showed. The channel a post is
+  pushed as is its _earliest_ observation, so one post selected by two
+  `--source` values lands on two rows naming two channels - and the same row
+  whichever of the two selected it.
+- `skipped` counts a record the projection cannot represent (no permalink, no
+  author handle). It never counts a post the flags excluded.
+- `--dry-run` counts what would be pushed and contacts nothing: it does not read
+  the token, so it answers with the server down.
+- A partial run is still a failure: `pushed` and `failed` say how far it got and
+  the first rejection's server words ride along in `body`.
+
+Every row lands as `visibility:"shadow"`, because the reducer takes no
+visibility argument - this command has no way to make a post public, and
+`store publish` remains the only step that does.
+
+The server's address and database name come from the identifier map
+(`spacetime: {url, database}`); `--url` overrides the address only. The token is
+read from `~/.config/spacetime/cli.toml`, never from a flag, and is never
+printed. A server that is not answering is `spacetime-unreachable`, a rejected
+token `spacetime-auth`, and a refused call `spacetime-reducer` - each one
+object, exit 2.
 
 ## Events
 
@@ -426,10 +468,11 @@ Every failure is one object, exit 2, no stack trace on stdout:
 Known codes: `no-config`, `config-exists`, `unknown-list`, `no-list-menu`,
 `no-list-surface`, `no-tab`, `no-post`, `page-not-ready`, `rate-limited`,
 `schema-invalid`, `no-rules`, `no-model`, `model-error`, `model-reply`,
-`cdp-unreachable`, `cdp-error`, `io-error`, `usage`, `internal`. A code is a
-contract; the `detail` string is not. `--help` and `--schema` are rendered from
-the same table the parser matches against, so a command cannot drift from its
-own documentation.
+`cdp-unreachable`, `cdp-error`, `spacetime-unreachable`, `spacetime-auth`,
+`spacetime-reducer`, `io-error`, `usage`, `internal`. A code is a contract; the
+`detail` string is not. `--help` and `--schema` are rendered from the same table
+the parser matches against, so a command cannot drift from its own
+documentation.
 
 ## Tests
 
