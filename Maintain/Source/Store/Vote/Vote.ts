@@ -11,7 +11,7 @@ import {
 	type CuratedEntry,
 	type VoteEntry,
 } from "../../Model/Vote/Vote.ts";
-import { stringify } from "../../Output/Json/Json.ts";
+import { stringify } from "../../Output/JSON/JSON.ts";
 import { open as openPublic } from "../Public/Public.ts";
 
 /**

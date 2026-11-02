@@ -183,7 +183,7 @@ test("the archive addresses a post by id only", async () => {
 });
 
 test("no command imports a transport implementation", () => {
-	// The seam's whole point: `Transport/Cdp` and `Transport/View` are what a
+	// The seam's whole point: `Transport/CDP` and `Transport/View` are what a
 	// command must never name. Checked here rather than by a grep in a review,
 	// because a grep is a promise and this is a test.
 	const directory = join(root(), "Maintain", "Source", "Command");
@@ -197,7 +197,7 @@ test("no command imports a transport implementation", () => {
 				continue;
 			}
 			const source = readFileSync(child, "utf8");
-			if (source.includes("Transport/Cdp") || source.includes("Transport/View")) {
+			if (source.includes("Transport/CDP") || source.includes("Transport/View")) {
 				offenders.push(child);
 			}
 		}

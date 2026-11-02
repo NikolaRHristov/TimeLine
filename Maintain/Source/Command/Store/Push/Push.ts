@@ -251,7 +251,7 @@ export const Definition: CommandDefinition = {
 		}),
 		option("limit", "integer", Text.OptionStorePushLimit),
 		option("dry-run", "boolean", Text.OptionStorePushDryrun),
-		option("url", "string", Text.OptionStorePushUrl, {
+		option("url", "string", Text.OptionStorePushURL, {
 			format: "uri",
 		}),
 	],

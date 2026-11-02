@@ -1,7 +1,7 @@
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
-import { connect, type CdpClient } from "../Cdp/Client.ts";
-import { evaluate } from "../Cdp/Command/Evaluate.ts";
+import { connect, type CDPClient } from "../CDP/Client.ts";
+import { evaluate } from "../CDP/Command/Evaluate.ts";
 
 export type WaitOptions = { timeout?: number; interval?: number };
 
@@ -10,7 +10,7 @@ export type IdleOptions = { timeout?: number; quiet?: number };
 /** One attached tab: evaluate, navigate, wait. Closed by the command that opened it. */
 export type Session = {
 	tab: Tab;
-	client: CdpClient;
+	client: CDPClient;
 	evaluate<T>(expression: string): Promise<T>;
 	navigate(url: string): Promise<boolean>;
 	reload(): Promise<boolean>;

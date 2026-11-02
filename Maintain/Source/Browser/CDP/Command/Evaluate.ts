@@ -1,5 +1,5 @@
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
-import type { CdpClient } from "../Client.ts";
+import type { CDPClient } from "../Client.ts";
 
 export type EvaluateOptions = {
 	/** Wait for a returned promise before resolving. Default true. */
@@ -23,7 +23,7 @@ type EvaluateResult = {
  * the CLI never holds state in the page between calls.
  */
 export async function evaluate<T = unknown>(
-	client: CdpClient,
+	client: CDPClient,
 	expression: string,
 	options: EvaluateOptions = {},
 ): Promise<T> {

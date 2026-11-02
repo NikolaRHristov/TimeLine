@@ -10,7 +10,7 @@ import {
 import { join } from "node:path";
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import { fileName, type EventKind, type EventRecord } from "../../Model/Event/Event.ts";
-import { stringify } from "../../Output/Json/Json.ts";
+import { stringify } from "../../Output/JSON/JSON.ts";
 import type { PublicBookmark } from "../Model/Model.ts";
 
 const STATUS_ID = /^\d{1,32}$/;

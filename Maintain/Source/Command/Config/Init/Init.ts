@@ -100,7 +100,7 @@ export const Definition: CommandDefinition = {
 		option("list", "string", Text.OptionConfigInitList, {
 			repeat: true,
 		}),
-		option("cdp-port", "integer", Text.OptionConfigInitCdpport),
+		option("cdp-port", "integer", Text.OptionConfigInitCDPPort),
 		option("force", "boolean", Text.OptionConfigInitForce),
 	],
 	async run(context: CommandContext): Promise<unknown> {

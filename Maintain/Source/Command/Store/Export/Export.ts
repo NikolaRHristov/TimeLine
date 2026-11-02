@@ -27,7 +27,7 @@ export const Definition: CommandDefinition = {
 	summary: Text.CommandStoreExportSummary,
 	options: [
 		option("to", "string", Text.OptionStoreExportTo),
-		option("url", "string", Text.OptionStoreExportUrl, {
+		option("url", "string", Text.OptionStoreExportURL, {
 			format: "uri",
 		}),
 		option("dry-run", "boolean", Text.OptionStoreExportDryrun),

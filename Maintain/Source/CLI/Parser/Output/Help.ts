@@ -17,14 +17,14 @@ export function commandList(commands: readonly CommandDefinition[]): string {
 		(command) => `  ${command.path.join(" ").padEnd(width)}  ${command.summary}`,
 	);
 	return [
-		Text.CliTitle,
+		Text.CLITitle,
 		"",
-		Text.CliUsageList,
+		Text.CLIUsageList,
 		"",
-		Text.CliCommands,
+		Text.CLICommands,
 		...lines,
 		"",
-		Text.CliContract,
+		Text.CLIContract,
 		"",
 	].join("\n");
 }
@@ -62,11 +62,11 @@ export function commandHelp(command: CommandDefinition): string {
 	});
 
 	return [
-		fill(Text.CliHeadingCommand, { path: command.path.join(" "), summary: command.summary }),
+		fill(Text.CLIHeadingCommand, { path: command.path.join(" "), summary: command.summary }),
 		"",
-		fill(Text.CliUsageCommand, { usage: usage.join(" ") }),
+		fill(Text.CLIUsageCommand, { usage: usage.join(" ") }),
 		"",
-		Text.CliOptions,
+		Text.CLIOptions,
 		...lines,
 		"",
 	].join("\n");

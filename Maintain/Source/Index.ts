@@ -5,7 +5,7 @@ import { parse } from "./CLI/Parser/Parser.ts";
 import { commands } from "./CLI/Registry/Registry.ts";
 import { schema } from "./CLI/Schema/Schema.ts";
 import { create } from "./Command/Context/Context.ts";
-import { stringify, write } from "./Output/Json/Json.ts";
+import { stringify, write } from "./Output/JSON/JSON.ts";
 import { render } from "./Output/Table/Table.ts";
 
 /**

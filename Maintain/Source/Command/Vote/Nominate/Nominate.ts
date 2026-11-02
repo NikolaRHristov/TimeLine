@@ -5,7 +5,7 @@ import { load, requireList } from "../../../Configuration/Load/Load.ts";
 import * as Text from "../../../Content/Text.ts";
 import { Post } from "../../../Model/Post/Post.ts";
 import { document, type VoteEntry } from "../../../Model/Vote/Vote.ts";
-import { stringify } from "../../../Output/Json/Json.ts";
+import { stringify } from "../../../Output/JSON/JSON.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
@@ -68,7 +68,7 @@ export const Definition: CommandDefinition = {
 	summary: Text.CommandVoteNominateSummary,
 	options: [
 		option("id", "string", Text.OptionVoteNominateId),
-		option("url", "string", Text.OptionVoteNominateUrl, {
+		option("url", "string", Text.OptionVoteNominateURL, {
 			format: "uri",
 		}),
 		option("list", "string", Text.OptionVoteNominateList, {

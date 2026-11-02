@@ -24,31 +24,31 @@ const content = (Value: string | undefined, Name: string): string => {
 	return Value;
 };
 
-export const CliCommands = content(
+export const CLICommands = content(
 	process.env["CONTENT_STRING_CLI_COMMANDS"],
 	"CONTENT_STRING_CLI_COMMANDS",
 );
-export const CliContract = content(
+export const CLIContract = content(
 	process.env["CONTENT_STRING_CLI_CONTRACT"],
 	"CONTENT_STRING_CLI_CONTRACT",
 );
-export const CliHeadingCommand = content(
+export const CLIHeadingCommand = content(
 	process.env["CONTENT_STRING_CLI_HEADING_COMMAND"],
 	"CONTENT_STRING_CLI_HEADING_COMMAND",
 );
-export const CliOptions = content(
+export const CLIOptions = content(
 	process.env["CONTENT_STRING_CLI_OPTIONS"],
 	"CONTENT_STRING_CLI_OPTIONS",
 );
-export const CliTitle = content(
+export const CLITitle = content(
 	process.env["CONTENT_STRING_CLI_TITLE"],
 	"CONTENT_STRING_CLI_TITLE",
 );
-export const CliUsageCommand = content(
+export const CLIUsageCommand = content(
 	process.env["CONTENT_STRING_CLI_USAGE_COMMAND"],
 	"CONTENT_STRING_CLI_USAGE_COMMAND",
 );
-export const CliUsageList = content(
+export const CLIUsageList = content(
 	process.env["CONTENT_STRING_CLI_USAGE_LIST"],
 	"CONTENT_STRING_CLI_USAGE_LIST",
 );
@@ -228,7 +228,7 @@ export const OptionAuthorClassifyInferLimit = content(
 	process.env["CONTENT_STRING_OPTION_AUTHOR_CLASSIFY_INFER_LIMIT"],
 	"CONTENT_STRING_OPTION_AUTHOR_CLASSIFY_INFER_LIMIT",
 );
-export const OptionConfigInitCdpport = content(
+export const OptionConfigInitCDPPort = content(
 	process.env["CONTENT_STRING_OPTION_CONFIG_INIT_CDPPORT"],
 	"CONTENT_STRING_OPTION_CONFIG_INIT_CDPPORT",
 );
@@ -320,7 +320,7 @@ export const OptionPostTargetTab = content(
 	process.env["CONTENT_STRING_OPTION_POST_TARGET_TAB"],
 	"CONTENT_STRING_OPTION_POST_TARGET_TAB",
 );
-export const OptionPostTargetUrl = content(
+export const OptionPostTargetURL = content(
 	process.env["CONTENT_STRING_OPTION_POST_TARGET_URL"],
 	"CONTENT_STRING_OPTION_POST_TARGET_URL",
 );
@@ -332,7 +332,7 @@ export const OptionStoreExportTo = content(
 	process.env["CONTENT_STRING_OPTION_STORE_EXPORT_TO"],
 	"CONTENT_STRING_OPTION_STORE_EXPORT_TO",
 );
-export const OptionStoreExportUrl = content(
+export const OptionStoreExportURL = content(
 	process.env["CONTENT_STRING_OPTION_STORE_EXPORT_URL"],
 	"CONTENT_STRING_OPTION_STORE_EXPORT_URL",
 );
@@ -368,7 +368,7 @@ export const OptionStorePushSource = content(
 	process.env["CONTENT_STRING_OPTION_STORE_PUSH_SOURCE"],
 	"CONTENT_STRING_OPTION_STORE_PUSH_SOURCE",
 );
-export const OptionStorePushUrl = content(
+export const OptionStorePushURL = content(
 	process.env["CONTENT_STRING_OPTION_STORE_PUSH_URL"],
 	"CONTENT_STRING_OPTION_STORE_PUSH_URL",
 );
@@ -416,7 +416,7 @@ export const OptionVoteNominateTitle = content(
 	process.env["CONTENT_STRING_OPTION_VOTE_NOMINATE_TITLE"],
 	"CONTENT_STRING_OPTION_VOTE_NOMINATE_TITLE",
 );
-export const OptionVoteNominateUrl = content(
+export const OptionVoteNominateURL = content(
 	process.env["CONTENT_STRING_OPTION_VOTE_NOMINATE_URL"],
 	"CONTENT_STRING_OPTION_VOTE_NOMINATE_URL",
 );

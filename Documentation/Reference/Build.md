@@ -54,7 +54,7 @@ gitignored.
 
 ### Why `bundle` is on
 
-The sources import each other with `.ts` specifiers (`from "./Cli/Parser/Parser.ts"`), which is the
+The sources import each other with `.ts` specifiers (`from "./CLI/Parser/Parser.ts"`), which is the
 same form `node Maintain/Source/Index.ts` runs directly with no toolchain. A non-bundled emit would
 copy those specifiers into `Target/`, where only `.js` files exist, so
 `node Maintain/Target/Index.js` could not resolve its own imports. `bundle` plus `splitting`
@@ -76,7 +76,7 @@ selector modules are `inPage` functions whose source is sent to the page and the
 | `pnpm maintain --help`     | the compiled entry, through the workspace                           |
 
 The mapping is one-to-one: `Source/**` is the entry base, so `Source/Index.ts` becomes
-`Target/Index.js` and `Source/Cli/Parser/Parser.ts` becomes `Target/Cli/Parser/Parser.js`.
+`Target/Index.js` and `Source/CLI/Parser/Parser.ts` becomes `Target/CLI/Parser/Parser.js`.
 
 ## Two pipelines that must not mix
 

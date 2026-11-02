@@ -6,7 +6,7 @@ import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
 import * as Text from "../../../Content/Text.ts";
 import { EventKind } from "../../../Model/Event/Event.ts";
-import { stringify } from "../../../Output/Json/Json.ts";
+import { stringify } from "../../../Output/JSON/JSON.ts";
 import type { CommandContext } from "../../Context/Context.ts";
 
 /** The event kinds the site's Event collection accepts. */

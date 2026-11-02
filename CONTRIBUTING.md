@@ -97,6 +97,31 @@ of classes of individuals.
 
 **Consequence**: A permanent ban from any sort of public interaction within the community.
 
+## Naming
+
+One convention, everywhere in the tree: folders, files, identifiers, and prose.
+
+| Kind       | Rule                                                  | Example                            |
+| ---------- | ----------------------------------------------------- | ---------------------------------- |
+| Folder     | PascalCase; singular when it names a role             | `Source/CLI`, `Source/Script`      |
+| File       | PascalCase, one concept per file                      | `Client.ts`, `URL-And-Shell.md`    |
+| Acronym    | fully uppercase, in names and prose                   | `CLI`, `URL`, `API`, `JSON`, `CDP` |
+| Identifier | PascalCase for types and values; camelCase for locals | `CDPClient`, `cdpValue`            |
+
+A compound takes the acronym whole: `CdpClient` is `CDPClient`, `Output/Json/Json.ts` is
+`Output/JSON/JSON.ts`, and `OptionPostTargetUrl` is `OptionPostTargetURL`.
+
+Four things sit outside the rule because something else already fixes their spelling: Astro's
+`Source/pages` and `Source/content.config.ts`; the repository-root ecosystem files (`package.json`,
+`tsconfig.json`, `astro.config.ts`, `tailwind.config.js`); `Public/_headers` and
+`Public/_redirects`; and wire-format field names such as `webSocketDebuggerUrl`. A plural stays
+where the folder is a collection rather than a role - the root `Scripts/` holds independent scripts,
+while `Source/Script` and `Maintain/Script` name the role.
+
+A rename is mechanical: `git mv` the path, then follow every import, the `astro.config.ts` alias
+table, and the paths quoted in `Documentation/`. A half-renamed tree does not build, which is the
+check.
+
 ## Attribution
 
 This Code of Conduct is adapted from the [`Contributor Covenant`][homepage], version 2.1, available

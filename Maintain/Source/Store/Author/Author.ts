@@ -2,7 +2,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import type { AuthorRecord, DecisionRecord } from "../../Model/Generated/Types.ts";
-import { stringify } from "../../Output/Json/Json.ts";
+import { stringify } from "../../Output/JSON/JSON.ts";
 
 /**
  * A handle as X spells it. The same pattern guards the file name: a handle is

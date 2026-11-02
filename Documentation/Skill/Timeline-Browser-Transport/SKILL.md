@@ -24,11 +24,11 @@ identifier map (`Documentation/Reference/Configure.md`); a command takes a slug,
 `Source/Transport/Transport.ts` is the seam. A command declares what it needs
 (`transport: "read" | "write" | "browser"`), receives a `CommandContext`, and calls
 `context.transport`. `Source/Browser/` is the CDP implementation detail: the client, the selectors
-and the session, reachable only from `Source/Transport/Cdp/`.
+and the session, reachable only from `Source/Transport/CDP/`.
 
 A new browser command therefore adds nothing to `Browser/` and imports nothing from it. If the
 interface has no member for what the command needs, that is the interface's gap, not a reason to
-reach past it - and `Source/Test/Transport.test.ts` fails on any command that names `Transport/Cdp`
+reach past it - and `Source/Test/Transport.test.ts` fails on any command that names `Transport/CDP`
 or `Transport/View`.
 
 `--transport view` answers read commands from the shadow store with the same JSON shapes and refuses

@@ -475,4 +475,4 @@ Everything else is verified against the live endpoint - the claim-to-test table 
 
 A command's path states its domain - `Command/Post/Bookmark/Add.ts`. When the site renames a
 control, exactly one file changes, and the diff names the domain. Shared behaviour lives in
-`Browser/`, `Store/` and `Cli/`; commands stay thin.
+`Browser/`, `Store/` and `CLI/`; commands stay thin.

@@ -1,6 +1,6 @@
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
 
-export type CdpError = { code: number; message: string; data?: string };
+export type CDPError = { code: number; message: string; data?: string };
 
 type Pending = {
 	method: string;
@@ -9,7 +9,7 @@ type Pending = {
 	timer: ReturnType<typeof setTimeout>;
 };
 
-export type CdpClient = {
+export type CDPClient = {
 	/** Send one protocol command; resolves with its `result`. */
 	send<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T>;
 	/** Subscribe to a protocol event by method name. */
@@ -31,7 +31,7 @@ export type ConnectOptions = { timeout?: number };
 export async function connect(
 	webSocketDebuggerUrl: string,
 	options: ConnectOptions = {},
-): Promise<CdpClient> {
+): Promise<CDPClient> {
 	const timeout = options.timeout ?? 15_000;
 	const socket = await new Promise<WebSocket>((resolve, reject) => {
 		const timer = setTimeout(() => {
@@ -88,7 +88,7 @@ export async function connect(
 			method?: string;
 			params?: unknown;
 			result?: unknown;
-			error?: CdpError;
+			error?: CDPError;
 		};
 		try {
 			message = JSON.parse(String(event.data));

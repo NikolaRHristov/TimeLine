@@ -14,7 +14,7 @@ import type { PostTarget } from "../../Transport/Transport.ts";
  */
 export const targetOptions = [
 	option("id", "string", Text.OptionPostTargetId),
-	option("url", "string", Text.OptionPostTargetUrl, {
+	option("url", "string", Text.OptionPostTargetURL, {
 		format: "uri",
 	}),
 	option("tab", "string", Text.OptionPostTargetTab),

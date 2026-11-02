@@ -1,7 +1,7 @@
 import { option, type Option } from "../CLI/Parser/Argument/Option.ts";
 import { fail } from "../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition, Values } from "../CLI/Parser/Parser.ts";
-import { cdp } from "./Cdp/Transport.ts";
+import { cdp } from "./CDP/Transport.ts";
 import type { Transport, TransportName } from "./Transport.ts";
 import { view } from "./View/Transport.ts";
 

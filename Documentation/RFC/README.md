@@ -16,7 +16,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 ## Records
 
-Twenty-seven are written; none is implemented. A record moves to `implemented/` only when its
+Forty-two are written; none is implemented. A record moves to `implemented/` only when its
 verification table passes against the shipped code.
 
 The table lists every file in `proposed/`, and the count above is the number of files there. A
@@ -25,7 +25,11 @@ adds its row.
 
 The first ten decide the mechanics. Records 0011 to 0020 decide the product: what an audience is,
 who holds a key, how a room closes, what an export contains, what a host may observe, and what the
-system refuses to defend. Records beyond 0020 extend the set and state their own dependencies.
+system refuses to defend. Records 0021 to 0027 are the residuals a second reading found. Records
+0028 to 0042 are wave three - the operational and social layer that a room needs once it exists:
+retention, search, sync, moderation, rate, migration, versions, attention, naming, testing, law,
+billing, time, analytics and extension. Records beyond 0042 extend the set and state their own
+dependencies.
 
 | RFC      | Title                                                           | Decision class | Cards                  |
 | -------- | --------------------------------------------------------------- | -------------- | ---------------------- |
@@ -56,6 +60,21 @@ system refuses to defend. Records beyond 0020 extend the set and state their own
 | RFC-0025 | Room distribution: the module as artifact, the room as a stream | architecture   | -                      |
 | RFC-0026 | Peer-carried transport                                          | architecture   | -                      |
 | RFC-0027 | Product surface and curation economics                          | product        | t_406cc8ab             |
+| RFC-0028 | Data lifecycle and retention                                    | policy         | -                      |
+| RFC-0029 | Search and indexing under encryption                            | architecture   | -                      |
+| RFC-0030 | Offline-first sync and conflict resolution                      | architecture   | -                      |
+| RFC-0031 | Moderation and community governance                             | governance     | -                      |
+| RFC-0032 | Rate limiting and abuse resistance                              | policy         | -                      |
+| RFC-0033 | Room migration between hosts                                    | architecture   | -                      |
+| RFC-0034 | Versioning and protocol compatibility                           | architecture   | -                      |
+| RFC-0035 | Notifications, presence and attention                           | product        | -                      |
+| RFC-0036 | Naming, handles and namespace                                   | governance     | -                      |
+| RFC-0037 | Testing and simulation strategy                                 | methodology    | -                      |
+| RFC-0038 | Legal posture                                                   | policy         | -                      |
+| RFC-0039 | Billing and metering                                            | product        | -                      |
+| RFC-0040 | Time, ordering and causality                                    | architecture   | -                      |
+| RFC-0041 | Analytics without reading content                               | policy         | -                      |
+| RFC-0042 | Plugin and extension model                                      | architecture   | -                      |
 
 The Cards column records the ids a record names. Those may be research cards or implementing cards -
 each record's own `Task dependencies` line says which - and `-` means the record names no card yet.
@@ -82,6 +101,37 @@ partially covered. Every one has a home, and the disposition says which.
 | J   | Audiences: public, typed, internal, federated push | propagation is in scope (RFC-0012 rules 3 and 4); delegation is not, and lands in RFC-0023, because custody is a different question from who may read       |
 | K   | Import from other platforms                        | covered already, no change: RFC-0015 imports foreign content through an adapter that emits the same five files with `origin` set and `signature: null`      |
 | L   | Authoritative visibility for small networks        | extended RFC-0005: the five-member consequence is a bullet in its Consequences and a row in its Verification table                                          |
+
+## Wave three: the operational and social layer
+
+Records 0028 to 0042 extend the set past the product-level records. They decide what happens to a
+record after it is written, and to a room after it is full. Numbering continues after the residuals
+block: this wave took 0028 to 0042, and 0043 is the next free number.
+
+Each record extends a decision already made rather than restating it, and the extension is named in
+its own `Task dependencies` line. The dependencies inside the wave are these:
+
+```
+0040 time ---------+--> 0030 sync (a claim is not an order)
+                   +--> 0033 migration (the seam between two clocks)
+                   +--> 0034 versions (an additivity rule needs a clock to age a window)
+
+0028 retention ----+--> 0031 moderation (a redaction writes a tombstone)
+                   +--> 0033 migration (the export is the only complete copy)
+
+0007 privacy ------+--> 0029 search (no plaintext projection)
+                   +--> 0038 law (the controller/processor split)
+                   +--> 0042 extension (a library cannot read plaintext)
+
+0032 rate ---------+--> 0039 billing (an invitation is a metered row)
+0021 provenance ---+--> 0028 retention (an observation is the observer's authorship)
+
+0037 testing -------------------> every record (an intent row is an untested claim)
+```
+
+Two of the fifteen are boundaries rather than features. RFC-0038 states what the operator owes and
+what it cannot owe, and RFC-0037 states what can be proven before a second host exists. Both exist
+so that the other thirteen do not have to hedge in every paragraph.
 
 ## Research: the three pages the specification named
 
@@ -130,7 +180,7 @@ These are not RFCs; they are facts the RFCs build on. Each has a test in the ref
 
 ## Writing an RFC
 
-Copy `TEMPLATE.md`, assign the next number - 0028 is next - and keep the Decision section to what is
+Copy `TEMPLATE.md`, assign the next number - 0043 is next - and keep the Decision section to what is
 being decided; context and alternatives belong below it. An RFC that cannot name its verification is
 not ready.
 

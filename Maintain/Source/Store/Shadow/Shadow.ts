@@ -14,7 +14,7 @@ import {
 	type EventKind,
 	type EventRecord,
 } from "../../Model/Event/Event.ts";
-import { stringify } from "../../Output/Json/Json.ts";
+import { stringify } from "../../Output/JSON/JSON.ts";
 import type { ObservationEntry, ShadowPost } from "../Model/Model.ts";
 
 /** A status id is digits; anything else is not a post and must not become a path. */

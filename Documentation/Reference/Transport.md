@@ -17,13 +17,13 @@ must never be simulated - a "like" that only touched a local file would be a lie
 | ------------------------------------ | ---------------------------------------------------------------- |
 | `Source/Transport/Transport.ts`      | The interface, the target union, the capability names            |
 | `Source/Transport/Select.ts`         | `--transport cdp\|view`, and the refusal that lands before `run` |
-| `Source/Transport/Cdp/Transport.ts`  | The browser transport: one delegation per member                 |
-| `Source/Transport/Cdp/Post.ts`       | Resolving a `PostTarget`, reading it, flipping one control       |
+| `Source/Transport/CDP/Transport.ts`  | The browser transport: one delegation per member                 |
+| `Source/Transport/CDP/Post.ts`       | Resolving a `PostTarget`, reading it, flipping one control       |
 | `Source/Transport/View/Transport.ts` | The archive transport: reads `Storage/Shadow`, refuses the rest  |
 | `Source/Command/Context/Context.ts`  | `CommandContext`, and the one place a transport is resolved      |
 | `Source/Browser/`                    | The CDP implementation detail: client, selectors, session        |
 
-`Browser/` is not a second seam. It is what `Transport/Cdp` is made of, and no command may name it.
+`Browser/` is not a second seam. It is what `Transport/CDP` is made of, and no command may name it.
 
 ## Interface
 
@@ -147,7 +147,7 @@ path turns on focus emulation before taking the reading. Without it a post with 
 | Read shapes match               | `post extract --id <id>` vs `post extract --id <id> --transport view`: identical keys and order, `source` `live`/`shadow`; only `metrics` and the media size suffix differ | pass   |
 | No silent fallback              | `MAINTAIN_CDP_PORT=9223 node Maintain/Target/Index.js tab list` → `cdp-unreachable`, not an empty list                                                                     | pass   |
 | View needs no browser           | same dead port, `post extract --id <id> --transport view` succeeds                                                                                                         | pass   |
-| Commands stay transport-blind   | `grep -rn "Transport/Cdp\|Transport/View" Maintain/Source/Command` → nothing; enforced by `Source/Test/Transport.test.ts`                                                  | pass   |
+| Commands stay transport-blind   | `grep -rn "Transport/CDP\|Transport/View" Maintain/Source/Command` → nothing; enforced by `Source/Test/Transport.test.ts`                                                  | pass   |
 | `store *` ignores `--transport` | `store status`, `store publish --id 999`, `store hide --id 999` byte-identical with and without `--transport view`                                                         | pass   |
 
 ## Not this

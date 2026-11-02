@@ -114,15 +114,15 @@ Rules:
 ```
 Maintain/
   Index.ts                              # argv entry: parse → dispatch → print
-  Cli/Parser/Parser.ts                  # subcommand tree, flags, --help
-  Cli/Parser/Argument/Flag.ts           # boolean flag
-  Cli/Parser/Argument/Option.ts         # value option (string|int|enum)
-  Cli/Parser/Output/Help.ts             # help text from the same table
-  Cli/Parser/Output/Failure.ts          # one JSON error object, exit 2
-  Cli/Schema/Schema.ts                  # JSON Schema (2020-12) per command
-  Cli/Registry/Registry.ts              # command name → module
-  Browser/Cdp/Client.ts                 # connect, send, receive, close
-  Browser/Cdp/Command/Evaluate.ts       # Runtime.evaluate helper
+  CLI/Parser/Parser.ts                  # subcommand tree, flags, --help
+  CLI/Parser/Argument/Flag.ts           # boolean flag
+  CLI/Parser/Argument/Option.ts         # value option (string|int|enum)
+  CLI/Parser/Output/Help.ts             # help text from the same table
+  CLI/Parser/Output/Failure.ts          # one JSON error object, exit 2
+  CLI/Schema/Schema.ts                  # JSON Schema (2020-12) per command
+  CLI/Registry/Registry.ts              # command name → module
+  Browser/CDP/Client.ts                 # connect, send, receive, close
+  Browser/CDP/Command/Evaluate.ts       # Runtime.evaluate helper
   Browser/Target/Discovery.ts           # GET /json/list → Tab[]
   Browser/Target/Select.ts              # pick tab by url/title/id
   Browser/Session/Session.ts            # attach + evaluate + wait-for-selector
@@ -133,7 +133,7 @@ Maintain/
   Model/Tab/Tab.ts                      # {id, title, url, active}
   Configuration/Load/Load.ts            # read Configuration.local.json
   Configuration/Schema/Schema.ts        # zod-free hand validation
-  Output/Json/Json.ts                   # stable key order, 2-space
+  Output/JSON/JSON.ts                   # stable key order, 2-space
   Output/Table/Table.ts                 # padded columns for a TTY
   Command/Post/Like/Like.ts
   Command/Post/Like/Remove.ts
@@ -175,7 +175,7 @@ the same table the parser was built from.
 
 ### Tasks
 
-**Task 1.1 - CDP client.** Files: `Browser/Cdp/Client.ts`, `Browser/Cdp/Command/Evaluate.ts`.
+**Task 1.1 - CDP client.** Files: `Browser/CDP/Client.ts`, `Browser/CDP/Command/Evaluate.ts`.
 Connect to `ws://127.0.0.1:9222/devtools/page/<id>`, send `{id,method,params}`, resolve by id,
 reject on `error`. Test: evaluate `1+1` against a tab and assert `{result:{value:2}}` shape.
 
@@ -183,7 +183,7 @@ reject on `error`. Test: evaluate `1+1` against a tab and assert `{result:{value
 `GET /json/list`, filter `type==="page"`, drop `chrome-extension://`. Select by exact id, then url
 prefix, then title substring; fail with `{error:"no-tab", candidates:[…]}` listing what was seen.
 
-**Task 1.3 - Parser and schema.** Files: `Cli/Parser/*`, `Cli/Schema/Schema.ts`. Subcommand tree
+**Task 1.3 - Parser and schema.** Files: `CLI/Parser/*`, `CLI/Schema/Schema.ts`. Subcommand tree
 declared once as data; `--help` and `--schema` both render from it. Test: `schema post like` emits
 `required:["url"]` when `--url` is the only alternative, and the `--dry-run` flag appears as a
 boolean property.

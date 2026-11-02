@@ -1,5 +1,5 @@
-import { connect } from "../Cdp/Client.ts";
-import { evaluate } from "../Cdp/Command/Evaluate.ts";
+import { connect } from "../CDP/Client.ts";
+import { evaluate } from "../CDP/Command/Evaluate.ts";
 import type { RawTarget } from "../../Model/Tab/Tab.ts";
 
 /**
