@@ -15,6 +15,7 @@
 		"check": "pnpm run Check:Compatibility && pnpm --filter @nikolarhristov/timeline-maintain run check && pnpm run Check:Tokens",
 		"Check:Compatibility": "node Scripts/Compatibility.mjs",
 		"Check:Tokens": "node Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs",
+		"Audit": "node Documentation/Skill/Progressive-Enhancement/Reference/no-js-audit.mjs",
 		"Format": "prettier --write .",
 		"Format:Check": "prettier --check .",
 		"maintain": "node Maintain/Target/Index.js",

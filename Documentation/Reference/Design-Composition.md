@@ -1,125 +1,140 @@
 # The composition
 
 The measured geometry of the frame every workspace surface is built from. The reference image is
-`Documentation/Assets/Full Composition.png`; this file is the numbers behind it, so a component can
-be checked against the design without opening Figma or reading an image.
+`Documentation/Assets/Full Composition.png`, but this file is the authority: every value below was
+read from the file's own layer tree through the Figma MCP, not estimated from the picture.
 
-Every value here was read from the file's own layer tree, not estimated from the picture. A
-component that diverges from a number below records why in its header comment.
+A component that diverges from a number here records why in its header comment.
 
 ---
 
 ## The frame
 
-One frame, `Full Composition`, 1440 × 1300, laid out as four bands. The rail is fixed width and the
-other three share a 1200-wide column to its right.
+One frame, `Full Composition`, 1440 × 1300, ground `#f5f5f5`. Four bands sit on it, absolutely
+positioned. The dark chrome is the top band only; everything below it is light.
 
-- **Timeline Selector** - the rail. 224 × 360 at `0, 0`.
-- **File Drawer** - the private band. 1200 × 360 at `240, 0`.
-- **HR Separator** - the publish seam. 1200 × 40 at `240, 360`.
-- **Blank bento layout** - the canvas. 1200 × 900 at `240, 400`.
+- **Timeline Selector** - the rail. `224 × 360` at `0, 0`. Dark `#1c1c1e`, `1px #2e2e30` on the
+  right edge, padding `16px 12px`, `overflow: clip`.
+- **File Drawer** - the private band. `1200 × 360` at `240, 0`. Dark `#1c1c1e`, padding
+  `20px 28px 16px`, 12px between rows.
+- **HR Separator** - the seam. `1200 × 40` at `240, 360`. **Light `#ececec`**, padding inline 28px.
+- **Blank bento layout** - the canvas. `1200 × 900` at `240, 400`. Light `#fafafa`, 48px padding,
+  20px gaps.
+
+The 16px between the rail and the drawer is the ground showing through, not a gap inside a flex row.
 
 ---
 
 ## The rail
 
-224 wide, `#1c1c1e`, a 1px `#2e2e30` rule on its right edge, 12px inline and 16px block padding.
+Three blocks, flush - there is **no gap** between them. Header at `y=16`, drum at `y=47`, scroll at
+`y=315`; the arithmetic is exact and leaves no slack.
 
-The header is two lines: an eyebrow (`Provenance`, 11px, uppercase, `#8e8e93`) over a title
-(`Ingestion timeline`, 13px, semibold, `#e5e5ea`).
+### Header, 31 tall
 
-### The drum
+Eyebrow `Provenance` - 11px, regular, uppercase, `#8e8e93`. Title `Ingestion timeline` - 13px,
+semibold, `#e5e5ea`.
 
-268 tall, and the whole perspective is one table indexed by distance from the selected stage.
-Thirteen bands are drawn; the selected stage is the tall opaque one in the middle.
+### The drum, 268 tall
 
-| Distance | Height | Opacity | Marker | Marker radius | Border | Track | Label |
-| -------- | ------ | ------- | ------ | ------------- | ------ | ----- | ----- |
-| 0        | 44     | 1.00    | 12     | 6             | 2      | 12    | 10    |
-| 1        | 28     | 0.72    | 12     | 6             | 2      | 14    | 9     |
-| 2        | 22     | 0.55    | 10     | 5             | 1      | 12    | 8     |
-| 3        | 16     | 0.38    | 10     | 5             | 1      | 16    | -     |
-| 4        | 12     | 0.28    | 8      | 4             | 1      | 12    | -     |
-| 5        | 10     | 0.22    | 6      | 3             | 1      | 10    | -     |
-| 6        | 8      | 0.18    | 6      | 3             | 1      | 8     | -     |
+Thirteen bands. The ladder is the perspective: the selected stage is tall and opaque in the middle,
+and every band further away is shorter, fainter and smaller-marked.
 
-Two things sit on top of the stack and are not optional: a 40px gradient from the page colour to
-transparent at the top, and the mirror of it at the bottom. They are what turn a clipped stack into
-a cylinder.
+| Distance | Height | Opacity | Marker | Radius | Track | Label |
+| -------- | ------ | ------- | ------ | ------ | ----- | ----- |
+| 0        | 44     | 1.00    | 12     | 6      | 12    | 10    |
+| 1        | 28     | 0.72    | 12     | 6      | 14    | 9     |
+| 2        | 22     | 0.55    | 10×12  | 5      | 12    | 8     |
+| 3        | 16     | 0.38    | 10     | 5      | 16    | -     |
+| 4        | 12     | 0.28    | 8      | 4      | 12    | -     |
+| 5        | 10     | 0.22    | 6      | 3      | 10    | -     |
+| 6        | 8      | 0.18    | 6      | 3      | 8     | -     |
 
-The selected band carries a `rgb(99 102 241 / 8%)` plate, a capsule track (999px radius) and a
-right-aligned caption in its own accent.
+The bands are symmetric about the selection: `far-top-3` down to `far-bottom-3`. Only distances 0, 1
+and 2 carry a label, and a labelled band stacks `label → track` with a 2px gap (3px on the selected
+one).
 
-### Under the drum
+Every marker is filled with its band's stage accent, has a `1px #1c1c1e` border, and is absolutely
+positioned over the progress bar. The selected band's track is a capsule (`999px`); every other
+track is `2px`.
 
-A 6px scroll track (`#2c2c2e`, capsule) with an indigo thumb, and a 10px `#636366` note. The block
-is 31 tall.
+The selected band carries a `rgb(99 102 241 / 8%)` plate and a right-aligned 9px caption in its own
+accent.
+
+Two `40px × 200px` gradients sit on top of the stack - `#1c1c1e` to transparent at the top, the
+mirror at `y=228`. They are what make a clipped stack read as a cylinder.
+
+**Progress widths are fixed pixels, not percentages** - 60, 80, 95, 110, 104, 132, 92, 118 across
+the bands. A percentage is a different design.
+
+### Scroll state, 31 tall
+
+A 6px track `#2c2c2e` with a capsule indigo thumb, 6px above a 10px `#636366` note.
 
 ---
 
 ## The drawer
 
-1200 × 360, `#1c1c1e`, 20px top and 28px inline padding, 12px between rows.
-
 ### Header, 30 tall
 
-Three groups on one row, justified apart.
+Three groups, justified apart, 6px and 4px internal gaps.
 
-- **Left** - a 28 × 28 control (`#2c2c2e`, 1px `#3a3a3c`, 8px radius) with a 12px chevron, then the
-  two-line title block, then a second control. 6px gaps.
+- **Left** - two 28 × 28 controls (`#2c2c2e`, `1px #3a3a3c`, 8px radius) flanking a two-line block:
+  `Depth / Schema` at 11px uppercase `#8e8e93`, `My Files` at 13px semibold `#e5e5ea`.
 - **Centre** - a 14px lock glyph and a 12px `#636366` line.
-- **Right** - the view switch. Two chips, 4px apart, `4px 10px` padding, 6px radius, 11px type. The
-  active chip is `#48484a` and semibold; the other is `#3a3a3c` and `#8e8e93`.
+- **Right** - two chips, 4px apart, `4px 10px`, 6px radius, 11px. Active `#48484a` semibold
+  `#d1d1d6`; inactive `#3a3a3c` regular `#8e8e93`.
 
 ### Tab row, 22 tall
 
-Right-aligned: a `#2c2c2e` chip with an 11px plus glyph and an 11px `#636366` label, `4px 8px`
-padding, 6px radius.
+Right-aligned `#2c2c2e` chip, `4px 8px`, 6px radius, 11px `#636366`, an 11px plus glyph.
 
 ### Columns, 240 tall
 
-Four columns, 10px apart, each `flex: 1`, 10px inner padding, 6px between items.
+Four, 10px apart, `flex: 1`, 10px padding, 6px between items.
 
-- **Inactive** - `#1f1f21`, 1px `#2e2e30`, 12px radius.
-- **Active** - `#232325`, 1px `#3a3a3c`, and a tab shape: square at the top-left, 12px everywhere
-  else. That one corner is the only thing distinguishing the live column.
+- **Inactive** - `#1f1f21`, `1px #2e2e30`, 12px radius.
+- **Active** - `#232325`, `1px #3a3a3c`, and the tab shape: square top-left, 12px elsewhere.
 
 ### Items
 
-One component, three heights, because the height and the leading element are the same decision.
+- **Text** - 36 tall, 12px glyph, `10px 8px` padding, 8px gap, 8px radius.
+- **Media** - 44 tall, 28px thumbnail at 6px radius, `8px` inline padding.
+- **Comment** - 44 tall, 24px circular avatar, `8px` inline padding.
+- **Control** - 28 tall, centred, 10px type, 10px trailing chevron.
 
-- **Text** - 36 tall. 12px glyph, 11px semibold title, 9px meta, 12px trailing action.
-- **Media** - 44 tall. 28px thumbnail at 6px radius, then the same two lines.
-- **Comment** - 44 tall. 24px circular avatar with a two-letter mark, then the same two lines.
-- **Control** - 28 tall, centred, 10px type, 10px trailing chevron, no leading element.
-
-Selected: 1px `#6366f1` border, and the title, meta and glyph all take that accent. Default: 1px
-`#3a3a3c`, title `#d1d1d6`, meta `#636366`.
+Title 11px semibold, meta 9px. Selected item: `1px #6366f1` border with title, meta and glyph in
+that accent. Default: `1px #3a3a3c`, title `#d1d1d6`, meta `#636366`.
 
 ### The drop ghost
 
-28 tall, `#1c1c1e` face, a 1px dashed border in the column's own accent, 50-55% opacity, an 11px
-arrow and a 10px label. One per column, always last. It is an invitation, never a record.
+28 tall, `#1c1c1e` face, `1px dashed` in the column's own accent, 8px radius, one per column.
+Opacity differs by column: `0.55` on the first, `0.50` on the rest. Label 10px in the accent.
 
 ---
 
 ## The seam
 
-1200 × 40, `#1c1c1e`, 28px inline padding.
+`#ececec`, 40 tall, padding inline 28px, three groups.
 
-Left: two 24 × 24 capsule steps around a 13px `#e5e5ea` label. Centre: a 1px `#3a3a3c` rule that
-takes the remaining width. Right: a 12px circle-arrow glyph and a 13px `#636366` line.
+- **Left, 6px gaps** - two 24 × 24 white chips (`1px #d1d1d6`, 6px radius,
+  `drop-shadow(0 1px 1.5px rgb(0 0 0 / 6%))`) holding 11px chevrons, around a label at **11px
+  uppercase `#8e8e93`**.
+- **Centre** - a `1px #d8d8d8` rule taking the remaining width.
+- **Right, 4px gaps** - a 12px arrow-down-circle glyph and a **11px `#b0b0b8`** line.
+
+The seam is light on purpose. It belongs to neither surface, so it reads as a rule between the dark
+chrome and the light canvas rather than as part of either.
 
 ---
 
 ## The canvas
 
-1200 × 900, `#fafafa`, 48px padding, 20px gaps, six columns by four rows of equal tracks. Tiles are
-24px radius.
+`#fafafa`, 48px padding, 20px gaps, six equal columns by four equal rows, tiles at 24px radius.
 
-The greys are three, and which one a tile takes is a hierarchy, not a pattern: `#e2e2e2` for the
-loudest, `#e9e9e9` for the middle, `#eee` for the quietest. An empty tile is a real state - a thin
-archive draws the full mosaic in the quietest value rather than leaving holes.
+Three greys, assigned by hierarchy rather than pattern: `#e2e2e2` loudest, `#e9e9e9` middle, `#eee`
+quietest. An empty tile is a real state - a thin archive draws the full mosaic in the quietest value
+rather than leaving holes.
 
 ---
 
@@ -130,16 +145,17 @@ archive draws the full mosaic in the quietest value rather than leaving holes.
 - **Chrome ink** - `#e5e5ea` bright, `#d1d1d6` body, `#8e8e93` muted, `#636366` faint.
 - **Stages** - source `#6366f1`, ingestion `#34d399`, processing `#f59e0b`, review `#ec4899`,
   publish `#6e9efa`, file `#f0a045`, template `#9b77fa`.
-- **Canvas** - `#fafafa` ground, `#e2e2e2` / `#e9e9e9` / `#eee` tiles.
+- **Paper** - ground `#f5f5f5`, seam `#ececec`, seam rule `#d8d8d8`, seam ink `#8e8e93`, seam faint
+  `#b0b0b8`, canvas `#fafafa`, tiles `#e2e2e2` / `#e9e9e9` / `#eee`.
 
 A colour is a claim about identity: a band, a column head and an event row sharing an accent are
-naming the same stage. None of the seven is decoration.
+naming the same stage.
 
 ---
 
 ## Where it lives in the code
 
-- **Tokens** - `Source/Stylesheet/Global.css`, one `:root` block for the chrome and stages.
+- **Tokens** - `Source/Stylesheet/Global.css`, one `:root` block per ramp.
 - **Mixins** - `Source/Stylesheet/Material.scss`: `panel`, `face`, `card`, `control`, `inset`,
   `label`, `ellipsis`, `reset`.
 - **Sheets** - `Source/Stylesheet/Component/{Provenance,Drawer,Bento,Workspace}.scss`.

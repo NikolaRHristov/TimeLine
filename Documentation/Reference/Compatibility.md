@@ -79,8 +79,8 @@ each engine needs is the floor for that engine.
 | `overflow: clip`                                    | `Component/{Bento,Drawer,Provenance}.scss`, `Material.scss` | 90     | 81      | 16.0   |
 | `100dvh`                                            | `Component/Workspace.scss:18`                               | 108    | 101     | 15.4   |
 | `@layer`                                            | `Base.css:6`                                                | 99     | 97      | 15.4   |
-| Logical properties (`margin-block`, `inset-inline`) | `Component/*.css`, `Layout/*.css`                           | 89     | 66      | 15     |
-| Flex `gap`                                          | `Component/Pill.css` and the other flex rows                | 84     | 63      | 14.1   |
+| Logical properties (`margin-block`, `inset-inline`) | `Component/*.scss`, `Layout/*.scss`                         | 89     | 66      | 15     |
+| Flex `gap`                                          | `Component/Pill.scss` and the other flex rows               | 84     | 63      | 14.1   |
 
 **Baseline: Chrome 108, Firefox 101, Safari 16.0.** The binding constraint is `100dvh` on Chrome and
 `overflow: clip` on Safari.
@@ -122,6 +122,10 @@ Stated in full in RFC-0044; the rule a person needs at the keyboard is here.
   `tailwindcss/nesting` entry `postcss.config.js` imports and moves the theme from
   `tailwind.config.js` into CSS, so taking it is a stylesheet migration, not a version bump. The
   deferral is recorded in RFC-0044 and reported by the guard on every run.
+- **Sass is deferred at 1.107.1 against 3.0.** Every build prints `DEPRECATION WARNING [import]` for
+  `Source/Layout/Base.astro:80` and `:81`, which pull the two `.scss` sheets in with `@import`. Dart
+  Sass 3.0 removes `@import` outright, so a Sass major is a migration to `@use` (or to the component
+  styles importing their own sheet), not a version bump.
 - **Node majors** - adopted when the new line reaches LTS, and the recorded floor rises only when a
   dependency's own `engines` forces it. Raising the floor early costs every clone a runtime upgrade
   for no build it could not already do.
@@ -144,14 +148,15 @@ policy supersedes that record; it does not edit this page into disagreement with
 
 ## Claim → test
 
-| Claim                                  | Test                                                                         |
-| -------------------------------------- | ---------------------------------------------------------------------------- |
-| The floor is recorded once             | `node -p "require('./package.json').engines.node"` → `>=22.23.4`             |
-| The guard enforces it                  | `node Scripts/Compatibility.mjs` under Node 22.22.1 → `FAIL`, exit 1         |
-| A supported Node passes                | `node Scripts/Compatibility.mjs` under Node 26.5.1 → `PASS`, exit 0          |
-| Behind a major is reported, not failed | the same run prints `INFO tailwindcss 3.4.19 -> 4.3.3` and exits 0           |
-| A missing pnpm does not fail the check | `env -i PATH=/usr/bin:/bin node Scripts/Compatibility.mjs` → `SKIP`, exit 0  |
-| `pnpm run check` runs the guard first  | `pnpm run check` prints the `== record` section before `tsc` output          |
-| Nesting is compiled, not shipped       | `grep -c '&' Target/_astro/*.css` → `0` for every file                       |
-| Container queries are unused           | `grep -rn "@container\|container-type" Source/` → no match                   |
-| A clean clone builds                   | `rm -rf node_modules Target && pnpm install && pnpm run build` → both exit 0 |
+| Claim                                  | Test                                                                                     |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| The floor is recorded once             | `node -p "require('./package.json').engines.node"` → `>=22.23.4`                         |
+| The guard enforces it                  | `node Scripts/Compatibility.mjs` under Node 22.22.1 → `FAIL`, exit 1                     |
+| A supported Node passes                | `node Scripts/Compatibility.mjs` under Node 26.5.1 → `PASS`, exit 0                      |
+| Behind a major is reported, not failed | the same run prints `INFO tailwindcss 3.4.19 -> 4.3.3` and exits 0                       |
+| A missing pnpm does not fail the check | `env -i PATH=/usr/bin:/bin node Scripts/Compatibility.mjs` → `SKIP`, exit 0              |
+| `pnpm run check` runs the guard first  | `pnpm run check` prints the `== record` section before `tsc` output                      |
+| Nesting is compiled, not shipped       | `grep -c '&' Target/_astro/*.css` → `0` for every file                                   |
+| Container queries are unused           | `grep -rn "@container\|container-type" Source/` → no match                               |
+| A clean clone builds                   | `rm -rf node_modules Target && pnpm install && pnpm run build` → both exit 0             |
+| Sass `@import` is still in use         | `pnpm run build` prints `DEPRECATION WARNING [import]` for `Source/Layout/Base.astro:80` |

@@ -8,6 +8,11 @@
  * cache, while the workspace hydrates because what a person sees in their own
  * drawer depends on who they are and which network they belong to.
  *
+ * The island hydrates on visibility rather than on load, so the canvas paints
+ * from the build before any bundle competes for the main thread. The rule that
+ * keeps it honest - every route must render its content with scripts switched
+ * off - is audited by `Documentation/Skill/Progressive-Enhancement`.
+ *
  * An empty archive is a normal state here, not an error: every collection is
  * read with a default, so a fresh clone renders the composition with empty
  * columns instead of throwing. The page never reads the shadow store or the

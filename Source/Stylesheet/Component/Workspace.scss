@@ -14,9 +14,9 @@
 // header is not part of this component.
 .workspace {
 	display: flex;
-	align-items: stretch;
-	min-height: 100dvh;
-	background: var(--chrome-void);
+	align-items: flex-start;
+	gap: 16px;
+	background: var(--ground, #f5f5f5);
 	color: var(--chrome-ink);
 
 	&__body {

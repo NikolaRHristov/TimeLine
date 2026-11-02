@@ -21,8 +21,8 @@ defect in the change rather than a preference about the design.
 
 ### The nouns
 
-Six nouns describe every drawn thing on the site. A part is one of them or a composition of them;
-there is no seventh.
+Five nouns describe every drawn thing on the site, plus the live state of one of them. A part is one
+of the five or a composition of them; there is no sixth.
 
 | Noun          | What it is                                       | Mixin     | Fill               | Edge                       | Corner            |
 | ------------- | ------------------------------------------------ | --------- | ------------------ | -------------------------- | ----------------- |
@@ -120,7 +120,9 @@ mixin is a second place the palette lives.
 ## The token set
 
 `Source/Stylesheet/Global.css` declares every value two or more surfaces must agree on. Nothing else
-declares one. The set is two ramps plus the scales.
+declares one. The set is two ramps plus the scales, and the tables below are the set: a token added,
+renamed or removed is an edit to this section in the same change, because a table that lags the file
+specifies nothing.
 
 ### The paper ramp
 
@@ -143,13 +145,11 @@ declares one. The set is two ramps plus the scales.
 
 ### The ink ramp
 
-| Token                | Value     | Reads                                                              |
-| -------------------- | --------- | ------------------------------------------------------------------ |
-| `--color-ink`        | `#171717` | `Note.scss`, `Bento.scss`, `Roster.scss`, `Pill.scss`, `Page.scss` |
-| `--color-ink-muted`  | `#525252` | `Note.scss`, `Bento.scss`, `Roster.scss`, `Pill.scss`, `Page.scss` |
-| `--color-ink-faint`  | `#737373` | `Bento.scss`, `Roster.scss`, `Page.scss`                           |
-| `--color-accent`     | `#171717` | no reader - see the orphan rule                                    |
-| `--color-accent-ink` | `#ffffff` | no reader - see the orphan rule                                    |
+| Token               | Value     | Reads                                                                                             |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------- |
+| `--color-ink`       | `#171717` | `Global.css` (the focus ring), `Note.scss`, `Bento.scss`, `Roster.scss`, `Pill.scss`, `Page.scss` |
+| `--color-ink-muted` | `#525252` | `Note.scss`, `Bento.scss`, `Roster.scss`, `Pill.scss`, `Page.scss`                                |
+| `--color-ink-faint` | `#737373` | `Bento.scss`, `Roster.scss`, `Page.scss`                                                          |
 
 ### The scales
 
@@ -170,7 +170,6 @@ declares one. The set is two ramps plus the scales.
 | `--text-lg`        | `1.125rem`                          | `Page.scss` (a section heading)                                                                      |
 | `--text-2xl`       | `1.5rem`                            | `Page.scss` (a page title)                                                                           |
 | `--font-mono`      | the system mono stack               | `Note.scss` (inline code), `Shell.scss` (the brand mark)                                             |
-| `--font-sans`      | the system sans stack               | no reader - see the orphan rule                                                                      |
 | `--radius-sm`      | `0.25rem`                           | `Note.scss`, `Shell.scss`                                                                            |
 | `--radius-card`    | `0.5rem`                            | `Material.scss`, the `card` and `control` defaults                                                   |
 | `--radius-column`  | `0.75rem`                           | `Material.scss`, the `face` default                                                                  |
@@ -205,14 +204,15 @@ declares one. The set is two ramps plus the scales.
    declared in `Global.css` and read everywhere else. A hex literal outside `Global.css` is a
    defect: it is invisible to a token change, so a theme edit reaches the sheets and not that file.
    The single exception is the `theme-color` meta tag in `Base.astro`, which is HTML metadata rather
-   than a style, cannot read a custom property, and must equal `--color-surface`.
+   than a style, cannot read a custom property, and must equal the fill the shell header is drawn on
+   (`--chrome-void`).
 2. **A transparency is derived, not written.** A tint or a fade is
-   `color-mix(in srgb, var(--token) <percent>%, transparent)`. An `rgb()`, `rgba()` or `hsl()`
-   triple is a hex with its digits rearranged and is a defect.
+   `color-mix(in srgb, var(--token) <percent>%, transparent)`, and the drum's two fades run between
+   `--chrome-void` and the `transparent` keyword. An `rgb()`, `rgba()` or `hsl()` triple is a hex
+   with its digits rearranged and is a defect.
 3. **No orphan token.** Every declared token is read by at least one sheet, mixin or component. A
    stage token is read when the stage map names it. A token with no reader is deleted or given a
-   reader; it is never kept for a future use. Three are orphaned today: `--color-accent`,
-   `--color-accent-ink` and `--font-sans`.
+   reader; it is never kept for a future use.
 4. **No undefined token.** Every `var(--x)` resolves, either to a declaration in `Global.css` or to
    a custom property a component sets on the element. An unresolved custom property fails in
    silence, which reads as a colour or a dimension that has disappeared rather than as an error. The
@@ -230,6 +230,11 @@ declares one. The set is two ramps plus the scales.
    The workspace fold is 900px.
 7. **One sheet per component.** A component has one sheet, in SCSS, using the mixins. A `.css` and
    an `.scss` for the same part is two palettes waiting to disagree.
+8. **An edge is a token, not a composition.** The paper ramp composes its edges as `--hairline` and
+   `--hairline-faint`; the chrome ramp composes none, so three rules assemble one -
+   `Provenance.scss` for the rail's right edge, `Shell.scss` for the header and the footer. A line
+   is material, so it is composed once: `--hairline-chrome` declares the chrome edge, and the three
+   rules read it instead of assembling a width and a colour.
 
 ## The stage accents
 
@@ -238,17 +243,17 @@ three kinds are the forms a record takes when it leaves a step. Each is a token 
 an entry in `Source/Library/Stage.ts`, which is the only place that answers which colour a stage
 draws.
 
-| Stage          | Kind | Token                | Value     | What it names                                                        | Where it is read                                                           |
-| -------------- | ---- | -------------------- | --------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **source**     | step | `--stage-source`     | `#6366f1` | a record as it was captured: the post, its author, its metrics       | the rail's first band, the Bookmarks column, a selected row, a tile's edge |
-| **ingestion**  | step | `--stage-ingestion`  | `#34d399` | the event row recording the capture: its time, its transport         | the rail's second band                                                     |
-| **processing** | step | `--stage-processing` | `#f59e0b` | a scored record: a nomination, a vote count, a rank candidate        | the rail's third band                                                      |
-| **review**     | step | `--stage-review`     | `#ec4899` | the owner's decision: curated, ranked, approved                      | the rail's fourth band                                                     |
-| **file**       | kind | `--stage-file`       | `#f0a045` | a record stored as a file in the drawer                              | the Voted column                                                           |
-| **template**   | kind | `--stage-template`   | `#9b77fa` | a shape reused: a list, a column, a bento arrangement                | the Curated column                                                         |
-| **publish**    | kind | `--stage-publish`    | `#6e9efa` | a record that has left the private side: the canvas, a public handle | the Authors column, the canvas                                             |
+| Stage          | Kind | Token                | Value     | What it names                                                        | Where it is read                                           |
+| -------------- | ---- | -------------------- | --------- | -------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **source**     | step | `--stage-source`     | `#6366f1` | a record as it was captured: the post, its author, its metrics       | the rail's first band, the Bookmarks column, a tile's edge |
+| **ingestion**  | step | `--stage-ingestion`  | `#34d399` | the event row recording the capture: its time, its transport         | the rail's second band                                     |
+| **processing** | step | `--stage-processing` | `#f59e0b` | a scored record: a nomination, a vote count, a rank candidate        | the rail's third band                                      |
+| **review**     | step | `--stage-review`     | `#ec4899` | the owner's decision: curated, ranked, approved                      | the rail's fourth band                                     |
+| **file**       | kind | `--stage-file`       | `#f0a045` | a record stored as a file in the drawer                              | the Voted column                                           |
+| **template**   | kind | `--stage-template`   | `#9b77fa` | a shape reused: a list, a column, a bento arrangement                | the Curated column                                         |
+| **publish**    | kind | `--stage-publish`    | `#6e9efa` | a record that has left the private side: the canvas, a public handle | the Authors column, the canvas                             |
 
-Three rules bind the set:
+Four rules bind the set:
 
 - **A colour is a claim about identity.** A band, a column head and an event row that share an
   accent are naming the same stage. None of the seven is decoration, so an element takes a stage
@@ -259,6 +264,10 @@ Three rules bind the set:
 - **A column feeds a stage; it is not a stage.** `ColumnStage` binds each drawer column to the stage
   it publishes into, and `StageKey` stays the four steps. Adding a step is a token, a map entry and
   a place in the pipeline, in that order; adding a column is one entry in `ColumnStage`.
+- **A selected row takes the accent of the column it lives in.** The row receives it as
+  `--ghost-tone`'s sibling - the column sets the tone for everything inside it - rather than reading
+  a fixed accent. `Drawer.scss` currently draws every selected row in the source accent, which is
+  the defect this rule replaces.
 
 ## The component API
 
@@ -370,25 +379,26 @@ from the file's own layer tree rather than estimated from the picture.
 ## Context
 
 The material exists and is one file: `Source/Stylesheet/Material.scss` holds eight mixins, and the
-four workspace sheets call them rather than naming a fill. The token set is one file:
-`Source/Stylesheet/Global.css` declares 59 tokens across two ramps and the scales. The stage map is
-one module: `Source/Library/Stage.ts` holds four steps, three kinds and the column binding, and its
-values are `var(...)` references rather than hexes.
+workspace sheets call them rather than naming a fill. The token set is one file:
+`Source/Stylesheet/Global.css` declares the two ramps and the scales, and no other file declares a
+colour. The stage map is one module: `Source/Library/Stage.ts` holds four steps, three kinds and the
+column binding, and its values are `var(...)` references rather than hexes.
 
-What is missing is enforcement. The rules above hold today by discipline, and three measurements
-show where discipline has already slipped:
+What is missing is enforcement. The rules above hold by discipline, and three measurements show
+where discipline has already slipped:
 
-- **Three orphan tokens.** `comm -23` of the declared names against every `var(--x)` read under
-  `Source/` returns `--color-accent`, `--color-accent-ink` and `--font-sans`: declared, unread.
-- **Two rgb triples that are tokens by another spelling.** `grep -n 'rgb(' Source/Stylesheet`
-  returns three rules in `Provenance.scss`: the selected band's plate (`rgb(99 102 241 / 8%)`, the
-  source accent) and the two fades (`rgb(28 28 30 / 0%)`, the void at zero alpha).
-- **One drawn control with no action.** `Workspace.tsx` passes `OnAdd={() => undefined}` to the
-  drawer, which draws an add control above the columns.
+- **A selected row reads a fixed accent.**
+  `grep -n 'stage-source' Source/Stylesheet/Component/Drawer.scss` returns the selected-row rule:
+  every selected row is drawn in the source accent, whichever column it lives in.
+- **One drawn control has no action.** `grep -rn '=> undefined' Source/Component` returns
+  `Workspace.tsx`, which passes `OnAdd` as a no-op while the drawer draws an add control.
+- **Three edges are composed instead of read.** `grep -rn '1px solid var(' Source/Stylesheet`
+  returns `Provenance.scss` and two rules in `Shell.scss`: each assembles a chrome edge from a width
+  and a colour where the paper ramp reads `--hairline`.
 
 The checks that would hold the rules are named in the verification table below and are intent until
-the token contract script lands. The alternative to a script is review, and review has already
-passed a page carrying eight hex literals and a sheet carrying a second stage map.
+the token contract script lands. The alternative to a script is review, and a reviewer comparing two
+files cannot see the defect: a hex that should have been a token looks like a value that works.
 
 ## Alternatives considered
 
@@ -421,19 +431,20 @@ passed a page carrying eight hex literals and a sheet carrying a second stage ma
 
 ## Verification
 
-| Claim                                | Test                                                                                                                                           |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every colour is a token              | `grep -rnE '#[0-9a-fA-F]{3,8}' Source --include=*.scss --include=*.tsx --include=*.astro` returns only `Global.css` and the `theme-color` meta |
-| No rgb or hsl triple is written      | `grep -rn 'rgb(\|hsl(' Source/Stylesheet` returns only the two fade rules and the selected plate (intent: all three become `color-mix`)        |
-| No orphan token                      | the token contract script reports none; until it exists, `comm -23` of declared against read names returns the three tokens named in Context   |
-| No undefined token                   | every `var(--x)` resolves to a declaration or to the closed component-scoped set (script, intent)                                              |
-| One stage map                        | `grep -rn 'stage-' Source --include=*.ts --include=*.tsx --include=*.scss \| grep -v Library/Stage.ts` shows reads only, no second mapping     |
-| A component never reads a collection | `grep -rn 'astro:content' Source/Component` returns nothing (true today)                                                                       |
-| The shell owns the measure           | `grep -rn 'max-width' Source/Stylesheet Source/Component` returns `Shell.scss` and two media queries, nothing else                             |
-| Depth is drawn, never simulated      | `grep -rn 'box-shadow\|blur(\|linear-gradient' Source/Stylesheet` returns the two fade rules and nothing else                                  |
-| One sheet per component              | `find Source/Stylesheet -name '*.css'` returns `Base.css` and `Global.css` only                                                                |
-| A drawn control is wired             | `grep -rn '=> undefined' Source/Component` returns nothing (intent: the drawer's add control)                                                  |
-| The index lists what exists          | `ls Documentation/RFC/proposed \| wc -l` equals the written count the index states                                                             |
+| Claim                                | Test                                                                                                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Every colour is a token              | `grep -rnE '#[0-9a-fA-F]{3,8}' Source --include=*.scss --include=*.tsx --include=*.astro` returns only `Global.css` and the `theme-color` meta   |
+| No rgb or hsl triple is written      | `grep -rn 'rgb(\|hsl(' Source/Stylesheet` returns no declaration - today one comment names the form it replaced                                  |
+| No orphan token                      | the token contract script reports none; until it exists, `comm -23` of the declared names against every `var(--x)` read returns nothing          |
+| No undefined token                   | every `var(--x)` resolves to a declaration or to the closed component-scoped set (script, intent)                                                |
+| One stage map                        | `grep -rn 'stage-' Source --include=*.ts --include=*.tsx --include=*.scss \| grep -v Library/Stage.ts` shows reads only, no second mapping       |
+| A component never reads a collection | `grep -rn 'astro:content' Source/Component` returns nothing (true today)                                                                         |
+| The shell owns the measure           | `grep -rn 'max-width' Source/Stylesheet Source/Component` returns `Shell.scss` and two media queries, nothing else                               |
+| Depth is drawn, never simulated      | `grep -rn 'box-shadow\|blur(\|linear-gradient' Source/Stylesheet` returns the two fade rules and nothing else                                    |
+| One sheet per component              | `find Source/Stylesheet -name '*.css'` returns `Base.css` and `Global.css` only                                                                  |
+| No sheet composes an edge            | `grep -rn '1px solid var(' Source/Stylesheet` returns only `Global.css` and the three rules named in the token set (intent: `--hairline-chrome`) |
+| A drawn control is wired             | `grep -rn '=> undefined' Source/Component` returns nothing (intent: the drawer's add control)                                                    |
+| The index lists what exists          | `ls Documentation/RFC/proposed \| wc -l` equals the written count the index states                                                               |
 
 ## Open questions
 

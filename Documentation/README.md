@@ -50,6 +50,8 @@ what is intended, the RFCs state what was decided, and the skills state how to d
 - **`Skill/Parallel-Epic-Execution/`** - several agents working the same tree at once.
 - **`Skill/Figma-MCP/`** - reading a design file into components.
 - **`Skill/Tool-Archive/`** - keeping a working script instead of rewriting it next session.
+- **`Skill/Progressive-Enhancement/`** - the first paint is the server's; the no-script audit that
+  proves it.
 
 ---
 

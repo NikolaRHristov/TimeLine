@@ -1,7 +1,7 @@
 ---
 name: tool-archive
 description: Use when a script worked and should outlive the session that wrote it.
-version: 1.1.0
+version: 1.2.0
 author: TimeLine
 license: MIT
 platforms: [macos]
@@ -109,6 +109,7 @@ tried to hold a script's flags would go stale the first time the script changed.
 
 ## References
 
-| File              | Covers                                             |
-| ----------------- | -------------------------------------------------- |
-| `archive_tool.py` | The archiver: flags, header stamping, scrub, audit |
+| File                | Covers                                              |
+| ------------------- | --------------------------------------------------- |
+| `archive_tool.py`   | The archiver: flags, header stamping, scrub, audit  |
+| `TokenContract.mjs` | The token contract check: five rules, one exit code |

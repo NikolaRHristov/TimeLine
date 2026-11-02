@@ -9,10 +9,11 @@
  * explains why a public tree never names a private origin, and it calls the
  * siblings Site A ... Site D. Two things are deliberately different.
  *
- * - No theme switch. The pages style themselves with Tailwind utilities pinned
- *   to light values, so a switch that themed only the chrome would produce a
- *   dark header over a white article. `Stylesheet/Global.css` holds the tokens
- *   a real theme would use; converting the pages is the precondition.
+ * - No theme switch. The shell is the instrument panel and the page is the
+ *   paper: a dark frame around a light canvas, which is the split the
+ *   composition draws rather than a half-applied theme. Every sheet reads a
+ *   token from `Stylesheet/Global.css`, so the palette lives in one place and a
+ *   second one would be a second block of values, not a second set of rules.
  * - No Google Fonts request. The site is a static archive read offline from a
  *   service worker, and a third-party font fetch is the one thing on the page
  *   that cannot be served from cache - so the system stack is used instead.
@@ -62,7 +63,7 @@ const Year = new Date().getFullYear();
 		<title>{Full}</title>
 		<meta name="description" content={Description} />
 		<link rel="canonical" href={Canonical} />
-		<meta name="theme-color" content="#ffffff" />
+		<meta name="theme-color" content="#1c1c1e" />
 		<meta name="format-detection" content="telephone=no" />
 		<meta name="twitter:dnt" content="on" />
 

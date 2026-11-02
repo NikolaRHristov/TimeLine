@@ -1,3 +1,4 @@
+import "@Stylesheet/Component/Workspace.scss";
 import { createMemo, createSignal, Show } from "solid-js";
 import Bento, { type Tile } from "./Bento.tsx";
 import Drawer, { type DrawerView } from "./Drawer.tsx";
