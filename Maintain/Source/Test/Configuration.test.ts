@@ -137,5 +137,7 @@ test("the content schema takes list slugs as strings, never as an enumeration", 
 	);
 
 	assert.match(schema, /lists: z\.array\(z\.string\(\)\)/);
-	assert.equal(/["'](AI|UI|CODE)["']/.test(schema), false);
+	// `z.enum` is fine for closed protocol vocabularies (media kinds, event
+	// kinds); it must never be applied to a list slug, which is configuration.
+	assert.equal(/lists:\s*z\.enum\(/.test(schema), false);
 });

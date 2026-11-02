@@ -1,0 +1,19 @@
+# Generated, vendored or machine-local - never format these.
+
+# Build output
+Target/
+Maintain/Target/
+Maintain/Spacetime/spacetimedb/dist/
+node_modules/
+.astro/
+
+# Local-only data and identifiers
+Maintain/Storage/
+Maintain/Configuration/Local/
+
+# Dependencies and locks
+pnpm-lock.yaml
+package-lock.json
+
+# Vendored
+docs/

@@ -20,7 +20,7 @@ browser: it has no session and every page will be logged out.
 
 ```bash
 pnpm install
-pnpm run tool # builds Maintain/Target, the `pnpm maintain` entry point
+pnpm run Build # builds Maintain/Target, the `pnpm maintain` entry point
 ```
 
 ## Step 1 - write the identifier map
@@ -104,8 +104,8 @@ The mutating commands read the control's state first, so they are idempotent and
 safe to retry:
 
 ```bash
-pnpm maintain post like --url --json < permalink > --dry-run # resolve only
-pnpm maintain post like --url < permalink > --json           # act
+pnpm maintain post like --url <permalink> --dry-run --json # resolve only
+pnpm maintain post like --url <permalink> --json           # act
 ```
 
 `--dry-run` prints the resolved post and clicks nothing. A second real run

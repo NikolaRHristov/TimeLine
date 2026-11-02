@@ -355,20 +355,20 @@ test("the prompt is per author over aggregated evidence, not per post", () => {
 		verified: true,
 		posts: posts.length,
 		domains: [{ domain: "dribbble.com", count: 2 }],
-		keywords: { AI: 0, UI: 4, CODE: 0 },
-		terms: { AI: {}, UI: { figma: 3, typography: 1 }, CODE: {} },
+		keywords: { reading: 0, recipes: 4, notes: 0 },
+		terms: { reading: {}, recipes: { figma: 3, typography: 1 }, notes: {} },
 		excerpts: ["figma typography", "figma figma"],
 	};
 
-	const request = prompt([record], ["AI", "UI", "CODE"]);
+	const request = prompt([record], ["reading", "recipes", "notes"]);
 
 	assert.match(request.system, /Reply with JSON only/);
-	assert.match(request.system, /AI, UI, CODE/);
+	assert.match(request.system, /reading, recipes, notes/);
 	// One block for one author: the handle is named once, with the aggregate.
 	assert.equal(asked(request.user).length, 1);
 	assert.match(request.user, /AUTHOR 1\/1/);
 	assert.match(request.user, /domains: dribbble\.com\u00d72/);
-	assert.match(request.user, /keyword hits: AI 0, UI 4, CODE 0/);
+	assert.match(request.user, /keyword hits: reading 0, recipes 4, notes 0/);
 	assert.match(request.user, /bookmarked posts: 2/);
 	assert.match(request.user, /- figma typography\n- figma figma/);
 });
@@ -641,10 +641,10 @@ test("an endpoint that refuses the request is a model-error, not a crash", async
 
 test("a fenced reply is still JSON, and a bare array is accepted", () => {
 	const handles = new Set(["alpha01"]);
-	const lists = new Set(["AI", "UI", "CODE"]);
+	const lists = new Set(["reading", "recipes", "notes"]);
 
 	const fenced = parse(
-		'```json\n{"decisions":[{"handle":"alpha01","list":"UI","reason":"design work"}]}\n```',
+		'```json\n{"decisions":[{"handle":"alpha01","list":"recipes","reason":"design work"}]}\n```',
 		handles,
 		lists,
 	);
@@ -654,7 +654,7 @@ test("a fenced reply is still JSON, and a bare array is accepted", () => {
 			decision.list,
 			decision.by,
 		]),
-		[["alpha01", "UI", "model"]],
+		[["alpha01", "recipes", "model"]],
 	);
 	assert.deepEqual(fenced.unanswered, []);
 

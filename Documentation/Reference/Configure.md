@@ -163,3 +163,32 @@ same slug still scores on domains, and the rules loader says so.
 
 Every failure is one JSON object on stdout and exit code 2. A code is a
 contract; the `detail` string is not.
+
+## Leak audit
+
+The repository is public, so two questions are asked of the tracked tree
+whenever it changes. `scripts/audit-leaks.sh` asks both and exits non-zero on
+any hit:
+
+```bash
+scripts/audit-leaks.sh            # the repo this script lives in
+scripts/audit-leaks.sh . '^Update\.sh$'
+```
+
+1. **No absolute machine paths.** `file:///`, `/Users/…`, `/Volumes/…`, `/home/…`
+   in a tracked file. Anchored to a letter so documentation that *quotes* the
+   forbidden form does not fail the check.
+2. **No private origin names.** The wordlist lives in
+   `Maintain/Configuration/Local/Origin.txt` - gitignored, because a tracked
+   list of the names you are hiding would itself be the leak. Beside it,
+   `Origin.public.txt` names the entries that are *also* public namespaces (the
+   build toolchain's `@playform/*` npm scope, the conduct contact address); the
+   script subtracts one from the other and greps the difference.
+
+Both files are yours to write; a clone has neither, and the origin half of the
+audit reports `SKIP` rather than pretending to pass.
+
+The same two rules are why the map, the shadow store, the compiled tool layer
+(`Maintain/Target/`) and the compiled site (`/Target/`) are gitignored: each one
+records something machine-specific or account-specific. Ignoring does not
+untrack - a file already in the index stays there until `git rm --cached`.

@@ -125,7 +125,7 @@ export function system(lists: readonly string[]): string {
 	].join("\n");
 }
 
-/** One bucket's counts as a person reads them: `AI 4, UI 1, CODE 9`. */
+/** One bucket's counts as a person reads them: `reading 4, recipes 1, notes 9`. */
 function keywordLine(hits: Record<string, number>): string {
 	const entries = Object.entries(hits);
 	if (entries.length === 0) return "none";
