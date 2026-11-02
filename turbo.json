@@ -1,0 +1,23 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+
+	"globalEnv": ["NODE_ENV"],
+
+	"tasks": {
+		"build": {
+			"outputs": ["Target/**"]
+		},
+
+		"check": {
+			"dependsOn": ["build"],
+
+			"outputs": []
+		},
+
+		"tool": {
+			"cache": false,
+
+			"outputs": ["Target/**"]
+		}
+	}
+}

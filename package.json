@@ -24,8 +24,10 @@
 		"url": "https://PlayForm.Cloud"
 	},
 	"scripts": {
+		"build": "astro build",
+		"tool": "turbo run tool --filter=@nikolarhristov/timeline-maintain",
 		"Run": "astro dev --host",
-		"prepublishOnly": "astro build"
+		"prepublishOnly": "pnpm run build"
 	},
 	"dependencies": {
 		"@astrojs/sitemap": "3.7.4",
@@ -54,7 +56,8 @@
 		"zod": "4.6.7"
 	},
 	"devDependencies": {
-		"@astrojs/ts-plugin": "1.10.12"
+		"@astrojs/ts-plugin": "1.10.12",
+		"turbo": "2.11.10"
 	},
 	"publishConfig": {
 		"access": "restricted",

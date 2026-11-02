@@ -1,0 +1,19 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+
+	"compilerOptions": {
+		"noEmit": true,
+
+		"outDir": "./Target",
+
+		"rootDir": "./Source",
+
+		"types": ["node"]
+	},
+
+	"extends": "@playform/build/tsconfig",
+
+	"include": ["Source"],
+
+	"exclude": ["Target", "node_modules"]
+}

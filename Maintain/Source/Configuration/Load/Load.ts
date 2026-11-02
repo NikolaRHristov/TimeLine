@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { isAbsolute, join, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fail, isFailure } from "../../Cli/Parser/Output/Failure.ts";
 import type { Configuration } from "../Schema/Schema.ts";
 import { validate } from "../Schema/Schema.ts";
@@ -7,9 +7,36 @@ import { validate } from "../Schema/Schema.ts";
 /** Where the identifier map lives, relative to the repository root. */
 export const DEFAULT_CONFIGURATION = "Maintain/Configuration/Local/Configuration.local.json";
 
-/** The repository root: this file sits three levels below it. */
+/** The marker that names the repository root: the workspace file. */
+const ROOT_MARKER = "pnpm-workspace.yaml";
+
+/**
+ * The repository root.
+ *
+ * Found by walking up from this module, never by counting `..`: the same file
+ * runs from two depths. From source it is `Maintain/Source/Configuration/Load`;
+ * compiled it is `Maintain/Target/Configuration/Load`, one level shallower
+ * because the build drops `Source`. A fixed number of `..` is right in one
+ * place and wrong in the other, and being wrong means reading the identifier
+ * map - and writing the shadow store - in the wrong directory.
+ *
+ * A tree without the marker falls back to the working directory and says so:
+ * guessing quietly would be worse than a warning.
+ */
 export function root(): string {
-	return resolve(import.meta.dirname, "../../..");
+	let directory = import.meta.dirname;
+
+	for (;;) {
+		if (existsSync(join(directory, ROOT_MARKER))) return directory;
+
+		const parent = dirname(directory);
+		if (parent === directory) break;
+		directory = parent;
+	}
+
+	process.stderr.write(`maintain: no ${ROOT_MARKER} above ${import.meta.dirname}; using ${process.cwd()}\n`);
+
+	return process.cwd();
 }
 
 export function configurationPath(): string {

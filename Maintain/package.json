@@ -1,4 +1,24 @@
 {
+	"name": "@nikolarhristov/timeline-maintain",
+	"version": "0.0.1",
 	"private": true,
-	"type": "module"
+	"description": "Local tool layer: a dependency-free CDP client the site's content is scraped with.",
+	"type": "module",
+	"bin": {
+		"maintain": "Target/Index.js"
+	},
+	"scripts": {
+		"Build": "Build 'Source/**/*.ts' --ESBuild Configuration/ESBuild.ts",
+		"Watch": "Build 'Source/**/*.ts' --Watch --ESBuild Configuration/ESBuild.ts",
+		"build": "pnpm run Build",
+		"tool": "pnpm run Build",
+		"check": "tsc --noEmit -p tsconfig.json",
+		"test": "node --test Target/Test/*.test.js"
+	},
+	"devDependencies": {
+		"@playform/build": "0.3.4",
+		"@types/node": "26.6.5",
+		"tsc-alias": "1.9.1",
+		"typescript": "7.0.2"
+	}
 }
