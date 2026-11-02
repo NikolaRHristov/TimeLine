@@ -6,14 +6,24 @@
  * scrape that observed the post, which is the earliest moment this pipeline can
  * vouch for. The interface never exposes when the post was saved, so the page
  * must not present that timestamp as one.
+ *
+ * The route parameter is `Id` rather than `id` because the route a visitor
+ * reads is `/Bookmark/<id>` - a public path segment - while this name only
+ * exists inside `getStaticPaths`. The file is a rest route so an id that
+ * contains a separator still resolves to one page.
  */
+import "@Stylesheet/Component/Note.css";
+import "@Stylesheet/Component/Pill.css";
+import "@Stylesheet/Component/Roster.css";
 import Base from "@Layout/Base.astro";
+import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
 	const bookmarks = await getCollection("Bookmark");
+
 	return bookmarks.map((entry) => ({
-		params: { id: entry.id },
+		params: { Id: entry.id },
 		props: { entry },
 	}));
 }
@@ -42,9 +52,9 @@ const measured = [
 ---
 
 <Base Title={`${author.name} on X`} Description={entry.data.text.slice(0, 160)}>
-	<main class="container mx-auto max-w-3xl px-6 py-10">
+	<article class="sheet">
 		<nav class="mb-8 text-sm">
-			<a class="underline decoration-neutral-300 underline-offset-2" href="/Bookmark/">
+			<a class="underline decoration-neutral-300 underline-offset-2" href={Route.Bookmark}>
 				← Bookmarks
 			</a>
 		</nav>
@@ -72,6 +82,18 @@ const measured = [
 			</header>
 
 			<p class="whitespace-pre-wrap text-base leading-relaxed">{entry.data.text}</p>
+
+			{entry.data.lists.length > 0 && (
+				<ul class="pill__row">
+					{entry.data.lists.map((list) => (
+						<li>
+							<a class="pill__link" href={ListHref(list)}>
+								{list}
+							</a>
+						</li>
+					))}
+				</ul>
+			)}
 
 			{images.length > 0 && (
 				<div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -125,6 +147,11 @@ const measured = [
 				the post. The interface does not expose the moment it was saved.
 			</p>
 			<p>Last read {day(entry.data.scrapedAt)}.</p>
+			<p>
+				<a class="underline" href={BookmarkHref(entry.id)}>
+					Permalink
+				</a>
+			</p>
 		</footer>
-	</main>
+	</article>
 </Base>

@@ -12,16 +12,25 @@ synthetic post, and no real handle, list id or post id is committed.
 
 ## What you get
 
-| Route             | What it shows                                                     |
-| ----------------- | ----------------------------------------------------------------- |
-| `/`               | Counts, the lists in use, the five newest posts                   |
-| `/Bookmark/`      | Every published post, grouped by list and then by author          |
-| `/Bookmark/<id>/` | One post: text, media, metrics, and when the archive saw it       |
-| `/Activity/`      | The event log, newest first - a build-time read, no polling       |
-| `/Voted/`         | The candidates visitors rank, with their counts, and nothing else |
+| Route            | What it shows                                                     |
+| ---------------- | ----------------------------------------------------------------- |
+| `/`              | Counts, the lists in use, the five newest posts                   |
+| `/Bookmark`      | Every published post, grouped by list and then by author          |
+| `/Bookmark/<id>` | One post: text, media, metrics, and when the archive saw it       |
+| `/List`          | Every list the published posts carry, with its post count         |
+| `/List/<slug>`   | One list, newest first                                            |
+| `/Activity`      | The event log, newest first - a build-time read, no polling       |
+| `/Voted`         | The candidates visitors rank, with their counts, and nothing else |
 
 Every page renders an empty state when its collection is empty, so a fresh clone builds before it
 has any bookmarks.
+
+Every route above is PascalCase and is the only spelling that is served. A lowercase or semantic
+alias (`/bookmarks`, `/lists`, `/voted`, `/saved`, `/events`, …) answers with a `301` to the
+canonical path. The aliases are generated from `Source/Function/Route/Map.ts` into
+`Public/_redirects`; run `node Maintain/Script/GenerateRedirects.ts` after editing that map, and
+never edit the generated file by hand. `Documentation/Reference/URL-And-Shell.md` has the whole
+picture.
 
 ## Prerequisites
 

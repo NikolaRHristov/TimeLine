@@ -1,0 +1,68 @@
+/**
+ * The roster: one row per entry, with a leading figure and a trailing fact.
+ *
+ * The Curated index, the Voted candidates, the Bookmark list and the Activity
+ * log are the same shape seen from four angles - a ranked row, a vote count, a
+ * timestamp - so they share one row primitive instead of four near-copies.
+ *
+ * The row wraps rather than truncates. A post excerpt is the widest thing on
+ * the page and an author handle is the narrowest, so on a phone the meta line
+ * drops under the label and nothing is clipped.
+ */
+.roster {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	&__row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-1) var(--space-3);
+		padding-block: var(--space-2);
+		border-bottom: 1px solid var(--color-surface-sunken);
+		line-height: 1.35;
+
+		&:last-child {
+			border-bottom: 0;
+		}
+	}
+
+	/* The leading figure: a rank, a vote count, a time. Fixed width so the
+	   labels below it start on one vertical line. */
+	&__lead {
+		min-width: 2.5rem;
+		font-size: var(--text-sm);
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-ink-faint);
+	}
+
+	&__label {
+		color: var(--color-ink);
+		text-decoration: underline;
+		text-decoration-color: var(--color-line-strong);
+		text-underline-offset: 2px;
+
+		&:hover {
+			text-decoration-color: var(--color-ink);
+		}
+	}
+
+	/* The trailing fact, pushed to the right edge on a wide screen and left
+	   inline on a narrow one. */
+	&__meta {
+		margin-left: auto;
+		white-space: nowrap;
+		font-size: var(--text-xs);
+		color: var(--color-ink-faint);
+	}
+
+	/* A fact that belongs under the label rather than beside it: a note, a list
+	   membership. Full width forces the wrap. */
+	&__aside {
+		flex-basis: 100%;
+		font-size: var(--text-xs);
+		color: var(--color-ink-muted);
+	}
+}

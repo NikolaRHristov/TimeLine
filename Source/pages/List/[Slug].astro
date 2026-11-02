@@ -1,0 +1,96 @@
+---
+/**
+ * One list, newest first.
+ *
+ * The same rows `/Bookmark` groups by list, filtered to a single slug. The two
+ * pages exist because they answer different questions: the bookmark index is
+ * "what is in this archive", and this one is "what did I file under this word".
+ *
+ * The slug is a route parameter, so the path is `/List/<slug>` - one segment,
+ * never nested. A slug comes from the person's configuration and is not
+ * trusted to be URL-safe: `Canonical()` percent-encodes it when it builds the
+ * link, and Astro encodes it again when it builds the path, so the two agree.
+ */
+import Base from "@Layout/Base.astro";
+import { BookmarkHref, Route } from "@Library/Link.ts";
+import "@Stylesheet/Component/Note.css";
+import "@Stylesheet/Component/Roster.css";
+import { getCollection } from "astro:content";
+
+/** The bucket a post lands in when no list has claimed it. */
+const Unsorted = "Unsorted";
+
+export async function getStaticPaths() {
+	const bookmarks = await getCollection("Bookmark");
+	const slugs = new Set<string>();
+
+	for (const entry of bookmarks) {
+		if (entry.data.lists.length === 0) {
+			slugs.add(Unsorted);
+		}
+
+		for (const list of entry.data.lists) {
+			slugs.add(list);
+		}
+	}
+
+	return [...slugs].map((Slug) => ({ params: { Slug }, props: { Slug } }));
+}
+
+const { Slug } = Astro.props;
+
+const bookmarks = await getCollection("Bookmark");
+
+const entries = bookmarks
+	.filter((entry) => (entry.data.lists.length > 0 ? entry.data.lists : [Unsorted]).includes(Slug))
+	.sort((left, right) =>
+		(right.data.postedAt ?? right.data.firstSeenAt).localeCompare(
+			left.data.postedAt ?? left.data.firstSeenAt,
+		),
+	);
+
+const excerpt = (text: string): string =>
+	text.length > 180 ? `${text.slice(0, 180).trimEnd()}…` : text;
+const day = (value: string): string => value.slice(0, 10);
+---
+
+<Base Title={Slug} Description={`${entries.length} saved posts filed under ${Slug}.`}>
+	<article class="sheet">
+		<header class="sheet__head">
+			<h1 class="sheet__title">{Slug}</h1>
+			<p class="sheet__lede">
+				{entries.length} saved {entries.length === 1 ? "post" : "posts"}, newest first.
+			</p>
+		</header>
+
+		<ul class="roster">
+			{entries.map((entry) => (
+				<li class="roster__row">
+					<a class="roster__label" href={BookmarkHref(entry.id)}>
+						{excerpt(entry.data.text)}
+					</a>
+					<span class="roster__meta">
+						@{entry.data.author.handle} ·{" "}
+						{day(entry.data.postedAt ?? entry.data.firstSeenAt)}
+					</span>
+				</li>
+			))}
+		</ul>
+
+		{entries.length === 0 && (
+			<section class="note">
+				<h2 class="note__title">Nothing filed here yet</h2>
+				<p class="note__body">
+					This list has no published posts. The page exists because the slug does - an
+					empty list is a state, not an error.
+				</p>
+			</section>
+		)}
+
+		<footer class="sheet__foot">
+			<a href={Route.List}>All lists</a>
+			<span>·</span>
+			<a href={Route.Bookmark}>Bookmarks</a>
+		</footer>
+	</article>
+</Base>

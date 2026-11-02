@@ -18,8 +18,15 @@
  * Nothing is fetched while this page is built: the numbers come from the
  * content collection, which `maintain vote sync` refreshed last time the owner
  * ran it.
+ *
+ * The `data-vote-*` attributes are the widget's contract. They are on the same
+ * elements as the roster classes on purpose: the markup is styled by the
+ * stylesheet and found by the script, and neither has to know about the other.
  */
+import "@Stylesheet/Component/Note.css";
+import "@Stylesheet/Component/Roster.css";
 import Base from "@Layout/Base.astro";
+import { Route } from "@Library/Link.ts";
 import { read as readConfiguration } from "@Script/Vote/Configuration.ts";
 import { getCollection } from "astro:content";
 
@@ -49,74 +56,62 @@ const label = (entry: (typeof candidates)[number]): string =>
 ---
 
 <Base Title="Voted" Description={`${candidates.length} nominated posts, ranked by votes.`}>
-	<main class="container mx-auto max-w-3xl px-6 py-10">
-		<header class="mb-10">
-			<h1 class="text-2xl font-semibold">Voted</h1>
-			<p class="mt-1 text-sm text-neutral-600">
+	<article class="sheet">
+		<header class="sheet__head">
+			<h1 class="sheet__title">Voted</h1>
+			<p class="sheet__lede">
 				{candidates.length}
 				{candidates.length === 1 ? " candidate" : " candidates"} waiting for review, ranked
 				by votes. Votes decide the order here; they do not publish anything.
 			</p>
 			{!configured && (
-				<p class="mt-2 text-sm text-neutral-600">
+				<p class="sheet__lede">
 					Voting is not configured for this build - the counts below are the ones on file.
-					See{" "}
-					<code class="rounded bg-neutral-100 px-1">
-						Documentation/Reference/Voting.md
-					</code>{" "}
-					to add a vote store, or keep reading: the Curated index works without one.
+					See <code>Documentation/Reference/Voting.md</code> to add a vote store, or keep
+					reading: the Curated index works without one.
 				</p>
 			)}
 		</header>
 
 		{candidates.length === 0 && (
-			<section class="rounded border border-neutral-200 p-6 text-sm text-neutral-700">
-				<h2 class="mb-2 text-base font-semibold">Nothing nominated yet</h2>
-				<p class="mb-3">The candidate index is filled by the owner, one post at a time:</p>
-				<ol class="space-y-1">
+			<section class="note">
+				<h2 class="note__title">Nothing nominated yet</h2>
+				<p class="note__body">
+					The candidate index is filled by the owner, one post at a time:
+				</p>
+				<ol>
 					<li>
-						<code class="rounded bg-neutral-100 px-1">
-							maintain vote nominate --id &lt;status-id&gt;
-						</code>
+						<code>maintain vote nominate --id &lt;status-id&gt;</code>
 					</li>
 					<li>
-						<code class="rounded bg-neutral-100 px-1">maintain vote queue</code>
+						<code>maintain vote queue</code>
 					</li>
 					<li>
-						<code class="rounded bg-neutral-100 px-1">
-							maintain vote approve --id &lt;status-id&gt;
-						</code>
+						<code>maintain vote approve --id &lt;status-id&gt;</code>
 					</li>
 				</ol>
-				<p class="mt-3">
-					Approval is what puts an entry on the homepage. See{" "}
-					<code class="mx-1 rounded bg-neutral-100 px-1">
-						Documentation/Reference/Voting.md
-					</code>
-					for the whole flow.
+				<p class="note__body">
+					Approval is what puts an entry on the homepage. See
+					<code>Documentation/Reference/Voting.md</code> for the whole flow.
 				</p>
 			</section>
 		)}
 
 		{candidates.length > 0 && (
 			<div data-vote>
-				<ol class="space-y-4">
+				<ol class="roster">
 					{candidates.map((entry) => (
-						<li
-							class="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-neutral-200 pb-4"
-							data-vote-row>
-							<span
-								class="min-w-10 text-sm font-semibold tabular-nums text-neutral-700"
-								data-vote-total>
+						<li class="roster__row" data-vote-row>
+							<span class="roster__lead" data-vote-total>
 								{entry.data.votes}
 							</span>
 							<a
-								class="underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-900"
+								class="roster__label"
 								href={entry.data.url}
 								rel="noopener noreferrer">
 								{label(entry)}
 							</a>
-							<span class="text-xs text-neutral-500">
+							<span class="roster__meta">
 								{entry.data.author.handle === ""
 									? "unknown author"
 									: `@${entry.data.author.handle}`}
@@ -125,9 +120,7 @@ const label = (entry: (typeof candidates)[number]): string =>
 								{entry.data.lists.length > 0 && ` · ${entry.data.lists.join(", ")}`}
 							</span>
 							{entry.data.note !== undefined && entry.data.note !== "" && (
-								<span class="w-full text-xs text-neutral-600">
-									{entry.data.note}
-								</span>
+								<span class="roster__aside">{entry.data.note}</span>
 							)}
 							{configured && (
 								<button
@@ -144,20 +137,16 @@ const label = (entry: (typeof candidates)[number]): string =>
 			</div>
 		)}
 
-		<footer class="mt-12 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
-			<a class="underline" href="/">
-				Curated
-			</a>
-			<span class="mx-2">·</span>
-			<a class="underline" href="/Bookmark/">
-				Bookmarks
-			</a>
-			<span class="mx-2">·</span>
-			<a class="underline" href="/Activity/">
-				Activity
-			</a>
+		<footer class="sheet__foot">
+			<a href={Route.Home}>Curated</a>
+			<span>·</span>
+			<a href={Route.Bookmark}>Bookmarks</a>
+			<span>·</span>
+			<a href={Route.List}>Lists</a>
+			<span>·</span>
+			<a href={Route.Activity}>Activity</a>
 		</footer>
-	</main>
+	</article>
 </Base>
 
 {configuration !== null && (

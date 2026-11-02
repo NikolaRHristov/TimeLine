@@ -1,0 +1,57 @@
+/**
+ * The note: a bordered panel that explains an empty state.
+ *
+ * Every page in this site has a state with nothing in it, and that state is
+ * normal rather than an error - a fresh clone has no bookmarks, an archive with
+ * no vote store has no counts to show. The note is the shape those states share:
+ * a heading, one sentence of cause, and the commands that change it.
+ *
+ * It is deliberately not an alert. Nothing here is wrong, so nothing is red.
+ */
+.note {
+	padding: var(--space-6);
+	border: var(--hairline);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-sm);
+	color: var(--color-ink-muted);
+
+	&__title {
+		margin: 0 0 var(--space-2);
+		font-size: var(--text-base);
+		font-weight: 600;
+		color: var(--color-ink);
+	}
+
+	&__body {
+		margin: 0;
+
+		& + & {
+			margin-top: var(--space-3);
+		}
+	}
+
+	/* The commands a reader can run. Inline code, not a code block: each one is
+	   a step in a short list, and a block would push the last step off screen. */
+	code {
+		padding: 0 var(--space-1);
+		border-radius: var(--radius-sm);
+		background: var(--color-surface-sunken);
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		color: var(--color-ink);
+	}
+
+	ol,
+	ul {
+		margin: 0;
+		padding-left: var(--space-6);
+	}
+
+	li + li {
+		margin-top: var(--space-1);
+	}
+
+	a {
+		color: var(--color-ink);
+	}
+}

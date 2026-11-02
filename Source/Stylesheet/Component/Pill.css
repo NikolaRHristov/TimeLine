@@ -1,0 +1,35 @@
+/**
+ * The pill: a list slug rendered as a link.
+ *
+ * A slug is a word the person chose, so it is shown as one - not as a tag with
+ * a count, and not as a filter control that hides rows. Each pill navigates to
+ * that list's page, which is the only place the list's posts are grouped.
+ *
+ * The row wraps rather than scrolls: a person with forty lists should see forty
+ * pills on four lines, not one line with a horizontal scrollbar.
+ */
+.pill {
+	&__row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin-block: var(--space-6) var(--space-8);
+		padding: 0;
+		list-style: none;
+	}
+
+	&__link {
+		display: inline-block;
+		padding: var(--space-1) var(--space-3);
+		border: var(--hairline);
+		border-radius: var(--radius-full);
+		font-size: var(--text-xs);
+		color: var(--color-ink-muted);
+		text-decoration: none;
+
+		&:hover {
+			border-color: var(--color-line-strong);
+			color: var(--color-ink);
+		}
+	}
+}

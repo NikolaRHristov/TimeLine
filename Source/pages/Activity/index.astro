@@ -4,10 +4,17 @@
  *
  * Events are files, so this page is a build-time read of the Event collection -
  * no client JavaScript, no feed to poll. The live view of the same directory is
- * `node Maintain/Index.ts event tail --follow`, which prints the files as they
- * land.
+ * `node Maintain/Target/Index.js event tail --follow`, which prints the files as
+ * they land.
+ *
+ * A subject that resolves to a published post is a link; anything else is text.
+ * That distinction is the whole value of the page: it says which events changed
+ * something a visitor can see, without pretending the rest did not happen.
  */
 import Base from "@Layout/Base.astro";
+import { BookmarkHref, Route } from "@Library/Link.ts";
+import "@Stylesheet/Component/Note.css";
+import "@Stylesheet/Component/Roster.css";
 import { getCollection } from "astro:content";
 
 const events = (await getCollection("Event")).sort((left, right) =>
@@ -20,28 +27,24 @@ const isPost = (subject: string): boolean => bookmarks.has(subject);
 ---
 
 <Base Title="Activity" Description="What the bookmark pipeline did, newest first.">
-	<main class="container mx-auto max-w-3xl px-6 py-10">
-		<header class="mb-8">
-			<h1 class="text-2xl font-semibold">Activity</h1>
-			<p class="mt-1 text-sm text-neutral-600">
+	<article class="sheet">
+		<header class="sheet__head">
+			<h1 class="sheet__title">Activity</h1>
+			<p class="sheet__lede">
 				{events.length} {events.length === 1 ? "event" : "events"}, newest first.
 			</p>
 		</header>
 
-		<ol class="space-y-2">
+		<ol class="roster">
 			{events.map((entry) => (
-				<li class="flex flex-wrap items-baseline gap-x-3 border-b border-neutral-100 pb-2 text-sm">
-					<time
-						class="w-40 shrink-0 font-mono text-xs text-neutral-500"
-						datetime={entry.data.at}>
+				<li class="roster__row">
+					<time class="roster__lead font-mono" datetime={entry.data.at}>
 						{moment(entry.data.at)}
 					</time>
 					<span class="font-medium">{entry.data.kind}</span>
 					<span class="text-neutral-600">
 						{isPost(entry.data.subject) ? (
-							<a
-								class="underline decoration-neutral-300 underline-offset-2"
-								href={`/Bookmark/${entry.data.subject}/`}>
+							<a class="roster__label" href={BookmarkHref(entry.data.subject)}>
 								{entry.data.subject}
 							</a>
 						) : (
@@ -49,24 +52,26 @@ const isPost = (subject: string): boolean => bookmarks.has(subject);
 						)}
 					</span>
 					{typeof entry.data.payload?.count === "number" && (
-						<span class="text-xs text-neutral-500">
-							{entry.data.payload.count} posts
-						</span>
+						<span class="roster__meta">{entry.data.payload.count} posts</span>
 					)}
 				</li>
 			))}
 		</ol>
 
 		{events.length === 0 && (
-			<p class="text-sm text-neutral-600">
-				Nothing recorded yet. Events appear here once a post is published.
-			</p>
+			<section class="note">
+				<h2 class="note__title">Nothing recorded yet</h2>
+				<p class="note__body">
+					Events appear here once a post is published. The log is a directory of files,
+					not a database, so it can be read while the pipeline is running.
+				</p>
+			</section>
 		)}
 
-		<footer class="mt-12 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
-			<a class="underline" href="/Bookmark/">
-				Bookmarks
-			</a>
+		<footer class="sheet__foot">
+			<a href={Route.Bookmark}>Bookmarks</a>
+			<span>·</span>
+			<a href={Route.List}>Lists</a>
 		</footer>
-	</main>
+	</article>
 </Base>

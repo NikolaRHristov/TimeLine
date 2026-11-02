@@ -1,0 +1,29 @@
+# Response headers, read by the static host.
+#
+# The four security headers are the ones a sibling site in this family sets,
+# kept identical so a review of either site reads the same. They cost nothing
+# and each closes a real class of mistake:
+#
+#   X-Content-Type-Options    - a browser must not guess a type from the bytes;
+#                               an uploaded file served as text/html would run.
+#   X-Frame-Options           - the site cannot be framed, so it cannot be used
+#                               as an invisible click target.
+#   Referrer-Policy           - the full URL (which carries a post id) stays
+#                               out of a third-party Referer header.
+#   Permissions-Policy        - no camera, microphone or location, because the
+#                               page has no code that asks for them.
+#
+# The asset rule is what makes the service worker's cache coherent: everything
+# under `_astro/` is content-hashed, so a year-long immutable cache is correct -
+# a changed file is a different URL. The redirect map and the content JSON are
+# deliberately absent from that rule: they must revalidate, because a stale
+# redirect is worse than no cache.
+
+/*
+	X-Content-Type-Options: nosniff
+	X-Frame-Options: SAMEORIGIN
+	Referrer-Policy: strict-origin-when-cross-origin
+	Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/_astro/*
+	Cache-Control: public, max-age=31536000, immutable

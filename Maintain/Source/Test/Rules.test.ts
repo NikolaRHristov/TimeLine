@@ -221,10 +221,14 @@ test("the threshold and the weights are read from the file, not from the code", 
 	const rules = tracked();
 	const onDisk = JSON.parse(readFileSync(join(root(), DEFAULT_RULES), "utf8")) as {
 		threshold: { score: number; gap: number };
+		lists: Record<string, unknown>;
 	};
 
 	assert.deepEqual(rules.threshold, onDisk.threshold);
-	assert.deepEqual(Object.keys(rules.lists).sort(), ["AI", "CODE", "UI"]);
+	// The list names come from the file, in the file's own order - the tracked
+	// taxonomy is configuration, so a test that spelled it here would be a
+	// second copy of it.
+	assert.deepEqual(Object.keys(rules.lists), Object.keys(onDisk.lists));
 
 	const portfolio = evidence("designer", { UI: { figma: 2 } });
 	assert.equal(decide(portfolio, rules).list, "UI");

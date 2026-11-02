@@ -8,6 +8,7 @@ import { Keyword } from "../Configuration/Keyword/Keyword.ts";
 import { root } from "../Configuration/Load/Load.ts";
 import type { Author } from "../Model/Author/Author.ts";
 import {
+	buckets,
 	build,
 	domains,
 	EXCERPT_COUNT,
@@ -286,6 +287,20 @@ test("terms are counted per keyword, and the totals are their sum", () => {
 	assert.deepEqual(record.terms["second"], { figma: 1 });
 	assert.deepEqual(record.terms["third"], { rust: 2 });
 	assert.deepEqual(record.keywords, { first: 1, second: 1, third: 2 });
+});
+
+test("buckets are the vocabulary's own keys, in the order it declares them", () => {
+	// Neutral fixture slugs: nothing here knows the tracked taxonomy, which is
+	// the point - a vocabulary is configuration, so its keys are the buckets and
+	// its order is the record's print order.
+	const vocabulary = { alpha: ["ai"], beta: ["figma"], gamma: ["rust"] };
+	const record = build("alpha", author, [post("1", "ai figma rust")], vocabulary);
+
+	assert.deepEqual(buckets(vocabulary), ["alpha", "beta", "gamma"]);
+	assert.deepEqual(Object.keys(record.terms), ["alpha", "beta", "gamma"]);
+	assert.deepEqual(Object.keys(record.keywords), ["alpha", "beta", "gamma"]);
+	// Declared order, not sorted order: the vocabulary decides both.
+	assert.deepEqual(buckets({ gamma: ["rust"], alpha: ["ai"] }), ["gamma", "alpha"]);
 });
 
 test("no inference module is imported and no network call is made", async () => {

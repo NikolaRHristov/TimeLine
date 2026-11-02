@@ -1,0 +1,71 @@
+/**
+ * The page frame: the content column every page shares, and the two blocks that
+ * repeat at the top and the bottom of it.
+ *
+ * Layout, not component. A rule that styles one block of content belongs in
+ * `Stylesheet/Component/` instead - the split is what keeps this file short
+ * enough to read when you are looking for "why is the column this wide".
+ *
+ * The column width lives in `--content-width` (see `Global.css`) and the shell
+ * uses the same value, so the header, the article and the footer share one left
+ * edge at every viewport width.
+ */
+
+/* The article inside the shell's `<main>`. The shell owns the measure and the
+   horizontal padding; this owns the vertical rhythm only. */
+.sheet {
+	padding-block: 0;
+}
+
+.sheet__head {
+	margin-bottom: var(--space-10);
+}
+
+.sheet__title {
+	margin: 0;
+	font-size: var(--text-2xl);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+.sheet__lede {
+	margin: var(--space-1) 0 0;
+	font-size: var(--text-sm);
+	color: var(--color-ink-muted);
+}
+
+/* A section heading: the hairline under the label is what separates a long
+   grouped page into scannable blocks without a box. */
+.sheet__section {
+	margin-bottom: var(--rhythm-block);
+}
+
+.sheet__heading {
+	margin: 0 0 var(--space-3);
+	padding-bottom: var(--space-2);
+	border-bottom: var(--hairline);
+	font-size: var(--text-lg);
+	font-weight: 600;
+}
+
+/* The footer link row that closes a page: one line, muted, hairlined above. */
+.sheet__foot {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	margin-top: var(--rhythm-block);
+	padding-top: var(--space-4);
+	border-top: var(--hairline);
+	font-size: var(--text-xs);
+	color: var(--color-ink-faint);
+
+	a {
+		color: inherit;
+		text-decoration: underline;
+		text-underline-offset: 2px;
+
+		&:hover {
+			color: var(--color-ink);
+		}
+	}
+}

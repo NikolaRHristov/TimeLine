@@ -1,0 +1,53 @@
+# Generated file - do not edit.
+#
+# Source of truth: Source/Function/Route/Map.ts
+# Regenerate:     node Maintain/Script/GenerateRedirects.ts
+#
+# 5 canonical paths are served, not redirected.
+# 42 rules below are the aliases: lowercase and semantic spellings
+# that must reach the same page. Every one of them is a 301.
+#
+# Syntax: /from /to 301
+
+/activities   /Activity        301
+/activities/  /Activity        301
+/activity     /Activity        301
+/activity/    /Activity        301
+/activity/*   /Activity/:splat 301
+/bookmark     /Bookmark        301
+/bookmark/    /Bookmark        301
+/bookmark/*   /Bookmark/:splat 301
+/bookmarks    /Bookmark        301
+/bookmarks/   /Bookmark        301
+/candidates   /Voted           301
+/candidates/  /Voted           301
+/curated      /                301
+/curated/     /                301
+/event        /Activity        301
+/event/       /Activity        301
+/events       /Activity        301
+/events/      /Activity        301
+/home         /                301
+/home/        /                301
+/index        /                301
+/index/       /                301
+/list         /List            301
+/list/        /List            301
+/list/*       /List/:splat     301
+/lists        /List            301
+/lists/       /List            301
+/saved        /Bookmark        301
+/saved-posts  /Bookmark        301
+/saved-posts/ /Bookmark        301
+/saved/       /Bookmark        301
+/start        /                301
+/start/       /                301
+/vote         /Voted           301
+/vote/        /Voted           301
+/voted        /Voted           301
+/voted/       /Voted           301
+/voted/*      /Voted/:splat    301
+/votes        /Voted           301
+/votes/       /Voted           301
+/welcome      /                301
+/welcome/     /                301

@@ -6,8 +6,15 @@
  * A post can belong to more than one list, so it can appear under more than one
  * heading - the grouping is a view, not a copy. Posts with no list yet are
  * under `Unsorted`, which is where stage 3 leaves everything it has not decided.
+ *
+ * Each heading links to that list's own page. The grouping here is the whole
+ * archive at once; `/List/<slug>` is the same rows filtered to one list, which
+ * is the page a visitor who cares about one list actually wants.
  */
 import Base from "@Layout/Base.astro";
+import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
+import "@Stylesheet/Component/Note.css";
+import "@Stylesheet/Component/Roster.css";
 import { getCollection } from "astro:content";
 
 const bookmarks = await getCollection("Bookmark");
@@ -50,17 +57,25 @@ const excerpt = (text: string): string =>
 ---
 
 <Base Title="Bookmarks" Description={`${total} saved posts, grouped by list and author.`}>
-	<main class="container mx-auto max-w-3xl px-6 py-10">
-		<header class="mb-10">
-			<h1 class="text-2xl font-semibold">Bookmarks</h1>
-			<p class="mt-1 text-sm text-neutral-600">
+	<article class="sheet">
+		<header class="sheet__head">
+			<h1 class="sheet__title">Bookmarks</h1>
+			<p class="sheet__lede">
 				{total} saved {total === 1 ? "post" : "posts"}, grouped by list and author.
 			</p>
 		</header>
 
 		{sections.map(([list, authors]) => (
-			<section class="mb-12">
-				<h2 class="mb-4 border-b border-neutral-200 pb-2 text-lg font-semibold">{list}</h2>
+			<section class="sheet__section">
+				<h2 class="sheet__heading">
+					{list === "Unsorted" ? (
+						list
+					) : (
+						<a class="underline" href={ListHref(list)}>
+							{list}
+						</a>
+					)}
+				</h2>
 				{[...authors]
 					.sort(([left], [right]) => left.localeCompare(right))
 					.map(([handle, entries]) => (
@@ -69,15 +84,13 @@ const excerpt = (text: string): string =>
 								@{handle}{" "}
 								<span class="font-normal text-neutral-500">({entries.length})</span>
 							</h3>
-							<ul class="space-y-3">
+							<ul class="roster">
 								{entries.map((entry) => (
-									<li class="leading-snug">
-										<a
-											class="underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-900"
-											href={`/Bookmark/${entry.id}/`}>
+									<li class="roster__row">
+										<a class="roster__label" href={BookmarkHref(entry.id)}>
 											{excerpt(entry.data.text)}
 										</a>
-										<span class="ml-2 whitespace-nowrap text-xs text-neutral-500">
+										<span class="roster__meta">
 											{entry.data.postedAt
 												? entry.data.postedAt.slice(0, 10)
 												: entry.data.firstSeenAt.slice(0, 10)}
@@ -91,21 +104,26 @@ const excerpt = (text: string): string =>
 		))}
 
 		{total === 0 && (
-			<p class="text-sm text-neutral-600">
-				No bookmarks yet. Scrape your own into the shadow store, then publish what you want
-				to show:
-				<code class="mx-1 rounded bg-neutral-100 px-1">
-					maintain store scrape --source bookmark
-				</code>
-				then
-				<code class="mx-1 rounded bg-neutral-100 px-1">maintain store publish --all</code>.
-			</p>
+			<section class="note">
+				<h2 class="note__title">No bookmarks yet</h2>
+				<p class="note__body">
+					Scrape your own into the shadow store, then publish what you want to show:
+				</p>
+				<ol>
+					<li>
+						<code>maintain store scrape --source bookmark</code>
+					</li>
+					<li>
+						<code>maintain store publish --all</code>
+					</li>
+				</ol>
+			</section>
 		)}
 
-		<footer class="mt-12 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
-			<a class="underline" href="/Activity/">
-				Activity
-			</a>
+		<footer class="sheet__foot">
+			<a href={Route.List}>Lists</a>
+			<span>·</span>
+			<a href={Route.Activity}>Activity</a>
 		</footer>
-	</main>
+	</article>
 </Base>

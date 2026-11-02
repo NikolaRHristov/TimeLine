@@ -1,3 +1,53 @@
+/**
+ * The design tokens, and the one global reset the site needs.
+ *
+ * Values are literal rather than `theme(...)` lookups. This file is imported
+ * into a `<style is:global>` block, and the shell and component sheets read
+ * these variables - so a change of ink or spacing reaches the whole site
+ * without an edit under `Layout/` or `Component/`.
+ *
+ * The palette is Tailwind's neutral ramp, kept in step with the utility classes
+ * the pages still use. A page that migrates off the utilities should read a
+ * token instead of a colour, so there is one place a theme would change.
+ */
+
+:root {
+	--color-ink: #171717;
+	--color-ink-muted: #525252;
+	--color-ink-faint: #737373;
+	--color-line: #e5e5e5;
+	--color-line-strong: #d4d4d4;
+	--color-surface: #ffffff;
+	--color-surface-sunken: #f5f5f5;
+	--color-accent: #171717;
+	--color-accent-ink: #ffffff;
+
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-6: 1.5rem;
+	--space-8: 2rem;
+	--space-10: 2.5rem;
+
+	--text-xs: 0.75rem;
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-lg: 1.125rem;
+	--text-2xl: 1.5rem;
+
+	--font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+	--radius-sm: 0.25rem;
+	--radius-full: 9999px;
+
+	--hairline: 1px solid var(--color-line);
+	--header-height: 3.5rem;
+	--rhythm-block: 3rem;
+	--content-width: 48rem;
+}
+
 html {
 	-webkit-tap-highlight-color: transparent;
 }
@@ -22,4 +72,21 @@ body {
 
 img {
 	@apply inline-block select-none align-top outline-none;
+}
+
+/* A visible focus ring, because the shell is keyboard-reachable first. */
+:focus-visible {
+	outline: 2px solid var(--color-ink);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+		transition-duration: 0.01ms !important;
+	}
 }

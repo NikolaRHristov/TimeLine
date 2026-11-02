@@ -12,6 +12,18 @@ import type { Author } from "./Author.ts";
  */
 export type Vocabulary = Record<string, readonly string[]>;
 
+/**
+ * The buckets a vocabulary declares, in the order it declares them.
+ *
+ * The one place bucket names come from. A record's counts, its print order and
+ * the rules loader's view of which lists the evidence can count all derive from
+ * this list, so there is no second taxonomy in code to fall out of step with
+ * the configured one.
+ */
+export function buckets(vocabulary: Vocabulary): string[] {
+	return Object.keys(vocabulary);
+}
+
 /** How many times each bucket's vocabulary fired, per bucket. */
 export type KeywordHits = Record<string, number>;
 
@@ -205,7 +217,7 @@ export function terms(posts: readonly EvidencePost[], vocabulary: Vocabulary): T
 	const haystack = posts.map((post) => post.text.toLowerCase()).join("\n");
 	const hits: TermHits = {};
 
-	for (const bucket of Object.keys(vocabulary)) {
+	for (const bucket of buckets(vocabulary)) {
 		const counted: Record<string, number> = {};
 		for (const keyword of vocabulary[bucket] ?? []) {
 			const count = occurrences(haystack, keyword);
