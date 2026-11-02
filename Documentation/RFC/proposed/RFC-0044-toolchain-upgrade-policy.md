@@ -46,8 +46,13 @@ deferral, or an oversight.
 
 **The baseline was derivable all along.** `overflow: clip` appears in four sheets, `100dvh` in the
 workspace sheet, `@layer` in the base sheet, and CSS nesting appears in `.css` sources but is
-flattened by `tailwindcss/nesting` before the output. The highest requirement across those is Chrome
-108, Firefox 101, Safari 16.0, and no file said so.
+flattened by `tailwindcss/nesting` before the output. The highest requirement across those is
+Chrome 108, Firefox 101, Safari 16.0, and no file said so.
+
+**A Sass major would break the build today.** Every build prints
+`DEPRECATION WARNING [import]` for `Source/Layout/Base.astro:80` and `:81`, which import the two
+`.scss` sheets with `@import`; Dart Sass 3.0 removes that rule. The deferral is a migration to `@use`,
+measured by the warning rather than assumed.
 
 RFC-0009 fixed the workspace and the pipelines. It left two questions open - whether the tool
 package needs its own Node floor, and what a clean install proves without a lockfile. This record
@@ -104,5 +109,8 @@ answers both.
   install.
 - What a Tailwind 4 migration costs. It removes `tailwindcss/nesting` and moves the theme into CSS,
   so the estimate needs a spike against `postcss.config.js`, not a version bump.
+- What the Sass `@import` to `@use` migration costs across `Source/Layout/Base.astro` and the two
+  sheets it pulls in, and whether the sheets should instead be imported by the components that read
+  them.
 - Whether `astro check` belongs in `pnpm run check` beside the guard, and what it would report
   today.

@@ -384,8 +384,12 @@ workspace sheets call them rather than naming a fill. The token set is one file:
 colour. The stage map is one module: `Source/Library/Stage.ts` holds four steps, three kinds and the
 column binding, and its values are `var(...)` references rather than hexes.
 
-What is missing is enforcement. The rules above hold by discipline, and three measurements show
-where discipline has already slipped:
+The colour rules are enforced. `Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs`, wired
+as `pnpm run Check:Tokens` inside `pnpm run check`, fails the build on five things: a stray colour
+literal, an orphan token, an undefined token, a second stage map and a redefined `Material` mixin.
+Every message names the file and the line.
+
+Three rules in this record have no check, and each already drifts:
 
 - **A selected row reads a fixed accent.**
   `grep -n 'stage-source' Source/Stylesheet/Component/Drawer.scss` returns the selected-row rule:
@@ -396,9 +400,10 @@ where discipline has already slipped:
   returns `Provenance.scss` and two rules in `Shell.scss`: each assembles a chrome edge from a width
   and a colour where the paper ramp reads `--hairline`.
 
-The checks that would hold the rules are named in the verification table below and are intent until
-the token contract script lands. The alternative to a script is review, and a reviewer comparing two
-files cannot see the defect: a hex that should have been a token looks like a value that works.
+The rest of the rules are review rules. A script cannot see that a component reads a collection or
+that a gradient is the third one, and a reviewer comparing two files cannot see a hex that should
+have been a token, because the defect looks like a value that works. The verification table below
+says which claim each mechanism is responsible for.
 
 ## Alternatives considered
 
@@ -424,8 +429,8 @@ files cannot see the defect: a hex that should have been a token looks like a va
   them.
 - Geometry stays in the parts. A fidelity pass therefore edits sheets, deliberately: the alternative
   is a token per corner and a component that cannot state its own shape.
-- The rules are review rules until the token contract script exists. A rule with no check is a
-  preference, and this record does not pretend otherwise.
+- The colour rules are enforced by `pnpm run Check:Tokens`; the rest are review rules, and this
+  record names them rather than implying that review covers everything.
 - The record omits the template's `Date` field. Supersession orders this set, not recency: a reader
   asks which record replaced which, never which is newer.
 

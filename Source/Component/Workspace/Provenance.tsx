@@ -52,11 +52,33 @@ export default function Provenance(Props: Props) {
 
 	const Widest = () => Math.max(1, ...Props.Stages.map((Entry) => Entry.Events));
 
-	const Depth = (Index: number) => {
-		const Distance = Math.abs(Index - SelectedIndex());
+	/**
+	 * The drum always draws the full ladder, whatever the number of stages.
+	 *
+	 * The perspective is the whole point of the rail: thirteen bands, tallest and
+	 * most opaque in the middle, fading outward. One band per stage collapses that
+	 * to a list the moment an archive has four stages - which is every archive -
+	 * and four bands at 44/28/22/16 read as a stack of bars, not a cylinder. So the
+	 * slots are fixed and the stage under each slot is taken from the list and
+	 * cycled: the drum stays continuous, and a fifth stage changes what is labelled
+	 * rather than how many bands exist.
+	 */
+	const Span = 6;
+	const Slots = Array.from({ length: Span * 2 + 1 }, (_, Index) => Index - Span);
 
-		return Ladder[Math.min(Distance, Ladder.length - 1)];
+	const Empty: Stage = { Key: "", Label: "", Tone: "transparent", Events: 0 };
+
+	const Band = (Distance: number): Stage => {
+		const Count = Props.Stages.length;
+
+		if (Count === 0) {
+			return Empty;
+		}
+
+		return Props.Stages[((SelectedIndex() + Distance) % Count + Count) % Count] ?? Empty;
 	};
+
+	const Step = (Distance: number) => Ladder[Math.min(Math.abs(Distance), Ladder.length - 1)];
 
 	const Progress = (Entry: Stage) => `${Math.round((Entry.Events / Widest()) * 100)}%`;
 
@@ -68,10 +90,11 @@ export default function Provenance(Props: Props) {
 			</div>
 
 			<div class="provenance__drum" role="list">
-				<For each={Props.Stages}>
-					{(Entry, Index) => {
-						const Step = () => Depth(Index());
-						const Active = () => Entry.Key === Props.Selected;
+				<For each={Slots}>
+					{(Distance) => {
+						const Entry = () => Band(Distance);
+						const Shape = () => Step(Distance);
+						const Active = () => Distance === 0;
 
 						return (
 							<button
@@ -80,21 +103,21 @@ export default function Provenance(Props: Props) {
 								class="provenance__band"
 								classList={{ "provenance__band--selected": Active() }}
 								style={{
-									"--band-height": `${Step().Height}px`,
-									"--band-opacity": `${Step().Opacity}`,
-									"--band-tone": Entry.Tone,
-									"--track-height": `${Step().Track}px`,
-									"--band-progress": Progress(Entry),
-									"--band-label-size": `${Step().Label}px`,
-									"--marker-size": `${Step().Marker}px`,
-									"--marker-radius": `${Step().Radius}px`,
-									"--marker-border": `${Step().Border}px`,
-									"--marker-top": `${Step().Top}px`,
+									"--band-height": `${Shape().Height}px`,
+									"--band-opacity": `${Shape().Opacity}`,
+									"--band-tone": Entry().Tone,
+									"--track-height": `${Shape().Track}px`,
+									"--band-progress": Progress(Entry()),
+									"--band-label-size": `${Shape().Label}px`,
+									"--marker-size": `${Shape().Marker}px`,
+									"--marker-radius": `${Shape().Radius}px`,
+									"--marker-border": `${Shape().Border}px`,
+									"--marker-top": `${Shape().Top}px`,
 								}}
 								aria-pressed={Active()}
-								onClick={() => Props.OnSelect?.(Entry.Key)}>
-								<Show when={Step().Label > 0}>
-									<span class="provenance__band-label">{Entry.Label}</span>
+								onClick={() => Props.OnSelect?.(Entry().Key)}>
+								<Show when={Shape().Label > 0 && Entry().Label !== ""}>
+									<span class="provenance__band-label">{Entry().Label}</span>
 								</Show>
 
 								<span class="provenance__track">
@@ -111,8 +134,8 @@ export default function Provenance(Props: Props) {
 									</For>
 								</span>
 
-								<Show when={Active() && Entry.Caption !== undefined}>
-									<span class="provenance__caption">{Entry.Caption}</span>
+								<Show when={Active() && Entry().Caption !== undefined}>
+									<span class="provenance__caption">{Entry().Caption}</span>
 								</Show>
 							</button>
 						);
