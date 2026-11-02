@@ -38,18 +38,19 @@ Run these in order; each one rules out the previous cause.
    `ps -eo pid,etime,command | grep -E 'managed_worker|kanban_worker_client' | grep -v grep` lists
    every live worker and its age. Each running card has one `kanban_worker_client`; a
    `managed_worker` with no client beside it is a finished card whose process has not exited yet.
-3. **Read the gateway's own account.** `tail -40 ~/.hermes/logs/gateway.log` carries
+3. **Read the gateway's own account.** `tail -40 $HERMES_HOME/logs/gateway.log` carries
    `kanban dispatcher [default]: spawned=N reclaimed=N crashed=N` per pass, plus any
-   `Restart deferred` line.
+   `Restart deferred` line. `$HERMES_HOME` is the agent's profile directory; the paths below are
+   relative to it, so they read the same on any machine.
 4. **Count the rate limit by minute.**
-   `grep 'RateLimitError' ~/.hermes/logs/gateway.error.log | grep -oE '^[0-9-]+ [0-9]{2}:[0-9]{2}' | uniq -c | tail -10`.
+   `grep 'RateLimitError' $HERMES_HOME/logs/gateway.error.log | grep -oE '^[0-9-]+ [0-9]{2}:[0-9]{2}' | uniq -c | tail -10`.
    A cluster in one or two minutes is the provider throttling, not a code defect.
 5. **Read the board.** `hermes kanban list` prints every card with status and assignee;
    `hermes kanban show <id>` adds runs and comments.
 6. **Read the block reason, not the status.** A `blocked` card carries `last_failure_error`:
 
     ```sh
-    sqlite3 ~/.hermes/kanban.db "select id,status,consecutive_failures,substr(last_failure_error,1,200) from tasks where status='blocked'"
+    sqlite3 $HERMES_HOME/kanban.db "select id,status,consecutive_failures,substr(last_failure_error,1,200) from tasks where status='blocked'"
     ```
 
     The wording decides which failure below you are looking at.
@@ -95,9 +96,9 @@ or it is not queued.
 
 ## Reading the database safely
 
-`~/.hermes/state.db` and `~/.hermes/kanban.db` are WAL-mode; read them with `sqlite3` while the
-gateway runs. Never write to either by hand - a direct write bypasses the claim lock and the failure
-counter. The `tasks` table has no `blocked_reason` and no `attempts` column: block text is
+`$HERMES_HOME/state.db` and `$HERMES_HOME/kanban.db` are WAL-mode; read them with `sqlite3` while
+the gateway runs. Never write to either by hand - a direct write bypasses the claim lock and the
+failure counter. The `tasks` table has no `blocked_reason` and no `attempts` column: block text is
 `last_failure_error` and crash history lives in `task_events`.
 
 Counting every table in `state.db` is slow because the FTS shadow tables are huge; query the table
@@ -105,12 +106,12 @@ you need instead of enumerating all of them.
 
 ## Claim → test
 
-| Claim                            | Test                                                                                                         |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| A sweep is needed at all         | `uptime`, `memory_pressure \| tail -4`, `df -h /`                                                            |
-| Workers are live, and how old    | `ps -eo pid,etime,command \| grep -E 'managed_worker\|kanban_worker_client'`                                 |
-| The gateway is draining          | `grep 'Restart deferred' ~/.hermes/logs/gateway.log \| tail -1`                                              |
-| A provider is throttling         | `grep 'RateLimitError' ~/.hermes/logs/gateway.error.log \| tail -3`                                          |
-| Why a card is blocked            | `sqlite3 ~/.hermes/kanban.db "select id,substr(last_failure_error,1,160) from tasks where status='blocked'"` |
-| A card will never dispatch       | `hermes kanban list` shows `(unassigned)` beside a `ready` card                                              |
-| The fallback can relieve a limit | `grep -A3 'fallback_providers' ~/.hermes/config.yaml` names a model different from `model.default`           |
+| Claim                            | Test                                                                                                            |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| A sweep is needed at all         | `uptime`, `memory_pressure \| tail -4`, `df -h /`                                                               |
+| Workers are live, and how old    | `ps -eo pid,etime,command \| grep -E 'managed_worker\|kanban_worker_client'`                                    |
+| The gateway is draining          | `grep 'Restart deferred' $HERMES_HOME/logs/gateway.log \| tail -1`                                              |
+| A provider is throttling         | `grep 'RateLimitError' $HERMES_HOME/logs/gateway.error.log \| tail -3`                                          |
+| Why a card is blocked            | `sqlite3 $HERMES_HOME/kanban.db "select id,substr(last_failure_error,1,160) from tasks where status='blocked'"` |
+| A card will never dispatch       | `hermes kanban list` shows `(unassigned)` beside a `ready` card                                                 |
+| The fallback can relieve a limit | `grep -A3 'fallback_providers' $HERMES_HOME/config.yaml` names a model different from `model.default`           |

@@ -99,7 +99,7 @@ a verdict.
 indefinitely.
 
 ```sh
-grep 'browser-control/register' ~/.hermes/logs/gateway.log | tail -1
+grep 'browser-control/register' $HERMES_HOME/logs/gateway.log | tail -1
 ```
 
 Observed on a `--load-extension` relaunch: the background worker was present, yet no
@@ -131,5 +131,5 @@ the session is gone - re-read the list after a few seconds.
 | Which profile owns the port        | `PID=$(lsof -nP -iTCP:9222 -sTCP:LISTEN -t \| head -1); ps -o command= -p "$PID"`                   |
 | Both instances are up              | `ps -eo command \| grep '[B]rave Browser' \| grep -o -- '--user-data-dir=[^ ]*' \| sort \| uniq -c` |
 | The extension actually loaded      | `curl -s http://127.0.0.1:9222/json/list \| grep -o 'chrome-extension://[a-z]*/background.js'`      |
-| The extension is talking to Hermes | `grep 'browser-control/register' ~/.hermes/logs/gateway.log \| tail -1` shows a recent timestamp    |
+| The extension is talking to Hermes | `grep 'browser-control/register' $HERMES_HOME/logs/gateway.log \| tail -1` shows a recent timestamp |
 | Tabs came back and are logged in   | `curl -s http://127.0.0.1:9222/json/list` shows resolved titles, not `@undefined`                   |
