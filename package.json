@@ -21,6 +21,7 @@
 		"Format": "prettier --write .",
 		"Format:Check": "prettier --check .",
 		"maintain": "node Maintain/Target/Index.js",
+		"Deploy": "firebase deploy --only hosting",
 		"prepublishOnly": "pnpm run build",
 		"tool": "pnpm --filter @nikolarhristov/timeline-maintain run tool"
 	},
