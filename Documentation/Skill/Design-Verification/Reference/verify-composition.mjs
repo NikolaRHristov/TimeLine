@@ -53,6 +53,12 @@ const Frame = [
 		(Box) => Box.bandHeights.join(","),
 		"8,10,12,16,22,28,44,28,22,16,12,10,8",
 	],
+	["the seam is light, not panel dark", (Box) => Box.seamBackground, "rgb(236, 236, 236)"],
+	[
+		"the seam names a stage, never a record",
+		(Box) => Box.seamNote,
+		"Drop private items here to publish · Source timeline selected",
+	],
 ];
 
 const Probe = `(() => {
@@ -71,6 +77,8 @@ const Probe = `(() => {
 		bento: Box(".bento"),
 		bandCount: Bands.length,
 		bandHeights: Bands.map((Band) => Math.round(Band.getBoundingClientRect().height)),
+		seamBackground: getComputedStyle(document.querySelector(".publish")).backgroundColor,
+		seamNote: document.querySelector(".publish__note")?.textContent?.trim(),
 	});
 })()`;
 
@@ -173,7 +181,9 @@ try {
 		}
 
 		Server = await serve(resolve(Root, "Target"));
-		Url = `http://127.0.0.1:${PORT}/Workspace/`;
+		// A cache-busted URL, because Chromium keeps the previous document across a
+		// rebuild: an unparameterised probe reports the page that used to exist.
+		Url = `http://127.0.0.1:${PORT}/Workspace/?v=${Date.now()}`;
 	}
 
 	try {

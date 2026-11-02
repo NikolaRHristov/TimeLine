@@ -23,6 +23,12 @@
 	--tile-1: #e2e2e2; /* the loudest tile */
 	--tile-2: #e9e9e9; /* the middle tile */
 	--tile-3: #eee; /* the quietest tile */
+	--seam: #ececec; /* the band between the drawer and the canvas */
+	--seam-line: #e2e2e2; /* the rule that runs across the seam */
+	--seam-control: #ffffff; /* a step on the seam, one value above it */
+	--seam-control-line: #d1d1d6; /* the hairline around that step */
+	--seam-ink: #8e8e93; /* the seam's label */
+	--seam-faint: #b0b0b8; /* the seam's note */
 
 	/* The line ramp. Three weights, and picking one is a decision about how
 	   visible an edge has to be rather than about a colour: a rule inside a

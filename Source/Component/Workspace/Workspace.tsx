@@ -1,9 +1,8 @@
 import "@Stylesheet/Component/Workspace.scss";
-import { createMemo, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import Bento, { Seats, type Tile } from "./Bento.tsx";
 import Drawer, { type DrawerView } from "./Drawer.tsx";
 import { type Column } from "./DrawerColumn.tsx";
-import { type Entry } from "./DrawerItem.tsx";
 import Provenance, { type Stage } from "./Provenance.tsx";
 import Publish from "./Publish.tsx";
 
@@ -75,18 +74,19 @@ export default function Workspace(Props: Props) {
 	const [Open, SetOpen] = createSignal<string | null>(null);
 	const [Published, SetPublished] = createSignal<Tile[]>(Props.Tiles);
 
-	/** The record the workspace has open, wherever it lives. */
-	const Selected = createMemo<Entry | undefined>(() => {
-		const Id = Open();
-
-		return Id === null
-			? undefined
-			: Props.Columns.flatMap((Column) => Column.Entries).find((Entry) => Entry.Id === Id);
-	});
-
 	/** The column a record belongs to, which is also the stage it publishes into. */
 	const Owner = (Id: string) =>
 		Props.Columns.find((Column) => Column.Entries.some((Entry) => Entry.Id === Id));
+
+	/**
+	 * The selected stage's short name, for the seam's note.
+	 *
+	 * A stage label reads `Source · 3 events`, and the seam wants only the name:
+	 * the count belongs to the rail, where the band can show it, not to a band
+	 * that has room for one clause.
+	 */
+	const StageName = () =>
+		(Props.Stages.find((Entry) => Entry.Key === Stage())?.Label ?? "").split(" · ")[0];
 
 	const Publish_ = (Key: string) => {
 		const Column = Props.Columns.find((Candidate) => Candidate.Key === Key);
@@ -144,15 +144,9 @@ export default function Workspace(Props: Props) {
 					OnPublish={(Key) => Publish_(Key)}
 				/>
 
-				<Publish
-					Label={Props.Destination}
-					Note={Props.Instruction}
-					Armed={Selected()?.Title}
-				/>
+				<Publish Label={Props.Destination} Note={Props.Instruction} Context={StageName()} />
 
-				<Show
-					when={View() === "list"}
-					fallback={<Bento Tiles={Published()} />}>
+				<Show when={View() === "list"} fallback={<Bento Tiles={Published()} />}>
 					<Bento Tiles={Published()} />
 				</Show>
 			</div>

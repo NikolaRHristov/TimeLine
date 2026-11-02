@@ -86,28 +86,34 @@ each engine needs is the floor for that engine.
 
 | Feature                                             | Where                                                       | Chrome | Firefox | Safari |
 | --------------------------------------------------- | ----------------------------------------------------------- | ------ | ------- | ------ |
+| `color-mix()`                                       | `Component/Provenance.scss:88`                              | 111    | 113     | 16.2   |
 | `overflow: clip`                                    | `Component/{Bento,Drawer,Provenance}.scss`, `Material.scss` | 90     | 81      | 16.0   |
-| `100dvh`                                            | `Component/Workspace.scss:18`                               | 108    | 101     | 15.4   |
-| `@layer`                                            | `Base.css:6`                                                | 99     | 97      | 15.4   |
-| Logical properties (`margin-block`, `inset-inline`) | `Component/*.scss`, `Layout/*.scss`                         | 89     | 66      | 15     |
+| Logical properties (`margin-block`, `inset-inline`) | `Component/{Bento,Pill}.scss`                               | 89     | 66      | 15     |
 | Flex `gap`                                          | `Component/Pill.scss` and the other flex rows               | 84     | 63      | 14.1   |
 
-**Baseline: Chrome 108, Firefox 101, Safari 16.0.** The binding constraint is `100dvh` on Chrome and
-`overflow: clip` on Safari.
+**Baseline: Chrome 111, Firefox 113, Safari 16.2.** `color-mix()` is the binding constraint on all
+three engines; `overflow: clip` is the next.
 
-Two features the components were expected to lean on are not a browser requirement at all:
+Two features that have been in these sheets are no longer requirements at all:
 
 - **CSS nesting** is compiled away. `tailwindcss/nesting` in `postcss.config.js` flattens every `&`
   before `autoprefixer` runs, and Sass does the same for the `.scss` sheets, so no `&` reaches the
-  output. Native nesting (Chrome 112, Safari 16.5, Firefox 117) is therefore not in the floor.
+  output and native nesting imposes nothing.
 - **Container queries** are not used anywhere: no `@container`, no `container-type`, and
-  `@tailwindcss/container-queries` is not a dependency. They impose nothing.
+  `@tailwindcss/container-queries` is not a dependency.
 
-The support numbers come from `caniuse-lite`, the data `autoprefixer` already carries. Re-derive the
-table when a new feature is added to a stylesheet:
+`100dvh` and `@layer` were both in the sheets when this page was first written and neither survives
+in the source - the workspace no longer sizes itself in dynamic viewport units, and the base sheet
+holds Tailwind directives rather than a cascade layer. Both are re-derivable, and a reintroduction
+is what the commands below are for.
+
+The numbers come from two data sets, both already present or fetchable without a browser:
+`caniuse-lite` (the data `autoprefixer` carries) for the four CSS features except `color-mix()`,
+which caniuse has no entry for, and MDN's browser-compat-data (`css.types.color.color-mix`) for that
+one. Re-derive the caniuse half when a new feature is added to a stylesheet:
 
 ```sh
-node -e "const P=require('path'),R=require('module').createRequire(P.dirname(require.resolve('autoprefixer/package.json')));const F=R('./dist/unpacker/feature.js').default;for(const n of ['css-overflow','viewport-unit-variants','css-cascade-layers','css-logical-props','flexbox-gap']){const U=F(R('./data/features/'+n+'.js'));const E=e=>Object.keys(U.stats[e]).filter(v=>U.stats[e][v].startsWith('y')).sort((a,b)=>parseFloat(a)-parseFloat(b))[0];console.log(n.padEnd(24),'chrome',E('chrome'),'firefox',E('firefox'),'safari',E('safari'))}"
+node -e "const P=require('path'),R=require('module').createRequire(P.dirname(require.resolve('autoprefixer/package.json'))),C=R('caniuse-lite'),E=(U,e)=>Object.keys(U.stats[e]||{}).filter(v=>U.stats[e][v].startsWith('y')).sort((a,b)=>parseFloat(a)-parseFloat(b))[0];for(const n of ['css-overflow','css-logical-props','flexbox-gap']){const U=C.feature(C.features[n]);console.log(n.padEnd(20),'chrome',E(U,'chrome'),'firefox',E(U,'firefox'),'safari',E(U,'safari'))}"
 ```
 
 The site ships JavaScript at `esnext`: Astro's client build sets `vite.build.target` to `esnext`
@@ -158,15 +164,16 @@ policy supersedes that record; it does not edit this page into disagreement with
 
 ## Claim → test
 
-| Claim                                  | Test                                                                                     |
-| -------------------------------------- | ---------------------------------------------------------------------------------------- |
-| The floor is recorded once             | `node -p "require('./package.json').engines.node"` → `>=22.23.4`                         |
-| The guard enforces it                  | `node Scripts/Compatibility.mjs` under Node 22.22.1 → `FAIL`, exit 1                     |
-| A supported Node passes                | `node Scripts/Compatibility.mjs` under Node 26.5.1 → `PASS`, exit 0                      |
-| Behind a major is reported, not failed | the same run prints `INFO tailwindcss 3.4.19 -> 4.3.3` and exits 0                       |
-| A missing pnpm does not fail the check | `env -i PATH=/usr/bin:/bin node Scripts/Compatibility.mjs` → `SKIP`, exit 0              |
-| `pnpm run check` runs the guard first  | `pnpm run check` prints the `== record` section before `tsc` output                      |
-| Nesting is compiled, not shipped       | `grep -c '&' Target/_astro/*.css` → `0` for every file                                   |
-| Container queries are unused           | `grep -rn "@container\|container-type" Source/` → no match                               |
-| A clean clone builds                   | `rm -rf node_modules Target && pnpm install && pnpm run build` → both exit 0             |
-| Sass `@import` is still in use         | `pnpm run build` prints `DEPRECATION WARNING [import]` for `Source/Layout/Base.astro:80` |
+| Claim                                  | Test                                                                                          |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- |
+| The floor is recorded once             | `node -p "require('./package.json').engines.node"` → `>=22.23.4`                              |
+| The guard enforces it                  | `node Scripts/Compatibility.mjs` under Node 22.22.1 → `FAIL`, exit 1                          |
+| A supported Node passes                | `node Scripts/Compatibility.mjs` under Node 26.5.1 → `PASS`, exit 0                           |
+| Behind a major is reported, not failed | the same run prints `INFO tailwindcss 3.4.19 -> 4.3.3` and exits 0                            |
+| A missing pnpm does not fail the check | `env -i PATH=/usr/bin:/bin node Scripts/Compatibility.mjs` → `SKIP`, exit 0                   |
+| `pnpm run check` runs the guard first  | `pnpm run check` prints the `== record` section before `tsc` output                           |
+| Nesting is compiled, not shipped       | `grep -c '&' Target/_astro/*.css` → `0` for every file                                        |
+| Container queries are unused           | `grep -rn "@container\|container-type" Source/` → no match                                    |
+| The baseline matches the sheets        | the `caniuse-lite` query above reproduces the three caniuse rows; MDN BCD gives `color-mix()` |
+| A clean clone builds                   | `rm -rf node_modules Target && pnpm install && pnpm run build` → both exit 0                  |
+| Sass `@import` is still in use         | `pnpm run build` prints `DEPRECATION WARNING [import]` for `Source/Layout/Base.astro:80`      |

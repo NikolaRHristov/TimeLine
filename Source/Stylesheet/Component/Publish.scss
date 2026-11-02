@@ -1,0 +1,84 @@
+@use "../Material.scss" as Material;
+
+// The seam: the band between the private drawer and the published canvas.
+//
+// It is light on purpose, and that is the whole design. Everything above it is
+// dark chrome; everything below is a light canvas. A band that belongs to
+// neither surface reads as a rule between two places rather than as part of
+// either - so it takes the paper ground's own value and a white control, not the
+// panel's.
+//
+// It states exactly two things and no more: where a drop lands (left), and what
+// a drop would be (right). Neither is a record's title. The right-hand line names
+// the selected *stage*, because that is what decides the destination - a title
+// there would change on every click and make the band look like a status bar.
+.publish {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 4px;
+	height: 2.5rem;
+	padding-inline: 1.75rem;
+	background: var(--seam);
+	color: var(--seam-ink);
+
+	&__group {
+		display: flex;
+		align-items: center;
+		gap: 3px;
+		flex-shrink: 0;
+		white-space: nowrap;
+	}
+
+	// A step control: a white disc on the light band. The disc carries the whole
+	// affordance - the composition has no cast shadow anywhere, so the edge is a
+	// hairline and the value step does the work.
+	&__step {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		background: var(--seam-control);
+		border: 1px solid var(--seam-control-line);
+		border-radius: var(--radius-full);
+		color: var(--chrome-ink-faint);
+		flex-shrink: 0;
+
+		svg {
+			width: 11px;
+			height: 11px;
+		}
+	}
+
+	// 11px uppercase: the same voice as the rail's eyebrow, so the two ends of
+	// the composition speak in one register.
+	&__label {
+		@include Material.label(11px);
+
+		color: var(--seam-ink);
+	}
+
+	&__rule {
+		flex: 1 0 0;
+		min-width: 1px;
+		height: 2px;
+		background: var(--seam-line);
+	}
+
+	&__note {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 11px;
+		line-height: normal;
+		color: var(--seam-faint);
+		white-space: nowrap;
+
+		svg {
+			width: 12px;
+			height: 12px;
+			flex-shrink: 0;
+		}
+	}
+}

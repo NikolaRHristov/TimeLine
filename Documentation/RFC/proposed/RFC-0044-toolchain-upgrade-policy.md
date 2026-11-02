@@ -44,10 +44,10 @@ site build and to nothing else; the check path said nothing about the runtime at
 entry: `tailwindcss` 3.4.19 against 4.3.3. Nothing in the repository said whether that was a debt, a
 deferral, or an oversight.
 
-**The baseline was derivable all along.** `overflow: clip` appears in four sheets, `100dvh` in the
-workspace sheet, `@layer` in the base sheet, and CSS nesting appears in `.css` sources but is
+**The baseline was derivable all along.** `overflow: clip` appears in four sheets, `color-mix()` in
+the provenance sheet, logical properties in two, and CSS nesting appears in `.scss` sources but is
 flattened by `tailwindcss/nesting` before the output. The highest requirement across those is Chrome
-108, Firefox 101, Safari 16.0, and no file said so.
+111, Firefox 113, Safari 16.2 - set by `color-mix()` - and no file said so.
 
 **A Sass major would break the build today.** Every build prints `DEPRECATION WARNING [import]` for
 `Source/Layout/Base.astro:80` and `:81`, which import the two `.scss` sheets with `@import`; Dart

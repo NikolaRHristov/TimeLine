@@ -18,6 +18,7 @@
  * columns instead of throwing. The page never reads the shadow store or the
  * database - the collections are the only source.
  */
+import { Seats } from "@Component/Workspace/Bento.tsx";
 import Workspace from "@Component/Workspace/Workspace.tsx";
 import Base from "@Layout/Base.astro";
 import { BookmarkHref } from "@Library/Link.ts";
@@ -145,31 +146,21 @@ const Columns = [
 /**
  * The canvas starts with what the owner already curated, in rank order.
  *
- * The first pick takes a wide tile and the rest a standard one, which is the
- * composition's own hierarchy: one thing leads the page, the rest support it.
+ * The records take the seats in the composition's own order, so the hero is the
+ * highest-ranked pick and the mosaic fills from the top-left inward. The seat
+ * table itself lives with the canvas (`Bento.Seats`) because it is the layout, not
+ * the data: a page decides which records go on the canvas, never where.
  */
-const Order = [
-	{ Column: 1, Row: 1, ColumnSpan: 3, RowSpan: 2 },
-	{ Column: 4, Row: 1, ColumnSpan: 3, RowSpan: 2 },
-	{ Column: 1, Row: 3, ColumnSpan: 2, RowSpan: 2 },
-	{ Column: 3, Row: 3, ColumnSpan: 2, RowSpan: 2 },
-	{ Column: 5, Row: 3, ColumnSpan: 2, RowSpan: 2 },
-];
-
 const Tiles = [...curated]
 	.sort((Left, Right) => Left.data.rank - Right.data.rank)
-	.slice(0, Order.length)
+	.slice(0, Seats.length)
 	.map((Entry, Index) => {
 		const Source = bookmarks.find((Bookmark) => Bookmark.data.id === Entry.data.id);
-		const Seat = Order[Index] ?? Order[Order.length - 1];
+		const Seat = Seats[Index];
 
 		return {
+			...Seat,
 			Id: Entry.data.id,
-			Column: Seat.Column,
-			Row: Seat.Row,
-			ColumnSpan: Seat.ColumnSpan,
-			RowSpan: Seat.RowSpan,
-			Tone: (Index === 0 ? "plain" : "quiet") as "plain" | "quiet",
 			Eyebrow: `Rank ${Entry.data.rank}`,
 			Title: Source === undefined ? Entry.data.id : Line(Source.data.text, 64),
 			Meta:
@@ -182,7 +173,7 @@ const Tiles = [...curated]
 	});
 ---
 
-<Base Title="Workspace" Description="The private side of the archive." Wide>
+<Base Title="Workspace" Description="The private side of the archive." Wide Bare>
 	<Workspace
 		client:visible
 		Stages={Stages}
