@@ -211,6 +211,10 @@ export const Content = {
 					),
 				},
 			},
+			Title: content(
+				process.env["CONTENT_STRING_PAGE_ACTIVITY_TITLE"],
+				"CONTENT_STRING_PAGE_ACTIVITY_TITLE",
+			),
 		},
 		Bookmark: {
 			Description: content(

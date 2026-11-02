@@ -64,6 +64,40 @@ interface Props {
 const { Page, Href } = Astro.props;
 
 /**
+ * A page whose copy did not arrive is a build failure, not an empty heading.
+ *
+ * `@Library/Content.ts` throws when a *file* under `Content/` is missing, but a
+ * key that never reaches the object it is read from is `undefined` at run time
+ * and renders as nothing - a heading with no words on a page whose whole
+ * content is words. This is the same rule `content()` states, applied to the
+ * frame: name what is missing, and fail where a build can still stop.
+ */
+const Words: readonly [string, unknown][] = [
+	["Eyebrow", Page.Eyebrow],
+	["Title", Page.Title],
+	["Lede", Page.Lede],
+	["Rail.Eyebrow", Page.Rail.Eyebrow],
+	["Rail.Title", Page.Rail.Title],
+	["Rail.Note", Page.Rail.Note],
+	["Close.Label", Page.Close.Label],
+	["Close.Link", Page.Close.Link],
+	...Page.Boxes.flatMap((Entry) =>
+		(["Eyebrow", "Title", "Body"] as const).map((Field): [string, unknown] => [
+			`Box ${Entry.Key}.${Field}`,
+			Entry[Field],
+		]),
+	),
+];
+
+for (const [Name, Value] of Words) {
+	if (typeof Value !== "string" || Value.trim() === "") {
+		throw new Error(
+			`Showcase page: ${Name} is empty - a showcase page is copy, so a missing word is the whole page missing (RFC-0053).`,
+		);
+	}
+}
+
+/**
  * The rail's bands: one per section, in reading order.
  *
  * `Events` is 1 for every section, because a section carries no quantity - a

@@ -106,9 +106,10 @@ const Profiles = [
 	{ Path: "/Bookmark/", ...Showcase },
 	{
 		Path: "/Bookmark/:Id/",
-		Title: "h1",
+		Title: "h1.post__title",
 		Require: [
-			{ Selector: "article article", Min: 1 },
+			{ Selector: "article.post", Min: 1 },
+			{ Selector: ".post__text", Min: 1 },
 			{ Selector: "dl dt", Min: 4 },
 			{ Selector: "a[href]", Min: 3 },
 		],
@@ -117,13 +118,7 @@ const Profiles = [
 	{
 		Path: "/List/:Slug/",
 		Title: "h1.sheet__title",
-		Require: [{ Selector: "article.sheet", Min: 1 }],
-		Some: [
-			[
-				{ Selector: ".roster__row", Min: 1 },
-				{ Selector: ".note", Min: 1 },
-			],
-		],
+		Require: [{ Selector: "article.bento__tile", Min: 1 }],
 	},
 	{ Path: "/Voted/", ...Showcase },
 	{ Path: "/Activity/", ...Showcase },
