@@ -1,5 +1,4 @@
-import type { Bucket, Evidence } from "./Evidence.ts";
-import { Bucket as Buckets } from "./Evidence.ts";
+import type { Evidence } from "./Evidence.ts";
 
 /**
  * The weighted rules, as `Configuration/Rules/Rules.json` declares them.
@@ -66,8 +65,6 @@ export type Classification = {
 	preserved: Preserved[];
 };
 
-const BUCKET = new Set<string>(Buckets);
-
 /** Order by UTF-16 code unit: `localeCompare` depends on the machine's locale. */
 function compare(left: string, right: string): number {
 	return left < right ? -1 : left > right ? 1 : 0;
@@ -106,15 +103,16 @@ function mostSpecific(host: string, weights: Record<string, number>): string | n
 /**
  * Score one author against every configured list.
  *
- * A keyword weight applies to the evidence bucket with the same name, so a list
- * whose slug is not a bucket scores on domains only. That is why the rules
- * loader warns about keyword weights for a list the evidence cannot count.
+ * A keyword weight applies to the evidence bucket with the same name, and the
+ * buckets are the loaded vocabulary's keys. A list with no bucket of its own
+ * scores on domains only - which is why the rules loader warns about keyword
+ * weights for a list the evidence cannot count.
  */
 export function score(evidence: Evidence, rules: Rules): ListScore[] {
 	const scored: ListScore[] = [];
 
 	for (const [list, rule] of Object.entries(rules.lists)) {
-		const counted = BUCKET.has(list) ? evidence.terms[list as Bucket] : {};
+		const counted = evidence.terms[list] ?? {};
 		const domains = rule.domains ?? {};
 		const contributions: Contribution[] = [];
 

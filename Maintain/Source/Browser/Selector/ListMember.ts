@@ -60,7 +60,7 @@ async function inPage(request: { op: string; name?: string }): Promise<unknown> 
 		return root === null ? [] : Array.from(root.querySelectorAll('[data-testid="listCell"]'));
 	};
 
-	/** "UI·70 membersNikola Hristov@NikolaRHristov" -> "UI". */
+	/** "Alpha·70 membersExample Person@example_handle" -> "Alpha". */
 	const nameOf = (cell: Element): string => {
 		const head = (cell.textContent ?? "").split("·")[0];
 		return head === undefined ? "" : head.trim();

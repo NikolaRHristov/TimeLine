@@ -27,6 +27,7 @@ export type ListMemberContext = { session: Session; tab: Tab; url: string; surfa
 
 function stateOf(result: ListMemberResult | undefined): ListSurfaceState {
 	return {
+		opened: result?.opened === true,
 		rows: result?.rows ?? [],
 		save: result?.save === true,
 		alerts: result?.alerts ?? [],
@@ -64,6 +65,19 @@ export function surfaceOf(session: Session): ListSurface {
 export async function execute(surface: ListSurface, request: MemberRequest): Promise<MemberReport> {
 	const opened = await surface.open();
 	if (opened.rows.length === 0) {
+		// A menu that never appeared and a dialog that rendered empty are
+		// different problems: the first is usually the account's own profile,
+		// which offers no "Add/remove from Lists" at all, and the second is the
+		// page failing to fetch the lists. Reporting them as one code sends the
+		// caller looking in the wrong place.
+		if (opened.opened !== true) {
+			throw fail("no-list-menu", "no Add/remove from Lists control in the profile header", {
+				handle: request.handle,
+				list: request.name,
+				alerts: opened.alerts,
+				hint: "an account's own profile has no such control; only another account's profile does",
+			});
+		}
 		throw fail("no-list-surface", "the list dialog rendered no rows", {
 			handle: request.handle,
 			list: request.name,

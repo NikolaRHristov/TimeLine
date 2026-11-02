@@ -133,7 +133,8 @@ test("the record shape is fixed, whatever the data says", async () => {
 		"terms",
 		"excerpts",
 	]);
-	assert.deepEqual(Object.keys((record as Evidence).keywords), ["AI", "UI", "CODE"]);
+	// The counts print in vocabulary order, whatever that vocabulary is.
+	assert.deepEqual(Object.keys((record as Evidence).keywords), Object.keys(Keyword));
 	// JSON-serialisable as it stands: no dates, no class instances.
 	assert.deepEqual(JSON.parse(JSON.stringify(record)), record);
 });
@@ -216,24 +217,28 @@ test("domains are capped at five", () => {
 });
 
 test("keywords are counted on word boundaries, per bucket", () => {
+	// Neutral slugs: buckets are whatever the vocabulary declares, so this
+	// proves the counting for any name rather than for one taxonomy.
+	const vocabulary = { first: ["ai"], second: ["ui"], third: ["rust", "c++", "c#"] };
 	const posts = [
 		post("1", "said the html thing"),
 		post("2", "an ai post about ui and rust"),
 		post("3", "c++ and C# and AI again"),
 	];
 
-	assert.deepEqual(keywords(posts, Keyword), { AI: 2, UI: 1, CODE: 3 });
+	assert.deepEqual(keywords(posts, vocabulary), { first: 2, second: 1, third: 3 });
 });
 
 test("terms are counted per keyword, and the totals are their sum", () => {
+	const vocabulary = { first: ["ai"], second: ["figma"], third: ["rust"] };
 	const posts = [post("1", "an ai post about figma and rust"), post("2", "rust again")];
-	const record = build("alpha", author, posts, Keyword);
+	const record = build("alpha", author, posts, vocabulary);
 
 	// Sparse: a term that never fired is absent, not zero.
-	assert.deepEqual(record.terms.AI, { ai: 1 });
-	assert.deepEqual(record.terms.UI, { figma: 1 });
-	assert.deepEqual(record.terms.CODE, { rust: 2 });
-	assert.deepEqual(record.keywords, { AI: 1, UI: 1, CODE: 2 });
+	assert.deepEqual(record.terms["first"], { ai: 1 });
+	assert.deepEqual(record.terms["second"], { figma: 1 });
+	assert.deepEqual(record.terms["third"], { rust: 2 });
+	assert.deepEqual(record.keywords, { first: 1, second: 1, third: 2 });
 });
 
 test("no inference module is imported and no network call is made", async () => {

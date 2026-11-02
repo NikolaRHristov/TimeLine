@@ -10,7 +10,7 @@ import { DEFAULT_RULES, load, validate, warn } from "../Configuration/Rules/Rule
 import type { Author } from "../Model/Author/Author.ts";
 import type { Decision, Rules } from "../Model/Author/Decision.ts";
 import { classify, decide, score } from "../Model/Author/Decision.ts";
-import type { Bucket, DomainHit, Evidence, TermHits } from "../Model/Author/Evidence.ts";
+import type { DomainHit, Evidence, TermHits } from "../Model/Author/Evidence.ts";
 import { totals } from "../Model/Author/Evidence.ts";
 import type { Post } from "../Model/Post/Post.ts";
 import { merge } from "../Store/Merge/Merge.ts";
@@ -53,10 +53,10 @@ function tracked(): Rules {
 /** One evidence record with hand-written counts, so a test says what it means. */
 function evidence(
 	handle: string,
-	terms: Partial<Record<Bucket, Record<string, number>>>,
+	terms: Record<string, Record<string, number>>,
 	domains: DomainHit[] = [],
 ): Evidence {
-	const counted: TermHits = { AI: {}, UI: {}, CODE: {}, ...terms };
+	const counted: TermHits = { ...terms };
 	return {
 		handle,
 		name: handle,

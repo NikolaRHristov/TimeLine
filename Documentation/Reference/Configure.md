@@ -101,6 +101,15 @@ maintain config show            # {"lists":[{"slug":"alpha","id":"*"}], …}
 maintain config show --reveal   # {"lists":[{"slug":"alpha","id":"1"}], …}
 ```
 
+`--list <slug>` narrows the output to one list. The slug is resolved against the
+map, never against a hardcoded set, so an unconfigured slug is `unknown-list`
+with the configured set in `configured`:
+
+```bash
+maintain config show --list alpha   # one entry
+maintain config show --list nope    # {"error":"unknown-list","configured":["alpha","beta"],…}
+```
+
 ## Environment overrides
 
 | Variable             | Overrides              | Notes                                                            |
@@ -108,11 +117,32 @@ maintain config show --reveal   # {"lists":[{"slug":"alpha","id":"1"}], …}
 | `MAINTAIN_CONFIG`    | the map's path         | Absolute, or relative to the working directory                    |
 | `MAINTAIN_CDP_PORT`  | `cdp.port`             | Wins over the map; non-numeric values are ignored with a warning  |
 | `MAINTAIN_STORAGE`   | `storage.shadow`       | Points the whole store at a temporary directory for a test        |
+| `MAINTAIN_VOCABULARY`| the keyword vocabulary | A JSON file of `{ "<slug>": ["term", …] }`; unreadable falls back |
+| `MAINTAIN_RULES`     | the weights file       | Absolute, or relative to the working directory                    |
 | `MAINTAIN_DEBUG`     | -                      | Prints the stack trace of a failure to stderr                     |
 
 Environment beats the file, and the file beats the default. A command that only
 touches the browser (`tab list`, `post extract`) works with no map at all: it
 warns on stderr and falls back to `127.0.0.1:9222`.
+
+### Vocabulary
+
+`author evidence` counts words per bucket, and a bucket is a list slug. The
+tracked default is `Maintain/Source/Configuration/Keyword/Keyword.ts`; point
+`MAINTAIN_VOCABULARY` at a JSON file to count your own words under your own
+slugs:
+
+```json
+{
+	"alpha": ["retrieval", "embedding"],
+	"beta": ["typography", "figma"]
+}
+```
+
+A file that cannot be read, is not JSON, or names no bucket is reported on
+stderr and the tracked vocabulary is used instead - counting is an aid, not a
+prerequisite. Buckets need not match your `lists`: a list with no bucket of the
+same slug still scores on domains, and the rules loader says so.
 
 ## Failure codes
 

@@ -28,6 +28,8 @@ with identical JSON shapes. See `Reference/Transport.md`.
 | `MAINTAIN_CDP_PORT` | `9222`                                                  | Port of the browser's debugging endpoint |
 | `MAINTAIN_CONFIG`   | `Maintain/Configuration/Local/Configuration.local.json` | Identifier map                           |
 | `MAINTAIN_STORAGE`  | `Maintain/Storage/Shadow`                               | Shadow store root                        |
+| `MAINTAIN_VOCABULARY`| `Configuration/Keyword/Keyword.ts` (tracked default)   | Keyword vocabulary, `{slug: [term, …]}`  |
+| `MAINTAIN_RULES`    | `Maintain/Configuration/Rules/Rules.json`               | Weighted rules for `author classify`     |
 | `MAINTAIN_DEBUG`    | unset                                                   | Print a failure's stack trace to stderr  |
 
 Missing config exits 2 with `{error:"no-config", expected:"<path>",
@@ -39,7 +41,7 @@ identifiers from argv.
 | Command                 | Options                                                              | Result                                               |
 | ----------------------- | -------------------------------------------------------------------- | ---------------------------------------------------- |
 | `config init`           | `--profile`, `--list <slug>=<id>` (repeatable), `--cdp-port`, `--force` | `{written,profile,lists,cdp,next}`                |
-| `config show`           | `--reveal`                                                           | `{path,profile,cdp,lists,routes,content,storage}`    |
+| `config show`           | `--reveal`, `--list <slug>`                                          | `{path,profile,cdp,lists,routes,content,storage}`    |
 | `tab list`              | -                                                                    | `{tabs:[{id,title,url,active}]}`                     |
 | `tab focus`             | `--id`                                                               | `{focused:true,id}`                                  |
 | `post extract`          | `--tab`, `--index`                                                   | `{post:{id,url,author,text,postedAt,media,metrics}}` |
@@ -56,6 +58,7 @@ identifiers from argv.
 | `store hide`            | `--id`                                                               | `{hidden:true,id,removed,unchanged}`                 |
 | `store status`          | -                                                                    | `{shadow:{…},public:{…}}`                            |
 | `author evidence build` | -                                                                    | `{archive,posts,authors:[…],skipped}`                |
+| `author classify rules` | -                                                                    | `{rules,threshold,counts,decisions,ambiguous,preserved}` |
 | `event append`          | `--kind`, `--subject`, `--payload`                                   | `{written:true,path}`                                |
 | `event tail`            | `--follow`, `--dir shadow\|public`, `--since`, `--interval`          | `{directory,count,events}` or JSON lines             |
 
@@ -74,7 +77,18 @@ loop. A dry run reads the handle's "Pick a List" dialog and prints
 `{added:true,…}` or, when the handle is already on the list,
 `{added:false,alreadyMember:true,…}` without pressing Save. A limit is reported
 as `{error:"rate-limited"}`, so a caller looping over handles stops instead of
-retrying.
+retrying. A profile whose header has no "Add/remove from Lists" control - the
+account's own profile is the common case - is `no-list-menu`; a dialog that
+opens with no rows is `no-list-surface`. The two are reported apart because
+they send a caller looking in different places.
+
+A command that waits for a page to be ready gets one answer when it never is:
+`page-not-ready` with `{expression,timeout,url}`. `page bookmarks open`,
+`page list open` and `page list member add` stop there, because a count or a
+membership write against a page that never arrived would describe something
+that is not on screen. Scraping is the exception: `page bookmarks scrape` and
+`store scrape` warn on stderr and read what did render, and end as `no-post`
+only when nothing did.
 
 ## Ingest: three sources, two stores
 
@@ -169,6 +183,51 @@ Three kinds of post are left out and counted in `skipped` instead of vanishing:
 `hidden` (a tombstone - text withheld from the site is not sent to a model
 either), posts no bookmark observed, and posts with no handle.
 
+## Distribution: the rules decide first
+
+`author classify rules` scores every author's evidence against the tracked
+weights in `Maintain/Configuration/Rules/Rules.json` and places only the ones
+those weights can explain:
+
+```json
+{
+	"handle": "<HANDLE>",
+	"list": "UI",
+	"score": 13,
+	"gap": 13,
+	"by": "rule",
+	"reason": "UI 13 (figma×2=6, typography×1=3, dribbble.com×1=4); runner-up AI 0; gap 13 clears 3"
+}
+```
+
+A placement needs both halves of the threshold. `score` is the best list's
+total; `gap` is that list's lead over the runner-up. `threshold.score` and
+`threshold.gap` are read from the rules file, never from the TypeScript - a
+cut-off living in code is a cut-off nobody can tune. Both are required: a file
+without a threshold is a `schema-invalid` failure, not a default.
+
+Everything that clears neither is reported in `ambiguous` with `list: null` and
+the same arithmetic in `reason`, so the model pass has exactly the work the
+rules could not do. An author no weighted term or host matched scores `0` and
+says so.
+
+- A keyword weight applies to the evidence bucket of the same name, so a list
+  whose slug has no vocabulary scores on domains only. The loader says so on
+  stderr rather than leaving the weight silently inert.
+- A domain key covers its subdomains - `figma.com` matches `blog.figma.com` -
+  and never a host that merely ends the same way, so `notfigma.com` scores
+  nothing for `figma.com`.
+- A bad weight (a string, a negative number) is dropped with a warning naming
+  the key: one typo in a long weights list must not stop a run.
+
+A decision already marked `decision.by: "manual"` is never scored and never
+rewritten. It is reported in `preserved` with the reason on file, including
+when its author no longer appears in the archive. `rule` and `model` answers are
+previous guesses, so this pass may supersede them.
+
+The command reads the shadow archive and the Author collection and writes
+neither, so a dry run stays dry and two runs print the same bytes.
+
 ## Example
 
 ```bash
@@ -194,9 +253,9 @@ Every failure is one object, exit 2, no stack trace on stdout:
 }
 ```
 
-Known codes: `no-config`, `config-exists`, `unknown-list`, `no-list-surface`,
-`no-tab`, `no-post`, `rate-limited`, `schema-invalid`, `cdp-unreachable`,
-`cdp-error`, `io-error`,
+Known codes: `no-config`, `config-exists`, `unknown-list`, `no-list-menu`,
+`no-list-surface`, `no-tab`, `no-post`, `page-not-ready`, `rate-limited`,
+`schema-invalid`, `cdp-unreachable`, `cdp-error`, `io-error`,
 `usage`, `internal`. A code is a contract; the `detail` string is not. `--help`
 and `--schema` are rendered from the same table the parser matches against, so a
 command cannot drift from its own documentation.

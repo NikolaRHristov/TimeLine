@@ -2,8 +2,9 @@ import { readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
 import type { Rules } from "../../Model/Author/Decision.ts";
-import { Bucket as Buckets } from "../../Model/Author/Evidence.ts";
+import type { Vocabulary } from "../../Model/Author/Evidence.ts";
 import { Keyword } from "../Keyword/Keyword.ts";
+import { loadVocabulary } from "../Keyword/Load.ts";
 import { root } from "../Load/Load.ts";
 
 /** Where the tracked weights live, relative to the repository root. */
@@ -131,8 +132,8 @@ function sample(entries: readonly string[]): string {
  * evidence has no bucket for, a weight naming a term the vocabulary never
  * counts, and a vocabulary term the file forgot to weight.
  */
-export function warn(rules: Rules, source: string): void {
-	const buckets = new Set<string>(Buckets);
+export function warn(rules: Rules, source: string, vocabulary: Vocabulary = Keyword): void {
+	const buckets = new Set<string>(Object.keys(vocabulary));
 	const notes: string[] = [];
 
 	for (const [list, rule] of Object.entries(rules.lists)) {
@@ -142,14 +143,14 @@ export function warn(rules: Rules, source: string): void {
 
 	const dead: string[] = [];
 	const unweighted: string[] = [];
-	for (const bucket of Buckets) {
+	for (const bucket of buckets) {
 		const rule = rules.lists[bucket];
 		if (rule === undefined) continue;
 		const weighted = rule.keywords ?? {};
-		const vocabulary = Keyword[bucket].map((term) => term.toLowerCase().trim());
-		const known = new Set(vocabulary);
+		const terms = (vocabulary[bucket] ?? []).map((term) => term.toLowerCase().trim());
+		const known = new Set(terms);
 		for (const term of Object.keys(weighted)) if (!known.has(term)) dead.push(`${bucket}:${term}`);
-		for (const term of vocabulary) if (weighted[term] === undefined) unweighted.push(`${bucket}:${term}`);
+		for (const term of terms) if (weighted[term] === undefined) unweighted.push(`${bucket}:${term}`);
 	}
 	if (dead.length > 0) notes.push(`weights terms the vocabulary does not count: ${sample(dead)}`);
 	if (unweighted.length > 0) notes.push(`does not weight every vocabulary term (they score 0): ${sample(unweighted)}`);
@@ -181,6 +182,6 @@ export function load(): Rules {
 	}
 
 	const rules = validate(parsed, path);
-	warn(rules, path);
+	warn(rules, path, loadVocabulary());
 	return rules;
 }

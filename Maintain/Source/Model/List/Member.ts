@@ -50,6 +50,13 @@ export type ListRow = { name: string; checked: boolean };
 
 /** What the dialog says right now. */
 export type ListSurfaceState = {
+	/**
+	 * The header's More caret and its "Add/remove from Lists" item were both
+	 * found and clicked. False means the menu never appeared at all, which is a
+	 * different failure from a dialog that opened with no rows: an account's
+	 * own profile offers no such control, and only other profiles do.
+	 */
+	opened: boolean;
 	rows: ListRow[];
 	/** True when the Save button is enabled - something is staged. */
 	save: boolean;

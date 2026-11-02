@@ -1,5 +1,5 @@
 import { relative } from "node:path";
-import { Keyword } from "../../../Configuration/Keyword/Keyword.ts";
+import { loadVocabulary } from "../../../Configuration/Keyword/Load.ts";
 import { root } from "../../../Configuration/Load/Load.ts";
 import type { Evidence } from "../../../Model/Author/Evidence.ts";
 import { build } from "../../../Model/Author/Evidence.ts";
@@ -49,6 +49,7 @@ function compare(left: string, right: string): number {
 export function collect(): EvidenceCollection {
 	const store = openShadow(shadowDirectory());
 	const posts = store.all();
+	const vocabulary = loadVocabulary();
 
 	const groups = new Map<string, ShadowPost[]>();
 	const skipped: Skipped = { hidden: 0, unbookmarked: 0, anonymous: 0 };
@@ -78,7 +79,7 @@ export function collect(): EvidenceCollection {
 		group.sort((left, right) => compare(left.id, right.id));
 		const first = group[0];
 		if (first === undefined) continue;
-		authors.push(build(handle, first.author, group, Keyword));
+		authors.push(build(handle, first.author, group, vocabulary));
 	}
 
 	return {

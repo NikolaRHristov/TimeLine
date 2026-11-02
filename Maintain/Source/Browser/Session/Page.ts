@@ -4,6 +4,8 @@ import type { DiscoveryOptions } from "../Target/Discovery.ts";
 import { discover } from "../Target/Discovery.ts";
 import { close, open } from "../Target/Lifecycle.ts";
 import { select, selectHandle } from "../Target/Select.ts";
+import { assertReady } from "./Ready.ts";
+import type { ReadinessMode } from "./Ready.ts";
 import type { Session } from "./Session.ts";
 import { attach } from "./Session.ts";
 
@@ -15,6 +17,13 @@ export type PageOptions = {
 	/** Wait until this expression is true before handing the page over. */
 	ready?: string;
 	timeout?: number;
+	/**
+	 * What a readiness timeout means. `fail` (the default) refuses to hand over
+	 * a page that never arrived, so no command reports on a half-rendered one;
+	 * `warn` says so on stderr and continues, for a caller that can still read
+	 * what did render.
+	 */
+	onNotReady?: ReadinessMode;
 	/**
 	 * Close the tab again when this run opened it. A command that is not
 	 * showing the person a page (`store scrape`) leaves nothing behind; a tab
@@ -72,7 +81,16 @@ export async function withPage<T>(
 	try {
 		if (navigate === true) await session.navigate(url);
 		if (options.ready !== undefined) {
-			await session.waitFor(options.ready, { timeout: options.timeout ?? 25_000 });
+			const timeout = options.timeout ?? 25_000;
+			const ready = await session.waitFor(options.ready, { timeout });
+			// `waitFor` answers a timeout with `false` and never throws; dropping
+			// that answer is what let a page that never loaded run the body.
+			assertReady(ready, {
+				expression: options.ready,
+				timeout,
+				url,
+				mode: options.onNotReady,
+			});
 		}
 		const href = await session.evaluate<string>("location.href").catch(() => url);
 		return await body({ session, tab, href: typeof href === "string" ? href : url });

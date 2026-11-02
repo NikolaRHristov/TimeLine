@@ -19,17 +19,19 @@ import { handle, rateLimit } from "../Model/List/Member.ts";
  */
 function dialog(
 	rows: ListRow[],
-	options: { alerts?: string[]; saveAlerts?: string[]; saveRows?: ListRow[] } = {},
+	options: { alerts?: string[]; saveAlerts?: string[]; saveRows?: ListRow[]; opened?: boolean } = {},
 ): { surface: ListSurface; calls: string[] } {
 	const calls: string[] = [];
+	const opened = options.opened ?? true;
 	const surface: ListSurface = {
 		async open(): Promise<ListSurfaceState> {
 			calls.push("open");
-			return { rows, save: false, alerts: [] };
+			return { opened, rows, save: false, alerts: [] };
 		},
 		async pick(name: string): Promise<ListSurfaceState> {
 			calls.push(`pick:${name}`);
 			return {
+				opened,
 				rows: rows.map((row) => (row.name === name ? { name: row.name, checked: true } : row)),
 				save: true,
 				alerts: options.alerts ?? [],
@@ -37,7 +39,7 @@ function dialog(
 		},
 		async save(): Promise<ListSurfaceState> {
 			calls.push("save");
-			return { rows: options.saveRows ?? [], save: false, alerts: options.saveAlerts ?? [] };
+			return { opened, rows: options.saveRows ?? [], save: false, alerts: options.saveAlerts ?? [] };
 		},
 		async close(): Promise<void> {
 			calls.push("close");
@@ -60,8 +62,8 @@ const codeOf = async (run: () => Promise<unknown>): Promise<string> => {
 };
 
 test("a handle is letters, digits and underscore, with or without @", () => {
-	assert.equal(handle("NikolaRHristov"), "NikolaRHristov");
-	assert.equal(handle("@NikolaRHristov"), "NikolaRHristov");
+	assert.equal(handle("example_handle"), "example_handle");
+	assert.equal(handle("@example_handle"), "example_handle");
 	assert.equal(handle("  @some_one  "), "some_one");
 	assert.equal(handle("a".repeat(15)), "a".repeat(15));
 	// A handle goes into a URL path, so anything that could steer the path is
@@ -170,16 +172,26 @@ test("a dialog that renders no rows is `no-list-surface`", async () => {
 	assert.equal(code, "no-list-surface");
 });
 
+test("a profile with no list menu is `no-list-menu`, not an empty dialog", async () => {
+	// The live client's own profile has no `userActions` caret, so the menu is
+	// never found. That is a different failure from a dialog that opened empty,
+	// and a caller reading the code has to be able to tell them apart.
+	const { surface, calls } = dialog([], { opened: false });
+	const code = await codeOf(() => execute(surface, { handle: "someone", name: "UI", apply: true }));
+	assert.equal(code, "no-list-menu");
+	assert.deepEqual(calls, ["open"]);
+});
+
 test("a row that does not flip to checked is a cdp-error, not a silent success", async () => {
 	const surface: ListSurface = {
 		async open() {
-			return { rows: rows(["UI", false]), save: false, alerts: [] };
+			return { opened: true, rows: rows(["UI", false]), save: false, alerts: [] };
 		},
 		async pick() {
-			return { rows: rows(["UI", false]), save: false, alerts: [] };
+			return { opened: true, rows: rows(["UI", false]), save: false, alerts: [] };
 		},
 		async save() {
-			return { rows: [], save: false, alerts: [] };
+			return { opened: true, rows: [], save: false, alerts: [] };
 		},
 		async close() {
 			/* nothing to clean up */

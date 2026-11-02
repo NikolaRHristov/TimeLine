@@ -16,6 +16,10 @@ import type { Vocabulary } from "../../Model/Author/Evidence.ts";
  * Every entry is a word a person would actually type. Abbreviations that are
  * ordinary English too (`go`, `dev`, `agent`, `token`) stay out: a bucket that
  * fires on every post ranks nothing.
+ *
+ * This is the tracked default, not the rule: the keys are list slugs, and
+ * `MAINTAIN_VOCABULARY` points the loader at a JSON file of the same shape so a
+ * person with their own lists counts their own words. Nothing enumerates slugs.
  */
 export const Keyword: Vocabulary = {
 	AI: [

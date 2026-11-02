@@ -1,5 +1,6 @@
 import { fail } from "../../../../Cli/Parser/Output/Failure.ts";
 import { withPage } from "../../../../Browser/Session/Page.ts";
+import { assertReady } from "../../../../Browser/Session/Ready.ts";
 import type { Session } from "../../../../Browser/Session/Session.ts";
 import type { InPageSnapshot } from "../../../../Browser/Selector/Post.ts";
 import { expression } from "../../../../Browser/Selector/Post.ts";
@@ -114,28 +115,38 @@ export async function scrape(url: string, options: ScrapeOptions = {}): Promise<
 
 	// `--tab` is an explicit request to use that tab; without it, take a
 	// background tab of our own so the person's window never moves.
+	//
+	// A scrape is the one caller that warns instead of failing: a timeline that
+	// is still painting still has posts in the DOM, and reading them is the job.
+	// If nothing rendered at all the run ends as `no-post` anyway, so the warning
+	// is the difference between a partial answer and a lie about a full one.
 	const ephemeral = options.tab === undefined;
-	await withPage(url, { tab: options.tab, ready: READY, timeout: 25_000, close: true, ephemeral }, async (context) => {
-		const queue = [context.href];
-		if (options.followTabs === true) {
-			const state = await context.session.evaluate<{ tabs: { href: string }[] }>(tabsExpression());
-			for (const tab of state.tabs ?? []) {
-				if (tab.href !== "" && !queue.includes(tab.href)) queue.push(tab.href);
+	await withPage(
+		url,
+		{ tab: options.tab, ready: READY, timeout: 25_000, close: true, ephemeral, onNotReady: "warn" },
+		async (context) => {
+			const queue = [context.href];
+			if (options.followTabs === true) {
+				const state = await context.session.evaluate<{ tabs: { href: string }[] }>(tabsExpression());
+				for (const tab of state.tabs ?? []) {
+					if (tab.href !== "" && !queue.includes(tab.href)) queue.push(tab.href);
+				}
 			}
-		}
 
-		for (let index = 0; index < queue.length; index += 1) {
-			if (index > 0) {
-				await context.session.navigate(queue[index]!);
-				await context.session.waitFor(READY, { timeout: 20_000 });
+			for (let index = 0; index < queue.length; index += 1) {
+				if (index > 0) {
+					await context.session.navigate(queue[index]!);
+					const ready = await context.session.waitFor(READY, { timeout: 20_000 });
+					assertReady(ready, { expression: READY, timeout: 20_000, url: queue[index]!, mode: "warn" });
+				}
+				pages.push(queue[index]!);
+				const result = await walk(context.session, seen, { limit, maxIdle, wait });
+				rounds += result.rounds;
+				stopped = result.stopped;
+				if (seen.size >= limit) break;
 			}
-			pages.push(queue[index]!);
-			const result = await walk(context.session, seen, { limit, maxIdle, wait });
-			rounds += result.rounds;
-			stopped = result.stopped;
-			if (seen.size >= limit) break;
-		}
-	});
+		},
+	);
 
 	const posts = [...seen.values()].slice(0, limit);
 	if (posts.length === 0) {

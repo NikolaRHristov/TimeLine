@@ -2,18 +2,18 @@ import type { Author } from "./Author.ts";
 import type { Media } from "../Post/Post.ts";
 
 /**
- * The buckets stage 3 files an author into. The order is the order a record
- * prints its counts in, so the JSON shape never depends on which bucket scored
- * highest.
+ * One vocabulary per bucket.
+ *
+ * A bucket is a list slug: the keys are whatever the loaded vocabulary
+ * declares, never a union in this file. Key order is the order a record prints
+ * its counts in, so the JSON shape follows the vocabulary and not a ranking.
+ * With no vocabulary loaded there are no buckets, and every count is empty -
+ * which is the honest answer, not a failure.
  */
-export const Bucket = ["AI", "UI", "CODE"] as const;
+export type Vocabulary = Record<string, readonly string[]>;
 
-export type Bucket = (typeof Bucket)[number];
-
-/** One vocabulary per bucket. The words are configuration; the shape is not. */
-export type Vocabulary = Record<Bucket, readonly string[]>;
-
-export type KeywordHits = Record<Bucket, number>;
+/** How many times each bucket's vocabulary fired, per bucket. */
+export type KeywordHits = Record<string, number>;
 
 /**
  * How many times each vocabulary term occurs, per bucket - sparse, because a
@@ -23,7 +23,7 @@ export type KeywordHits = Record<Bucket, number>;
  * is what `Configuration/Rules/Rules.json` weights name. This is the layer
  * that turns "counted" into "weighted": the counts decide nothing here.
  */
-export type TermHits = Record<Bucket, Record<string, number>>;
+export type TermHits = Record<string, Record<string, number>>;
 
 /** A domain the author's posts linked to, and how many posts linked it. */
 export type DomainHit = { domain: string; count: number };
@@ -203,13 +203,15 @@ function occurrences(haystack: string, keyword: string): number {
  */
 export function terms(posts: readonly EvidencePost[], vocabulary: Vocabulary): TermHits {
 	const haystack = posts.map((post) => post.text.toLowerCase()).join("\n");
-	const hits: TermHits = { AI: {}, UI: {}, CODE: {} };
+	const hits: TermHits = {};
 
-	for (const bucket of Bucket) {
-		for (const keyword of vocabulary[bucket]) {
+	for (const bucket of Object.keys(vocabulary)) {
+		const counted: Record<string, number> = {};
+		for (const keyword of vocabulary[bucket] ?? []) {
 			const count = occurrences(haystack, keyword);
-			if (count > 0) hits[bucket][keyword.toLowerCase().trim()] = count;
+			if (count > 0) counted[keyword.toLowerCase().trim()] = count;
 		}
+		hits[bucket] = counted;
 	}
 
 	return hits;
@@ -217,9 +219,11 @@ export function terms(posts: readonly EvidencePost[], vocabulary: Vocabulary): T
 
 /** The per-bucket totals of a term map. */
 export function totals(counted: TermHits): KeywordHits {
-	const hits: KeywordHits = { AI: 0, UI: 0, CODE: 0 };
-	for (const bucket of Bucket) {
-		for (const count of Object.values(counted[bucket])) hits[bucket] += count;
+	const hits: KeywordHits = {};
+	for (const bucket of Object.keys(counted)) {
+		let sum = 0;
+		for (const count of Object.values(counted[bucket] ?? {})) sum += count;
+		hits[bucket] = sum;
 	}
 	return hits;
 }
