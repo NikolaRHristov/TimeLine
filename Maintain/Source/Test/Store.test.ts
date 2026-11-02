@@ -121,7 +121,7 @@ test("events are found by subject", () => {
 
 	const about = store.events("42");
 	assert.equal(about.length, 1);
-	assert.equal(about[0].record.kind, "bookmark.added");
+	assert.equal(about[0]!.record.kind, "bookmark.added");
 	assert.equal(store.events().length, 2);
 });
 

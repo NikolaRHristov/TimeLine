@@ -8,9 +8,9 @@ export type Column = { key: string; header: string };
 export function render(rows: readonly Record<string, unknown>[], columns: readonly Column[]): string {
 	const cells = rows.map((row) => columns.map((column) => String(row[column.key] ?? "")));
 	const widths = columns.map((column, index) =>
-		Math.max(column.header.length, ...cells.map((row) => row[index].length)),
+		Math.max(column.header.length, ...cells.map((row) => row[index]!.length)),
 	);
-	const head = columns.map((column, index) => column.header.padEnd(widths[index])).join("  ");
-	const body = cells.map((row) => row.map((cell, index) => cell.padEnd(widths[index])).join("  "));
+	const head = columns.map((column, index) => column.header.padEnd(widths[index]!)).join("  ");
+	const body = cells.map((row) => row.map((cell, index) => cell.padEnd(widths[index]!)).join("  "));
 	return `${[head, ...body].join("\n")}\n`;
 }

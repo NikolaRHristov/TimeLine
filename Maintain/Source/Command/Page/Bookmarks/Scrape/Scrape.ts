@@ -10,9 +10,9 @@ export type ScrapeOptions = {
 	/** `--tab`: a CDP target id, or its index in `tab list`. */
 	tab?: unknown;
 	/** Stop once this many distinct posts have been read. */
-	limit?: number;
+	limit?: number | undefined;
 	/** Stop after this many scrolls in a row that produced nothing new. */
-	maxIdle?: number;
+	maxIdle?: number | undefined;
 	/** How long one scroll may take to produce a new id, in milliseconds. */
 	wait?: number;
 	/** Walk every tab the page presents - `/i/history` holds Bookmarks and Likes. */
@@ -126,10 +126,10 @@ export async function scrape(url: string, options: ScrapeOptions = {}): Promise<
 
 		for (let index = 0; index < queue.length; index += 1) {
 			if (index > 0) {
-				await context.session.navigate(queue[index]);
+				await context.session.navigate(queue[index]!);
 				await context.session.waitFor(READY, { timeout: 20_000 });
 			}
-			pages.push(queue[index]);
+			pages.push(queue[index]!);
 			const result = await walk(context.session, seen, { limit, maxIdle, wait });
 			rounds += result.rounds;
 			stopped = result.stopped;

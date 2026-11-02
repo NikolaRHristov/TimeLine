@@ -41,7 +41,7 @@ export const Tab = {
 
 	/** What URL matching compares: no query, no hash, no trailing slash. */
 	key(url: string): string {
-		const bare = url.split("#")[0].split("?")[0];
+		const bare = url.split("#")[0]!.split("?")[0]!;
 		return bare.endsWith("/") ? bare.slice(0, -1) : bare;
 	},
 

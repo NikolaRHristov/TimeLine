@@ -79,7 +79,7 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 	}
 
 	for (let index = 0; index < rest.length; index += 1) {
-		const token = rest[index];
+		const token = rest[index]!;
 		if (!isFlag(token)) {
 			throw fail("usage", `unexpected argument: ${token}`, { command: command.path.join(" ") });
 		}

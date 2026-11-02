@@ -22,6 +22,6 @@ export const Post = {
 	 */
 	idFromHref(href: string): string | null {
 		const match = /\/status\/(\d+)/.exec(href);
-		return match === null ? null : match[1];
+		return match === null ? null : (match[1] ?? null);
 	},
 };

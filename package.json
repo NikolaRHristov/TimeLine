@@ -18,6 +18,7 @@
 		"build": "astro build",
 		"Build": "pnpm --filter @nikolarhristov/timeline-maintain run Build",
 		"tool": "pnpm --filter @nikolarhristov/timeline-maintain run tool",
+		"check": "pnpm --filter @nikolarhristov/timeline-maintain run check",
 		"maintain": "node Maintain/Target/Index.js",
 		"Run": "astro dev --host",
 		"prepublishOnly": "pnpm run build"

@@ -22,7 +22,7 @@ export type FailureCode =
  */
 export class Failure extends Error {
 	readonly code: FailureCode;
-	readonly detail?: string;
+	readonly detail: string | undefined;
 	readonly extra: Record<string, unknown>;
 
 	constructor(code: FailureCode, detail?: string, extra: Record<string, unknown> = {}) {
