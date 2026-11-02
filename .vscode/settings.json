@@ -46,8 +46,8 @@
 		"**/.turbo": true,
 		"**/Thumbs.db": true,
 		"**/node_modules": true,
-		"**/Target": true,
-		"**/tmp": true
+		"**/Target": false,
+		"**/tmp": false
 	},
 	"search.exclude": {
 		"**/.astro": true,
