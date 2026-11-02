@@ -1,0 +1,95 @@
+---
+/**
+ * The spread: a showcase page as a descent, not a grid.
+ *
+ * A bento canvas aligns its boxes because they hold records that must be compared.
+ * A showcase page holds nothing but claims, so its boxes are free to move, and the
+ * movement is the reading: every other box steps sideways, the gaps are wider than
+ * the canvas's, and the page ends on a centred band of pillars rather than on
+ * whatever the last card happened to say.
+ *
+ * The component is static on purpose. A showcase page reads no collection and
+ * holds no state (RFC-0053), so there is nothing to hydrate - and a page that ships
+ * no JavaScript cannot fail to render without it.
+ *
+ * Every word arrives from the page, which reads it from `@Library/Content.ts`. No
+ * sentence is written here.
+ */
+import "@Stylesheet/Component/Spread.scss";
+
+export interface Card {
+	/** The feature's family, e.g. `Provenance`. */
+	Eyebrow: string;
+	/** The claim, as a heading. One sentence, no comma splices. */
+	Title: string;
+	/** The supporting line. Two sentences at most. */
+	Body: string;
+	/** Where the box leads, when it leads somewhere. */
+	Href?: string;
+	/** Which of the three greys the box takes. */
+	Tone?: "quiet" | "loud";
+}
+
+export interface Pillar {
+	/** The step's name: Authenticated, Encrypted, Authorised. */
+	Name: string;
+	/** What the step guarantees, in one line. */
+	Note: string;
+}
+
+interface Props {
+	Eyebrow: string;
+	Title: string;
+	Lede: string;
+	Cards: Card[];
+	Pillars: Pillar[];
+}
+
+const { Eyebrow, Title, Lede, Cards, Pillars } = Astro.props;
+
+const Tone = { quiet: "spread__box--quiet", loud: "spread__box--loud" };
+---
+
+<div class="spread">
+	<header class="spread__hero">
+		<p class="spread__eyebrow">{Eyebrow}</p>
+		<h1 class="spread__hero-title">{Title}</h1>
+		<p class="spread__hero-lede">{Lede}</p>
+	</header>
+
+	{
+		Cards.map((Card) => {
+			const class: string = [
+				"spread__box",
+				Card.Href === undefined ? "" : "spread__box--link",
+				Card.Tone === undefined ? "" : Tone[Card.Tone],
+			]
+				.filter(Boolean)
+				.join(" ");
+
+			return (
+				<article class={class}>
+					<p class="spread__eyebrow">{Card.Eyebrow}</p>
+					<h2 class="spread__title">{Card.Title}</h2>
+					<p class="spread__body">{Card.Body}</p>
+					{Card.Href !== undefined && (
+						<a class="spread__more" href={Card.Href}>
+							See it in the workspace
+						</a>
+					)}
+				</article>
+			);
+		})
+	}
+
+	<footer class="spread__pillars">
+		{
+			Pillars.map((Pillar) => (
+				<div class="spread__pillar">
+					<p class="spread__pillar-name">{Pillar.Name}</p>
+					<p class="spread__pillar-note">{Pillar.Note}</p>
+				</div>
+			))
+		}
+	</footer>
+</div>

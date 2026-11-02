@@ -1,0 +1,86 @@
+---
+/**
+ * The showcase spread - the layout primitive for RFC-0053, demonstrated.
+ *
+ * Six boxes, dispersed down a centred column: the provenance rail, the drawer, the
+ * publish seam, the canvas, the network, and a motion. Each states one claim and
+ * leads to the surface that proves it. The page closes on the three pillars of the
+ * swimlane flow (RFC-0047), so the last thing read is the mechanism rather than a
+ * slogan.
+ *
+ * The copy is written here while this page is a demonstration. RFC-0053 requires it
+ * to move into `Content/` and resolve through `@Library/Content.ts` before the page
+ * ships; the card that lands the homepage does that move.
+ *
+ * No collection is read and no island is mounted: the page is `ready` by
+ * construction, renders identically on an empty archive, and cannot fail without
+ * JavaScript because it ships none.
+ */
+import Spread, { type Card, type Pillar } from "@Component/Showcase/Spread.astro";
+import Base from "@Layout/Base.astro";
+
+const Cards: Card[] = [
+	{
+		Eyebrow: "Provenance",
+		Title: "You can see where every record came from.",
+		Body: "The rail reads the pipeline as depth: what was observed, what was processed, what was reviewed. A stage is a band, and the band that is selected is the one the page is showing.",
+		Href: "/Workspace",
+		Tone: "loud",
+	},
+	{
+		Eyebrow: "Drawer",
+		Title: "The private side stays private.",
+		Body: "Everything you have not published lives in your own store. Nothing reaches the canvas until you move it there, and withdrawing a record is the same gesture in reverse.",
+		Href: "/Workspace",
+	},
+	{
+		Eyebrow: "Seam",
+		Title: "One verb crosses.",
+		Body: "Publishing is the only action that moves a record from your drawer to a canvas. Curation, voting and commenting select among what is already public; they never publish.",
+		Href: "/Workspace",
+		Tone: "quiet",
+	},
+	{
+		Eyebrow: "Canvas",
+		Title: "Placement is data, not layout.",
+		Body: "A tile states the column and row it starts at and how many tracks it spans, so a thin archive still composes as a page instead of leaving holes.",
+		Href: "/Workspace",
+	},
+	{
+		Eyebrow: "Network",
+		Title: "Carried, never read.",
+		Body: "The network moves what you send between peers. The keys are yours, the transport is end to end, and the operator has nothing to inspect because it holds no key to inspect with.",
+	},
+	{
+		Eyebrow: "Motion",
+		Title: "An action travels, then settles.",
+		Body: "A motion is raised by a participant, carried by the network, and settled when its outcome is recorded. A change of intent is a second motion, never an edit of the first.",
+		Tone: "loud",
+	},
+];
+
+const Pillars: Pillar[] = [
+	{
+		Name: "Authenticated",
+		Note: "The provider verifies the network, and the network verifies the provider. Both halves of the handshake are drawn.",
+	},
+	{
+		Name: "Encrypted",
+		Note: "End to end between peers. The cipher suite is stated, not summarised, so the claim can be checked.",
+	},
+	{
+		Name: "Authorised",
+		Note: "Seeing is the first permission. Every grant after it is named, scoped, and revocable by the person who gave it.",
+	},
+];
+---
+
+<Base Title="TimeLine" Description="A bookmark showcase you own." Wide>
+	<Spread
+		Eyebrow="A network for what you keep"
+		Title="Your archive, your drawer, your canvas."
+		Lede="Everything you save stays private until you decide otherwise. What you publish is composed from your own material, carried over a network that cannot read it, and shown to exactly the people you authorised."
+		Cards={Cards}
+		Pillars={Pillars}
+	/>
+</Base>

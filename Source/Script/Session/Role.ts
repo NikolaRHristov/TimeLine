@@ -94,9 +94,9 @@ export function Allows(Standing: Standing, Act: Act, About?: Subject): boolean {
 			if (Standing.Role === "owner") return true;
 			if (Standing.Role !== "member") return false;
 			return (
-				Subject !== undefined &&
+				About !== undefined &&
 				Standing.Identity !== null &&
-				Subject.Author === Standing.Identity
+				About.Author === Standing.Identity
 			);
 
 		// Vote: a member and an owner, and a reader only where the room is an

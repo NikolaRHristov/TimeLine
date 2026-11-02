@@ -1,0 +1,73 @@
+@use "../Material.scss" as Material;
+
+// The context strip: which place the workspace is looking at, and how current
+// what it shows is.
+//
+// It is chrome, not paper: it sits at the head of the drawer column, above the
+// private half, and takes the panel's own ground and hairline so it reads as the
+// drawer's first row rather than as a band of its own. The state line is set in
+// the rail's eyebrow voice for the same reason - a state and a stage are both
+// things the interface asserts about itself, and they should not look like data.
+//
+// A tab is a control and not a link: the context is local state, the page does
+// not change, and a link would promise a URL that does not exist.
+.context {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	height: 2rem;
+	padding-inline: 1.75rem;
+	background: var(--chrome-deep);
+	border-bottom: 1px solid var(--chrome-line);
+	flex-shrink: 0;
+
+	&__tabs {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1);
+		min-width: 0;
+	}
+
+	// The unselected tab is a control with no face: the strip's ground shows
+	// through, so the selected one is the only filled shape on it.
+	&__tab {
+		@include Material.reset;
+		@include Material.control(transparent, transparent, var(--chrome-ink-muted), var(--radius-sm));
+		@include Material.ellipsis;
+
+		height: 1.5rem;
+		padding-inline: var(--space-2);
+		font-size: var(--text-2xs);
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+
+		&--active {
+			@include Material.control(
+				var(--chrome-control),
+				var(--chrome-line-strong),
+				var(--chrome-ink-bright),
+				var(--radius-sm)
+			);
+		}
+	}
+
+	&__state {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: var(--text-2xs);
+		line-height: normal;
+		color: var(--chrome-ink-faint);
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	&__state-word {
+		@include Material.label(var(--text-2xs), var(--chrome-ink-muted));
+	}
+
+	&__state-time {
+		color: var(--chrome-ink-faint);
+	}
+}

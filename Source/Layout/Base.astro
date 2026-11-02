@@ -175,7 +175,11 @@ const Year = new Date().getFullYear();
 						</ul>
 					</nav>
 
+					{/* The signature line: the carrier names itself once, and the
+					    network keeps the name its operator gave it (RFC-0055
+					    rule 3). This is the only place the company appears. */}
 					<p class="shell-footer__licence">
+						<span>{Content.Brand.Attribution}</span>
 						<span>{Content.Brand.Licence}</span>
 						<span>{Year}</span>
 					</p>

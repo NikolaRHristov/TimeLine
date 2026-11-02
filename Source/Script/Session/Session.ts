@@ -207,7 +207,9 @@ export function Enter<Drawer, Canvas>(
 		State: Joined ? "joined" : Slot.State,
 		AsOf: Slot.AsOf,
 		Drawer: Input.Drawer,
-		Canvas: Input.Canvases[ContextKey(Slot.Context)] ?? Input.Built,
+		// A joined membership reads nothing, so its canvas is the build's rather
+		// than whatever a caller happened to hold for that key.
+		Canvas: Joined ? Input.Built : (Input.Canvases[ContextKey(Slot.Context)] ?? Input.Built),
 		Pending: Input.Pending,
 	};
 }

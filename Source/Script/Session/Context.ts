@@ -38,6 +38,15 @@ export function Room(RoomId: string, Label: string, Destination: string): Contex
 }
 
 /**
+ * The key the owner's own context is addressed by.
+ *
+ * Exported because a caller that keeps one canvas per context needs the own
+ * context's key without holding the context itself, and a caller that wrote the
+ * literal would be a second place the key's spelling lives.
+ */
+export const OwnKey = "own";
+
+/**
  * The key a context is addressed by.
  *
  * `own` is a literal and a room is prefixed, so a room whose id happens to be
@@ -45,7 +54,7 @@ export function Room(RoomId: string, Label: string, Destination: string): Contex
  * records are keyed by this string, which is why it is stated once here.
  */
 export function Key(Context: Context): string {
-	return Context.Kind === "own" ? "own" : `room:${Context.RoomId}`;
+	return Context.Kind === "own" ? OwnKey : `room:${Context.RoomId}`;
 }
 
 /** Whether two contexts address the same place. */

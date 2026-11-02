@@ -401,6 +401,10 @@ export const Content = {
 	},
 	Word: {
 		Across: content(process.env["CONTENT_STRING_WORD_ACROSS"], "CONTENT_STRING_WORD_ACROSS"),
+		Approved: content(
+			process.env["CONTENT_STRING_WORD_APPROVED"],
+			"CONTENT_STRING_WORD_APPROVED",
+		),
 		Candidate: content(
 			process.env["CONTENT_STRING_WORD_CANDIDATE"],
 			"CONTENT_STRING_WORD_CANDIDATE",
@@ -429,6 +433,10 @@ export const Content = {
 		Recorded: content(
 			process.env["CONTENT_STRING_WORD_RECORDED"],
 			"CONTENT_STRING_WORD_RECORDED",
+		),
+		Rejected: content(
+			process.env["CONTENT_STRING_WORD_REJECTED"],
+			"CONTENT_STRING_WORD_REJECTED",
 		),
 		Saved: content(process.env["CONTENT_STRING_WORD_SAVED"], "CONTENT_STRING_WORD_SAVED"),
 		Unsorted: content(
