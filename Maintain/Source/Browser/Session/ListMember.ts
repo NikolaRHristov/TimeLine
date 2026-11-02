@@ -196,13 +196,20 @@ export async function withListMember<T>(
 	body: (context: ListMemberContext) => Promise<T>,
 ): Promise<T> {
 	const url = `https://x.com/${handle}`;
-	return withPage(url, { ready: readyExpression(), timeout: 15_000, ephemeral: true }, async (page) => {
-		await focus(page.session);
-		const surface = surfaceOf(page.session);
-		try {
-			return await body({ session: page.session, tab: page.tab, url: page.href, surface });
-		} finally {
-			await surface.close();
-		}
-	});
+	// `fail`: a membership write must not proceed on a profile that never
+	// arrived. `--dry-run` would otherwise report "not a member" for a page that
+	// simply has not rendered yet, which reads as a green light to apply.
+	return withPage(
+		url,
+		{ ready: readyExpression(), timeout: 15_000, ephemeral: true, onNotReady: "fail" },
+		async (page) => {
+			await focus(page.session);
+			const surface = surfaceOf(page.session);
+			try {
+				return await body({ session: page.session, tab: page.tab, url: page.href, surface });
+			} finally {
+				await surface.close();
+			}
+		},
+	);
 }

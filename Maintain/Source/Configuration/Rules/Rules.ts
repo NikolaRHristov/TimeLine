@@ -6,6 +6,7 @@ import type { Vocabulary } from "../../Model/Author/Evidence.ts";
 import { Keyword } from "../Keyword/Keyword.ts";
 import { loadVocabulary } from "../Keyword/Load.ts";
 import { root } from "../Load/Load.ts";
+import type { Configuration } from "../Schema/Schema.ts";
 
 /** Where the tracked weights live, relative to the repository root. */
 export const DEFAULT_RULES = "Maintain/Configuration/Rules/Rules.json";
@@ -116,6 +117,57 @@ export function validate(value: unknown, source: string): Rules {
 
 	const version = document["version"];
 	return { version: typeof version === "number" ? version : 1, threshold: { score, gap }, lists };
+}
+
+/** What the identifier map and the rules file agree a list is. */
+export type Scope = {
+	/** The weights to score with: only lists the map declares, when it declares any. */
+	rules: Rules;
+	/** Every slug a decision may name, in the authority's order. */
+	slugs: string[];
+	/** Rules keys the map does not declare, and which are therefore dropped. */
+	dropped: string[];
+};
+
+/**
+ * Narrow the rules to the lists the identifier map declares.
+ *
+ * The map is the authority on what a list is *called*; the rules file only says
+ * how to weigh one. A rule for a slug the map does not declare is dropped,
+ * because keeping it would make the weights file a second taxonomy - a map of
+ * `reading` and `recipes` would still be told to place authors into `CODE`.
+ *
+ * Two degradations, both announced rather than silent: no map at all, and a map
+ * that declares no lists. In either case there is nothing to narrow to, so the
+ * rules file's own keys are the only list vocabulary available and every
+ * command keeps working.
+ */
+export function scope(rules: Rules, configuration: Configuration | null): Scope {
+	const source = rulesPath();
+	const declared = configuration?.lists.map((entry) => entry.slug) ?? [];
+
+	if (declared.length === 0) {
+		process.stderr.write(
+			`maintain: ${source}: ${configuration === null ? "no identifier map" : "the identifier map declares no lists"}; the rules file's own keys are the list vocabulary\n`,
+		);
+		return { rules, slugs: Object.keys(rules.lists), dropped: [] };
+	}
+
+	const configured = new Set(declared);
+	const kept: Rules["lists"] = {};
+	for (const slug of declared) {
+		const rule = rules.lists[slug];
+		if (rule !== undefined) kept[slug] = rule;
+	}
+
+	const dropped = Object.keys(rules.lists).filter((slug) => !configured.has(slug));
+	if (dropped.length > 0) {
+		process.stderr.write(
+			`maintain: ${source}: dropping weights for ${sample(dropped)}; the identifier map does not declare ${dropped.length === 1 ? "that list" : "those lists"}\n`,
+		);
+	}
+
+	return { rules: { ...rules, lists: kept }, slugs: declared, dropped };
 }
 
 /** The first few of a list, with a count of the rest. */

@@ -1,7 +1,7 @@
 import { relative } from "node:path";
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { optional, root } from "../../../Configuration/Load/Load.ts";
-import { load as loadRules, rulesPath } from "../../../Configuration/Rules/Rules.ts";
+import { load as loadRules, rulesPath, scope } from "../../../Configuration/Rules/Rules.ts";
 import type { Preserved } from "../../../Model/Author/Decision.ts";
 import { classify } from "../../../Model/Author/Decision.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
@@ -54,26 +54,17 @@ export const Definition: CommandDefinition = {
 	summary: "Place authors into lists with weighted rules; leave the ambiguous ones unassigned.",
 	options: [],
 	async run(): Promise<unknown> {
-		const rules = loadRules();
+		// The identifier map decides which lists exist; the rules file only says
+		// how to weigh them. Scoring against the rules' own keys would let the
+		// weights file decide the taxonomy, so the rules are narrowed first.
+		const scoped = scope(loadRules(), optional());
 		const collection = collect();
-		const result = classify(collection.authors, rules, manual(contentDirectory()));
-
-		// A rules list with no id in the identifier map can be decided but never
-		// applied, which is worth saying before a distribute run discovers it.
-		const configuration = optional();
-		if (configuration !== null && configuration.lists.length > 0) {
-			const configured = new Set(configuration.lists.map((entry) => entry.slug));
-			const missing = Object.keys(rules.lists).filter((slug) => !configured.has(slug));
-			if (missing.length > 0) {
-				process.stderr.write(
-					`maintain: no list id configured for ${missing.join(", ")}; those decisions cannot be applied\n`,
-				);
-			}
-		}
+		const result = classify(collection.authors, scoped.rules, manual(contentDirectory()));
 
 		return {
 			rules: shown(rulesPath()),
-			threshold: rules.threshold,
+			threshold: scoped.rules.threshold,
+			lists: scoped.slugs,
 			counts: {
 				authors: collection.authors.length,
 				decided: result.decisions.length,

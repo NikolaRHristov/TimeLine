@@ -2,6 +2,9 @@
 export type FailureCode =
 	| "no-config"
 	| "no-rules"
+	| "no-model"
+	| "model-error"
+	| "model-reply"
 	| "config-exists"
 	| "unknown-list"
 	| "no-list-menu"

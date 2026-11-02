@@ -5,7 +5,7 @@ import { assertReady } from "../Browser/Session/Ready.ts";
 import { isFailure } from "../Cli/Parser/Output/Failure.ts";
 
 const EXPRESSION = 'document.querySelectorAll("article").length > 0';
-const URL_ = "https://x.com/NikolaRHristov";
+const URL_ = "https://x.com/example";
 
 /** Whatever a piece of code writes to stderr, and whatever it returns. */
 function capture<T>(work: () => T): { value: T; text: string } {
@@ -62,6 +62,6 @@ test("a scrape warns instead of failing, so the posts that did render are read",
 	assert.equal(value, undefined);
 	assert.match(text, /^maintain: the page never became ready within 25000 ms: /);
 	assert.match(text, /article/);
-	assert.match(text, /https:\/\/x\.com\/NikolaRHristov/);
+	assert.match(text, /https:\/\/x\.com\/example/);
 	assert.match(text, /continuing\n$/);
 });

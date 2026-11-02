@@ -18,6 +18,8 @@ import { Definition as StoreHide } from "../../Command/Store/Hide/Hide.ts";
 import { Definition as StoreStatus } from "../../Command/Store/Status/Status.ts";
 import { Definition as AuthorEvidenceBuild } from "../../Command/Author/Evidence/Build.ts";
 import { Definition as AuthorClassifyRules } from "../../Command/Author/Classify/Rules.ts";
+import { Definition as AuthorClassifyInfer } from "../../Command/Author/Classify/Infer.ts";
+import { Definition as AuthorDistributeApply } from "../../Command/Author/Distribute/Apply.ts";
 import { Definition as EventAppend } from "../../Command/Event/Append/Append.ts";
 import { Definition as EventTail } from "../../Command/Event/Tail/Tail.ts";
 
@@ -47,6 +49,8 @@ export const commands: readonly CommandDefinition[] = [
 	StoreStatus,
 	AuthorEvidenceBuild,
 	AuthorClassifyRules,
+	AuthorClassifyInfer,
+	AuthorDistributeApply,
 	EventAppend,
 	EventTail,
 ];

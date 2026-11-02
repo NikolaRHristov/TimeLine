@@ -9,9 +9,11 @@ export const Definition: CommandDefinition = {
 	options: [option("tab", "string", "CDP target id from `tab list`, or its index.")],
 	async run(values): Promise<unknown> {
 		const configuration = load();
+		// `fail`: the count is the answer, so a page that never painted must not
+		// be reported as "0 posts".
 		return withPage(
 			configuration.routes.bookmarks,
-			{ tab: values["tab"], ready: 'document.querySelectorAll("article").length > 0' },
+			{ tab: values["tab"], ready: 'document.querySelectorAll("article").length > 0', onNotReady: "fail" },
 			async (context) => {
 				const count = await context.session.evaluate<number>('document.querySelectorAll("article").length');
 				return {

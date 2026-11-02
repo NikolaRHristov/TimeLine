@@ -18,7 +18,9 @@ export const Definition: CommandDefinition = {
 		const list = requireList(configuration, slug);
 
 		const url = ListModel.url(list);
-		return withPage(url, { ready: readyExpression(), timeout: 15_000 }, async (context) => ({
+		// `fail`: "the list is open" is the whole answer, so a page that never
+		// arrived must not be reported as one.
+		return withPage(url, { ready: readyExpression(), timeout: 15_000, onNotReady: "fail" }, async (context) => ({
 			navigated: true,
 			slug,
 			url: context.href,

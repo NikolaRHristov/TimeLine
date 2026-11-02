@@ -1,5 +1,7 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { stringify } from "../../Output/Json/Json.ts";
 
 /**
  * A handle as X spells it. The same pattern guards the file name: a handle is
@@ -14,14 +16,27 @@ const HANDLE = /^[A-Za-z0-9_]{1,15}$/;
  * classifier may replace it, while `rule` and `model` are answers a later run
  * is allowed to revise.
  */
-export type DecisionRecord = { by: string; confidence?: number; reason?: string };
+export type DecisionRecord = {
+	by: string;
+	confidence?: number;
+	/**
+	 * The classifier's own numbers, when it had any: the rules' weighted score
+	 * and its lead over the runner-up, or the model's equivalent. Kept out of
+	 * the site's schema on purpose - the site shows a decision, not the
+	 * arithmetic behind it.
+	 */
+	score?: number;
+	gap?: number;
+	reason?: string;
+};
 
 /**
  * One author record in the site's content collection:
  * `Source/Content/Author/<handle>.json`.
  *
- * The record is read, never written, by the rules classifier - it is the one
- * place a manual decision can be seen.
+ * The rules classifier reads it and never writes it - it is the one place a
+ * manual decision can be seen. `author classify infer` is the only writer, and
+ * it refuses to touch a record whose decision is `manual`.
  */
 export type AuthorRecord = {
 	handle: string;
@@ -40,6 +55,8 @@ export type AuthorStore = {
 	all(): AuthorRecord[];
 	/** One record, or null when the handle has none. */
 	get(handle: string): AuthorRecord | null;
+	/** Write one record whole; returns its path. */
+	write(record: AuthorRecord): string;
 };
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -64,6 +81,10 @@ function decision(value: unknown): DecisionRecord | null {
 	const parsed: DecisionRecord = { by };
 	const confidence = detail["confidence"];
 	if (typeof confidence === "number" && Number.isFinite(confidence)) parsed.confidence = confidence;
+	const score = detail["score"];
+	if (typeof score === "number" && Number.isFinite(score)) parsed.score = score;
+	const gap = detail["gap"];
+	if (typeof gap === "number" && Number.isFinite(gap)) parsed.gap = gap;
 	const reason = text(detail["reason"]);
 	if (reason !== null) parsed.reason = reason;
 	return parsed;
@@ -139,6 +160,36 @@ export function open(content: string): AuthorStore {
 		get(handle: string): AuthorRecord | null {
 			if (!HANDLE.test(handle)) return null;
 			return read(join(directory, `${handle}.json`));
+		},
+
+		/**
+		 * Write one record whole, over whatever was there.
+		 *
+		 * Whole and not merged: the caller has already read the record and
+		 * decided what survives it, so a merge here would be a second, hidden
+		 * opinion about the same fields. The handle is re-validated because it
+		 * is a filename: a value carrying `/` or `..` must never reach a path,
+		 * however it got here.
+		 */
+		write(entry: AuthorRecord): string {
+			if (!HANDLE.test(entry.handle)) {
+				throw fail("io-error", "a handle must be simple before it becomes a filename", {
+					handle: entry.handle,
+				});
+			}
+
+			const path = join(directory, `${entry.handle}.json`);
+			try {
+				mkdirSync(directory, { recursive: true });
+				writeFileSync(path, `${stringify(entry)}\n`, "utf8");
+			} catch (error) {
+				throw fail("io-error", "could not write the author record", {
+					path,
+					reason: error instanceof Error ? error.message : String(error),
+				});
+			}
+
+			return path;
 		},
 	};
 }

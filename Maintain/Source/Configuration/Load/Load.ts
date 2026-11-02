@@ -56,11 +56,15 @@ export function load(): Configuration {
 	try {
 		raw = readFileSync(path, "utf8");
 	} catch {
+		// Both halves of the fix are absolute: the caller may be anywhere, and a
+		// relative copy command only works from the repository root. Quoted so a
+		// path with a space still pastes.
+		const examplePath = join(root(), EXAMPLE_CONFIGURATION);
 		throw fail("no-config", "the identifier map is missing", {
 			expected: path,
-			// The exact commands, run from the repository root: a failure that
-			// only names a path leaves the caller guessing at the next step.
-			copy: `mkdir -p ${dirname(DEFAULT_CONFIGURATION)} && cp ${EXAMPLE_CONFIGURATION} ${DEFAULT_CONFIGURATION}`,
+			// The exact commands, run from any directory: a failure that only
+			// names a path leaves the caller guessing at the next step.
+			copy: `mkdir -p "${dirname(path)}" && cp "${examplePath}" "${path}"`,
 			next: "maintain config init",
 		});
 	}
@@ -116,12 +120,20 @@ export function requireList(configuration: Configuration, slug: string): List {
 	const found = configuration.lists.find((entry) => entry.slug === slug);
 	if (found !== undefined) return found;
 
-	throw fail("unknown-list", `no list named ${slug} in the identifier map`, {
-		slug,
-		configured: configuration.lists.map((entry) => entry.slug),
-		expected: configurationPath(),
-		next: `add it with: maintain config init --force --list ${slug}=<id>`,
-	});
+	// The message names the configured set, not only the miss: a caller reading
+	// one line of output has to learn what it could have asked for. An empty map
+	// says `none` rather than trailing off into an empty list.
+	const configured = configuration.lists.map((entry) => entry.slug);
+	throw fail(
+		"unknown-list",
+		`${JSON.stringify(slug)} is not configured; configured lists: ${configured.length === 0 ? "none" : configured.join(", ")}`,
+		{
+			slug,
+			configured,
+			expected: configurationPath(),
+			next: `add it with: maintain config init --force --list ${slug}=<id>`,
+		},
+	);
 }
 
 /**

@@ -1,7 +1,8 @@
+import { existsSync } from "node:fs";
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import { fail } from "../../../Cli/Parser/Output/Failure.ts";
-import { example } from "../../../Configuration/Load/Load.ts";
+import { fail, isFailure } from "../../../Cli/Parser/Output/Failure.ts";
+import { configurationPath, example, load } from "../../../Configuration/Load/Load.ts";
 import type { Configuration } from "../../../Configuration/Schema/Schema.ts";
 import { save } from "../../../Configuration/Write/Write.ts";
 import type { List } from "../../../Model/List/List.ts";
@@ -43,12 +44,38 @@ function next(configuration: Configuration): string[] {
 }
 
 /**
+ * The map `config init` starts from.
+ *
+ * With `--force` on an existing map, the existing values are the base: the
+ * onboarding sequence this command prints runs `init --force` once per fact
+ * (the handle, then each list), and a later step must not undo an earlier one.
+ * Without an existing map - or when the existing one cannot be read - the
+ * tracked example is the base, because that is the only thing a fresh clone has.
+ */
+function base(force: boolean): Configuration {
+	if (force) {
+		try {
+			return load();
+		} catch (error) {
+			// A corrupt map is exactly what `--force` is for: start over rather
+			// than refusing to repair it, but never silently.
+			if (!(isFailure(error) && error.code === "no-config")) {
+				const detail = error instanceof Error ? error.message : String(error);
+				process.stderr.write(`maintain: ${configurationPath()} is unreadable (${detail}); starting from the example\n`);
+			}
+		}
+	}
+	return example();
+}
+
+/**
  * Write the local identifier map - the onboarding entry point.
  *
- * It starts from the tracked example, so the written file carries exactly the
- * defaults the documentation describes, then applies whatever the caller
- * passed. It never asks a question: every value is a flag, which is what makes
- * it drivable by any agent.
+ * On a fresh clone it starts from the tracked example, so the written file
+ * carries exactly the defaults the documentation describes. With `--force` it
+ * starts from the map already on disk, so running it once per fact composes.
+ * It never asks a question: every value is a flag, which is what makes it
+ * drivable by any agent.
  */
 export const Definition: CommandDefinition = {
 	path: ["config", "init"],
@@ -57,10 +84,11 @@ export const Definition: CommandDefinition = {
 		option("profile", "string", "The handle whose bookmarks are being archived.", { format: "handle" }),
 		option("list", "string", "One configured list, as <slug>=<id>. Repeat for more.", { repeat: true }),
 		option("cdp-port", "integer", "Port of the browser's debugging endpoint."),
-		option("force", "boolean", "Overwrite an existing identifier map."),
+		option("force", "boolean", "Replace an existing map, keeping its values as the base."),
 	],
 	async run(values): Promise<unknown> {
-		const configuration = example();
+		const force = values["force"] === true;
+		const configuration = base(force);
 
 		const profile = values["profile"];
 		if (profile !== undefined) {
@@ -76,8 +104,15 @@ export const Definition: CommandDefinition = {
 			configuration.routes.likes = `https://x.com/${handle}/likes`;
 		}
 
+		// One slug is one entry: `--list` replaces the entry it names and appends
+		// the ones it does not, so wiring a second list does not drop the first.
 		const lists = Array.isArray(values["list"]) ? (values["list"] as string[]) : [];
-		if (lists.length > 0) configuration.lists = lists.map(parseList);
+		for (const raw of lists) {
+			const list = parseList(raw);
+			const at = configuration.lists.findIndex((entry) => entry.slug === list.slug);
+			if (at === -1) configuration.lists.push(list);
+			else configuration.lists[at] = list;
+		}
 
 		const port = values["cdp-port"];
 		if (port !== undefined) {
@@ -88,10 +123,14 @@ export const Definition: CommandDefinition = {
 			configuration.cdp.port = number;
 		}
 
-		const path = save(configuration, { force: values["force"] === true });
+		// Read before writing: after `save` the file always exists, so the answer
+		// to "was this an overwrite?" has to be taken first.
+		const existed = existsSync(configurationPath());
+		const path = save(configuration, { force });
 
 		return {
 			written: path,
+			overwritten: existed,
 			profile: configuration.profile,
 			lists: configuration.lists.map((list) => ({ slug: list.slug, name: list.name })),
 			cdp: configuration.cdp,
