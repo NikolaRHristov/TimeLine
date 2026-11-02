@@ -1,24 +1,20 @@
-import type { Author } from "../Author/Author.ts";
+import type { PostRecord } from "../Generated/Types.ts";
 
-export type Media = { kind: "image" | "video" | "gif" | "link"; url: string };
+export type { MediaItem as Media, Metrics } from "../Generated/Types.ts";
 
-export type Metrics = {
-	replies: number;
-	reposts: number;
-	likes: number;
-	views: number;
-};
-
-/** One post, keyed by its status id - never by its text. */
-export type Post = {
-	id: string;
-	url: string;
-	author: Author;
-	text: string;
-	postedAt: string | null;
-	media: Media[];
-	metrics: Metrics;
-};
+/**
+ * One post as a transport reads it off the page.
+ *
+ * Deliberately narrower than `PostRecord`: a page can show a permalink, an
+ * author, the text, the attachments and the counts, and nothing else. The
+ * archive bookkeeping - when it was first seen, whether it is published - is
+ * the store's, not the page's, so deriving this by `Pick` keeps the reading a
+ * subset of the record instead of a second declaration that could drift.
+ */
+export type Post = Pick<
+	PostRecord,
+	"id" | "url" | "author" | "text" | "postedAt" | "media" | "metrics"
+>;
 
 export const Post = {
 	/**

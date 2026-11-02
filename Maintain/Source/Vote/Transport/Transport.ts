@@ -1,4 +1,6 @@
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
+import * as Text from "../../Content/Text.ts";
+import { fill } from "../../Output/Text/Fill.ts";
 import {
 	configuration,
 	ENVIRONMENT,
@@ -44,7 +46,7 @@ function none(): VoteTransport {
 				// their business, and a sync that names only `DATABASE_URL`
 				// sends them looking at a database that is fine.
 				expected: EXPECTED,
-				next: "see Documentation/Reference/Voting.md - or leave voting off; the Curated index does not need it",
+				next: fill(Text.HintVoteAbsent, { reference: Text.ReferenceVoting }),
 			});
 		},
 	};
@@ -81,7 +83,7 @@ export function select(environment: NodeJS.ProcessEnv = process.env): VoteTransp
 			throw fail("no-transport", `${TRANSPORT_ENV}=firebase but no project is configured`, {
 				expected: EXPECTED,
 				missing: "MAINTAIN_VOTE_FIREBASE_DATABASE_URL",
-				next: "see Documentation/Reference/Voting.md",
+				next: fill(Text.HintVoteIncomplete, { reference: Text.ReferenceVoting }),
 			});
 		}
 		return none();

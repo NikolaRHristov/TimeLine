@@ -27,6 +27,11 @@ Maintain/Target/
 
 node_modules/
 
+# The content layer's local override: the values a clone sets for itself - its
+# own licence, its own origin. The tracked `Content/Configuration.json` holds the
+# defaults, and `Configuration.local.json` is merged over it at build time.
+Content/Configuration.local.json
+
 # Local secrets: Firebase token, any API key. The global ignore also covers
 # `.env`, but a token in this repo deserves a rule that travels with the repo.
 .env
@@ -40,3 +45,10 @@ firebase-debug.log
 
 !AGENTS.md
 .hermes-tmp-measure.mjs
+.hermes-probe-export/Event/*.added-*.json
+.hermes-probe-export/Event/*-scrape.finished-bookmark.json
+.hermes-probe-export/Post/*.json
+.hermes-probe-export/Event/*-scrape.started-bookmark.json
+.hermes-probe-export/Event/*-scrape.started-history.json
+.hermes-probe-export/Event/*-scrape.finished-history.json
+.hermes-tmp/export/Event/2026-11-01T22-44-59-658Z-bookmark.added-2116959959581655196.json

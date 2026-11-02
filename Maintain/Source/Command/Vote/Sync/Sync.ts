@@ -1,5 +1,7 @@
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
+import { fill } from "../../../Output/Text/Fill.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote, writeSnapshot } from "../../../Store/Vote/Vote.ts";
 import { ENVIRONMENT } from "../../../Vote/Transport/Firebase.ts";
@@ -29,7 +31,7 @@ import type { CommandContext } from "../../Context/Context.ts";
  */
 export const Definition: CommandDefinition = {
 	path: ["vote", "sync"],
-	summary: "Pull current vote counts from the transport into the local store.",
+	summary: Text.CommandVoteSyncSummary,
 	options: [],
 	async run(_context: CommandContext): Promise<unknown> {
 		const transport = select();
@@ -38,7 +40,7 @@ export const Definition: CommandDefinition = {
 			// silently reported zero changes would look like a working sync.
 			throw fail("no-transport", "no vote transport is configured", {
 				expected: Object.values(ENVIRONMENT),
-				next: "see Documentation/Reference/Voting.md, or leave voting off",
+				next: fill(Text.HintVoteSync, { reference: Text.ReferenceVoting }),
 			});
 		}
 

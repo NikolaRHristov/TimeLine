@@ -11,6 +11,7 @@ Public, anonymised documentation for this site's tooling and data model.
 | `Reference/Storage-Model.md`        | The shadow store and the published collection, and why two         |
 | `Reference/Transport.md`            | CDP as primary transport, the store as the read-only fallback      |
 | `Reference/Build.md`                | How the tool layer and the site are built                          |
+| `Reference/Content.md`              | The content layer: strings baked in from `Content/` at build time  |
 | `Reference/URL-And-Shell.md`        | URL targeting and shell quoting rules for argv                     |
 | `Reference/Voting.md`               | The Voted index, owner approval, and bringing your own Firebase    |
 | `Skill/Timeline-Bookmarks/SKILL.md` | An operating procedure any agent can load before using the tooling |
@@ -26,7 +27,7 @@ Public, anonymised documentation for this site's tooling and data model.
 
 ## Why the leak audit subtracts names instead of narrowing paths
 
-`scripts/audit-leaks.sh` sweeps every tracked file for the private origin names in
+`Scripts/AuditLeaks.sh` sweeps every tracked file for the private origin names in
 `Maintain/Configuration/Local/Origin.txt`. Some of the hits that sweep produces are not account
 data, and they are kept on purpose:
 
@@ -45,12 +46,12 @@ caught anywhere in the tree. Both directions are reproducible:
 # a private origin anywhere -> FAIL
 printf 'contact: <private-origin> ops\n' > Documentation/Canary.md
 git add Documentation/Canary.md
-scripts/audit-leaks.sh .          # RESULT leaks present, exit 1
+Scripts/AuditLeaks.sh .          # RESULT leaks present, exit 1
 
 # only the public npm scope -> PASS
 printf 'deps: @playform/build\n' > Documentation/Canary.md
 git add Documentation/Canary.md
-scripts/audit-leaks.sh .          # RESULT clean, exit 0
+Scripts/AuditLeaks.sh .          # RESULT clean, exit 0
 ```
 
 `<private-origin>` stands for a word that is in `Origin.txt` and not in `Origin.public.txt`; the

@@ -1,32 +1,39 @@
 import { relative } from "node:path";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
+import * as Text from "../../../Content/Text.ts";
 import { Source as Sources, type Source } from "../../../Model/Source/Source.ts";
+import { connect } from "../../../Store/Database/Connect.ts";
 import type { Visibility } from "../../../Store/Model/Model.ts";
-import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
+import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
-import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
 import type { CommandContext } from "../../Context/Context.ts";
 
 /**
- * What each store holds, without reading any post's content.
+ * What the archive and the site each hold, without reading any post's content.
  *
- * Counts per store, per visibility and per source are the three questions worth
- * asking before a publish: how much is archived, how much is out, and where it
- * came from.
+ * The archive is the database: it is the source of truth, so a count here is a
+ * count of what the pipeline actually knows. The site is still files - a static
+ * build reads `Source/Content/` and nothing else - so its counts come from the
+ * collection.
+ *
+ * Counts per visibility and per source are the two questions worth asking
+ * before a publish: how much is archived, and where it came from.
  */
 export const Definition: CommandDefinition = {
 	path: ["store", "status"],
-	summary: "Count what the shadow store and the site's collection hold.",
+	summary: Text.CommandStoreStatusSummary,
 	options: [],
 	async run(_context: CommandContext): Promise<unknown> {
 		// The store's location is the identifier map's business, so a missing
 		// map is `no-config` here too - with the copy command attached - rather
 		// than a count of whatever the defaults happen to point at.
 		load();
-		const shadow = openShadow(shadowDirectory());
+		const { store } = connect();
 		const publicStore = openPublic(contentDirectory());
-		const posts = shadow.all();
+
+		const posts = await store.all();
+		const counts = await store.counts();
 
 		const byVisibility: Record<Visibility, number> = {
 			shadow: 0,
@@ -48,15 +55,15 @@ export const Definition: CommandDefinition = {
 		}
 
 		return {
-			shadow: {
-				// Repository-relative: this repo is public, and an absolute path
-				// would publish the machine's layout and the account name.
-				directory: relative(root(), shadow.directory),
+			database: {
+				name: store.name,
 				posts: posts.length,
 				byVisibility,
 				bySource,
-				observations: shadow.observationCount(),
-				events: shadow.events().length,
+				observations: counts.observations,
+				events: counts.events,
+				authors: counts.authors,
+				media: counts.media,
 			},
 			public: {
 				directory: relative(root(), publicStore.content),

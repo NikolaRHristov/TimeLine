@@ -26,7 +26,9 @@
 import "@Stylesheet/Component/Note.css";
 import "@Stylesheet/Component/Roster.css";
 import Base from "@Layout/Base.astro";
+import { Content } from "@Library/Content.ts";
 import { Route } from "@Library/Link.ts";
+import { fill } from "@Library/Text.ts";
 import { read as readConfiguration } from "@Script/Vote/Configuration.ts";
 import { getCollection } from "astro:content";
 
@@ -50,49 +52,49 @@ const candidates = voted
 			left.id.localeCompare(right.id),
 	);
 
+const description = fill(Content.Page.Voted.Description, { count: String(candidates.length) });
+const lede = fill(Content.Page.Voted.Lede, {
+	count: String(candidates.length),
+	candidateNoun: candidates.length === 1 ? Content.Word.Candidate : Content.Word.Candidates,
+});
 const day = (value: string): string => value.slice(0, 10);
 const label = (entry: (typeof candidates)[number]): string =>
 	entry.data.title !== undefined && entry.data.title !== "" ? entry.data.title : entry.data.url;
 ---
 
-<Base Title="Voted" Description={`${candidates.length} nominated posts, ranked by votes.`}>
+<Base Title={Content.Route.Voted} Description={description}>
 	<article class="sheet">
 		<header class="sheet__head">
-			<h1 class="sheet__title">Voted</h1>
-			<p class="sheet__lede">
-				{candidates.length}
-				{candidates.length === 1 ? " candidate" : " candidates"} waiting for review, ranked
-				by votes. Votes decide the order here; they do not publish anything.
-			</p>
+			<h1 class="sheet__title">{Content.Route.Voted}</h1>
+			<p class="sheet__lede">{lede}</p>
 			{!configured && (
 				<p class="sheet__lede">
-					Voting is not configured for this build - the counts below are the ones on file.
-					See <code>Documentation/Reference/Voting.md</code> to add a vote store, or keep
-					reading: the Curated index works without one.
+					{Content.Page.Voted.NotConfiguredBefore}
+					<code>{Content.Reference.Voting}</code>
+					{Content.Page.Voted.NotConfiguredAfter}
 				</p>
 			)}
 		</header>
 
 		{candidates.length === 0 && (
 			<section class="note">
-				<h2 class="note__title">Nothing nominated yet</h2>
-				<p class="note__body">
-					The candidate index is filled by the owner, one post at a time:
-				</p>
+				<h2 class="note__title">{Content.Empty.Voted}</h2>
+				<p class="note__body">{Content.Page.Voted.EmptyBody}</p>
 				<ol>
 					<li>
-						<code>maintain vote nominate --id &lt;status-id&gt;</code>
+						<code>{Content.Example.Nominate}</code>
 					</li>
 					<li>
-						<code>maintain vote queue</code>
+						<code>{Content.Example.Queue}</code>
 					</li>
 					<li>
-						<code>maintain vote approve --id &lt;status-id&gt;</code>
+						<code>{Content.Example.Approve}</code>
 					</li>
 				</ol>
 				<p class="note__body">
-					Approval is what puts an entry on the homepage. See
-					<code>Documentation/Reference/Voting.md</code> for the whole flow.
+					{Content.Page.Voted.EmptyHintBefore}
+					<code>{Content.Reference.Voting}</code>
+					{Content.Page.Voted.EmptyHintAfter}
 				</p>
 			</section>
 		)}
@@ -113,10 +115,12 @@ const label = (entry: (typeof candidates)[number]): string =>
 							</a>
 							<span class="roster__meta">
 								{entry.data.author.handle === ""
-									? "unknown author"
+									? Content.Page.Voted.UnknownAuthor
 									: `@${entry.data.author.handle}`}
 								{" · "}
-								nominated {day(entry.data.nominatedAt)}
+								{fill(Content.Page.Voted.Nominated, {
+									day: day(entry.data.nominatedAt),
+								})}
 								{entry.data.lists.length > 0 && ` · ${entry.data.lists.join(", ")}`}
 							</span>
 							{entry.data.note !== undefined && entry.data.note !== "" && (
@@ -127,7 +131,7 @@ const label = (entry: (typeof candidates)[number]): string =>
 									class="ml-auto rounded border border-neutral-300 px-3 py-1 text-xs text-neutral-700 hover:border-neutral-500 disabled:opacity-50"
 									data-vote-id={entry.data.id}
 									type="button">
-									Vote
+									{Content.Page.Voted.Button}
 								</button>
 							)}
 						</li>
@@ -138,13 +142,13 @@ const label = (entry: (typeof candidates)[number]): string =>
 		)}
 
 		<footer class="sheet__foot">
-			<a href={Route.Home}>Curated</a>
+			<a href={Route.Home}>{Content.Route.Curated}</a>
 			<span>·</span>
-			<a href={Route.Bookmark}>Bookmarks</a>
+			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
 			<span>·</span>
-			<a href={Route.List}>Lists</a>
+			<a href={Route.List}>{Content.Route.Lists}</a>
 			<span>·</span>
-			<a href={Route.Activity}>Activity</a>
+			<a href={Route.Activity}>{Content.Route.Activity}</a>
 		</footer>
 	</article>
 </Base>

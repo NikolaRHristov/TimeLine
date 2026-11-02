@@ -1,5 +1,6 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import { place } from "../../../Model/Vote/Vote.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
@@ -16,12 +17,12 @@ import { requireCurated } from "../Entry/Entry.ts";
  */
 export const Definition: CommandDefinition = {
 	path: ["vote", "rank"],
-	summary: "Move a curated entry to a new position.",
+	summary: Text.CommandVoteRankSummary,
 	options: [
-		option("id", "string", "Status id of the curated entry.", {
+		option("id", "string", Text.OptionVoteRankId, {
 			required: true,
 		}),
-		option("rank", "integer", "New position, 1 is the top.", {
+		option("rank", "integer", Text.OptionVoteRankRank, {
 			required: true,
 		}),
 	],

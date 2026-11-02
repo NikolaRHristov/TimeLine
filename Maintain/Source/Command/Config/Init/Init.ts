@@ -5,6 +5,7 @@ import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { configurationPath, example, load } from "../../../Configuration/Load/Load.ts";
 import type { Configuration } from "../../../Configuration/Schema/Schema.ts";
 import { save } from "../../../Configuration/Write/Write.ts";
+import * as Text from "../../../Content/Text.ts";
 import type { List } from "../../../Model/List/List.ts";
 import type { CommandContext } from "../../Context/Context.ts";
 
@@ -45,13 +46,11 @@ function parseList(raw: string): List {
 /** The three commands that turn a written map into a built site. */
 function next(configuration: Configuration): string[] {
 	const steps: string[] = [];
-	if (configuration.profile === "")
-		steps.push("maintain config init --force --profile <your-handle>");
-	if (configuration.lists.length === 0)
-		steps.push("maintain config init --force --list <slug>=<list-id>");
-	steps.push("maintain store scrape --source bookmark");
-	steps.push("maintain store publish --all");
-	steps.push("pnpm run build");
+	if (configuration.profile === "") steps.push(Text.ExampleConfigProfile);
+	if (configuration.lists.length === 0) steps.push(Text.ExampleConfigList);
+	steps.push(Text.ExampleScrape);
+	steps.push(Text.ExamplePublish);
+	steps.push(Text.ExampleBuild);
 	return steps.slice(0, 3);
 }
 
@@ -93,16 +92,16 @@ function base(force: boolean): Configuration {
  */
 export const Definition: CommandDefinition = {
 	path: ["config", "init"],
-	summary: "Write the local identifier map from the tracked example; every value is a flag.",
+	summary: Text.CommandConfigInitSummary,
 	options: [
-		option("profile", "string", "The handle whose bookmarks are being archived.", {
+		option("profile", "string", Text.OptionConfigInitProfile, {
 			format: "handle",
 		}),
-		option("list", "string", "One configured list, as <slug>=<id>. Repeat for more.", {
+		option("list", "string", Text.OptionConfigInitList, {
 			repeat: true,
 		}),
-		option("cdp-port", "integer", "Port of the browser's debugging endpoint."),
-		option("force", "boolean", "Replace an existing map, keeping its values as the base."),
+		option("cdp-port", "integer", Text.OptionConfigInitCdpport),
+		option("force", "boolean", Text.OptionConfigInitForce),
 	],
 	async run(context: CommandContext): Promise<unknown> {
 		const force = context.values["force"] === true;

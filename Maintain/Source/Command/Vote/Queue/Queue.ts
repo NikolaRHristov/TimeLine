@@ -1,5 +1,6 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import { age, candidates, totals } from "../../../Model/Vote/Vote.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
@@ -15,8 +16,8 @@ import type { CommandContext } from "../../Context/Context.ts";
  */
 export const Definition: CommandDefinition = {
 	path: ["vote", "queue"],
-	summary: "Every candidate, sorted by votes, with age and list.",
-	options: [option("limit", "integer", "Show at most this many candidates.")],
+	summary: Text.CommandVoteQueueSummary,
+	options: [option("limit", "integer", Text.OptionVoteQueueLimit)],
 	async run(context: CommandContext): Promise<unknown> {
 		const store = openVote(contentDirectory());
 		const all = store.votedAll();

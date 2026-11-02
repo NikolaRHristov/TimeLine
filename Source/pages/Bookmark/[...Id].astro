@@ -16,7 +16,9 @@ import "@Stylesheet/Component/Note.css";
 import "@Stylesheet/Component/Pill.css";
 import "@Stylesheet/Component/Roster.css";
 import Base from "@Layout/Base.astro";
+import { Content } from "@Library/Content.ts";
 import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
+import { fill } from "@Library/Text.ts";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
@@ -44,18 +46,20 @@ const links = media.filter((item) => item.kind === "link");
 
 const day = (value: string): string => value.slice(0, 10);
 const measured = [
-	["replies", metrics.replies],
-	["reposts", metrics.reposts],
-	["likes", metrics.likes],
-	["views", metrics.views],
+	[Content.Page.Bookmark.Detail.Metric.Replies, metrics.replies],
+	[Content.Page.Bookmark.Detail.Metric.Reposts, metrics.reposts],
+	[Content.Page.Bookmark.Detail.Metric.Likes, metrics.likes],
+	[Content.Page.Bookmark.Detail.Metric.Views, metrics.views],
 ].filter(([, value]) => typeof value === "number") as [string, number][];
 ---
 
-<Base Title={`${author.name} on X`} Description={entry.data.text.slice(0, 160)}>
+<Base
+	Title={fill(Content.Page.Bookmark.Detail.Title, { name: author.name })}
+	Description={entry.data.text.slice(0, 160)}>
 	<article class="sheet">
 		<nav class="mb-8 text-sm">
 			<a class="underline decoration-neutral-300 underline-offset-2" href={Route.Bookmark}>
-				← Bookmarks
+				{Content.Page.Bookmark.Detail.Back}
 			</a>
 		</nav>
 
@@ -64,19 +68,27 @@ const measured = [
 				<h1 class="text-lg font-semibold">{author.name}</h1>
 				<span class="text-sm text-neutral-600">@{author.handle}</span>
 				{author.verified && (
-					<span class="text-sm text-neutral-500" title="Verified account">
+					<span
+						class="text-sm text-neutral-500"
+						title={Content.Page.Bookmark.Detail.Verified}>
 						✓
 					</span>
 				)}
 				{entry.data.postedAt && (
 					<time class="ml-auto text-xs text-neutral-500" datetime={entry.data.postedAt}>
-						posted {day(entry.data.postedAt)}
+						{fill(Content.Page.Bookmark.Detail.Posted, {
+							day: day(entry.data.postedAt),
+						})}
 					</time>
 				)}
 				{rank !== null && (
 					<p class="w-full text-xs text-neutral-500">
-						Curated · rank {rank.data.rank} ·{" "}
-						{rank.data.votes === 1 ? "1 vote" : `${rank.data.votes} votes`}
+						{fill(Content.Page.Bookmark.Detail.Curated, {
+							rank: String(rank.data.rank),
+							count: String(rank.data.votes),
+							voteNoun:
+								rank.data.votes === 1 ? Content.Word.Vote : Content.Word.Votes,
+						})}
 					</p>
 				)}
 			</header>
@@ -139,17 +151,14 @@ const measured = [
 		<footer class="mt-10 space-y-1 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
 			<p>
 				<a class="underline" href={entry.data.url} rel="noopener noreferrer">
-					Open on X
+					{Content.Page.Bookmark.Detail.Open}
 				</a>
 			</p>
-			<p>
-				Saved at or after {day(entry.data.firstSeenAt)} - the first time this archive saw
-				the post. The interface does not expose the moment it was saved.
-			</p>
-			<p>Last read {day(entry.data.scrapedAt)}.</p>
+			<p>{fill(Content.Page.Bookmark.Detail.Saved, { day: day(entry.data.firstSeenAt) })}</p>
+			<p>{fill(Content.Page.Bookmark.Detail.LastRead, { day: day(entry.data.scrapedAt) })}</p>
 			<p>
 				<a class="underline" href={BookmarkHref(entry.id)}>
-					Permalink
+					{Content.Page.Bookmark.Detail.Permalink}
 				</a>
 			</p>
 		</footer>

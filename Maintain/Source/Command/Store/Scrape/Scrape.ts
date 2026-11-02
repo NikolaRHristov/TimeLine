@@ -1,24 +1,25 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import { ingest } from "../../../Ingest/Run/Run.ts";
 import { Source as Sources, type Source } from "../../../Model/Source/Source.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["store", "scrape"],
-	summary: "Walk one source and write every post it shows into the shadow store.",
+	summary: Text.CommandStoreScrapeSummary,
 	options: [
-		option("source", "enum", "Which channel to read.", {
+		option("source", "enum", Text.OptionStoreScrapeSource, {
 			required: true,
 			values: Sources,
 		}),
-		option("limit", "integer", "Stop after this many posts.", {
+		option("limit", "integer", Text.OptionStoreScrapeLimit, {
 			default: 200,
 		}),
-		option("max-idle", "integer", "Stop after this many scrolls that produced nothing new.", {
+		option("max-idle", "integer", Text.OptionStoreScrapeMaxidle, {
 			default: 3,
 		}),
-		option("tab", "string", "CDP target id from `tab list`, or its index."),
+		option("tab", "string", Text.OptionStoreScrapeTab),
 	],
 	// `store scrape` reads the browser and writes the archive, so it is not
 	// transport-agnostic the way `store status`/`publish`/`hide` are.

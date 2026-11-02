@@ -1,6 +1,7 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
 import type { CommandContext } from "../../Context/Context.ts";
@@ -20,12 +21,12 @@ import { requireVoted } from "../Entry/Entry.ts";
  */
 export const Definition: CommandDefinition = {
 	path: ["vote", "reject"],
-	summary: "Tombstone a candidate so it can never be nominated again.",
+	summary: Text.CommandVoteRejectSummary,
 	options: [
-		option("id", "string", "Status id of the candidate to reject.", {
+		option("id", "string", Text.OptionVoteRejectId, {
 			required: true,
 		}),
-		option("reason", "string", "Why it was rejected; kept on the event."),
+		option("reason", "string", Text.OptionVoteRejectReason),
 	],
 	async run(context: CommandContext): Promise<unknown> {
 		const id = String(context.values["id"]);

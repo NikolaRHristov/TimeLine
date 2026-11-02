@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Leak audit for a public checkout.
 #
-#   scripts/audit-leaks.sh [repo] [allowlist-regex]
+#   Scripts/AuditLeaks.sh [repo] [allowlist-regex]
 #
 # Two independent checks, both of which must come back empty:
 #   1. absolute machine paths in tracked files

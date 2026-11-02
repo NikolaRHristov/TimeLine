@@ -1,11 +1,12 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["tab", "focus"],
-	summary: "Bring one tab to the front.",
+	summary: Text.CommandTabFocusSummary,
 	options: [
-		option("id", "string", "CDP target id from `tab list`.", {
+		option("id", "string", Text.OptionTabFocusId, {
 			required: true,
 		}),
 	],

@@ -1,13 +1,16 @@
-/**
- * The event vocabulary, in one place.
- *
- * An event is a fact with a timestamp and a subject: what happened, to what,
- * when. The kinds are a closed set because the site's Event collection
- * validates against them - a new kind is a content-schema change, not a
- * string a caller may invent.
- */
+import type { EventRecord } from "../Generated/Types.ts";
 
-/** Every kind the pipeline records. */
+export type { EventRecord };
+
+/**
+ * Every kind the pipeline records, as a runtime list.
+ *
+ * The closed set itself is declared in `Model/Schema/Entities.ts` and reaches
+ * the site's Zod schema through `Source/content.config.ts`; this array is the
+ * copy a caller iterates. `Schema.test.ts` asserts the two agree, because a
+ * type cannot be enumerated and a list that silently fell behind would let a
+ * command record an event the site then rejects.
+ */
 export const EventKind = [
 	"scrape.started",
 	"scrape.finished",
@@ -26,14 +29,7 @@ export const EventKind = [
 	"vote.ranked",
 ] as const;
 
-export type EventKind = (typeof EventKind)[number];
-
-export type EventRecord = {
-	at: string;
-	kind: EventKind;
-	subject: string;
-	payload: Record<string, unknown>;
-};
+export type EventKind = EventRecord["kind"];
 
 /**
  * `<ISO>-<kind>-<subject>.json`, with `:` and `.` flattened so the name is

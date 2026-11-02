@@ -1,9 +1,10 @@
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import { dryRun, targetAlternatives, targetOf, targetOptions } from "../Target.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["post", "like", "remove"],
-	summary: "Remove a like, unless the post is not liked.",
+	summary: Text.CommandPostLikeRemoveSummary,
 	options: [...targetOptions, dryRun],
 	alternatives: targetAlternatives,
 	transport: "write",

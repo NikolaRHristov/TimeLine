@@ -148,7 +148,7 @@ stdout is not a TTY.
   and both gitignored. A committed build publishes every post id the archive held.
 - **Never write identifiers into a tracked file.** Handles, list ids and post ids belong in
   `Maintain/Configuration/Local/`. Docs use `<handle>`, `<slug>`, `<list-id>`.
-- **The leak audit subtracts public namespaces; it does not narrow paths.** `scripts/audit-leaks.sh`
+- **The leak audit subtracts public namespaces; it does not narrow paths.** `Scripts/AuditLeaks.sh`
   greps every tracked file for `Maintain/Configuration/Local/Origin.txt` minus `Origin.public.txt`,
   which lists the entries that are also public namespaces - the `@playform/*` npm scope and the
   maintainer's funding/conduct address. A hit there is not a leak: a published dependency scope and
@@ -178,6 +178,6 @@ stdout is not a TTY.
 | Shadow store is untracked     | `git check-ignore -v Maintain/Storage/Shadow/Post/<id>.json`                  |
 | Site builds                   | `pnpm run build` → `Target/index.html`, `Target/Bookmark/index.html`          |
 | Save time is not fabricated   | the detail page says "Saved at or after"; no `bookmarkedAt` field             |
-| The leak audit is clean       | `scripts/audit-leaks.sh .` → `RESULT clean`, exit 0                           |
+| The leak audit is clean       | `Scripts/AuditLeaks.sh .` → `RESULT clean`, exit 0                            |
 | A private origin still fails  | canary naming a word from `Origin.txt` alone → `RESULT leaks present`, exit 1 |
 | Public names are subtracted   | canary with `@playform/build` only → `RESULT clean`, exit 0                   |

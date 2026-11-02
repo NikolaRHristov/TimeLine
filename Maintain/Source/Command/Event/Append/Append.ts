@@ -4,6 +4,7 @@ import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
+import * as Text from "../../../Content/Text.ts";
 import { EventKind } from "../../../Model/Event/Event.ts";
 import { stringify } from "../../../Output/Json/Json.ts";
 import type { CommandContext } from "../../Context/Context.ts";
@@ -13,16 +14,16 @@ export const EVENT_KINDS = EventKind;
 
 export const Definition: CommandDefinition = {
 	path: ["event", "append"],
-	summary: "Write one event file into the content directory.",
+	summary: Text.CommandEventAppendSummary,
 	options: [
-		option("kind", "enum", "What happened.", {
+		option("kind", "enum", Text.OptionEventAppendKind, {
 			required: true,
 			values: EVENT_KINDS,
 		}),
-		option("subject", "string", "What it happened to - a post id or an author handle.", {
+		option("subject", "string", Text.OptionEventAppendSubject, {
 			required: true,
 		}),
-		option("payload", "json", "Extra event data.", { default: {} }),
+		option("payload", "json", Text.OptionEventAppendPayload, { default: {} }),
 	],
 	async run(context: CommandContext): Promise<unknown> {
 		const configuration = load();

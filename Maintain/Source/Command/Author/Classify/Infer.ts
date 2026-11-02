@@ -3,6 +3,7 @@ import { fail, toFailure, type Failure } from "../../../CLI/Parser/Output/Failur
 import type { CommandDefinition, Values } from "../../../CLI/Parser/Parser.ts";
 import { optional } from "../../../Configuration/Load/Load.ts";
 import { load as loadRules, scope } from "../../../Configuration/Rules/Rules.ts";
+import * as Text from "../../../Content/Text.ts";
 import { classify, type Preserved } from "../../../Model/Author/Decision.ts";
 import type { Evidence } from "../../../Model/Author/Evidence.ts";
 import {
@@ -73,10 +74,10 @@ function limit(values: Values): number {
  */
 export const Definition: CommandDefinition = {
 	path: ["author", "classify", "infer"],
-	summary: "Ask the model about the authors the rules left ambiguous; cache every answer.",
+	summary: Text.CommandAuthorClassifyInferSummary,
 	options: [
-		option("limit", "integer", "Ask about at most this many authors this run."),
-		option("dry-run", "boolean", "Report what would be asked and spend nothing."),
+		option("limit", "integer", Text.OptionAuthorClassifyInferLimit),
+		option("dry-run", "boolean", Text.OptionAuthorClassifyInferDryrun),
 	],
 	async run(context: CommandContext): Promise<unknown> {
 		// The map is the authority on the slug set, so it also decides what the

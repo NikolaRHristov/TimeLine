@@ -15,6 +15,7 @@ import { Definition as PostBookmarkRemove } from "../../Command/Post/Bookmark/Re
 import { Definition as PostExtract } from "../../Command/Post/Extract/Extract.ts";
 import { Definition as PostLike } from "../../Command/Post/Like/Like.ts";
 import { Definition as PostLikeRemove } from "../../Command/Post/Like/Remove.ts";
+import { Definition as StoreExport } from "../../Command/Store/Export/Export.ts";
 import { Definition as StoreHide } from "../../Command/Store/Hide/Hide.ts";
 import { Definition as StorePublish } from "../../Command/Store/Publish/Publish.ts";
 import { Definition as StorePush } from "../../Command/Store/Push/Push.ts";
@@ -52,6 +53,7 @@ export const commands: readonly CommandDefinition[] = [
 	PageListMemberAdd,
 	StoreScrape,
 	StorePublish,
+	StoreExport,
 	StoreHide,
 	StoreStatus,
 	StorePush,

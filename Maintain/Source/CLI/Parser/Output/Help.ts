@@ -1,20 +1,30 @@
+import * as Text from "../../../Content/Text.ts";
+import { fill } from "../../../Output/Text/Fill.ts";
 import { universal, type CommandDefinition } from "../Parser.ts";
 
-/** The command table, rendered from the same data the parser matches against. */
+/**
+ * The command table, rendered from the same data the parser matches against.
+ *
+ * The words come from `Content/String/CLI` through the `Text` index, so the help
+ * text is editable without touching this file and costs nothing at run time: the
+ * `define` map baked each one in at compile time. What stays here is the layout -
+ * the blank lines, the padding, the separators - because that is the shape of the
+ * table, not a sentence in it.
+ */
 export function commandList(commands: readonly CommandDefinition[]): string {
 	const width = Math.max(...commands.map((command) => command.path.join(" ").length));
 	const lines = commands.map(
 		(command) => `  ${command.path.join(" ").padEnd(width)}  ${command.summary}`,
 	);
 	return [
-		"maintain - a clap-shaped CLI over the Chrome DevTools Protocol.",
+		Text.CliTitle,
 		"",
-		"Usage: pnpm maintain <group> <command> [options] [--json] [--schema] [--help]",
+		Text.CliUsageList,
 		"",
-		"Commands:",
+		Text.CliCommands,
 		...lines,
 		"",
-		"Every command prints one JSON object; failures exit 2 with an `error` code.",
+		Text.CliContract,
 		"",
 	].join("\n");
 }
@@ -52,11 +62,11 @@ export function commandHelp(command: CommandDefinition): string {
 	});
 
 	return [
-		`maintain ${command.path.join(" ")} - ${command.summary}`,
+		fill(Text.CliHeadingCommand, { path: command.path.join(" "), summary: command.summary }),
 		"",
-		`Usage: ${usage.join(" ")}`,
+		fill(Text.CliUsageCommand, { usage: usage.join(" ") }),
 		"",
-		"Options:",
+		Text.CliOptions,
 		...lines,
 		"",
 	].join("\n");

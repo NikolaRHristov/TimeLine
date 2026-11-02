@@ -1,6 +1,7 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import { place, type CuratedEntry } from "../../../Model/Vote/Vote.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";
@@ -22,12 +23,12 @@ import { requireVoted } from "../Entry/Entry.ts";
  */
 export const Definition: CommandDefinition = {
 	path: ["vote", "approve"],
-	summary: "Move a candidate into the Curated index.",
+	summary: Text.CommandVoteApproveSummary,
 	options: [
-		option("id", "string", "Status id of the candidate to approve.", {
+		option("id", "string", Text.OptionVoteApproveId, {
 			required: true,
 		}),
-		option("rank", "integer", "Position in the Curated index; appended by default."),
+		option("rank", "integer", Text.OptionVoteApproveRank),
 	],
 	async run(context: CommandContext): Promise<unknown> {
 		const id = String(context.values["id"]);

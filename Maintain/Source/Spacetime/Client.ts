@@ -46,7 +46,12 @@ export type Client = {
 	identity(): Promise<string>;
 	/** Call one reducer with its positional arguments; resolves when it ran. */
 	call(reducer: string, args: readonly unknown[]): Promise<void>;
+	/** Run one SQL statement and return its rows as objects. */
+	sql(query: string): Promise<Row[]>;
 };
+
+/** One row, keyed by the column name the module declared in camelCase. */
+export type Row = Record<string, unknown>;
 
 function reason(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
@@ -168,6 +173,59 @@ export async function databaseIdentity(url: string, database: string): Promise<s
 	return identity.replace(/^0x/, "");
 }
 
+/**
+ * The column name the module declared, from the name SQL reports.
+ *
+ * SpacetimeDB publishes a camelCase column as snake_case, so `postedAt` comes
+ * back as `posted_at`. Mapping it back here keeps every caller reading the
+ * field names the declaration uses, instead of a second spelling of the schema.
+ */
+function camel(name: string): string {
+	return name.replace(/_([a-z0-9])/g, (_whole, letter: string) => letter.toUpperCase());
+}
+
+/**
+ * One cell, decoded.
+ *
+ * An optional column is a tagged pair on the wire - `[0, value]` for present,
+ * `[1, []]` for absent - which is the only place a JSON array appears in a
+ * result. Decoding it here means a caller never has to know the encoding, and
+ * `null` is the honest answer for "the module holds no value".
+ */
+function cell(value: unknown): unknown {
+	if (!Array.isArray(value) || value.length !== 2) return value;
+	// Tag 0 is `some`, tag 1 is `none`. Reading them the other way round turns
+	// every timestamp into null without an error anywhere - which is exactly the
+	// kind of silent loss this layer exists to prevent.
+	if (value[0] === 1) return null;
+	return value[0] === 0 ? value[1] : value;
+}
+
+/** The rows of one SQL statement, keyed by column name. */
+function rowsOf(body: unknown, url: string): Row[] {
+	if (!Array.isArray(body) || body.length === 0) return [];
+
+	const statement = body[0] as
+		{ schema?: { elements?: { name?: { some?: string } }[] }; rows?: unknown[][] } | undefined;
+	const elements = statement?.schema?.elements ?? [];
+	const names = elements.map((element) => camel(element.name?.some ?? ""));
+
+	const rows: Row[] = [];
+	for (const values of statement?.rows ?? []) {
+		const row: Row = {};
+		values.forEach((value, index) => {
+			const name = names[index];
+			if (name !== undefined && name !== "") row[name] = cell(value);
+		});
+		rows.push(row);
+	}
+
+	if (rows.length === 0 && (statement?.rows ?? []).length > 0) {
+		throw fail("spacetime-reducer", "the SQL result has no readable columns", { url });
+	}
+	return rows;
+}
+
 /** A client bound to one server and one database. */
 export function open(url: string, database: string): Client {
 	let resolved: Promise<string> | null = null;
@@ -199,6 +257,36 @@ export function open(url: string, database: string): Client {
 				CALL_TIMEOUT,
 			);
 			await checked(response, endpoint, `reducer ${JSON.stringify(reducer)}`);
+		},
+
+		async sql(query: string): Promise<Row[]> {
+			const identity = await client.identity();
+			const endpoint = `${client.url}/v1/database/${identity}/sql`;
+			const response = await request(
+				endpoint,
+				{
+					method: "POST",
+					headers: {
+						authorization: `Bearer ${token()}`,
+						// The endpoint takes the statement as the body, not as JSON.
+						"content-type": "text/plain",
+					},
+					body: query,
+				},
+				LOOKUP_TIMEOUT * 2,
+			);
+			await checked(response, endpoint, `query ${JSON.stringify(query)}`);
+
+			let body: unknown;
+			try {
+				body = await response.json();
+			} catch (error) {
+				throw fail("spacetime-reducer", "the query result is not JSON", {
+					url: endpoint,
+					reason: reason(error),
+				});
+			}
+			return rowsOf(body, endpoint);
 		},
 	};
 

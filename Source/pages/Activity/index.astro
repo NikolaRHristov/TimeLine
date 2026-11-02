@@ -12,7 +12,9 @@
  * something a visitor can see, without pretending the rest did not happen.
  */
 import Base from "@Layout/Base.astro";
+import { Content } from "@Library/Content.ts";
 import { BookmarkHref, Route } from "@Library/Link.ts";
+import { fill } from "@Library/Text.ts";
 import "@Stylesheet/Component/Note.css";
 import "@Stylesheet/Component/Roster.css";
 import { getCollection } from "astro:content";
@@ -22,17 +24,19 @@ const events = (await getCollection("Event")).sort((left, right) =>
 );
 const bookmarks = new Set((await getCollection("Bookmark")).map((entry) => entry.id));
 
+const lede = fill(Content.Page.Activity.Lede, {
+	count: String(events.length),
+	eventNoun: events.length === 1 ? Content.Word.Event : Content.Word.Events,
+});
 const moment = (value: string): string => `${value.slice(0, 10)} ${value.slice(11, 19)}Z`;
 const isPost = (subject: string): boolean => bookmarks.has(subject);
 ---
 
-<Base Title="Activity" Description="What the bookmark pipeline did, newest first.">
+<Base Title={Content.Route.Activity} Description={Content.Page.Activity.Description}>
 	<article class="sheet">
 		<header class="sheet__head">
-			<h1 class="sheet__title">Activity</h1>
-			<p class="sheet__lede">
-				{events.length} {events.length === 1 ? "event" : "events"}, newest first.
-			</p>
+			<h1 class="sheet__title">{Content.Route.Activity}</h1>
+			<p class="sheet__lede">{lede}</p>
 		</header>
 
 		<ol class="roster">
@@ -52,7 +56,11 @@ const isPost = (subject: string): boolean => bookmarks.has(subject);
 						)}
 					</span>
 					{typeof entry.data.payload?.count === "number" && (
-						<span class="roster__meta">{entry.data.payload.count} posts</span>
+						<span class="roster__meta">
+							{fill(Content.Page.Activity.PostCount, {
+								count: String(entry.data.payload.count),
+							})}
+						</span>
 					)}
 				</li>
 			))}
@@ -60,18 +68,15 @@ const isPost = (subject: string): boolean => bookmarks.has(subject);
 
 		{events.length === 0 && (
 			<section class="note">
-				<h2 class="note__title">Nothing recorded yet</h2>
-				<p class="note__body">
-					Events appear here once a post is published. The log is a directory of files,
-					not a database, so it can be read while the pipeline is running.
-				</p>
+				<h2 class="note__title">{Content.Empty.Activity}</h2>
+				<p class="note__body">{Content.Page.Activity.EmptyBody}</p>
 			</section>
 		)}
 
 		<footer class="sheet__foot">
-			<a href={Route.Bookmark}>Bookmarks</a>
+			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
 			<span>·</span>
-			<a href={Route.List}>Lists</a>
+			<a href={Route.List}>{Content.Route.Lists}</a>
 		</footer>
 	</article>
 </Base>

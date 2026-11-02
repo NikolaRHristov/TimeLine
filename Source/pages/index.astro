@@ -10,10 +10,15 @@
  * Every internal URL comes from `@Library/Link.ts`, which derives it from the
  * route map: the list pills point at `/List/<slug>` rather than at the bookmark
  * index, because a list has its own page now and a link that hid that would be
- * the one place the map is not the source of truth.
+ * the one place the map is not the source of truth. Every word comes from
+ * `@Library/Content.ts`, and the sentence that counts things is a `{{name}}`
+ * template filled here, so the numbers stay in the code and the words stay in
+ * `Content/`.
  */
 import Base from "@Layout/Base.astro";
+import { Content } from "@Library/Content.ts";
 import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
+import { fill } from "@Library/Text.ts";
 import "@Stylesheet/Component/Note.css";
 import "@Stylesheet/Component/Pill.css";
 import "@Stylesheet/Component/Roster.css";
@@ -60,57 +65,70 @@ const total = bookmarks.length;
 /**
  * One sentence for the header.
  *
- * Assembled as a string rather than as interleaved JSX expressions: the
- * optional `across N lists` clause used to sit between two text nodes, which
- * left the sentence reading `0 saved posts , 0 events recorded.` - a stray
- * space before the comma, visible exactly in the empty state this page is
- * supposed to make look deliberate.
+ * Assembled from one template rather than as interleaved markup: the optional
+ * `across N lists` clause used to sit between two text nodes, which left the
+ * sentence reading `0 saved posts , 0 events recorded.` - a stray space before
+ * the comma, visible exactly in the empty state this page is supposed to make
+ * look deliberate. The words come from `Content/`; only the counts and the
+ * singular/plural choice are made here.
  */
-const summary = `${total} saved ${total === 1 ? "post" : "posts"}${
-	lists.length > 0 ? ` across ${lists.length} ${lists.length === 1 ? "list" : "lists"}` : ""
-}, ${events.length} ${events.length === 1 ? "event" : "events"} recorded.`;
+const summary = fill(Content.Page.Index.Lede, {
+	total: String(total),
+	saved: Content.Word.Saved,
+	postNoun: total === 1 ? Content.Word.Post : Content.Word.Posts,
+	across:
+		lists.length > 0
+			? ` ${Content.Word.Across} ${lists.length} ${
+					lists.length === 1 ? Content.Word.List : Content.Word.Lists
+				}`
+			: "",
+	events: String(events.length),
+	eventNoun: events.length === 1 ? Content.Word.Event : Content.Word.Events,
+	recorded: Content.Word.Recorded,
+});
+
+const description = fill(Content.Page.Index.Description, {
+	total: String(total),
+	lists: String(lists.length),
+});
 
 const excerpt = (text: string): string =>
 	text.length > 160 ? `${text.slice(0, 160).trimEnd()}…` : text;
 const day = (value: string): string => value.slice(0, 10);
 ---
 
-<Base Description={`${total} saved posts, ${lists.length} lists, curated by hand.`}>
+<Base Description={description}>
 	<article class="sheet">
 		<header class="sheet__head">
-			<h1 class="sheet__title">Curated</h1>
+			<h1 class="sheet__title">{Content.Route.Curated}</h1>
 			<p class="sheet__lede">{summary}</p>
 		</header>
 
 		{total === 0 && (
 			<section class="note">
-				<h2 class="note__title">No bookmarks yet</h2>
-				<p class="note__body">
-					Nothing has been published into this archive. Scrape your own bookmarks into the
-					shadow store, then publish what you want to show:
-				</p>
+				<h2 class="note__title">{Content.Empty.Bookmarks}</h2>
+				<p class="note__body">{Content.Page.Index.EmptyBody}</p>
 				<ol>
 					<li>
-						<code>maintain store scrape --source bookmark</code>
+						<code>{Content.Example.Scrape}</code>
 					</li>
 					<li>
-						<code>maintain store publish --all</code>
+						<code>{Content.Example.Publish}</code>
 					</li>
 					<li>
-						<code>pnpm run build</code>
+						<code>{Content.Example.Build}</code>
 					</li>
 				</ol>
 				<p class="note__body">
-					The commands need a browser exposing the DevTools Protocol and a configured
-					identifier map - see
-					<code>Documentation/Reference/Configure.md</code>.
+					{Content.Page.Index.EmptyHint}
+					<code>{Content.Reference.Configure}</code>.
 				</p>
 			</section>
 		)}
 
 		{ranked.length > 0 && (
 			<section class="sheet__section">
-				<h2 class="sheet__heading">Picks</h2>
+				<h2 class="sheet__heading">{Content.Page.Index.Picks}</h2>
 				<ol class="roster">
 					{ranked.map((entry) => (
 						<li class="roster__row">
@@ -128,7 +146,8 @@ const day = (value: string): string => value.slice(0, 10);
 								</a>
 							)}
 							<span class="roster__meta">
-								{entry.votes} {entry.votes === 1 ? "vote" : "votes"}
+								{entry.votes}{" "}
+								{entry.votes === 1 ? Content.Word.Vote : Content.Word.Votes}
 							</span>
 						</li>
 					))}
@@ -150,7 +169,7 @@ const day = (value: string): string => value.slice(0, 10);
 
 		{newest.length > 0 && (
 			<section>
-				<h2 class="sheet__heading">Latest</h2>
+				<h2 class="sheet__heading">{Content.Page.Index.Latest}</h2>
 				<ul class="roster">
 					{newest.map((entry) => (
 						<li class="roster__row">
@@ -166,20 +185,20 @@ const day = (value: string): string => value.slice(0, 10);
 				</ul>
 				<p class="mt-4 text-sm">
 					<a class="underline" href={Route.Bookmark}>
-						All bookmarks →
+						{Content.Page.Index.All}
 					</a>
 				</p>
 			</section>
 		)}
 
 		<footer class="sheet__foot">
-			<a href={Route.Bookmark}>Bookmarks</a>
+			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
 			<span>·</span>
-			<a href={Route.List}>Lists</a>
+			<a href={Route.List}>{Content.Route.Lists}</a>
 			<span>·</span>
-			<a href={Route.Voted}>Voted</a>
+			<a href={Route.Voted}>{Content.Route.Voted}</a>
 			<span>·</span>
-			<a href={Route.Activity}>Activity</a>
+			<a href={Route.Activity}>{Content.Route.Activity}</a>
 		</footer>
 	</article>
 </Base>

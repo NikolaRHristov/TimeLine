@@ -7,6 +7,18 @@ Maintain/Spacetime/spacetimedb/dist/
 node_modules/
 .astro/
 
+# Generated from Maintain/Source/Model/Schema/Entities.ts. The generator owns
+# these bytes and `pnpm run check` compares them exactly, so a format pass that
+# rewrites them turns a current artifact into a stale one.
+Maintain/Source/Model/Generated/
+Maintain/Spacetime/spacetimedb/src/Schema.ts
+Source/content.config.ts
+
+# Content is copy, not code. A content file's bytes are its value - the build
+# bakes the text in verbatim - so rewrapping a paragraph to fit a column would
+# change the string every page prints.
+Content/
+
 # Local-only data and identifiers
 Maintain/Storage/
 Maintain/Configuration/Local/

@@ -1,4 +1,5 @@
 import type { BuildOptions, Plugin } from "esbuild";
+import { Content } from "./Content.ts";
 
 /**
  * @module ESBuild
@@ -8,20 +9,26 @@ import type { BuildOptions, Plugin } from "esbuild";
  * that removes the output directory so a renamed or deleted source never
  * leaves a stale file behind.
  *
- * Two options go further than a plain library build, and both follow from the
- * sources importing each other with `.ts` specifiers - the same form `node`
- * strips types from, so `node Source/Index.ts` runs with no toolchain:
+ * Three options go further than a plain library build. The first two follow
+ * from the sources importing each other with `.ts` specifiers - the same form
+ * `node` strips types from, so `node Source/Index.ts` runs with no toolchain:
  *
  * - `bundle` is on. A non-bundled emit copies `from "./X.ts"` straight into
  *   `Target/**`, where only `X.js` exists, so `node Target/Index.js` would
  *   fail to resolve its own imports.
  * - `splitting` keeps that from inlining every module into each of the ~57
  *   entry points: shared code is emitted once as `Target/chunk-*.js`.
+ * - `define` carries the content layer. Every file under `Content/` becomes one
+ *   entry, so a source reads `Text.<Name>` and the compiler writes the file's
+ *   text in as a literal - no runtime read, no Markdown in the bundle.
+ *   `Content.ts`, beside this file, builds that map.
  */
 export default {
 	bundle: true,
 
 	color: true,
+
+	define: (await Content()).Define,
 
 	format: "esm",
 

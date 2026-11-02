@@ -196,11 +196,11 @@ string is not.
 ## Leak audit
 
 The repository is public, so two questions are asked of the tracked tree whenever it changes.
-`scripts/audit-leaks.sh` asks both and exits non-zero on any hit:
+`Scripts/AuditLeaks.sh` asks both and exits non-zero on any hit:
 
 ```bash
-scripts/audit-leaks.sh            # the repo this script lives in
-scripts/audit-leaks.sh . '^Update\.sh$'
+Scripts/AuditLeaks.sh            # the repo this script lives in
+Scripts/AuditLeaks.sh . '^Update\.sh$'
 ```
 
 1. **No absolute machine paths.** No `file:///` URL, and no `/Users`, `/Volumes` or `/home` prefix

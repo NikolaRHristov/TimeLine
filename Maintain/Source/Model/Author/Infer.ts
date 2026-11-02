@@ -1,4 +1,6 @@
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
+import * as Text from "../../Content/Text.ts";
+import { fill } from "../../Output/Text/Fill.ts";
 import type { AuthorRecord, DecisionRecord } from "../../Store/Author/Author.ts";
 import type { Completion } from "../Inference/Client.ts";
 import type { Evidence } from "./Evidence.ts";
@@ -94,28 +96,14 @@ export function batches(evidences: readonly Evidence[], limit: number = BATCH_LI
 /**
  * The standing instruction: who the model is, and the one shape it may answer in.
  *
- * The lists are named here rather than left to the reply, because a slug the
+ * The text is `Content/Instruction/Classify.md`, baked in at build time. The
+ * lists are interpolated here rather than left to the reply, because a slug the
  * person never configured is a decision nothing can apply. The rules' weights
  * are deliberately absent: the model is asked to judge the account, not to
  * audit the arithmetic that could not.
  */
 export function system(lists: readonly string[]): string {
-	return [
-		"You file X (Twitter) accounts into the lists of one person's bookmark collection.",
-		"",
-		"Judge each account by its body of work, not by a single post. A mixed timeline is",
-		"normal: what matters is the subject the account keeps returning to.",
-		"",
-		`The lists are: ${lists.join(", ")}.`,
-		"",
-		"Reply with JSON only. No prose, no markdown fence, no commentary outside the JSON.",
-		'Shape: {"decisions":[{"handle":"<handle>","list":"<list>","score":<number>,"gap":<number>,"reason":"<one line>"}]}',
-		"",
-		"- One entry for every handle in the request, and for no other handle.",
-		"- `list` is one of the list names above, or null when the account belongs in none of them.",
-		"- `score` and `gap` are optional numbers of your own; they are recorded, not checked.",
-		"- `reason` is one line of plain English naming the evidence that decided it.",
-	].join("\n");
+	return fill(Text.InstructionClassify, { lists: lists.join(", ") });
 }
 
 /** One bucket's counts as a person reads them: `reading 4, recipes 1, notes 9`. */

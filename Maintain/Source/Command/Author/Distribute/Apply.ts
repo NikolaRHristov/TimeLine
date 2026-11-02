@@ -3,6 +3,7 @@ import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { configurationPath, optional } from "../../../Configuration/Load/Load.ts";
 import { load as loadRules, scope } from "../../../Configuration/Rules/Rules.ts";
+import * as Text from "../../../Content/Text.ts";
 import { apply as applyPlan, resolve, SPACING } from "../../../Model/Author/Distribute.ts";
 import { handle as normalize } from "../../../Model/List/Member.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
@@ -35,7 +36,7 @@ function pause(ms: number): Promise<void> {
  */
 export const Definition: CommandDefinition = {
 	path: ["author", "distribute", "apply"],
-	summary: "Write the resolved decisions, then add their memberships when --apply is passed.",
+	summary: Text.CommandAuthorDistributeApplySummary,
 	options: [
 		flag(
 			"apply",

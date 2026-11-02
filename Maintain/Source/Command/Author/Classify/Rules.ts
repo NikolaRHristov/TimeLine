@@ -2,6 +2,7 @@ import { relative } from "node:path";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { optional, root } from "../../../Configuration/Load/Load.ts";
 import { load as loadRules, rulesPath, scope } from "../../../Configuration/Rules/Rules.ts";
+import * as Text from "../../../Content/Text.ts";
 import { classify, type Preserved } from "../../../Model/Author/Decision.ts";
 import { open as openAuthors } from "../../../Store/Author/Author.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
@@ -51,7 +52,7 @@ export function manual(content: string): Map<string, Preserved> {
  */
 export const Definition: CommandDefinition = {
 	path: ["author", "classify", "rules"],
-	summary: "Place authors into lists with weighted rules; leave the ambiguous ones unassigned.",
+	summary: Text.CommandAuthorClassifyRulesSummary,
 	options: [],
 	async run(_context: CommandContext): Promise<unknown> {
 		// The identifier map decides which lists exist; the rules file only says

@@ -1,3 +1,8 @@
+import type {
+	CuratedRecord as CuratedEntry,
+	VotedRecord as VoteEntry,
+} from "../Generated/Types.ts";
+
 /**
  * The vote index, as data.
  *
@@ -30,23 +35,16 @@ export function isStatus(value: unknown): value is VoteStatus {
  * read the network would not be reproducible, and a site that showed a number
  * nobody recorded would be claiming a fact it does not have.
  */
-export type VoteEntry = {
-	/** The status id, or a slug derived from a URL that carries none. */
-	id: string;
-	url: string;
-	/** Optional short label; the site falls back to the URL. */
-	title?: string;
-	/** Optional reason the owner nominated it. */
-	note?: string;
-	author: { handle: string; name: string; verified: boolean };
-	/** The person's own list slugs - open strings, never an enum. */
-	lists: string[];
-	votes: number;
-	/** When `votes` was last observed to change. */
-	votedAt: string;
-	nominatedAt: string;
-	status: VoteStatus;
-};
+/**
+ * The two vote-index records, declared in `Model/Schema/Entities.ts` and
+ * rendered into `Model/Generated/Types.ts`. `VoteEntry` is the `voted` entity
+ * and `CuratedEntry` the `curated` one; both are also site collections, so the
+ * shape a command writes and the shape Astro validates are the same one.
+ */
+export type {
+	CuratedRecord as CuratedEntry,
+	VotedRecord as VoteEntry,
+} from "../Generated/Types.ts";
 
 /**
  * One entry of the Curated index.
@@ -55,14 +53,6 @@ export type VoteEntry = {
  * record by `id`, and the homepage joins them. `votes` is frozen at approval
  * time, which is what keeps the published site static and reproducible.
  */
-export type CuratedEntry = {
-	id: string;
-	/** Dense and unique: 1..N with no gaps. Written by the CLI, never by hand. */
-	rank: number;
-	votes: number;
-	approvedAt: string;
-	approvedBy: string;
-};
 
 /** Whole days between `then` and `now`; 0 for a future or unreadable date. */
 export function age(then: string, now: string): number {

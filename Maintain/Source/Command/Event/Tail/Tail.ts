@@ -4,6 +4,7 @@ import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { root } from "../../../Configuration/Load/Load.ts";
+import * as Text from "../../../Content/Text.ts";
 import type { EventRecord } from "../../../Model/Event/Event.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import type { CommandContext } from "../../Context/Context.ts";
@@ -51,15 +52,15 @@ function list(directory: string): Line[] {
  */
 export const Definition: CommandDefinition = {
 	path: ["event", "tail"],
-	summary: "Print the event log as JSON lines; --follow keeps printing new ones.",
+	summary: Text.CommandEventTailSummary,
 	options: [
-		option("follow", "boolean", "Keep polling and print events as they land."),
-		option("dir", "enum", "Which event log to read.", {
+		option("follow", "boolean", Text.OptionEventTailFollow),
+		option("dir", "enum", Text.OptionEventTailDir, {
 			values: ["shadow", "public"],
 			default: "shadow",
 		}),
-		option("since", "string", "Only print events at or after this timestamp."),
-		option("interval", "integer", "Polling interval in milliseconds.", {
+		option("since", "string", Text.OptionEventTailSince),
+		option("interval", "integer", Text.OptionEventTailInterval, {
 			default: 1000,
 		}),
 	],

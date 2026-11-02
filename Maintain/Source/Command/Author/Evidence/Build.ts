@@ -1,4 +1,5 @@
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import type { CommandContext } from "../../Context/Context.ts";
 import { collect } from "./Collect.ts";
 
@@ -13,7 +14,7 @@ import { collect } from "./Collect.ts";
  */
 export const Definition: CommandDefinition = {
 	path: ["author", "evidence", "build"],
-	summary: "Build one compact evidence record per bookmarked author. No model call.",
+	summary: Text.CommandAuthorEvidenceBuildSummary,
 	options: [],
 	async run(_context: CommandContext): Promise<unknown> {
 		return collect();

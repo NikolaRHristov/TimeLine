@@ -47,9 +47,9 @@ The shadow store's three states remain the states of the public projection; this
 replace them, it places them inside a larger set. `shadow` is a post no audience has been chosen
 for, `hidden` is a post withdrawn from `public` by its author.
 
-RFC-0005 leaves the visibility question open at the subscription layer, and RFC-0007 leaves the
-envelope's audience field undefined beyond its existence. This record decides what that field may
-contain and what each value promises.
+RFC-0005 records how visibility is enforced at delivery - a per-user view keyed on `ctx.sender` -
+and RFC-0007 leaves the envelope's audience field undefined beyond its existence. This record
+decides what that field may contain and what each value promises.
 
 ## Alternatives considered
 

@@ -71,7 +71,7 @@ Never edit `Public/_redirects` by hand. The next run overwrites it.
 - The service worker's cache name is derived from the route map, so adding or retiring a path
   produces a different cache and `cleanupOutdatedCaches` deletes the previous one on activate.
 - No absolute machine paths and no private origin names anywhere in the emitted files or in this
-  documentation (see `Storage-Model.md`). "Private" is measured by `scripts/audit-leaks.sh`, which
+  documentation (see `Storage-Model.md`). "Private" is measured by `Scripts/AuditLeaks.sh`, which
   subtracts the public namespaces listed in `Maintain/Configuration/Local/Origin.public.txt` - the
   build toolchain's npm scope and the maintainer contact - from the origin wordlist before grepping.
   Those names are public by construction, so subtracting them keeps the sweep mechanical over every
@@ -90,4 +90,4 @@ Never edit `Public/_redirects` by hand. The next run overwrites it.
 | Headers are present     | `Public/_headers` lists the four security headers and the `_astro/*` immutable rule                 | pass                                                                                   |
 | SW is production-only   | `astro build` emits `Target/service-worker.js` and a registration script; `astro dev` emits neither | pass                                                                                   |
 | SW precache is scoped   | the emitted precache manifest contains no `_redirects`, `_headers` or `*.json`                      | pass - 16 entries: 7 pages, 8 assets, `robots.txt`                                     |
-| No private origin named | `scripts/audit-leaks.sh .` → `== private origins` `PASS none`, exit 0                               | pass                                                                                   |
+| No private origin named | `Scripts/AuditLeaks.sh .` → `== private origins` `PASS none`, exit 0                                | pass                                                                                   |

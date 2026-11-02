@@ -1,5 +1,6 @@
 import { option } from "../../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../../Content/Text.ts";
 import { ingest } from "../../../../Ingest/Run/Run.ts";
 
 /**
@@ -11,15 +12,15 @@ import { ingest } from "../../../../Ingest/Run/Run.ts";
  */
 export const Definition: CommandDefinition = {
 	path: ["page", "bookmarks", "scrape"],
-	summary: "Walk the saved-posts page and write every post into the shadow store.",
+	summary: Text.CommandPageBookmarksScrapeCommandSummary,
 	options: [
-		option("limit", "integer", "Stop after this many posts.", {
+		option("limit", "integer", Text.OptionPageBookmarksScrapeCommandLimit, {
 			default: 200,
 		}),
-		option("max-idle", "integer", "Stop after this many scrolls that produced nothing new.", {
+		option("max-idle", "integer", Text.OptionPageBookmarksScrapeCommandMaxidle, {
 			default: 3,
 		}),
-		option("tab", "string", "CDP target id from `tab list`, or its index."),
+		option("tab", "string", Text.OptionPageBookmarksScrapeCommandTab),
 	],
 	transport: "browser",
 	async run(context): Promise<unknown> {

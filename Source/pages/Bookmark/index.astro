@@ -5,14 +5,17 @@
  *
  * A post can belong to more than one list, so it can appear under more than one
  * heading - the grouping is a view, not a copy. Posts with no list yet are
- * under `Unsorted`, which is where stage 3 leaves everything it has not decided.
+ * under the unsorted bucket, which is where stage 3 leaves everything it has not
+ * decided.
  *
  * Each heading links to that list's own page. The grouping here is the whole
  * archive at once; `/List/<slug>` is the same rows filtered to one list, which
  * is the page a visitor who cares about one list actually wants.
  */
 import Base from "@Layout/Base.astro";
+import { Content } from "@Library/Content.ts";
 import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
+import { fill } from "@Library/Text.ts";
 import "@Stylesheet/Component/Note.css";
 import "@Stylesheet/Component/Roster.css";
 import { getCollection } from "astro:content";
@@ -27,9 +30,12 @@ const newestFirst = [...bookmarks].sort((left, right) =>
 
 type Entry = (typeof newestFirst)[number];
 
+/** The bucket a post lands in when no list has claimed it. */
+const Unsorted = Content.Word.Unsorted;
+
 const grouped = new Map<string, Map<string, Entry[]>>();
 for (const entry of newestFirst) {
-	const lists = entry.data.lists.length > 0 ? entry.data.lists : ["Unsorted"];
+	const lists = entry.data.lists.length > 0 ? entry.data.lists : [Unsorted];
 	for (const list of lists) {
 		const authors = grouped.get(list) ?? new Map<string, Entry[]>();
 		grouped.set(list, authors);
@@ -41,34 +47,38 @@ for (const entry of newestFirst) {
 }
 
 /**
- * The headings are the slugs the posts carry, sorted alphabetically with
- * `Unsorted` last. No list name is hardcoded here: the set of lists belongs to
- * the person who configured them, not to the site.
+ * The headings are the slugs the posts carry, sorted alphabetically with the
+ * unsorted bucket last. No list name is hardcoded here: the set of lists belongs
+ * to the person who configured them, not to the site.
  */
 const sections = [...grouped].sort(([left], [right]) => {
-	if (left === "Unsorted") return 1;
-	if (right === "Unsorted") return -1;
+	if (left === Unsorted) return 1;
+	if (right === Unsorted) return -1;
 	return left.localeCompare(right);
 });
 
 const total = bookmarks.length;
+const description = fill(Content.Page.Bookmark.Description, { total: String(total) });
+const lede = fill(Content.Page.Bookmark.Lede, {
+	total: String(total),
+	saved: Content.Word.Saved,
+	postNoun: total === 1 ? Content.Word.Post : Content.Word.Posts,
+});
 const excerpt = (text: string): string =>
 	text.length > 180 ? `${text.slice(0, 180).trimEnd()}…` : text;
 ---
 
-<Base Title="Bookmarks" Description={`${total} saved posts, grouped by list and author.`}>
+<Base Title={Content.Route.Bookmarks} Description={description}>
 	<article class="sheet">
 		<header class="sheet__head">
-			<h1 class="sheet__title">Bookmarks</h1>
-			<p class="sheet__lede">
-				{total} saved {total === 1 ? "post" : "posts"}, grouped by list and author.
-			</p>
+			<h1 class="sheet__title">{Content.Route.Bookmarks}</h1>
+			<p class="sheet__lede">{lede}</p>
 		</header>
 
 		{sections.map(([list, authors]) => (
 			<section class="sheet__section">
 				<h2 class="sheet__heading">
-					{list === "Unsorted" ? (
+					{list === Unsorted ? (
 						list
 					) : (
 						<a class="underline" href={ListHref(list)}>
@@ -105,25 +115,23 @@ const excerpt = (text: string): string =>
 
 		{total === 0 && (
 			<section class="note">
-				<h2 class="note__title">No bookmarks yet</h2>
-				<p class="note__body">
-					Scrape your own into the shadow store, then publish what you want to show:
-				</p>
+				<h2 class="note__title">{Content.Empty.Bookmarks}</h2>
+				<p class="note__body">{Content.Document.EmptyBookmarks}</p>
 				<ol>
 					<li>
-						<code>maintain store scrape --source bookmark</code>
+						<code>{Content.Example.Scrape}</code>
 					</li>
 					<li>
-						<code>maintain store publish --all</code>
+						<code>{Content.Example.Publish}</code>
 					</li>
 				</ol>
 			</section>
 		)}
 
 		<footer class="sheet__foot">
-			<a href={Route.List}>Lists</a>
+			<a href={Route.List}>{Content.Route.Lists}</a>
 			<span>·</span>
-			<a href={Route.Activity}>Activity</a>
+			<a href={Route.Activity}>{Content.Route.Activity}</a>
 		</footer>
 	</article>
 </Base>

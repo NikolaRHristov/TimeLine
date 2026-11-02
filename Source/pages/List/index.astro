@@ -8,18 +8,20 @@
  * synthetic post therefore shows one list, and a clone with none shows the
  * empty state rather than a directory of links that go nowhere.
  *
- * `Unsorted` is the bucket for a post no list has claimed yet. It is listed
- * like any other list because it is one: a visitor looking for something they
- * know they saved should be able to find the posts the pipeline has not filed.
+ * The unsorted bucket is for a post no list has claimed yet. It is listed like
+ * any other list because it is one: a visitor looking for something they know
+ * they saved should be able to find the posts the pipeline has not filed.
  */
 import Base from "@Layout/Base.astro";
+import { Content } from "@Library/Content.ts";
 import { ListHref, Route } from "@Library/Link.ts";
+import { fill } from "@Library/Text.ts";
 import "@Stylesheet/Component/Note.css";
 import "@Stylesheet/Component/Roster.css";
 import { getCollection } from "astro:content";
 
 /** The bucket a post lands in when no list has claimed it. */
-const Unsorted = "Unsorted";
+const Unsorted = Content.Word.Unsorted;
 
 const bookmarks = await getCollection("Bookmark");
 
@@ -33,7 +35,7 @@ for (const entry of bookmarks) {
 	}
 }
 
-/** Alphabetical, with `Unsorted` last: it is the remainder, not a name. */
+/** Alphabetical, with the unsorted bucket last: it is the remainder, not a name. */
 const lists = [...counted].sort(([left], [right]) => {
 	if (left === Unsorted) return 1;
 	if (right === Unsorted) return -1;
@@ -41,16 +43,29 @@ const lists = [...counted].sort(([left], [right]) => {
 });
 
 const total = bookmarks.length;
+const description = fill(Content.Page.List.Description, {
+	listCount: String(lists.length),
+	listNoun: Content.Word.Lists,
+	across: Content.Word.Across,
+	total: String(total),
+	saved: Content.Word.Saved,
+	postNoun: Content.Word.Posts,
+});
+const lede = fill(Content.Page.List.Lede, {
+	listCount: String(lists.length),
+	listNoun: lists.length === 1 ? Content.Word.List : Content.Word.Lists,
+	across: Content.Word.Across,
+	total: String(total),
+	saved: Content.Word.Saved,
+	postNoun: total === 1 ? Content.Word.Post : Content.Word.Posts,
+});
 ---
 
-<Base Title="Lists" Description={`${lists.length} lists across ${total} saved posts.`}>
+<Base Title={Content.Route.Lists} Description={description}>
 	<article class="sheet">
 		<header class="sheet__head">
-			<h1 class="sheet__title">Lists</h1>
-			<p class="sheet__lede">
-				{lists.length} {lists.length === 1 ? "list" : "lists"} across {total} saved
-				{total === 1 ? " post" : " posts"}.
-			</p>
+			<h1 class="sheet__title">{Content.Route.Lists}</h1>
+			<p class="sheet__lede">{lede}</p>
 		</header>
 
 		{lists.length > 0 && (
@@ -61,7 +76,7 @@ const total = bookmarks.length;
 							{list}
 						</a>
 						<span class="roster__meta">
-							{count} {count === 1 ? "post" : "posts"}
+							{count} {count === 1 ? Content.Word.Post : Content.Word.Posts}
 						</span>
 					</li>
 				))}
@@ -70,28 +85,25 @@ const total = bookmarks.length;
 
 		{lists.length === 0 && (
 			<section class="note">
-				<h2 class="note__title">No lists yet</h2>
-				<p class="note__body">
-					A list exists once a published post carries its slug. Scrape and publish a post
-					that has one, or leave it - the archive reads the same either way.
-				</p>
+				<h2 class="note__title">{Content.Empty.Lists}</h2>
+				<p class="note__body">{Content.Page.List.EmptyBody}</p>
 				<ol>
 					<li>
-						<code>maintain store scrape --source bookmark</code>
+						<code>{Content.Example.Scrape}</code>
 					</li>
 					<li>
-						<code>maintain store publish --all</code>
+						<code>{Content.Example.Publish}</code>
 					</li>
 				</ol>
 			</section>
 		)}
 
 		<footer class="sheet__foot">
-			<a href={Route.Bookmark}>Bookmarks</a>
+			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
 			<span>·</span>
-			<a href={Route.Voted}>Voted</a>
+			<a href={Route.Voted}>{Content.Route.Voted}</a>
 			<span>·</span>
-			<a href={Route.Activity}>Activity</a>
+			<a href={Route.Activity}>{Content.Route.Activity}</a>
 		</footer>
 	</article>
 </Base>

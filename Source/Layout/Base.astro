@@ -7,7 +7,7 @@
  * the content column, and a footer carrying the sitemap and the licence. The
  * sibling is not named here - `Documentation/Reference/URL-And-Shell.md`
  * explains why a public tree never names a private origin, and it calls the
- * siblings Site A … Site D. Two things are deliberately different.
+ * siblings Site A ... Site D. Two things are deliberately different.
  *
  * - No theme switch. The pages style themselves with Tailwind utilities pinned
  *   to light values, so a switch that themed only the chrome would produce a
@@ -19,7 +19,8 @@
  *
  * Every internal link comes from `@Library/Link.ts`, which derives it from the
  * route map. No path is spelled in this file, so a route rename cannot leave a
- * dead link behind.
+ * dead link behind. Every word comes from `@Library/Content.ts`, which is baked
+ * from `Content/**` at build time.
  */
 import "@Stylesheet/Base.css";
 import { Content, Repository, Site } from "@Library/Content.ts";
@@ -32,11 +33,11 @@ interface Props {
 	Description?: string;
 }
 
-const { Title = Content.Title, Description = Content.Description } = Astro.props;
+const { Title = Content.Brand.Title, Description = Content.Brand.Description } = Astro.props;
 
 const Path = Astro.url.pathname;
 const Canonical = new URL(Path, Site).href;
-const Full = Title === Content.Title ? Title : `${Title} - ${Content.Short}`;
+const Full = Title === Content.Brand.Title ? Title : `${Title} - ${Content.Brand.Short}`;
 const Year = new Date().getFullYear();
 ---
 
@@ -53,7 +54,7 @@ const Year = new Date().getFullYear();
 		<meta name="twitter:dnt" content="on" />
 
 		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content={Content.Short} />
+		<meta property="og:site_name" content={Content.Brand.Short} />
 		<meta property="og:title" content={Full} />
 		<meta property="og:description" content={Description} />
 		<meta property="og:url" content={Canonical} />
@@ -71,9 +72,9 @@ const Year = new Date().getFullYear();
 			set:html={JSON.stringify({
 				"@context": "https://schema.org",
 				"@type": "WebSite",
-				name: Content.Title,
+				name: Content.Brand.Title,
 				url: Site,
-				description: Content.Description,
+				description: Content.Brand.Description,
 			})}
 		/>
 		<slot name="Head" />
@@ -82,19 +83,19 @@ const Year = new Date().getFullYear();
 	</Head>
 	<body>
 		<a class="skip" href="#main">
-			Skip to content
+			{Content.Shell.Skip}
 		</a>
 
 		<header class="shell-header">
 			<div class="page shell-header__inner">
 				<a class="shell-brand" href={Route.Home}>
 					<span class="shell-brand__mark" aria-hidden="true">
-						TL
+						{Content.Shell.Mark}
 					</span>
-					<span class="shell-brand__name">{Content.Short}</span>
+					<span class="shell-brand__name">{Content.Brand.Short}</span>
 				</a>
 
-				<nav class="shell-nav" aria-label="Primary">
+				<nav class="shell-nav" aria-label={Content.Shell.Primary}>
 					<ul>
 						{Primary.map((Entry) => (
 							<li>
@@ -110,7 +111,7 @@ const Year = new Date().getFullYear();
 
 				{Repository !== "" && (
 					<a class="shell-repository" href={Repository} rel="noopener noreferrer">
-						Source
+						{Content.Shell.Repository}
 					</a>
 				)}
 			</div>
@@ -123,11 +124,11 @@ const Year = new Date().getFullYear();
 		<footer class="shell-footer">
 			<div class="page shell-footer__inner">
 				<div class="shell-footer__brand">
-					<p class="shell-footer__name">{Content.Title}</p>
-					<p class="shell-footer__note">{Content.Description}</p>
+					<p class="shell-footer__name">{Content.Brand.Title}</p>
+					<p class="shell-footer__note">{Content.Brand.Description}</p>
 				</div>
 
-				<nav class="shell-sitemap" aria-label="Sitemap">
+				<nav class="shell-sitemap" aria-label={Content.Shell.Sitemap}>
 					<ul>
 						{Sitemap.map((Entry) => (
 							<li>
@@ -138,7 +139,7 @@ const Year = new Date().getFullYear();
 				</nav>
 
 				<p class="shell-footer__licence">
-					<span>{Content.Licence}</span>
+					<span>{Content.Brand.Licence}</span>
 					<span>{Year}</span>
 				</p>
 			</div>

@@ -1,6 +1,7 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
+import type { AuthorRecord, DecisionRecord } from "../../Model/Generated/Types.ts";
 import { stringify } from "../../Output/Json/Json.ts";
 
 /**
@@ -16,19 +17,7 @@ const HANDLE = /^[A-Za-z0-9_]{1,15}$/;
  * classifier may replace it, while `rule` and `model` are answers a later run
  * is allowed to revise.
  */
-export type DecisionRecord = {
-	by: string;
-	confidence?: number;
-	/**
-	 * The classifier's own numbers, when it had any: the rules' weighted score
-	 * and its lead over the runner-up, or the model's equivalent. Kept out of
-	 * the site's schema on purpose - the site shows a decision, not the
-	 * arithmetic behind it.
-	 */
-	score?: number;
-	gap?: number;
-	reason?: string;
-};
+export type { AuthorRecord, DecisionRecord } from "../../Model/Generated/Types.ts";
 
 /**
  * One author record in the site's content collection:
@@ -38,16 +27,6 @@ export type DecisionRecord = {
  * manual decision can be seen. `author classify infer` is the only writer, and
  * it refuses to touch a record whose decision is `manual`.
  */
-export type AuthorRecord = {
-	handle: string;
-	name: string;
-	verified: boolean;
-	firstSeenAt: string;
-	postCount: number;
-	lists: string[];
-	decision: DecisionRecord | null;
-};
-
 export type AuthorStore = {
 	/** Absolute path of the Author collection. */
 	directory: string;
@@ -73,12 +52,18 @@ function strings(value: unknown): string[] {
 	return value.filter((entry): entry is string => typeof entry === "string" && entry.length > 0);
 }
 
+/**
+ * Who may have written a decision. A value outside this set is not a decision
+ * this version can act on, so a hand-edited typo cannot outrank the classifier.
+ */
+const BY = new Set<string>(["rule", "model", "manual"]);
+
 function decision(value: unknown): DecisionRecord | null {
 	const detail = record(value);
 	if (detail === null) return null;
 	const by = text(detail["by"]);
-	if (by === null || by === "") return null;
-	const parsed: DecisionRecord = { by };
+	if (by === null || !BY.has(by)) return null;
+	const parsed: DecisionRecord = { by: by as DecisionRecord["by"] };
 	const confidence = detail["confidence"];
 	if (typeof confidence === "number" && Number.isFinite(confidence))
 		parsed.confidence = confidence;

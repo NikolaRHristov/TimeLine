@@ -2,6 +2,7 @@ import { flag } from "../../CLI/Parser/Argument/Flag.ts";
 import { option } from "../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import type { Values } from "../../CLI/Parser/Parser.ts";
+import * as Text from "../../Content/Text.ts";
 import type { PostTarget } from "../../Transport/Transport.ts";
 
 /**
@@ -12,12 +13,12 @@ import type { PostTarget } from "../../Transport/Transport.ts";
  * `--index` drives a tab the person already has.
  */
 export const targetOptions = [
-	option("id", "string", "Status id of the post, as it appears in a permalink."),
-	option("url", "string", "Permalink of the post to drive.", {
+	option("id", "string", Text.OptionPostTargetId),
+	option("url", "string", Text.OptionPostTargetUrl, {
 		format: "uri",
 	}),
-	option("tab", "string", "CDP target id from `tab list`, or its index."),
-	option("index", "integer", "Zero-based article index on the page.", {
+	option("tab", "string", Text.OptionPostTargetTab),
+	option("index", "integer", Text.OptionPostTargetIndex, {
 		default: 0,
 	}),
 ];

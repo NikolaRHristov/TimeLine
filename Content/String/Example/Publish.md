@@ -1,0 +1,1 @@
+maintain store publish --all

@@ -627,7 +627,7 @@ test("place() keeps the history a classification must not rewrite", () => {
 		firstSeenAt: "2026-01-01T00:00:00.000Z",
 		postCount: 9,
 		lists: ["UI"],
-		decision: { by: "rule", confidence: 1, reason: "an earlier guess" },
+		decision: { by: "rule" as const, confidence: 1, reason: "an earlier guess" },
 	};
 
 	const placed = place(

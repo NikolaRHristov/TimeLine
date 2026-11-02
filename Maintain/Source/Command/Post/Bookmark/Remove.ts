@@ -1,9 +1,10 @@
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import { dryRun, targetAlternatives, targetOf, targetOptions } from "../Target.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["post", "bookmark", "remove"],
-	summary: "Remove a bookmark, unless the post is not bookmarked.",
+	summary: Text.CommandPostBookmarkRemoveSummary,
 	options: [...targetOptions, dryRun],
 	alternatives: targetAlternatives,
 	transport: "write",

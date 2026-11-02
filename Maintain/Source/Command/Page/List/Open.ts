@@ -1,13 +1,14 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, requireList } from "../../../Configuration/Load/Load.ts";
+import * as Text from "../../../Content/Text.ts";
 import { List as ListModel } from "../../../Model/List/List.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["page", "list", "open"],
-	summary: "Show one configured list; the id comes from the identifier map, never argv.",
+	summary: Text.CommandPageListOpenSummary,
 	options: [
-		option("name", "string", "Slug of a list declared in the identifier map.", {
+		option("name", "string", Text.OptionPageListOpenName, {
 			required: true,
 		}),
 	],

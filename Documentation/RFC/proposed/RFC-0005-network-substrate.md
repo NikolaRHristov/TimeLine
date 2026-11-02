@@ -39,23 +39,33 @@ shared table.
   must be caught before it reaches every room.
 - Cross-room reads require an explicit call, which is slower but auditable.
 - Export can be scoped to a room, which makes the exit guarantee tractable.
+- At five members, per-row visibility buys nothing **between** members. Every member holds the
+  room's epoch (RFC-0013), so an `internal` post is readable by all five and there is no fifth party
+  to hide a comment from: the rule protects the room from outsiders, not members from each other.
+  Hiding a comment from four of five is a `typed` audience with a grant held by one (RFC-0012),
+  which is a per-post decision and not a room default - so a five-person room that wants a side
+  conversation must address it, because the room's default is that every member reads every
+  `internal` row.
 
 ## Verification
 
-| Claim                         | Test                                                           |
-| ----------------------------- | -------------------------------------------------------------- |
-| Connection without visibility | connect as a non-member, subscribe to a table, receive no rows |
-| Membership grants             | add the membership row, the same subscription returns rows     |
-| Revocation is immediate       | remove the row, the subscription stops delivering              |
-| Rooms are isolated            | a query in room A cannot address room B's tables               |
-| Export is per person          | export returns only rows authored by that identity             |
+| Claim                         | Test                                                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Connection without visibility | connect as a non-member, subscribe to a table, receive no rows                                             |
+| Membership grants             | add the membership row, the same subscription returns rows                                                 |
+| Revocation is immediate       | remove the row, the subscription stops delivering                                                          |
+| Rooms are isolated            | a query in room A cannot address room B's tables                                                           |
+| Export is per person          | export returns only rows authored by that identity                                                         |
+| A comment can be narrower     | at five members, a `typed` comment is absent from the other four members' subscriptions (intent, RFC-0012) |
 
 ## Open questions
 
-- Whether the engine supports per-row read permission at the subscription layer, or only filtering
-  inside the module. This is UNKNOWN and decides whether the isolation above is enforceable or
-  advisory.
-- Whether a module can gate a subscription by identity, or only filter results after they are
-  selected.
+- Per-row read permission at the subscription layer is **answered, not UNKNOWN**: the engine offers
+  a per-user view keyed on `ctx.sender`, where a client receives only the rows the view returns and
+  deleting the row it depends on drops those rows from that client, and a client visibility filter
+  declared as SQL over the subscribed table (`Maintain/Spacetime/AGENTS.md:617`, `:681`). Visibility
+  is therefore enforced at delivery rather than filtered afterwards, which makes the isolation above
+  enforceable and not advisory. What stays UNKNOWN is whether a per-user view can carry the whole
+  RFC-0012 audience rule without a scan per subscriber.
 - Upgrade strategy across many databases: staged rollout, version pinning, or a compatibility
   window.

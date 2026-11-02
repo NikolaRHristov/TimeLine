@@ -212,7 +212,7 @@ ranks, and why approval is a human action.
 
 | Claim                                | Test                                                                                                       |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| No absolute machine paths committed  | `scripts/audit-leaks.sh .` → `RESULT clean`                                                                |
+| No absolute machine paths committed  | `Scripts/AuditLeaks.sh .` → `RESULT clean`                                                                 |
 | No real project in the tree          | `git grep -niE 'apiKey\|projectId' -- .` → placeholders only                                               |
 | A fresh clone builds with no project | `pnpm run build` with no `MAINTAIN_VOTE_*` → `Target/Voted/index.html` contains "Voting is not configured" |
 | The page still ranks                 | the same build renders every candidate, sorted by `votes`                                                  |

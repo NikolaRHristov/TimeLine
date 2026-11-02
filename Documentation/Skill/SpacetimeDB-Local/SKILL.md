@@ -101,6 +101,53 @@ Three limits of the query surface read as failures, not as syntax you can fix:
   but `describe` and `sql` expose `first_seen_at` and `post_count`; the camelCase spelling fails as
   an unknown column, which reads like a missing field rather than a naming convention.
 
+## Reading rows from a program
+
+The CLI is for a person. A command that needs rows talks to the same endpoint the CLI does:
+
+```
+POST <URL>/v1/database/<identity>/sql
+Authorization: Bearer <token>
+content-type: text/plain
+
+SELECT * FROM post
+```
+
+The statement is the **raw body**, not JSON - posting `{"query":"…"}` answers
+`sql parser error: Expected an SQL statement, found: { at Line: 1, Column 1`, which reads like a
+broken query rather than a wrong envelope. The answer is a JSON **array of statement results**, one
+per statement, each shaped:
+
+```json
+{
+	"schema": {
+		"elements": [{ "name": { "some": "first_seen_at" }, "algebraic_type": { "String": [] } }]
+	},
+	"rows": [["2026-11-01T22:44:56.379Z", 1, true]]
+}
+```
+
+`rows` are positional and aligned to `schema.elements`, so a reader maps names to values itself and
+camelCases the snake_case names back. Load every table a command needs in one `Promise.all` and
+assemble the nested shapes in memory: a query per record turns one round trip into two hundred.
+
+## Splitting the module: generated schema, hand-written reducers
+
+A field list is derived; behaviour is not. Emitting the `table(...)` declarations into
+`src/Schema.ts` and keeping the reducers in `src/index.ts` lets one declaration own the columns
+while the reducers stay readable.
+
+- The **entry file must export the schema as default**: `import { spacetimedb } from "./Schema";`
+  then `export default spacetimedb;`. Lifecycle hooks and reducers are `spacetimedb.reducer(...)`
+  off that value, so `ctx.db.<table>` keeps its row types without re-declaring anything.
+- **Imports inside the module package carry no `.ts` extension.** The module's own `tsconfig.json`
+  uses `moduleResolution: "bundler"` without `allowImportingTsExtensions`, so `from "./Schema.ts"`
+  fails with
+  `TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled`.
+  Write `from "./Schema"` there even when the surrounding repository spells `.ts` everywhere else.
+- Give each table its database name explicitly - `table({ name: "post", public: true }, {…})` - so
+  the published table name is a decision rather than whatever the variable happens to be called.
+
 ## Schema rules that keep it replayable
 
 - **Derived ids, never auto-increment.** `.autoInc()` in the TypeScript schema API still requires
@@ -131,6 +178,11 @@ build must never connect to the database, or a static/CI build acquires a live s
   `null` is accepted but means _none_ - so a value sent as `null` succeeds with the field silently
   dropped. The wire shape is `{"some":"<value>"}` for a value and `null` for none; check the
   parameter index the error names.
+- **A result's option column is a tagged pair, and the tags run the other way.** `select` returns
+  `[0, "<value>"]` for a value and `[1, []]` for none. Decoding `0` as none turns every optional
+  column into `null` with no error anywhere: the rows still arrive, the counts still match, and the
+  only symptom is a field that quietly lost its content. Assert one known non-null value survives a
+  write → read round trip before trusting a reader that maps these.
 - **A program calls a reducer over HTTP, not through the CLI.** The CLI's own transport is
   `POST <URL>/v1/database/<identity>/call/<reducer>` with `Authorization: Bearer <token>` and a JSON
   **array** of positional arguments (not an object keyed by name), answering `200` with an empty
@@ -157,15 +209,18 @@ build must never connect to the database, or a static/CI build acquires a live s
 
 ## Claim → test
 
-| Claim                         | Test                                                                                                                               |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| CLI installed                 | `spacetime --version` prints the release tag                                                                                       |
-| Server up                     | `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows `spacetime`                                                                             |
-| Module compiles               | `spacetime build` → `Build finished successfully.`                                                                                 |
-| Database published            | `spacetime list --server http://127.0.0.1:<port>` shows the name                                                                   |
-| Reducer writes                | `spacetime call …` then `spacetime sql … "select count(*) from <table>"`                                                           |
-| Replay is idempotent          | a second identical `call` leaves `count(*)` unchanged                                                                              |
-| Optional argument round-trips | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())` |
-| Config matches reality        | the name in `spacetime.local.json` equals the row in `spacetime list`                                                              |
-| Schema is discoverable        | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                         |
-| Aggregation is client-side    | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                     |
+| Claim                           | Test                                                                                                                               |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| CLI installed                   | `spacetime --version` prints the release tag                                                                                       |
+| Server up                       | `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows `spacetime`                                                                             |
+| Module compiles                 | `spacetime build` → `Build finished successfully.`                                                                                 |
+| Database published              | `spacetime list --server http://127.0.0.1:<port>` shows the name                                                                   |
+| Reducer writes                  | `spacetime call …` then `spacetime sql … "select count(*) from <table>"`                                                           |
+| Replay is idempotent            | a second identical `call` leaves `count(*)` unchanged                                                                              |
+| Optional argument round-trips   | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())` |
+| Config matches reality          | the name in `spacetime.local.json` equals the row in `spacetime list`                                                              |
+| Schema is discoverable          | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                         |
+| Aggregation is client-side      | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                     |
+| A program reads rows            | `POST <URL>/v1/database/<identity>/sql` with a raw `SELECT` body returns `[{schema, rows}]`                                        |
+| An optional column survives     | write `{"some":"<value>"}`, then read `[0,"<value>"]` back - `[1,[]]` means the value was lost                                     |
+| Generated schema, hand reducers | `spacetime build` passes with `src/Schema.ts` imported as `"./Schema"` (no extension)                                              |

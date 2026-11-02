@@ -35,6 +35,12 @@ export type ShadowStore = {
 	all(): ShadowPost[];
 	/** Append one line to `Observation.jsonl`. */
 	observe(entry: ObservationEntry): void;
+	/** Rewrite `Observation.jsonl` from a list; the export path, which owns the whole file. */
+	replaceObservations(entries: readonly ObservationEntry[]): string;
+	/** Write one event at its canonical path, overwriting; the export path. */
+	writeEvent(record: EventRecord): string;
+	/** Every line of `Observation.jsonl`, oldest first. */
+	observations(): ObservationEntry[];
 	/** How many lines `Observation.jsonl` holds; 0 when it was never written. */
 	observationCount(): number;
 	/** Write one event file and return its path. */
@@ -141,6 +147,63 @@ export function open(directory: string): ShadowStore {
 					reason: error instanceof Error ? error.message : String(error),
 				});
 			}
+		},
+
+		replaceObservations(entries: readonly ObservationEntry[]): string {
+			const path = join(directory, "Observation.jsonl");
+			try {
+				mkdirSync(directory, { recursive: true });
+				writeFileSync(
+					path,
+					entries.map((entry) => `${JSON.stringify(entry)}\n`).join(""),
+					"utf8",
+				);
+			} catch (error) {
+				throw fail("io-error", "could not write the observation log", {
+					path,
+					reason: error instanceof Error ? error.message : String(error),
+				});
+			}
+			return path;
+		},
+
+		writeEvent(record: EventRecord): string {
+			const path = join(eventDirectory(), fileName(record.at, record.kind, record.subject));
+			try {
+				mkdirSync(eventDirectory(), { recursive: true });
+				writeFileSync(path, `${stringify(record)}\n`, "utf8");
+			} catch (error) {
+				throw fail("io-error", "could not write the event file", {
+					path,
+					reason: error instanceof Error ? error.message : String(error),
+				});
+			}
+			return path;
+		},
+
+		observations(): ObservationEntry[] {
+			let raw: string;
+			try {
+				raw = readFileSync(join(directory, "Observation.jsonl"), "utf8");
+			} catch {
+				return [];
+			}
+			const found: ObservationEntry[] = [];
+			for (const line of raw.split("\n")) {
+				if (line.trim() === "") continue;
+				let value: unknown;
+				try {
+					value = JSON.parse(line);
+				} catch {
+					// A truncated last line is what a killed process leaves behind;
+					// the rest of the log is still readable.
+					continue;
+				}
+				const entry = record(value);
+				if (entry === null || typeof entry["statusId"] !== "string") continue;
+				found.push(entry as unknown as ObservationEntry);
+			}
+			return found;
 		},
 
 		observationCount(): number {

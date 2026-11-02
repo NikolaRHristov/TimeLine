@@ -2,6 +2,7 @@ import { flag } from "../../../../CLI/Parser/Argument/Flag.ts";
 import { option } from "../../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../../Content/Text.ts";
 import { handle } from "../../../../Model/List/Member.ts";
 
 /**
@@ -14,12 +15,12 @@ import { handle } from "../../../../Model/List/Member.ts";
  */
 export const Definition: CommandDefinition = {
 	path: ["page", "list", "member", "add"],
-	summary: "Add one handle to one curated list; a dry run unless --apply.",
+	summary: Text.CommandPageListMemberAddSummary,
 	options: [
-		option("name", "string", "Slug of a list declared in the identifier map.", {
+		option("name", "string", Text.OptionPageListMemberAddName, {
 			required: true,
 		}),
-		option("handle", "string", "Handle to add, with or without the leading @.", {
+		option("handle", "string", Text.OptionPageListMemberAddHandle, {
 			required: true,
 		}),
 		flag("apply", "Write the membership. Without this flag nothing is changed."),

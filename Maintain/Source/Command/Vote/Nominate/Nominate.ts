@@ -2,6 +2,7 @@ import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, requireList } from "../../../Configuration/Load/Load.ts";
+import * as Text from "../../../Content/Text.ts";
 import { Post } from "../../../Model/Post/Post.ts";
 import { document, type VoteEntry } from "../../../Model/Vote/Vote.ts";
 import { stringify } from "../../../Output/Json/Json.ts";
@@ -64,17 +65,17 @@ function merge(left: readonly string[], right: readonly string[]): string[] {
  */
 export const Definition: CommandDefinition = {
 	path: ["vote", "nominate"],
-	summary: "Add a post or URL to the Voted index as a candidate.",
+	summary: Text.CommandVoteNominateSummary,
 	options: [
-		option("id", "string", "Status id of a post in the shadow store."),
-		option("url", "string", "Permalink to nominate, scraped or not.", {
+		option("id", "string", Text.OptionVoteNominateId),
+		option("url", "string", Text.OptionVoteNominateUrl, {
 			format: "uri",
 		}),
-		option("list", "string", "File the entry under this configured list.", {
+		option("list", "string", Text.OptionVoteNominateList, {
 			repeat: true,
 		}),
-		option("title", "string", "Short label for the entry."),
-		option("note", "string", "Why it was nominated."),
+		option("title", "string", Text.OptionVoteNominateTitle),
+		option("note", "string", Text.OptionVoteNominateNote),
 	],
 	alternatives: [["id"], ["url"]],
 	async run(context: CommandContext): Promise<unknown> {

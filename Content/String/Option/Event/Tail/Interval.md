@@ -1,0 +1,1 @@
+Polling interval in milliseconds.

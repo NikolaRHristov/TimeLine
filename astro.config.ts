@@ -44,11 +44,23 @@ export const Aliases = Object.fromEntries(
 // Vite's own loader - otherwise `site` (and therefore the sitemap) would fall
 // back to the example domain while the shell's canonical link used the real one.
 const { loadEnv } = await import("vite");
-const { Fallback } = await import("./Source/Library/Content.ts");
+const { Content } = await import("./Scripts/Content.ts");
 
 const Env = loadEnv(process.env["NODE_ENV"] ?? "production", Here, "");
 
-const Site = Env["SITE_URL"] ?? Fallback;
+// The content layer, read before Vite exists. Every string, document and
+// instruction under `Content/` becomes one `define`, and `vite.define` below
+// hands the same map to the page bundle - so a page reads a name and the
+// compiler writes the file's text into the bundle. Nothing reads Markdown at
+// run time, and the site ships no copy it does not print.
+const Layer = await Content();
+const Origin = Layer.Values["ORIGIN"];
+
+if (Origin === undefined) {
+	throw new Error("Content/Configuration.json: ORIGIN is missing; every canonical URL needs it");
+}
+
+const Site = Env["SITE_URL"] ?? Origin;
 
 // The route map, read directly rather than through `@Function/`: this file is
 // loaded by Astro's config loader before the alias table above is registered.
@@ -149,6 +161,7 @@ export default defineConfig({
 		contentIntellisense: true,
 	},
 	vite: {
+		define: Layer.Define,
 		build: {
 			sourcemap: On,
 			manifest: true,

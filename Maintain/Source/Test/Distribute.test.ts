@@ -20,7 +20,11 @@ import {
 } from "../Model/Author/Distribute.ts";
 import { totals, type Evidence } from "../Model/Author/Evidence.ts";
 import type { Post } from "../Model/Post/Post.ts";
-import { open as openAuthors, type AuthorRecord } from "../Store/Author/Author.ts";
+import {
+	open as openAuthors,
+	type AuthorRecord,
+	type DecisionRecord,
+} from "../Store/Author/Author.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
 import { context } from "./Context.ts";
@@ -66,7 +70,12 @@ function evidence(handle: string, terms: Record<string, Record<string, number>> 
 }
 
 /** A record as the Author collection holds it. */
-function stored(handle: string, lists: string[], by: string, reason = "on file"): AuthorRecord {
+function stored(
+	handle: string,
+	lists: string[],
+	by: DecisionRecord["by"],
+	reason = "on file",
+): AuthorRecord {
 	return {
 		handle,
 		name: handle,

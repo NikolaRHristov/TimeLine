@@ -16,6 +16,7 @@
 // `tsc -p tsconfig.json` cannot see any `@*` specifier. The relative path is
 // what the bundler, the Astro config loader and bare Node all agree on.
 import { Canonical, Clean } from "../Function/Route/Map.ts";
+import { Content } from "./Content.ts";
 
 export { Canonical };
 
@@ -46,18 +47,18 @@ export const ListHref = (Slug: string): string => Canonical("List", Slug);
  * header would push the brand and the repository link off a narrow screen.
  */
 export const Primary = [
-	{ Href: Route.Bookmark, Label: "Bookmarks" },
-	{ Href: Route.List, Label: "Lists" },
-	{ Href: Route.Voted, Label: "Voted" },
-	{ Href: Route.Activity, Label: "Activity" },
+	{ Href: Route.Bookmark, Label: Content.Route.Bookmarks },
+	{ Href: Route.List, Label: Content.Route.Lists },
+	{ Href: Route.Voted, Label: Content.Route.Voted },
+	{ Href: Route.Activity, Label: Content.Route.Activity },
 ] as const;
 
 export const Sitemap = [
-	{ Href: Route.Home, Label: "Curated" },
-	{ Href: Route.Bookmark, Label: "Bookmarks" },
-	{ Href: Route.List, Label: "Lists" },
-	{ Href: Route.Voted, Label: "Voted" },
-	{ Href: Route.Activity, Label: "Activity" },
+	{ Href: Route.Home, Label: Content.Route.Curated },
+	{ Href: Route.Bookmark, Label: Content.Route.Bookmarks },
+	{ Href: Route.List, Label: Content.Route.Lists },
+	{ Href: Route.Voted, Label: Content.Route.Voted },
+	{ Href: Route.Activity, Label: Content.Route.Activity },
 ] as const;
 
 /**

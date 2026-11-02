@@ -1,11 +1,12 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load } from "../../../Configuration/Load/Load.ts";
+import * as Text from "../../../Content/Text.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["page", "bookmarks", "open"],
-	summary: "Show the saved-posts page and report how many posts it has.",
-	options: [option("tab", "string", "CDP target id from `tab list`, or its index.")],
+	summary: Text.CommandPageBookmarksOpenSummary,
+	options: [option("tab", "string", Text.OptionPageBookmarksOpenTab)],
 	transport: "browser",
 	async run(context): Promise<unknown> {
 		const configuration = load();

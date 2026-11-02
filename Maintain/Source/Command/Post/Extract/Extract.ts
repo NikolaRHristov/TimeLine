@@ -1,9 +1,10 @@
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
+import * as Text from "../../../Content/Text.ts";
 import { targetAlternatives, targetOf, targetOptions } from "../Target.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["post", "extract"],
-	summary: "Read one post, from the live page or from the shadow archive.",
+	summary: Text.CommandPostExtractSummary,
 	options: targetOptions,
 	alternatives: targetAlternatives,
 	transport: "read",

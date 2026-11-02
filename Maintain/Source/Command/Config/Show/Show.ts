@@ -1,6 +1,7 @@
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { configurationPath, load, requireList } from "../../../Configuration/Load/Load.ts";
+import * as Text from "../../../Content/Text.ts";
 import type { CommandContext } from "../../Context/Context.ts";
 
 /**
@@ -17,10 +18,10 @@ function mask(id: string): string {
 
 export const Definition: CommandDefinition = {
 	path: ["config", "show"],
-	summary: "Print the resolved identifier map; list ids are masked unless --reveal.",
+	summary: Text.CommandConfigShowSummary,
 	options: [
-		option("reveal", "boolean", "Print list ids instead of masking them."),
-		option("list", "string", "Show only the configured list with this slug."),
+		option("reveal", "boolean", Text.OptionConfigShowReveal),
+		option("list", "string", Text.OptionConfigShowList),
 	],
 	async run(context: CommandContext): Promise<unknown> {
 		const configuration = load();
