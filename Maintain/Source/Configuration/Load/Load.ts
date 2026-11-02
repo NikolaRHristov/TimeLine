@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { fail, isFailure } from "../../Cli/Parser/Output/Failure.ts";
+import { fail, isFailure } from "../../CLI/Parser/Output/Failure.ts";
 import type { List } from "../../Model/List/List.ts";
 import { empty, validate, type Configuration } from "../Schema/Schema.ts";
 

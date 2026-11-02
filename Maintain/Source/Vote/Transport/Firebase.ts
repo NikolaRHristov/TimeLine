@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import { root } from "../../Configuration/Load/Load.ts";
 
 /**

@@ -3,7 +3,7 @@ import { expression, type InPageSnapshot } from "../../../../Browser/Selector/Po
 import { withPage } from "../../../../Browser/Session/Page.ts";
 import { assertReady } from "../../../../Browser/Session/Ready.ts";
 import type { Session } from "../../../../Browser/Session/Session.ts";
-import { fail } from "../../../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../../../CLI/Parser/Output/Failure.ts";
 import type { Post } from "../../../../Model/Post/Post.ts";
 
 export type ScrapeOptions = {

@@ -1,4 +1,4 @@
-import { toFailure } from "../../Cli/Parser/Output/Failure.ts";
+import { toFailure } from "../../CLI/Parser/Output/Failure.ts";
 import type { AuthorRecord, AuthorStore } from "../../Store/Author/Author.ts";
 import { classify, type Preserved, type Rules } from "./Decision.ts";
 import type { Evidence } from "./Evidence.ts";

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { assertReady } from "../Browser/Session/Ready.ts";
-import { isFailure } from "../Cli/Parser/Output/Failure.ts";
+import { isFailure } from "../CLI/Parser/Output/Failure.ts";
 
 const EXPRESSION = 'document.querySelectorAll("article").length > 0';
 const URL_ = "https://x.com/example";

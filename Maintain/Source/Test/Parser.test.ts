@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { flag } from "../Cli/Parser/Argument/Flag.ts";
-import { option } from "../Cli/Parser/Argument/Option.ts";
-import { isFailure } from "../Cli/Parser/Output/Failure.ts";
-import { parse, type CommandDefinition } from "../Cli/Parser/Parser.ts";
-import { schema } from "../Cli/Schema/Schema.ts";
+import { flag } from "../CLI/Parser/Argument/Flag.ts";
+import { option } from "../CLI/Parser/Argument/Option.ts";
+import { isFailure } from "../CLI/Parser/Output/Failure.ts";
+import { parse, type CommandDefinition } from "../CLI/Parser/Parser.ts";
+import { schema } from "../CLI/Schema/Schema.ts";
 import { Definition as PostLike } from "../Command/Post/Like/Like.ts";
 
 const commands: CommandDefinition[] = [

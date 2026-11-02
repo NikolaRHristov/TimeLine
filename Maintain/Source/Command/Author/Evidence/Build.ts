@@ -1,4 +1,4 @@
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { collect } from "./Collect.ts";
 
 /**

@@ -1,4 +1,4 @@
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import type { List } from "../../Model/List/List.ts";
 
 /**

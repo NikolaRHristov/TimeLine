@@ -1,6 +1,6 @@
-import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import { fail, toFailure, type Failure } from "../../../Cli/Parser/Output/Failure.ts";
-import type { CommandDefinition, Values } from "../../../Cli/Parser/Parser.ts";
+import { option } from "../../../CLI/Parser/Argument/Option.ts";
+import { fail, toFailure, type Failure } from "../../../CLI/Parser/Output/Failure.ts";
+import type { CommandDefinition, Values } from "../../../CLI/Parser/Parser.ts";
 import { optional } from "../../../Configuration/Load/Load.ts";
 import { load as loadRules, scope } from "../../../Configuration/Rules/Rules.ts";
 import { classify, type Preserved } from "../../../Model/Author/Decision.ts";

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { select, selectHandle } from "../Browser/Target/Select.ts";
-import { isFailure } from "../Cli/Parser/Output/Failure.ts";
+import { isFailure } from "../CLI/Parser/Output/Failure.ts";
 import { Tab as TabModel, type Tab } from "../Model/Tab/Tab.ts";
 
 const tab = (id: string, url: string, title: string, attached = false, active = false): Tab => ({

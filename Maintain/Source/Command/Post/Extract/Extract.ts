@@ -1,6 +1,6 @@
 import { withPost } from "../../../Browser/Session/Post.ts";
-import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import { option } from "../../../CLI/Parser/Argument/Option.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 
 export const Definition: CommandDefinition = {
 	path: ["post", "extract"],

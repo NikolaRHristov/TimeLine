@@ -1,8 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import { fail } from "../../../Cli/Parser/Output/Failure.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import { option } from "../../../CLI/Parser/Argument/Option.ts";
+import { fail } from "../../../CLI/Parser/Output/Failure.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
 import { EventKind } from "../../../Model/Event/Event.ts";
 import { stringify } from "../../../Output/Json/Json.ts";

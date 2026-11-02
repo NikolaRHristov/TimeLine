@@ -1,4 +1,4 @@
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
 import { connect, type CdpClient } from "../Cdp/Client.ts";
 import { evaluate } from "../Cdp/Command/Evaluate.ts";

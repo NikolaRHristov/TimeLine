@@ -1,7 +1,7 @@
 import { readyExpression } from "../../../Browser/Selector/List.ts";
 import { withPage } from "../../../Browser/Session/Page.ts";
-import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import { option } from "../../../CLI/Parser/Argument/Option.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, requireList } from "../../../Configuration/Load/Load.ts";
 import { List as ListModel } from "../../../Model/List/List.ts";
 

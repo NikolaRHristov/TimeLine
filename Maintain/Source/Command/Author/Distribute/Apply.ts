@@ -1,7 +1,7 @@
 import { execute, withListMember } from "../../../Browser/Session/ListMember.ts";
-import { flag } from "../../../Cli/Parser/Argument/Flag.ts";
-import { fail } from "../../../Cli/Parser/Output/Failure.ts";
-import type { CommandDefinition, Values } from "../../../Cli/Parser/Parser.ts";
+import { flag } from "../../../CLI/Parser/Argument/Flag.ts";
+import { fail } from "../../../CLI/Parser/Output/Failure.ts";
+import type { CommandDefinition, Values } from "../../../CLI/Parser/Parser.ts";
 import { configurationPath, optional, requireList } from "../../../Configuration/Load/Load.ts";
 import { load as loadRules, scope } from "../../../Configuration/Rules/Rules.ts";
 import { apply as applyPlan, resolve, SPACING } from "../../../Model/Author/Distribute.ts";

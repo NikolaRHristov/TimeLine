@@ -1,5 +1,5 @@
-import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import { option } from "../../../CLI/Parser/Argument/Option.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { age, candidates, totals } from "../../../Model/Vote/Vote.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote } from "../../../Store/Vote/Vote.ts";

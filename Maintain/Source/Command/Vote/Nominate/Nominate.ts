@@ -1,6 +1,6 @@
-import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import { fail } from "../../../Cli/Parser/Output/Failure.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import { option } from "../../../CLI/Parser/Argument/Option.ts";
+import { fail } from "../../../CLI/Parser/Output/Failure.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, requireList } from "../../../Configuration/Load/Load.ts";
 import { Post } from "../../../Model/Post/Post.ts";
 import { document, type VoteEntry } from "../../../Model/Vote/Vote.ts";

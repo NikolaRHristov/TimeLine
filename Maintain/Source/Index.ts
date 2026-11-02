@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { toFailure } from "./Cli/Parser/Output/Failure.ts";
-import { commandHelp, commandList } from "./Cli/Parser/Output/Help.ts";
-import { parse } from "./Cli/Parser/Parser.ts";
-import { commands } from "./Cli/Registry/Registry.ts";
-import { schema } from "./Cli/Schema/Schema.ts";
+import { toFailure } from "./CLI/Parser/Output/Failure.ts";
+import { commandHelp, commandList } from "./CLI/Parser/Output/Help.ts";
+import { parse } from "./CLI/Parser/Parser.ts";
+import { commands } from "./CLI/Registry/Registry.ts";
+import { schema } from "./CLI/Schema/Schema.ts";
 import { stringify, write } from "./Output/Json/Json.ts";
 import { render } from "./Output/Table/Table.ts";
 

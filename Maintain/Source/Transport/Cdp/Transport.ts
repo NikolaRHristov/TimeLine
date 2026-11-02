@@ -1,28 +1,21 @@
+import { readyExpression } from "../../Browser/Selector/List.ts";
 import { execute, withListMember } from "../../Browser/Session/ListMember.ts";
 import { withPage, type PageOptions } from "../../Browser/Session/Page.ts";
-import { readyExpression } from "../../Browser/Selector/List.ts";
 import { scrape as scrapePage } from "../../Browser/Session/Scrape.ts";
 import { attach } from "../../Browser/Session/Session.ts";
 import { discover, type DiscoveryOptions } from "../../Browser/Target/Discovery.ts";
 import { activate } from "../../Browser/Target/Lifecycle.ts";
 import { select } from "../../Browser/Target/Select.ts";
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import { connection, load, requireList } from "../../Configuration/Load/Load.ts";
 import { handle as normalizeHandle } from "../../Model/List/Member.ts";
-import type {
-	PageHandle,
-	PageReadiness,
-	PageRequest,
-	Transport,
-} from "../Transport.ts";
+import type { PageHandle, PageReadiness, PageRequest, Transport } from "../Transport.ts";
 import { flip, read } from "./Post.ts";
 
 /** The two readiness names, as the expressions they stand for. */
 function readiness(name: PageReadiness | undefined): string | undefined {
 	if (name === undefined) return undefined;
-	return name === "list"
-		? readyExpression()
-		: 'document.querySelectorAll("article").length > 0';
+	return name === "list" ? readyExpression() : 'document.querySelectorAll("article").length > 0';
 }
 
 /**

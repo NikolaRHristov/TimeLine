@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { execute, type ListSurface } from "../Browser/Session/ListMember.ts";
-import { isFailure } from "../Cli/Parser/Output/Failure.ts";
-import { parse } from "../Cli/Parser/Parser.ts";
-import { schema } from "../Cli/Schema/Schema.ts";
+import { isFailure } from "../CLI/Parser/Output/Failure.ts";
+import { parse } from "../CLI/Parser/Parser.ts";
+import { schema } from "../CLI/Schema/Schema.ts";
 import { Definition as MemberAdd } from "../Command/Page/List/Member/Add.ts";
 import { handle, rateLimit, type ListRow, type ListSurfaceState } from "../Model/List/Member.ts";
 

@@ -3,9 +3,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
-import { fail, isFailure } from "../Cli/Parser/Output/Failure.ts";
-import { parse } from "../Cli/Parser/Parser.ts";
-import { schema } from "../Cli/Schema/Schema.ts";
+import { fail, isFailure } from "../CLI/Parser/Output/Failure.ts";
+import { parse } from "../CLI/Parser/Parser.ts";
+import { schema } from "../CLI/Schema/Schema.ts";
 import { Definition } from "../Command/Author/Distribute/Apply.ts";
 import type { Rules } from "../Model/Author/Decision.ts";
 import {

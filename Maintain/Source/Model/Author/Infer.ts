@@ -1,4 +1,4 @@
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import type { AuthorRecord, DecisionRecord } from "../../Store/Author/Author.ts";
 import type { Completion } from "../Inference/Client.ts";
 import type { Evidence } from "./Evidence.ts";

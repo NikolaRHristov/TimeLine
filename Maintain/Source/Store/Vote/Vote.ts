@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import { optional, root } from "../../Configuration/Load/Load.ts";
 import { DEFAULT_VOTE } from "../../Configuration/Schema/Schema.ts";
 import type { EventKind } from "../../Model/Event/Event.ts";

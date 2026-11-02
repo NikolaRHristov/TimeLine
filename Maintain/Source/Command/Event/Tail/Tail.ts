@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import { fail } from "../../../Cli/Parser/Output/Failure.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import { option } from "../../../CLI/Parser/Argument/Option.ts";
+import { fail } from "../../../CLI/Parser/Output/Failure.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { root } from "../../../Configuration/Load/Load.ts";
 import type { EventRecord } from "../../../Model/Event/Event.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";

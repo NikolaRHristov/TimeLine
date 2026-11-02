@@ -1,4 +1,4 @@
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 
 /** What a readiness wait that ran out of time means for the caller. */
 export type ReadinessMode = "fail" | "warn";

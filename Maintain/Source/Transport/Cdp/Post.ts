@@ -1,17 +1,14 @@
 import {
-	attach,
-	type Session,
-} from "../../Browser/Session/Session.ts";
-import {
 	snapshot,
 	toggle,
 	type ControlName,
 	type PostContext,
 } from "../../Browser/Session/Post.ts";
+import { attach, type Session } from "../../Browser/Session/Session.ts";
 import { discover, type DiscoveryOptions } from "../../Browser/Target/Discovery.ts";
 import { close, open } from "../../Browser/Target/Lifecycle.ts";
 import { select, selectHandle } from "../../Browser/Target/Select.ts";
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import { connection } from "../../Configuration/Load/Load.ts";
 import { Post as PostModel, type Post } from "../../Model/Post/Post.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
@@ -89,10 +86,9 @@ export async function withTarget<T>(
 		}
 
 		session = await attach(tab, endpoint);
-		const ready = await session.waitFor(
-			'document.querySelectorAll("article").length > 0',
-			{ timeout: 25_000 },
-		);
+		const ready = await session.waitFor('document.querySelectorAll("article").length > 0', {
+			timeout: 25_000,
+		});
 		if (ready !== true) {
 			throw fail("no-post", "the page showed no posts", {
 				tab: tab.id,
@@ -101,11 +97,7 @@ export async function withTarget<T>(
 		}
 
 		const state = await snapshot(session, index, wanted);
-		if (
-			state.found !== true ||
-			state.post === undefined ||
-			state.controls === undefined
-		) {
+		if (state.found !== true || state.post === undefined || state.controls === undefined) {
 			throw fail(
 				"no-post",
 				wanted === undefined ? `no post at index ${index}` : "no post with that id",

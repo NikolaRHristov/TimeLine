@@ -1,5 +1,5 @@
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
-import type { Values } from "../../Cli/Parser/Parser.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
+import type { Values } from "../../CLI/Parser/Parser.ts";
 import { connection } from "../../Configuration/Load/Load.ts";
 import { Post as PostModel, type Post } from "../../Model/Post/Post.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";

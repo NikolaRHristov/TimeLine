@@ -1,5 +1,5 @@
 import { relative } from "node:path";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { optional, root } from "../../../Configuration/Load/Load.ts";
 import { load as loadRules, rulesPath, scope } from "../../../Configuration/Rules/Rules.ts";
 import { classify, type Preserved } from "../../../Model/Author/Decision.ts";

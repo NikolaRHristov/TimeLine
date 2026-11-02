@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import type { Rules } from "../../Model/Author/Decision.ts";
 import { buckets, type Vocabulary } from "../../Model/Author/Evidence.ts";
 import { Keyword } from "../Keyword/Keyword.ts";

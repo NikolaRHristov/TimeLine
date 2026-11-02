@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, beforeEach, test } from "node:test";
-import { isFailure } from "../Cli/Parser/Output/Failure.ts";
+import { isFailure } from "../CLI/Parser/Output/Failure.ts";
 import { Definition as Approve } from "../Command/Vote/Approve/Approve.ts";
 import { Definition as Nominate } from "../Command/Vote/Nominate/Nominate.ts";
 import { Definition as Queue } from "../Command/Vote/Queue/Queue.ts";

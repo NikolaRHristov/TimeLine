@@ -1,5 +1,5 @@
-import { fail } from "../../../Cli/Parser/Output/Failure.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import { fail } from "../../../CLI/Parser/Output/Failure.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { contentDirectory } from "../../../Store/Path/Path.ts";
 import { open as openVote, writeSnapshot } from "../../../Store/Vote/Vote.ts";
 import { ENVIRONMENT } from "../../../Vote/Transport/Firebase.ts";

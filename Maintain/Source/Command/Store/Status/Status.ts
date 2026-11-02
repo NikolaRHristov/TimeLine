@@ -1,5 +1,5 @@
 import { relative } from "node:path";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
 import { Source as Sources, type Source } from "../../../Model/Source/Source.ts";
 import type { Visibility } from "../../../Store/Model/Model.ts";

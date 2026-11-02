@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import { configurationPath } from "../Load/Load.ts";
 import type { Configuration } from "../Schema/Schema.ts";
 import { document } from "../Schema/Schema.ts";

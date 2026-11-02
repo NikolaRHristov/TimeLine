@@ -1,5 +1,5 @@
 import { toggle, withPost } from "../../../Browser/Session/Post.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { dryRun, targetAlternatives, targetOptions } from "../Target.ts";
 
 export const Definition: CommandDefinition = {

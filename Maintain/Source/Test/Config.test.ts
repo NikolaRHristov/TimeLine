@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
-import { isFailure } from "../Cli/Parser/Output/Failure.ts";
+import { isFailure } from "../CLI/Parser/Output/Failure.ts";
 import { Definition as Init } from "../Command/Config/Init/Init.ts";
 import { Definition as Show } from "../Command/Config/Show/Show.ts";
 import { EXAMPLE_CONFIGURATION, load, root } from "../Configuration/Load/Load.ts";

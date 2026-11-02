@@ -1,4 +1,4 @@
-import { fail } from "../../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CuratedEntry, VoteEntry } from "../../../Model/Vote/Vote.ts";
 import type { VoteStore } from "../../../Store/Vote/Vote.ts";
 

@@ -1,5 +1,5 @@
-import { flag } from "../../Cli/Parser/Argument/Flag.ts";
-import { option } from "../../Cli/Parser/Argument/Option.ts";
+import { flag } from "../../CLI/Parser/Argument/Flag.ts";
+import { option } from "../../CLI/Parser/Argument/Option.ts";
 
 /** The four post commands address a post the same way; they share this list. */
 export const targetOptions = [

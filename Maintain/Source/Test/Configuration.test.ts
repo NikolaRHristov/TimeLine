@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { isFailure } from "../Cli/Parser/Output/Failure.ts";
+import { isFailure } from "../CLI/Parser/Output/Failure.ts";
 import { requireList, root } from "../Configuration/Load/Load.ts";
 import { scope } from "../Configuration/Rules/Rules.ts";
 import { validate } from "../Configuration/Schema/Schema.ts";

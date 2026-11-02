@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { fail } from "../Cli/Parser/Output/Failure.ts";
+import { fail } from "../CLI/Parser/Output/Failure.ts";
 
 /**
  * A thin HTTP client for one SpacetimeDB database.

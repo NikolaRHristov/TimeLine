@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
-import { option } from "../../../Cli/Parser/Argument/Option.ts";
-import { fail, isFailure } from "../../../Cli/Parser/Output/Failure.ts";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import { option } from "../../../CLI/Parser/Argument/Option.ts";
+import { fail, isFailure } from "../../../CLI/Parser/Output/Failure.ts";
+import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
 import { configurationPath, example, load } from "../../../Configuration/Load/Load.ts";
 import type { Configuration } from "../../../Configuration/Schema/Schema.ts";
 import { save } from "../../../Configuration/Write/Write.ts";

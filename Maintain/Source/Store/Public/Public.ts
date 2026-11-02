@@ -8,7 +8,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import { fileName, type EventKind, type EventRecord } from "../../Model/Event/Event.ts";
 import { stringify } from "../../Output/Json/Json.ts";
 import type { PublicBookmark } from "../Model/Model.ts";
