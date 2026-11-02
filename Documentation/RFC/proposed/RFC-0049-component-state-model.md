@@ -20,8 +20,8 @@ Seven rules make the set enforceable.
 ### 1. The set is closed and shared
 
 The states are exported from one module and consumed by every sheet. A component cannot invent
-`--pressed` or `--dragging`; if the thing it needs is not in the set, the set is wrong and is changed
-deliberately.
+`--pressed` or `--dragging`; if the thing it needs is not in the set, the set is wrong and is
+changed deliberately.
 
 The failure this prevents is the one every design system drifts into: eleven components with eleven
 spellings of "hover", and a reader who cannot tell whether two of them mean the same thing.
@@ -41,7 +41,8 @@ tab shape, and a pressed row is a fill step - and they never appear the same.
 be confused with a border that belongs to the design. A component that sets `outline: none` without
 replacing it fails review, because it removes the only affordance a keyboard user has.
 
-The ring's offset is a token, not a literal, so a dense surface can tighten it without a second rule.
+The ring's offset is a token, not a literal, so a dense surface can tighten it without a second
+rule.
 
 ### 4. `locked` is not `disabled`
 
@@ -90,8 +91,9 @@ in. Without a shared set, each component invents its own and the system reads as
 **A state per component, documented beside it.** Rejected: that is the drift this record exists to
 prevent, and it puts the definition of "selected" in the component that happens to need it first.
 
-**A CSS framework's state classes.** Rejected: the repository does not carry a utility framework into
-its own sheets, and the states must read the material's tokens rather than a framework's palette.
+**A CSS framework's state classes.** Rejected: the repository does not carry a utility framework
+into its own sheets, and the states must read the material's tokens rather than a framework's
+palette.
 
 **Merging `locked` into `disabled`.** Rejected on rule 4: the distinction is the whole information
 content of the state.
@@ -106,13 +108,13 @@ content of the state.
 
 ## Verification
 
-| Claim                        | Test                                                                        |
-| ---------------------------- | --------------------------------------------------------------------------- |
-| One export, no local states  | a sheet declaring a state name outside the module fails the token contract  |
-| `active` and `selected` differ | a selected row and a pressed row render different computed styles          |
-| Focus is never removed       | `grep` for `outline: none` in a component sheet returns nothing              |
-| `locked` carries a reason    | a locked control rendered without one fails the component's prop contract    |
-| `busy` preserves geometry    | the control's bounding box is unchanged across the state, asserted in the browser |
+| Claim                          | Test                                                                              |
+| ------------------------------ | --------------------------------------------------------------------------------- |
+| One export, no local states    | a sheet declaring a state name outside the module fails the token contract        |
+| `active` and `selected` differ | a selected row and a pressed row render different computed styles                 |
+| Focus is never removed         | `grep` for `outline: none` in a component sheet returns nothing                   |
+| `locked` carries a reason      | a locked control rendered without one fails the component's prop contract         |
+| `busy` preserves geometry      | the control's bounding box is unchanged across the state, asserted in the browser |
 
 ## Open questions
 

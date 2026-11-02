@@ -12,8 +12,8 @@ material and the token set); t_ab85d9de (the session and network layer)
 
 The composition gains a band beneath the canvas that states what the network actually runs, one row
 per peer, one column per capability, in protocol-first language. It is called the spectrometer
-because that is what it does: it separates a claim the network makes into the specific protocols that
-carry it, and shows which of them are running for which peer right now.
+because that is what it does: it separates a claim the network makes into the specific protocols
+that carry it, and shows which of them are running for which peer right now.
 
 The band is evidence, not a feature list. Every cell is derived from a record that already exists,
 and a capability with no protocol behind it is drawn as UNKNOWN rather than described in prose.
@@ -22,8 +22,8 @@ Five rules make that enforceable.
 
 ### 1. One row per peer, one column per capability
 
-The reader's question is not "what does the product do" but "what does this peer actually do with me".
-So the table is peers against capabilities, never a list of adjectives.
+The reader's question is not "what does the product do" but "what does this peer actually do with
+me". So the table is peers against capabilities, never a list of adjectives.
 
 - A **row** is a peer: the owner's own network, a joined room, another network's edge, the service
   provider. A peer is an actor with an identity (RFC-0013), not a person.
@@ -32,11 +32,11 @@ So the table is peers against capabilities, never a list of adjectives.
   into two rows of space.
 - The **intersection** is a state, not a tick. A cell states one of three, and the three are never
   collapsed:
-  - **running** - the protocol is engaged for this peer right now;
-  - **available** - the peer supports it and has not been granted it, which is a permission fact, not
-    a defect;
-  - **absent** - the peer does not implement it. This is drawn, never omitted, because an omitted
-    cell reads as "fine".
+    - **running** - the protocol is engaged for this peer right now;
+    - **available** - the peer supports it and has not been granted it, which is a permission fact,
+      not a defect;
+    - **absent** - the peer does not implement it. This is drawn, never omitted, because an omitted
+      cell reads as "fine".
 
 A table that showed only what is running would answer "what is on" and hide the more useful answer,
 which is "what could be on and is not".
@@ -49,8 +49,8 @@ that can be checked against RFC-0013. `End-to-end encrypted` is a claim that can
 against anything.
 
 The rule follows from the repository's own posture: every other surface states a fact with the
-command that proves it. This band states a fact with the protocol that implements it, and the two are
-the same discipline.
+command that proves it. This band states a fact with the protocol that implements it, and the two
+are the same discipline.
 
 A capability whose protocol cannot be named is UNKNOWN. It is not described in the sentence that
 would otherwise have been written.
@@ -86,9 +86,9 @@ entitled to know about, with every cell it cannot prove rendered UNKNOWN.
 
 ### 5. A capability the owner cannot grant is not advertised
 
-The band lists the capabilities the owner's own network can actually engage. A capability that exists
-in the protocol but that this deployment cannot grant is not drawn, because a row of "available"
-cells that can never become "running" is a promise the operator cannot keep.
+The band lists the capabilities the owner's own network can actually engage. A capability that
+exists in the protocol but that this deployment cannot grant is not drawn, because a row of
+"available" cells that can never become "running" is a promise the operator cannot keep.
 
 This is the one rule that makes the band shrink as the deployment is honest, and that is the
 intention. RFC-0038 already states what the operator owes and what it cannot owe; the band is where
@@ -96,10 +96,10 @@ that distinction becomes visible without a paragraph of hedging.
 
 ## Context
 
-The composition already states three things: where the work sits (the rail, RFC-0045), what is private
-and what is published (the drawer and the canvas, RFC-0043), and that publishing is the only verb
-across the seam. It does not state what the network *is*, which is the question a person asks the
-moment a second peer appears.
+The composition already states three things: where the work sits (the rail, RFC-0045), what is
+private and what is published (the drawer and the canvas, RFC-0043), and that publishing is the only
+verb across the seam. It does not state what the network _is_, which is the question a person asks
+the moment a second peer appears.
 
 The existing records answer it in prose: RFC-0013 defines the keys, RFC-0020 the trust model,
 RFC-0023 the grants, RFC-0026 the transport. What none of them provides is a surface where those
@@ -109,15 +109,15 @@ closes, and it is a surface decision rather than a protocol one - no mechanism c
 ## Alternatives considered
 
 **A feature grid with ticks.** Rejected: a tick states that a capability exists somewhere, and the
-question is what is engaged with *this* peer. It also cannot express `available`, which is the state
+question is what is engaged with _this_ peer. It also cannot express `available`, which is the state
 that carries the most information.
 
 **A prose paragraph per capability.** Rejected: it is what the RFCs already do, and it is why the
 answers are not visible in the product.
 
 **A protocol-agnostic summary ("encrypted: yes").** Rejected on rule 2. A claim without a named
-protocol cannot be verified by the person reading it, and this repository does not accept unverifiable
-claims anywhere else.
+protocol cannot be verified by the person reading it, and this repository does not accept
+unverifiable claims anywhere else.
 
 **Deriving the state from client-side capability detection.** Rejected on rule 3: detection reports
 what a browser supports, not what a peer engaged, and the two diverge exactly when it matters.
@@ -136,13 +136,13 @@ what a browser supports, not what a peer engaged, and the two diverge exactly wh
 
 ## Verification
 
-| Claim                                    | Test                                                                                     |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Every cell names a protocol or UNKNOWN   | a cell whose protocol field is empty fails the component's own prop contract             |
-| No cell is derived from a missing record | render with an empty record set; every cell reads UNKNOWN, none reads `running`          |
+| Claim                                    | Test                                                                                       |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Every cell names a protocol or UNKNOWN   | a cell whose protocol field is empty fails the component's own prop contract               |
+| No cell is derived from a missing record | render with an empty record set; every cell reads UNKNOWN, none reads `running`            |
 | The band is static                       | `Emulation.setScriptExecutionDisabled` still renders every row and column (RFC-0048 audit) |
 | The band sits under the canvas           | `verify-composition.mjs` gains a band-top invariant equal to canvas-top plus canvas-height |
-| The flow order matches the swimlanes     | the column order array is imported by both components, not duplicated in each            |
+| The flow order matches the swimlanes     | the column order array is imported by both components, not duplicated in each              |
 
 ## Open questions
 

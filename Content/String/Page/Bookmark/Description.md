@@ -1,1 +1,1 @@
-{{total}} saved posts, grouped by list and author.
+{{total}} saved posts, each one a tile on the archive canvas.

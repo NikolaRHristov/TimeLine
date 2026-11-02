@@ -9,8 +9,8 @@ RFC-0020 (the trust model), RFC-0021 (observation provenance), RFC-0022 (room is
 
 ## Decision
 
-Between the canvas and the spectrometer sits a band of swimlanes: one lane per actor, laid out left to
-right along the same flow the spectrometer's columns use. The band answers one question that no
+Between the canvas and the spectrometer sits a band of swimlanes: one lane per actor, laid out left
+to right along the same flow the spectrometer's columns use. The band answers one question that no
 record has yet made visible - **who authenticates whom, and who authorises whom to look**.
 
 Two lanes are always present and they run in opposite directions. The provider authenticates the
@@ -33,8 +33,8 @@ A person is not a lane. A person holds grants inside a lane, and drawing a perso
 make the diagram about individuals when the decision it records is about networks.
 
 The owner's own lane is the only one that is always drawn. A peer lane appears when the relationship
-exists and disappears when it ends, so the band's height is a fact about the deployment rather than a
-fixed slot.
+exists and disappears when it ends, so the band's height is a fact about the deployment rather than
+a fixed slot.
 
 ### 2. Trust runs in two directions, and one arrow is a lie
 
@@ -82,12 +82,12 @@ The canvas is a grid at a 20px rhythm. The swimlanes use a larger vertical step 
 deliberately greater than the canvas gap - because a lane carries a direction and a diagram needs
 room between its rows to read as flow rather than as a table.
 
-The horizontal axis is shared with the spectrometer: the same four steps, in the same order, imported
-from one module. A lane and a column that disagree about the order would be two diagrams of the same
-thing.
+The horizontal axis is shared with the spectrometer: the same four steps, in the same order,
+imported from one module. A lane and a column that disagree about the order would be two diagrams of
+the same thing.
 
-The band is static. Lanes that depend on a joined room are hydrated with the session (RFC-0017); with
-no session the band draws the provider and the owner's network and nothing else, which is the
+The band is static. Lanes that depend on a joined room are hydrated with the session (RFC-0017);
+with no session the band draws the provider and the owner's network and nothing else, which is the
 truthful picture of a reader who has joined nothing.
 
 ### 6. A lane states its own layer
@@ -100,9 +100,9 @@ ambiguous the moment two networks peer:
 - **content** - the record's audience permits this reader (RFC-0012).
 - **policy** - the operator's own rules apply (RFC-0038).
 
-A lane that spans more than one layer states the highest layer it reaches and draws the lower ones as
-implied. The layer is what makes the band answerable to RFC-0022's isolation claim: a lane that is
-transport-isolated but not policy-isolated is a real and common state, and the diagram says so.
+A lane that spans more than one layer states the highest layer it reaches and draws the lower ones
+as implied. The layer is what makes the band answerable to RFC-0022's isolation claim: a lane that
+is transport-isolated but not policy-isolated is a real and common state, and the diagram says so.
 
 ## Context
 
@@ -117,8 +117,8 @@ asks "who else can see this", and the honest answer is a diagram, not a sentence
 
 ## Alternatives considered
 
-**A single "trusted" badge on the canvas.** Rejected: it collapses two directions and four steps into
-a boolean, and the boolean is the part that is not true.
+**A single "trusted" badge on the canvas.** Rejected: it collapses two directions and four steps
+into a boolean, and the boolean is the part that is not true.
 
 **A permissions matrix under the canvas.** Rejected: that is the spectrometer (RFC-0046). The
 spectrometer states what a peer runs; the swimlanes state the relationship that lets it run. Merging
@@ -143,21 +143,22 @@ belongs to the publish gesture, which is the only verb that changes state (RFC-0
 
 ## Verification
 
-| Claim                                | Test                                                                                   |
-| ------------------------------------ | -------------------------------------------------------------------------------------- |
-| Two directions are always drawn      | render with one lane; both the inbound and the outbound arrow are present              |
-| `see` precedes every grant           | a grant whose lane has no `see` step fails the band's own prop contract                |
-| A badge names its issuer             | a badge rendered with an empty issuer reads UNKNOWN, never a colour                    |
-| One step order, imported not copied  | the step array is a single export read by both the band and the spectrometer           |
-| The band is static                   | it renders with `Emulation.setScriptExecutionDisabled`; only joined-room lanes are added by the session |
-| Lane pitch exceeds the canvas gap    | `verify-composition.mjs` gains a lane-pitch invariant greater than the 20px canvas gap |
+| Claim                               | Test                                                                                                    |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Two directions are always drawn     | render with one lane; both the inbound and the outbound arrow are present                               |
+| `see` precedes every grant          | a grant whose lane has no `see` step fails the band's own prop contract                                 |
+| A badge names its issuer            | a badge rendered with an empty issuer reads UNKNOWN, never a colour                                     |
+| One step order, imported not copied | the step array is a single export read by both the band and the spectrometer                            |
+| The band is static                  | it renders with `Emulation.setScriptExecutionDisabled`; only joined-room lanes are added by the session |
+| Lane pitch exceeds the canvas gap   | `verify-composition.mjs` gains a lane-pitch invariant greater than the 20px canvas gap                  |
 
 ## Open questions
 
 - Whether an `accredit` step belongs on every lane or only on the provider's. Today it is drawn on
   any lane holding a certificate, which may be too permissive a reading of RFC-0013.
-- Whether a peer network's lane should show its own provider. The recursion is real and the band does
-  not currently draw it; the alternative is a second band, which is a layout decision left open.
+- Whether a peer network's lane should show its own provider. The recursion is real and the band
+  does not currently draw it; the alternative is a second band, which is a layout decision left
+  open.
 - The exact lane pitch. It must exceed 20px and it must let four lanes and their labels sit inside
   the band without the band becoming a second canvas; that is a design-pass measurement, not a
   decision this record can make from prose.
