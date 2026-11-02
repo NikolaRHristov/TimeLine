@@ -344,8 +344,8 @@ command per handle behind `--apply`.
 
 ## Claim → test
 
-| Claim | Test | | --------------------------------- |
-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## | Claim | Test | | --------------------------------- |
+
 | ------------------------------------------ | | CDP is reachable |
 `curl -s http://127.0.0.1:9222/json/version` → JSON with `Protocol-Version` | | CLI parses like clap
 | `maintain post like --help` lists `--url`, `--tab`, `--dry-run` | | Schema is machine-usable |
