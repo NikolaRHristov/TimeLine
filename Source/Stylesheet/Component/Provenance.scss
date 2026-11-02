@@ -74,11 +74,14 @@
 		flex-shrink: 0;
 
 		// The selected stage carries a tinted plate, so the eye finds the current
-		// position before it reads a single label.
+		// position before it reads a single label. The tint is derived from the
+		// stage's own accent rather than written as a triple: an `rgb()` here
+		// would be the accent with its digits rearranged, and a theme that moved
+		// the accent would leave this plate behind.
 		&--selected {
 			gap: 3px;
 			opacity: 1;
-			background: rgb(99 102 241 / 8%);
+			background: color-mix(in srgb, var(--stage-source) 8%, transparent);
 		}
 	}
 
@@ -144,12 +147,12 @@
 
 		&--top {
 			top: 0;
-			background: linear-gradient(to bottom, var(--chrome-void), rgb(28 28 30 / 0%));
+			background: linear-gradient(to bottom, var(--chrome-void), transparent);
 		}
 
 		&--bottom {
 			top: 14.25rem;
-			background: linear-gradient(to bottom, rgb(28 28 30 / 0%), var(--chrome-void));
+			background: linear-gradient(to bottom, transparent, var(--chrome-void));
 		}
 	}
 

@@ -1,4 +1,4 @@
-# RFC-0043 - The material, the tokens and the component contract
+# RFC-0045 - The material, the tokens and the component contract
 
 **Status:** Proposed **Owner:** operator **Applies to:** every sheet under `Source/Stylesheet/`,
 every component under `Source/Component/`, every page under `Source/pages/`, and
