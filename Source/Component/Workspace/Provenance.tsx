@@ -75,7 +75,7 @@ export default function Provenance(Props: Props) {
 			return Empty;
 		}
 
-		return Props.Stages[((SelectedIndex() + Distance) % Count + Count) % Count] ?? Empty;
+		return Props.Stages[(((SelectedIndex() + Distance) % Count) + Count) % Count] ?? Empty;
 	};
 
 	const Step = (Distance: number) => Ladder[Math.min(Math.abs(Distance), Ladder.length - 1)];
