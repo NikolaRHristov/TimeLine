@@ -1,8 +1,7 @@
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
-import type { CdpClient } from "../Cdp/Client.ts";
-import { connect } from "../Cdp/Client.ts";
-import { evaluate } from "../Cdp/Command/Evaluate.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
+import { connect, type CdpClient } from "../Cdp/Client.ts";
+import { evaluate } from "../Cdp/Command/Evaluate.ts";
 
 export type WaitOptions = { timeout?: number; interval?: number };
 
@@ -32,12 +31,21 @@ const sleep = (milliseconds: number): Promise<void> =>
  * would detach the extension's own debugger, which is the one thing this tool
  * layer must never do.
  */
-export async function attach(tab: Tab, options: { timeout?: number } = {}): Promise<Session> {
+export async function attach(
+	tab: Tab,
+	options: { timeout?: number } = {},
+): Promise<Session> {
 	if (tab.attached) {
-		throw fail("no-tab", "that tab is attached by a browser extension", { id: tab.id, url: tab.url });
+		throw fail("no-tab", "that tab is attached by a browser extension", {
+			id: tab.id,
+			url: tab.url,
+		});
 	}
 	if (tab.webSocketDebuggerUrl === undefined) {
-		throw fail("cdp-unreachable", "the target exposes no websocket", { id: tab.id, url: tab.url });
+		throw fail("cdp-unreachable", "the target exposes no websocket", {
+			id: tab.id,
+			url: tab.url,
+		});
 	}
 	const client = await connect(
 		tab.webSocketDebuggerUrl,
@@ -98,7 +106,10 @@ export async function attach(tab: Tab, options: { timeout?: number } = {}): Prom
 				}
 				return false;
 			}
-			return session.waitFor(`document.readyState === "complete"`, { timeout: 20_000, interval: 200 });
+			return session.waitFor(`document.readyState === "complete"`, {
+				timeout: 20_000,
+				interval: 200,
+			});
 		},
 		async reload(): Promise<boolean> {
 			lastActivity = Date.now();
@@ -112,7 +123,10 @@ export async function attach(tab: Tab, options: { timeout?: number } = {}): Prom
 				}
 				return false;
 			}
-			return session.waitFor(`document.readyState === "complete"`, { timeout: 20_000, interval: 200 });
+			return session.waitFor(`document.readyState === "complete"`, {
+				timeout: 20_000,
+				interval: 200,
+			});
 		},
 		async waitForIdle(idleOptions: IdleOptions = {}): Promise<boolean> {
 			const quiet = idleOptions.quiet ?? 600;
@@ -123,12 +137,21 @@ export async function attach(tab: Tab, options: { timeout?: number } = {}): Prom
 			}
 			return false;
 		},
-		async waitFor(expression: string, waitOptions: WaitOptions = {}): Promise<boolean> {
+		async waitFor(
+			expression: string,
+			waitOptions: WaitOptions = {},
+		): Promise<boolean> {
 			const deadline = Date.now() + (waitOptions.timeout ?? 15_000);
 			const interval = waitOptions.interval ?? 150;
 			while (Date.now() < deadline) {
 				try {
-					if ((await evaluate<boolean>(client, `Boolean(${expression})`)) === true) return true;
+					if (
+						(await evaluate<boolean>(
+							client,
+							`Boolean(${expression})`,
+						)) === true
+					)
+						return true;
 				} catch {
 					// A navigation destroys the execution context for a moment; poll again.
 				}

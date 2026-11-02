@@ -2,7 +2,6 @@
 	"name": "timeline-bookmarks",
 	"version": "0.1.0",
 	"private": true,
-	"packageManager": "pnpm@11.18.0",
 	"description": "A bookmark showcase you own: your X bookmarks, your lists, a static site.",
 	"keywords": [
 		"astro",
@@ -15,13 +14,13 @@
 		"name": "Timeline contributors"
 	},
 	"scripts": {
-		"build": "astro build",
 		"Build": "pnpm --filter @nikolarhristov/timeline-maintain run Build",
-		"tool": "pnpm --filter @nikolarhristov/timeline-maintain run tool",
+		"Run": "astro dev --host",
+		"build": "astro build",
 		"check": "pnpm --filter @nikolarhristov/timeline-maintain run check",
 		"maintain": "node Maintain/Target/Index.js",
-		"Run": "astro dev --host",
-		"prepublishOnly": "pnpm run build"
+		"prepublishOnly": "pnpm run build",
+		"tool": "pnpm --filter @nikolarhristov/timeline-maintain run tool"
 	},
 	"dependencies": {
 		"@astrojs/sitemap": "3.7.4",
@@ -53,6 +52,7 @@
 		"@astrojs/ts-plugin": "1.10.12",
 		"turbo": "2.11.10"
 	},
+	"packageManager": "pnpm@11.18.0",
 	"publishConfig": {
 		"access": "restricted",
 		"provenance": true

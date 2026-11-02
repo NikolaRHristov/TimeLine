@@ -1,5 +1,4 @@
-import type { Option } from "./Argument/Option.ts";
-import { parseValue, takesValue } from "./Argument/Option.ts";
+import { parseValue, takesValue, type Option } from "./Argument/Option.ts";
 import { fail } from "./Output/Failure.ts";
 
 export type Values = Record<string, unknown>;
@@ -25,9 +24,21 @@ export type Parsed = {
 
 /** Flags every command accepts. */
 export const universal: readonly Option[] = [
-	{ name: "help", kind: "boolean", description: "Print this command's options." },
-	{ name: "schema", kind: "boolean", description: "Print this command's JSON Schema instead of running it." },
-	{ name: "json", kind: "boolean", description: "Print JSON (implied when stdout is not a TTY)." },
+	{
+		name: "help",
+		kind: "boolean",
+		description: "Print this command's options.",
+	},
+	{
+		name: "schema",
+		kind: "boolean",
+		description: "Print this command's JSON Schema instead of running it.",
+	},
+	{
+		name: "json",
+		kind: "boolean",
+		description: "Print JSON (implied when stdout is not a TTY).",
+	},
 ];
 
 function isFlag(token: string): boolean {
@@ -41,7 +52,10 @@ function isFlag(token: string): boolean {
  * option. The path must match in full, so `post like` never swallows
  * `post like remove`.
  */
-export function parse(argv: readonly string[], commands: readonly CommandDefinition[]): Parsed {
+export function parse(
+	argv: readonly string[],
+	commands: readonly CommandDefinition[],
+): Parsed {
 	const tokens = [...argv];
 	let split = tokens.findIndex(isFlag);
 	if (split === -1) split = tokens.length;
@@ -49,11 +63,21 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 	const rest = tokens.slice(split);
 
 	if (words.length === 0) {
-		const onlyHelp = rest.every((token) => token === "--help" || token === "--json");
+		const onlyHelp = rest.every(
+			(token) => token === "--help" || token === "--json",
+		);
 		if (!onlyHelp) {
-			throw fail("usage", "no command given", { commands: commands.map((command) => command.path.join(" ")) });
+			throw fail("usage", "no command given", {
+				commands: commands.map((command) => command.path.join(" ")),
+			});
 		}
-		return { command: null, values: {}, help: true, schema: false, json: rest.includes("--json") };
+		return {
+			command: null,
+			values: {},
+			help: true,
+			schema: false,
+			json: rest.includes("--json"),
+		};
 	}
 
 	const command = commands.find(
@@ -68,20 +92,25 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 	}
 
 	const known = new Map<string, Option>();
-	for (const definition of [...command.options, ...universal]) known.set(definition.name, definition);
+	for (const definition of [...command.options, ...universal])
+		known.set(definition.name, definition);
 
 	const values: Values = {};
 	for (const definition of command.options) {
 		if (definition.default === undefined) continue;
 		// An array default is cloned: every parse gets its own bucket, so a
 		// repeatable option can never accumulate into the command table itself.
-		values[definition.name] = Array.isArray(definition.default) ? [...definition.default] : definition.default;
+		values[definition.name] = Array.isArray(definition.default)
+			? [...definition.default]
+			: definition.default;
 	}
 
 	for (let index = 0; index < rest.length; index += 1) {
 		const token = rest[index]!;
 		if (!isFlag(token)) {
-			throw fail("usage", `unexpected argument: ${token}`, { command: command.path.join(" ") });
+			throw fail("usage", `unexpected argument: ${token}`, {
+				command: command.path.join(" "),
+			});
 		}
 		const body = token.slice(2);
 		const equals = body.indexOf("=");
@@ -95,12 +124,15 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 			});
 		}
 		if (!takesValue(definition)) {
-			values[rawName] = inline === undefined ? true : parseValue(definition, inline);
+			values[rawName] =
+				inline === undefined ? true : parseValue(definition, inline);
 			continue;
 		}
 		const raw = inline ?? rest[index + 1];
 		if (raw === undefined || (inline === undefined && isFlag(raw))) {
-			throw fail("usage", `--${rawName} expects a value`, { command: command.path.join(" ") });
+			throw fail("usage", `--${rawName} expects a value`, {
+				command: command.path.join(" "),
+			});
 		}
 		if (inline === undefined) index += 1;
 		const value = parseValue(definition, raw);
@@ -108,7 +140,9 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 			values[rawName] = value;
 			continue;
 		}
-		const bucket = Array.isArray(values[rawName]) ? (values[rawName] as unknown[]) : [];
+		const bucket = Array.isArray(values[rawName])
+			? (values[rawName] as unknown[])
+			: [];
 		bucket.push(value);
 		values[rawName] = bucket;
 	}
@@ -118,7 +152,10 @@ export function parse(argv: readonly string[], commands: readonly CommandDefinit
 	// to document itself before the caller knows what to pass.
 	if (values["help"] !== true && values["schema"] !== true) {
 		for (const definition of command.options) {
-			if (definition.required === true && values[definition.name] === undefined) {
+			if (
+				definition.required === true &&
+				values[definition.name] === undefined
+			) {
 				throw fail("usage", `--${definition.name} is required`, {
 					command: command.path.join(" "),
 					options: command.options.map((item) => `--${item.name}`),

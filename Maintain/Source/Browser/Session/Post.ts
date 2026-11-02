@@ -1,17 +1,18 @@
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
 import type { Values } from "../../Cli/Parser/Parser.ts";
-import type { Post } from "../../Model/Post/Post.ts";
-import { Post as PostModel } from "../../Model/Post/Post.ts";
-import type { Tab } from "../../Model/Tab/Tab.ts";
 import { connection } from "../../Configuration/Load/Load.ts";
-import type { DiscoveryOptions } from "../Target/Discovery.ts";
-import { discover } from "../Target/Discovery.ts";
+import { Post as PostModel, type Post } from "../../Model/Post/Post.ts";
+import type { Tab } from "../../Model/Tab/Tab.ts";
+import {
+	expression,
+	type ControlName,
+	type InPageControl,
+	type InPageSnapshot,
+} from "../Selector/Post.ts";
+import { discover, type DiscoveryOptions } from "../Target/Discovery.ts";
 import { close, open } from "../Target/Lifecycle.ts";
 import { select, selectHandle } from "../Target/Select.ts";
-import type { ControlName, InPageControl, InPageSnapshot } from "../Selector/Post.ts";
-import { expression } from "../Selector/Post.ts";
-import type { Session } from "./Session.ts";
-import { attach } from "./Session.ts";
+import { attach, type Session } from "./Session.ts";
 
 export type Controls = Record<ControlName, InPageControl>;
 
@@ -28,7 +29,11 @@ export type PostContext = {
 const sleep = (milliseconds: number): Promise<void> =>
 	new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-export async function snapshot(session: Session, index: number, id?: string): Promise<InPageSnapshot> {
+export async function snapshot(
+	session: Session,
+	index: number,
+	id?: string,
+): Promise<InPageSnapshot> {
 	return session.evaluate<InPageSnapshot>(
 		id === undefined
 			? expression({ op: "snapshot", index })
@@ -36,13 +41,21 @@ export async function snapshot(session: Session, index: number, id?: string): Pr
 	);
 }
 
-function controlOf(state: InPageSnapshot, control: ControlName): InPageControl | undefined {
+function controlOf(
+	state: InPageSnapshot,
+	control: ControlName,
+): InPageControl | undefined {
 	if (state.controls === undefined) return undefined;
 	return state.controls[control];
 }
 
 /** Poll until the control reads the wanted state; the page flips it before the request lands. */
-async function settle(session: Session, index: number, control: ControlName, want: boolean): Promise<boolean> {
+async function settle(
+	session: Session,
+	index: number,
+	control: ControlName,
+	want: boolean,
+): Promise<boolean> {
 	const deadline = Date.now() + 6000;
 	while (Date.now() < deadline) {
 		const state = await snapshot(session, index);
@@ -70,15 +83,27 @@ async function persisted(
 		await context.session.waitForIdle({ quiet: 600, timeout: 8000 });
 		const reloaded = await context.session.reload();
 		if (reloaded !== true) return observed;
-		await context.session.waitFor('document.querySelectorAll("article").length > 0', { timeout: 20_000 });
-		const state = await snapshot(context.session, context.index, context.post.id);
+		await context.session.waitFor(
+			'document.querySelectorAll("article").length > 0',
+			{ timeout: 20_000 },
+		);
+		const state = await snapshot(
+			context.session,
+			context.index,
+			context.post.id,
+		);
 		const entry = controlOf(state, control);
 		if (entry === undefined) return observed;
 		observed = entry.active;
 		if (entry.active === want) return observed;
 		if (attempt === 0) {
 			await context.session.evaluate(
-				expression({ op: "toggle", index: context.index, control, id: context.post.id }),
+				expression({
+					op: "toggle",
+					index: context.index,
+					control,
+					id: context.post.id,
+				}),
 			);
 		}
 	}
@@ -104,15 +129,23 @@ export async function toggle(
 		expression({ op: "toggle", index: context.index, control }),
 	);
 	if (clicked.found !== true) {
-		throw fail("no-post", `no post at index ${context.index}`, { count: clicked.count });
+		throw fail("no-post", `no post at index ${context.index}`, {
+			count: clicked.count,
+		});
 	}
 	if (clicked.clicked !== true) {
-		throw fail("no-post", `the ${control} control is not on this post`, { id: context.post.id });
+		throw fail("no-post", `the ${control} control is not on this post`, {
+			id: context.post.id,
+		});
 	}
 
 	await settle(context.session, context.index, control, want);
 
-	const after = await snapshot(context.session, context.index, context.post.id);
+	const after = await snapshot(
+		context.session,
+		context.index,
+		context.post.id,
+	);
 	const state = controlOf(after, control);
 	let now = state === undefined ? want : state.active;
 
@@ -133,7 +166,10 @@ export async function toggle(
  * temporary one that is closed afterwards - the person's own tabs are never
  * navigated away. `--tab`/`--index` drive a tab they already have.
  */
-export async function withPost<T>(values: Values, body: (context: PostContext) => Promise<T>): Promise<T> {
+export async function withPost<T>(
+	values: Values,
+	body: (context: PostContext) => Promise<T>,
+): Promise<T> {
 	const endpoint: DiscoveryOptions = connection();
 	const index = typeof values["index"] === "number" ? values["index"] : 0;
 	let tab: Tab | null = null;
@@ -143,12 +179,18 @@ export async function withPost<T>(values: Values, body: (context: PostContext) =
 	try {
 		if (typeof values["url"] === "string" && values["url"].length > 0) {
 			if (PostModel.idFromHref(values["url"]) === null) {
-				throw fail("usage", "--url is not a post permalink", { url: values["url"] });
+				throw fail("usage", "--url is not a post permalink", {
+					url: values["url"],
+				});
 			}
 			const tabs = await discover(endpoint);
 			let existing: Tab | null = null;
 			try {
-				existing = select(tabs, { url: values["url"] }, { exact: true });
+				existing = select(
+					tabs,
+					{ url: values["url"] },
+					{ exact: true },
+				);
 			} catch {
 				existing = null;
 			}
@@ -158,7 +200,10 @@ export async function withPost<T>(values: Values, body: (context: PostContext) =
 				tab = await open(values["url"], endpoint);
 				temporary = true;
 			}
-		} else if (typeof values["tab"] === "string" && values["tab"].length > 0) {
+		} else if (
+			typeof values["tab"] === "string" &&
+			values["tab"].length > 0
+		) {
 			const tabs = await discover(endpoint);
 			tab = selectHandle(tabs, values["tab"]);
 		} else {
@@ -166,15 +211,25 @@ export async function withPost<T>(values: Values, body: (context: PostContext) =
 		}
 
 		session = await attach(tab, endpoint);
-		const ready = await session.waitFor('document.querySelectorAll("article").length > 0', {
-			timeout: 25_000,
-		});
+		const ready = await session.waitFor(
+			'document.querySelectorAll("article").length > 0',
+			{
+				timeout: 25_000,
+			},
+		);
 		if (ready !== true) {
-			throw fail("no-post", "the page showed no posts", { tab: tab.id, url: tab.url });
+			throw fail("no-post", "the page showed no posts", {
+				tab: tab.id,
+				url: tab.url,
+			});
 		}
 
 		const state = await snapshot(session, index);
-		if (state.found !== true || state.post === undefined || state.controls === undefined) {
+		if (
+			state.found !== true ||
+			state.post === undefined ||
+			state.controls === undefined
+		) {
 			throw fail("no-post", `no post at index ${index}`, {
 				count: state.count,
 				tab: tab.id,

@@ -1,10 +1,8 @@
 import { toFailure } from "../../Cli/Parser/Output/Failure.ts";
 import type { AuthorRecord, AuthorStore } from "../../Store/Author/Author.ts";
-import type { Preserved, Rules } from "./Decision.ts";
-import { classify } from "./Decision.ts";
+import { classify, type Preserved, type Rules } from "./Decision.ts";
 import type { Evidence } from "./Evidence.ts";
-import type { Placement } from "./Infer.ts";
-import { place } from "./Infer.ts";
+import { place, type Placement } from "./Infer.ts";
 
 /**
  * How long one membership write waits after the previous one.
@@ -132,7 +130,9 @@ export function resolve(
 		manual.set(record.handle, {
 			handle: record.handle,
 			list: record.lists[0] ?? null,
-			reason: oneLine(record.decision.reason ?? "manual decision on file"),
+			reason: oneLine(
+				record.decision.reason ?? "manual decision on file",
+			),
 		});
 	}
 
@@ -207,11 +207,21 @@ export function resolve(
 				});
 				continue;
 			}
-			plan.push({ handle: entry.handle, list, by: "manual", reason: entry.reason, write: false });
+			plan.push({
+				handle: entry.handle,
+				list,
+				by: "manual",
+				reason: entry.reason,
+				write: false,
+			});
 		}
 	}
 
-	plan.sort((left, right) => compare(left.handle, right.handle) || compare(left.list, right.list));
+	plan.sort(
+		(left, right) =>
+			compare(left.handle, right.handle) ||
+			compare(left.list, right.list),
+	);
 
 	return {
 		plan,
@@ -223,11 +233,19 @@ export function resolve(
 }
 
 /** One handle into one list, through the single-handle primitive. */
-export type Add = (handle: string, list: string) => Promise<"added" | "already">;
+export type Add = (
+	handle: string,
+	list: string,
+) => Promise<"added" | "already">;
 
 export type Attempt = { handle: string; list: string; by: DecidedBy };
 
-export type FailureEntry = { handle: string; list: string; error: string; detail: string | null };
+export type FailureEntry = {
+	handle: string;
+	list: string;
+	error: string;
+	detail: string | null;
+};
 
 /**
  * Why a run stopped before the end of its plan.
@@ -282,7 +300,10 @@ export type Deps = {
  * than one writer, and a record that appeared between `resolve` reading the
  * collection and this line is the person's answer, which wins over a rule.
  */
-function write(plan: readonly Planned[], deps: Deps): { written: string[]; blocked: Set<string> } {
+function write(
+	plan: readonly Planned[],
+	deps: Deps,
+): { written: string[]; blocked: Set<string> } {
 	const written: string[] = [];
 	const blocked = new Set<string>();
 	const seen = new Set<string>();
@@ -306,7 +327,12 @@ function write(plan: readonly Planned[], deps: Deps): { written: string[]; block
 			continue;
 		}
 
-		const placement: Placement = { handle: entry.handle, list: entry.list, reason: entry.reason, by: "rule" };
+		const placement: Placement = {
+			handle: entry.handle,
+			list: entry.list,
+			reason: entry.reason,
+			by: "rule",
+		};
 		if (entry.score !== undefined) placement.score = entry.score;
 		if (entry.gap !== undefined) placement.gap = entry.gap;
 
@@ -336,11 +362,25 @@ function write(plan: readonly Planned[], deps: Deps): { written: string[]; block
  * must not end a distribution - unless it repeats, which is the `repeated-failure`
  * stop above.
  */
-export async function apply(plan: readonly Planned[], deps: Deps): Promise<Applied> {
-	const attempted: Attempt[] = plan.map(({ handle, list, by }) => ({ handle, list, by }));
+export async function apply(
+	plan: readonly Planned[],
+	deps: Deps,
+): Promise<Applied> {
+	const attempted: Attempt[] = plan.map(({ handle, list, by }) => ({
+		handle,
+		list,
+		by,
+	}));
 
 	if (!deps.apply) {
-		return { written: [], added: [], already: [], failed: [], remaining: attempted, stopped: null };
+		return {
+			written: [],
+			added: [],
+			already: [],
+			failed: [],
+			remaining: attempted,
+			stopped: null,
+		};
 	}
 
 	const { written, blocked } = write(plan, deps);
@@ -396,7 +436,12 @@ export async function apply(plan: readonly Planned[], deps: Deps): Promise<Appli
 				break;
 			}
 
-			failed.push({ handle: entry.handle, list: entry.list, error: failure.code, detail });
+			failed.push({
+				handle: entry.handle,
+				list: entry.list,
+				error: failure.code,
+				detail,
+			});
 			streak = failure.code === repeated ? streak + 1 : 1;
 			repeated = failure.code;
 
@@ -414,5 +459,12 @@ export async function apply(plan: readonly Planned[], deps: Deps): Promise<Appli
 		}
 	}
 
-	return { written, added, already, failed, remaining: attempted.slice(consumed), stopped };
+	return {
+		written,
+		added,
+		already,
+		failed,
+		remaining: attempted.slice(consumed),
+		stopped,
+	};
 }

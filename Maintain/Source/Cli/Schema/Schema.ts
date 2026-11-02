@@ -1,6 +1,5 @@
 import type { Option } from "../Parser/Argument/Option.ts";
-import type { CommandDefinition } from "../Parser/Parser.ts";
-import { universal } from "../Parser/Parser.ts";
+import { universal, type CommandDefinition } from "../Parser/Parser.ts";
 
 const DRAFT = "https://json-schema.org/draft/2020-12/schema";
 
@@ -19,7 +18,14 @@ function scalar(definition: Option): Record<string, unknown> {
 			shape["enum"] = [...(definition.values ?? [])];
 			break;
 		case "json":
-			shape["type"] = ["object", "array", "string", "number", "boolean", "null"];
+			shape["type"] = [
+				"object",
+				"array",
+				"string",
+				"number",
+				"boolean",
+				"null",
+			];
 			break;
 		default:
 			shape["type"] = "string";
@@ -31,7 +37,9 @@ function scalar(definition: Option): Record<string, unknown> {
 /** One option as a JSON Schema property; the property name is the flag itself. */
 function property(definition: Option): Record<string, unknown> {
 	const shape: Record<string, unknown> =
-		definition.repeat === true ? { type: "array", items: scalar(definition) } : scalar(definition);
+		definition.repeat === true
+			? { type: "array", items: scalar(definition) }
+			: scalar(definition);
 	shape["description"] = definition.description;
 	if (definition.default !== undefined) shape["default"] = definition.default;
 	return shape;

@@ -1,4 +1,4 @@
-import { schema, table, t } from "spacetimedb/server";
+import { schema, t, table } from "spacetimedb/server";
 
 /**
  * Timeline archive, live view.
@@ -106,7 +106,14 @@ const membership = table(
 	},
 );
 
-const spacetimedb = schema({ post, author, media, observation, event, membership });
+const spacetimedb = schema({
+	post,
+	author,
+	media,
+	observation,
+	event,
+	membership,
+});
 
 export default spacetimedb;
 
@@ -161,7 +168,10 @@ export const observe = spacetimedb.reducer(
 					postCount: 1,
 				});
 			} else {
-				ctx.db.author.handle.update({ ...known, postCount: known.postCount + 1 });
+				ctx.db.author.handle.update({
+					...known,
+					postCount: known.postCount + 1,
+				});
 			}
 		} else {
 			ctx.db.post.id.update({
@@ -194,7 +204,12 @@ export const observe = spacetimedb.reducer(
 
 /** Append one event. The payload is opaque JSON text. */
 export const record = spacetimedb.reducer(
-	{ kind: t.string(), subject: t.string(), payload: t.string(), at: t.string() },
+	{
+		kind: t.string(),
+		subject: t.string(),
+		payload: t.string(),
+		at: t.string(),
+	},
 	(ctx, args) => {
 		const id = `${args.at}:${args.kind}:${args.subject}`;
 		if (ctx.db.event.id.find(id) !== null) return;
@@ -253,6 +268,11 @@ export const attach = spacetimedb.reducer(
 	(ctx, args) => {
 		const id = `${args.postId}:${args.url}`;
 		if (ctx.db.media.id.find(id) !== null) return;
-		ctx.db.media.insert({ id, postId: args.postId, kind: args.kind, url: args.url });
+		ctx.db.media.insert({
+			id,
+			postId: args.postId,
+			kind: args.kind,
+			url: args.url,
+		});
 	},
 );

@@ -16,6 +16,9 @@ export type FailureCode =
 	| "schema-invalid"
 	| "cdp-unreachable"
 	| "cdp-error"
+	| "spacetime-unreachable"
+	| "spacetime-auth"
+	| "spacetime-reducer"
 	| "usage"
 	| "io-error"
 	| "internal";
@@ -30,7 +33,11 @@ export class Failure extends Error {
 	readonly detail: string | undefined;
 	readonly extra: Record<string, unknown>;
 
-	constructor(code: FailureCode, detail?: string, extra: Record<string, unknown> = {}) {
+	constructor(
+		code: FailureCode,
+		detail?: string,
+		extra: Record<string, unknown> = {},
+	) {
 		super(detail ?? code);
 		this.name = "Failure";
 		this.code = code;
@@ -46,7 +53,11 @@ export class Failure extends Error {
 	}
 }
 
-export function fail(code: FailureCode, detail?: string, extra: Record<string, unknown> = {}): Failure {
+export function fail(
+	code: FailureCode,
+	detail?: string,
+	extra: Record<string, unknown> = {},
+): Failure {
 	return new Failure(code, detail, extra);
 }
 

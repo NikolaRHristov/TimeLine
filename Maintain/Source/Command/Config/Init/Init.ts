@@ -1,8 +1,13 @@
 import { existsSync } from "node:fs";
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
 import { fail, isFailure } from "../../../Cli/Parser/Output/Failure.ts";
-import { configurationPath, example, load } from "../../../Configuration/Load/Load.ts";
+import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
+import {
+	configurationPath,
+	example,
+	load,
+} from "../../../Configuration/Load/Load.ts";
 import type { Configuration } from "../../../Configuration/Schema/Schema.ts";
 import { save } from "../../../Configuration/Write/Write.ts";
 import type { List } from "../../../Model/List/List.ts";
@@ -17,16 +22,26 @@ const HANDLE = /^[A-Za-z0-9_]{1,15}$/;
 function parseList(raw: string): List {
 	const split = raw.indexOf("=");
 	if (split <= 0 || split === raw.length - 1) {
-		throw fail("usage", `--list expects <slug>=<id>, got ${raw}`, { value: raw, form: "--list alpha=123456" });
+		throw fail("usage", `--list expects <slug>=<id>, got ${raw}`, {
+			value: raw,
+			form: "--list alpha=123456",
+		});
 	}
 
 	const slug = raw.slice(0, split).trim();
 	const id = raw.slice(split + 1).trim();
 	if (!SLUG.test(slug)) {
-		throw fail("usage", `--list slug must match ${SLUG.source}, got ${slug}`, { value: raw, slug });
+		throw fail(
+			"usage",
+			`--list slug must match ${SLUG.source}, got ${slug}`,
+			{ value: raw, slug },
+		);
 	}
 	if (!/^\S+$/.test(id)) {
-		throw fail("usage", `--list id must be one token, got ${id}`, { value: raw, id });
+		throw fail("usage", `--list id must be one token, got ${id}`, {
+			value: raw,
+			id,
+		});
 	}
 
 	return { slug, name: slug, id };
@@ -35,8 +50,10 @@ function parseList(raw: string): List {
 /** The three commands that turn a written map into a built site. */
 function next(configuration: Configuration): string[] {
 	const steps: string[] = [];
-	if (configuration.profile === "") steps.push("maintain config init --force --profile <your-handle>");
-	if (configuration.lists.length === 0) steps.push("maintain config init --force --list <slug>=<list-id>");
+	if (configuration.profile === "")
+		steps.push("maintain config init --force --profile <your-handle>");
+	if (configuration.lists.length === 0)
+		steps.push("maintain config init --force --list <slug>=<list-id>");
 	steps.push("maintain store scrape --source bookmark");
 	steps.push("maintain store publish --all");
 	steps.push("pnpm run build");
@@ -60,8 +77,11 @@ function base(force: boolean): Configuration {
 			// A corrupt map is exactly what `--force` is for: start over rather
 			// than refusing to repair it, but never silently.
 			if (!(isFailure(error) && error.code === "no-config")) {
-				const detail = error instanceof Error ? error.message : String(error);
-				process.stderr.write(`maintain: ${configurationPath()} is unreadable (${detail}); starting from the example\n`);
+				const detail =
+					error instanceof Error ? error.message : String(error);
+				process.stderr.write(
+					`maintain: ${configurationPath()} is unreadable (${detail}); starting from the example\n`,
+				);
 			}
 		}
 	}
@@ -79,12 +99,31 @@ function base(force: boolean): Configuration {
  */
 export const Definition: CommandDefinition = {
 	path: ["config", "init"],
-	summary: "Write the local identifier map from the tracked example; every value is a flag.",
+	summary:
+		"Write the local identifier map from the tracked example; every value is a flag.",
 	options: [
-		option("profile", "string", "The handle whose bookmarks are being archived.", { format: "handle" }),
-		option("list", "string", "One configured list, as <slug>=<id>. Repeat for more.", { repeat: true }),
-		option("cdp-port", "integer", "Port of the browser's debugging endpoint."),
-		option("force", "boolean", "Replace an existing map, keeping its values as the base."),
+		option(
+			"profile",
+			"string",
+			"The handle whose bookmarks are being archived.",
+			{ format: "handle" },
+		),
+		option(
+			"list",
+			"string",
+			"One configured list, as <slug>=<id>. Repeat for more.",
+			{ repeat: true },
+		),
+		option(
+			"cdp-port",
+			"integer",
+			"Port of the browser's debugging endpoint.",
+		),
+		option(
+			"force",
+			"boolean",
+			"Replace an existing map, keeping its values as the base.",
+		),
 	],
 	async run(values): Promise<unknown> {
 		const force = values["force"] === true;
@@ -94,10 +133,14 @@ export const Definition: CommandDefinition = {
 		if (profile !== undefined) {
 			const handle = String(profile).trim().replace(/^@/, "");
 			if (!HANDLE.test(handle)) {
-				throw fail("usage", `--profile expects a handle, got ${String(profile)}`, {
-					value: String(profile),
-					form: "--profile your-handle",
-				});
+				throw fail(
+					"usage",
+					`--profile expects a handle, got ${String(profile)}`,
+					{
+						value: String(profile),
+						form: "--profile your-handle",
+					},
+				);
 			}
 			configuration.profile = handle;
 			// The likes route follows the handle, and only now is it known.
@@ -106,10 +149,14 @@ export const Definition: CommandDefinition = {
 
 		// One slug is one entry: `--list` replaces the entry it names and appends
 		// the ones it does not, so wiring a second list does not drop the first.
-		const lists = Array.isArray(values["list"]) ? (values["list"] as string[]) : [];
+		const lists = Array.isArray(values["list"])
+			? (values["list"] as string[])
+			: [];
 		for (const raw of lists) {
 			const list = parseList(raw);
-			const at = configuration.lists.findIndex((entry) => entry.slug === list.slug);
+			const at = configuration.lists.findIndex(
+				(entry) => entry.slug === list.slug,
+			);
 			if (at === -1) configuration.lists.push(list);
 			else configuration.lists[at] = list;
 		}
@@ -118,7 +165,11 @@ export const Definition: CommandDefinition = {
 		if (port !== undefined) {
 			const number = Number(port);
 			if (!Number.isInteger(number) || number < 1 || number > 65_535) {
-				throw fail("usage", `--cdp-port expects a port between 1 and 65535, got ${String(port)}`, { value: port });
+				throw fail(
+					"usage",
+					`--cdp-port expects a port between 1 and 65535, got ${String(port)}`,
+					{ value: port },
+				);
 			}
 			configuration.cdp.port = number;
 		}
@@ -132,7 +183,10 @@ export const Definition: CommandDefinition = {
 			written: path,
 			overwritten: existed,
 			profile: configuration.profile,
-			lists: configuration.lists.map((list) => ({ slug: list.slug, name: list.name })),
+			lists: configuration.lists.map((list) => ({
+				slug: list.slug,
+				name: list.name,
+			})),
 			cdp: configuration.cdp,
 			next: next(configuration),
 		};

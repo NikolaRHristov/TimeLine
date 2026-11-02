@@ -1,14 +1,18 @@
 import { relative } from "node:path";
+
 import { loadVocabulary } from "../../../Configuration/Keyword/Load.ts";
 import { root } from "../../../Configuration/Load/Load.ts";
-import type { Evidence } from "../../../Model/Author/Evidence.ts";
-import { build } from "../../../Model/Author/Evidence.ts";
+import { build, type Evidence } from "../../../Model/Author/Evidence.ts";
 import type { ShadowPost } from "../../../Store/Model/Model.ts";
 import { shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
 
 /** Posts left out of the records, counted rather than dropped silently. */
-export type Skipped = { hidden: number; unbookmarked: number; anonymous: number };
+export type Skipped = {
+	hidden: number;
+	unbookmarked: number;
+	anonymous: number;
+};
 
 /** One author per record, plus what the archive held that no record could use. */
 export type EvidenceCollection = {

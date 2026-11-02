@@ -1,5 +1,6 @@
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
 import { stringify } from "../../Output/Json/Json.ts";
 
@@ -60,7 +61,8 @@ export type AuthorStore = {
 };
 
 function record(value: unknown): Record<string, unknown> | null {
-	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+	if (value === null || typeof value !== "object" || Array.isArray(value))
+		return null;
 	return value as Record<string, unknown>;
 }
 
@@ -70,7 +72,10 @@ function text(value: unknown): string | null {
 
 function strings(value: unknown): string[] {
 	if (!Array.isArray(value)) return [];
-	return value.filter((entry): entry is string => typeof entry === "string" && entry.length > 0);
+	return value.filter(
+		(entry): entry is string =>
+			typeof entry === "string" && entry.length > 0,
+	);
 }
 
 function decision(value: unknown): DecisionRecord | null {
@@ -80,9 +85,11 @@ function decision(value: unknown): DecisionRecord | null {
 	if (by === null || by === "") return null;
 	const parsed: DecisionRecord = { by };
 	const confidence = detail["confidence"];
-	if (typeof confidence === "number" && Number.isFinite(confidence)) parsed.confidence = confidence;
+	if (typeof confidence === "number" && Number.isFinite(confidence))
+		parsed.confidence = confidence;
 	const score = detail["score"];
-	if (typeof score === "number" && Number.isFinite(score)) parsed.score = score;
+	if (typeof score === "number" && Number.isFinite(score))
+		parsed.score = score;
 	const gap = detail["gap"];
 	if (typeof gap === "number" && Number.isFinite(gap)) parsed.gap = gap;
 	const reason = text(detail["reason"]);
@@ -140,7 +147,9 @@ export function open(content: string): AuthorStore {
 		all(): AuthorRecord[] {
 			let names: string[];
 			try {
-				names = readdirSync(directory).filter((name) => name.endsWith(".json")).sort();
+				names = readdirSync(directory)
+					.filter((name) => name.endsWith(".json"))
+					.sort();
 			} catch {
 				return [];
 			}
@@ -150,10 +159,15 @@ export function open(content: string): AuthorStore {
 				const parsed = read(join(directory, name));
 				// First file wins: two records for one handle is a hand-edit
 				// accident, and picking one deterministically beats reporting both.
-				if (parsed !== null && !found.has(parsed.handle)) found.set(parsed.handle, parsed);
+				if (parsed !== null && !found.has(parsed.handle))
+					found.set(parsed.handle, parsed);
 			}
 			return [...found.values()].sort((left, right) =>
-				left.handle < right.handle ? -1 : left.handle > right.handle ? 1 : 0,
+				left.handle < right.handle
+					? -1
+					: left.handle > right.handle
+						? 1
+						: 0,
 			);
 		},
 
@@ -173,9 +187,13 @@ export function open(content: string): AuthorStore {
 		 */
 		write(entry: AuthorRecord): string {
 			if (!HANDLE.test(entry.handle)) {
-				throw fail("io-error", "a handle must be simple before it becomes a filename", {
-					handle: entry.handle,
-				});
+				throw fail(
+					"io-error",
+					"a handle must be simple before it becomes a filename",
+					{
+						handle: entry.handle,
+					},
+				);
 			}
 
 			const path = join(directory, `${entry.handle}.json`);
@@ -185,7 +203,8 @@ export function open(content: string): AuthorStore {
 			} catch (error) {
 				throw fail("io-error", "could not write the author record", {
 					path,
-					reason: error instanceof Error ? error.message : String(error),
+					reason:
+						error instanceof Error ? error.message : String(error),
 				});
 			}
 

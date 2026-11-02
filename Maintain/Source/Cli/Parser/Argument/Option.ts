@@ -37,14 +37,18 @@ export function parseValue(definition: Option, raw: string): unknown {
 			return raw;
 		case "integer": {
 			if (!/^-?\d+$/.test(raw)) {
-				throw fail("usage", `--${definition.name} expects an integer`, { value: raw });
+				throw fail("usage", `--${definition.name} expects an integer`, {
+					value: raw,
+				});
 			}
 			return Number(raw);
 		}
 		case "boolean": {
 			if (raw === "true") return true;
 			if (raw === "false") return false;
-			throw fail("usage", `--${definition.name} is a flag`, { value: raw });
+			throw fail("usage", `--${definition.name} is a flag`, {
+				value: raw,
+			});
 		}
 		case "json": {
 			try {
@@ -52,17 +56,22 @@ export function parseValue(definition: Option, raw: string): unknown {
 			} catch (error) {
 				throw fail("usage", `--${definition.name} expects JSON`, {
 					value: raw,
-					reason: error instanceof Error ? error.message : String(error),
+					reason:
+						error instanceof Error ? error.message : String(error),
 				});
 			}
 		}
 		case "enum": {
 			const values = definition.values ?? [];
 			if (!values.includes(raw)) {
-				throw fail("usage", `--${definition.name} expects one of ${values.join(", ")}`, {
-					value: raw,
-					values,
-				});
+				throw fail(
+					"usage",
+					`--${definition.name} expects one of ${values.join(", ")}`,
+					{
+						value: raw,
+						values,
+					},
+				);
 			}
 			return raw;
 		}

@@ -2,7 +2,12 @@ import type { Author } from "../Author/Author.ts";
 
 export type Media = { kind: "image" | "video" | "gif" | "link"; url: string };
 
-export type Metrics = { replies: number; reposts: number; likes: number; views: number };
+export type Metrics = {
+	replies: number;
+	reposts: number;
+	likes: number;
+	views: number;
+};
 
 /** One post, keyed by its status id - never by its text. */
 export type Post = {

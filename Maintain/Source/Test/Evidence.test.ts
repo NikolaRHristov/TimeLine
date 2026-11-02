@@ -7,9 +7,16 @@ import { after, test } from "node:test";
 import { Definition } from "../Command/Author/Evidence/Build.ts";
 import { Keyword } from "../Configuration/Keyword/Keyword.ts";
 import { root } from "../Configuration/Load/Load.ts";
-import type { Evidence, EvidencePost } from "../Model/Author/Evidence.ts";
-import { EXCERPT_COUNT, EXCERPT_LIMIT, build, domains, keywords } from "../Model/Author/Evidence.ts";
 import type { Author } from "../Model/Author/Author.ts";
+import {
+	build,
+	domains,
+	EXCERPT_COUNT,
+	EXCERPT_LIMIT,
+	keywords,
+	type Evidence,
+	type EvidencePost,
+} from "../Model/Author/Evidence.ts";
 import type { Post } from "../Model/Post/Post.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
@@ -43,7 +50,11 @@ function reading(id: string, overrides: Partial<Post> = {}): Post {
 	};
 }
 
-function post(id: string, text: string, media: EvidencePost["media"] = []): EvidencePost {
+function post(
+	id: string,
+	text: string,
+	media: EvidencePost["media"] = [],
+): EvidencePost {
 	return { id, text, media };
 }
 
@@ -59,7 +70,11 @@ async function run(directory: string): Promise<{
 		return (await Definition.run({})) as {
 			authors: Evidence[];
 			posts: number;
-			skipped: { hidden: number; unbookmarked: number; anonymous: number };
+			skipped: {
+				hidden: number;
+				unbookmarked: number;
+				anonymous: number;
+			};
 		};
 	} finally {
 		if (previous === undefined) delete process.env["MAINTAIN_STORAGE"];
@@ -80,21 +95,41 @@ function archive(): string {
 	for (const [id, handle] of people) {
 		const { post: record } = merge(
 			null,
-			reading(id, { author: { handle, name: handle.toUpperCase(), verified: handle === "alpha" } }),
+			reading(id, {
+				author: {
+					handle,
+					name: handle.toUpperCase(),
+					verified: handle === "alpha",
+				},
+			}),
 			{ source: "bookmark", at: AT },
 		);
 		store.write(record);
 	}
 	// A like-only post is not a bookmark, and a hidden post is withheld.
-	store.write(merge(null, reading("5", { author: { handle: "gamma", name: "Gamma", verified: false } }), {
-		source: "like",
-		at: AT,
-	}).post);
+	store.write(
+		merge(
+			null,
+			reading("5", {
+				author: { handle: "gamma", name: "Gamma", verified: false },
+			}),
+			{
+				source: "like",
+				at: AT,
+			},
+		).post,
+	);
 	store.write({
-		...merge(null, reading("6", { author: { handle: "delta", name: "Delta", verified: false } }), {
-			source: "bookmark",
-			at: AT,
-		}).post,
+		...merge(
+			null,
+			reading("6", {
+				author: { handle: "delta", name: "Delta", verified: false },
+			}),
+			{
+				source: "bookmark",
+				at: AT,
+			},
+		).post,
 		visibility: "hidden",
 	});
 	return directory;
@@ -108,7 +143,11 @@ test("one record per distinct author, and no duplicates", async () => {
 		["alpha", "beta"],
 	);
 	assert.equal(result.posts, 6);
-	assert.deepEqual(result.skipped, { hidden: 1, unbookmarked: 1, anonymous: 0 });
+	assert.deepEqual(result.skipped, {
+		hidden: 1,
+		unbookmarked: 1,
+		anonymous: 0,
+	});
 	// A record counts its own posts: alpha has three, beta one.
 	assert.deepEqual(
 		result.authors.map((record) => record.posts),
@@ -134,7 +173,10 @@ test("the record shape is fixed, whatever the data says", async () => {
 		"excerpts",
 	]);
 	// The counts print in vocabulary order, whatever that vocabulary is.
-	assert.deepEqual(Object.keys((record as Evidence).keywords), Object.keys(Keyword));
+	assert.deepEqual(
+		Object.keys((record as Evidence).keywords),
+		Object.keys(Keyword),
+	);
 	// JSON-serialisable as it stands: no dates, no class instances.
 	assert.deepEqual(JSON.parse(JSON.stringify(record)), record);
 });
@@ -148,23 +190,44 @@ test("two runs on one archive print the same bytes", async () => {
 });
 
 test("an excerpt never exceeds the cap, even when the post does", () => {
-	const record = build("alpha", author, [post("1", "a".repeat(5_000))], Keyword);
+	const record = build(
+		"alpha",
+		author,
+		[post("1", "a".repeat(5_000))],
+		Keyword,
+	);
 	const excerpt = record.excerpts[0] ?? "";
 
 	assert.equal(record.excerpts.length, 1);
-	assert.ok(excerpt.length <= EXCERPT_LIMIT, `${excerpt.length} > ${EXCERPT_LIMIT}`);
+	assert.ok(
+		excerpt.length <= EXCERPT_LIMIT,
+		`${excerpt.length} > ${EXCERPT_LIMIT}`,
+	);
 	assert.ok(excerpt.endsWith("…"));
 });
 
 test("the cut never splits an emoji", () => {
 	// Each emoji is two UTF-16 code units, so the cap lands mid-pair.
-	const record = build("alpha", author, [post("1", "😀".repeat(300))], Keyword);
+	const record = build(
+		"alpha",
+		author,
+		[post("1", "😀".repeat(300))],
+		Keyword,
+	);
 	const excerpt = record.excerpts[0] ?? "";
 	const last = excerpt.charCodeAt(excerpt.length - 1);
 
 	assert.ok(excerpt.length <= EXCERPT_LIMIT);
-	assert.equal(last >= 0xd800 && last <= 0xdbff, false, "a lone high surrogate was kept");
-	assert.equal(last >= 0xdc00 && last <= 0xdfff, false, "a lone low surrogate was kept");
+	assert.equal(
+		last >= 0xd800 && last <= 0xdbff,
+		false,
+		"a lone high surrogate was kept",
+	);
+	assert.equal(
+		last >= 0xdc00 && last <= 0xdfff,
+		false,
+		"a lone low surrogate was kept",
+	);
 });
 
 test("at most three excerpts, shortest prose first", () => {
@@ -187,14 +250,22 @@ test("at most three excerpts, shortest prose first", () => {
 });
 
 test("a repost never spends a second slot", () => {
-	const record = build("alpha", author, [post("1", "same words"), post("2", "same words")], Keyword);
+	const record = build(
+		"alpha",
+		author,
+		[post("1", "same words"), post("2", "same words")],
+		Keyword,
+	);
 
 	assert.deepEqual(record.excerpts, ["same words"]);
 });
 
 test("domains are ranked, counted once per post, and shorteners are ignored", () => {
 	const posts = [
-		post("1", "see https://github.com/a/b and https://github.com/c/d and https://t.co/xyz"),
+		post(
+			"1",
+			"see https://github.com/a/b and https://github.com/c/d and https://t.co/xyz",
+		),
 		post("2", "https://www.github.com/e/f, then https://vercel.com/x", [
 			{ kind: "link", url: "https://t.co/abc" },
 		]),
@@ -209,8 +280,8 @@ test("domains are ranked, counted once per post, and shorteners are ignored", ()
 });
 
 test("domains are capped at five", () => {
-	const posts = ["a.com", "b.com", "c.com", "d.com", "e.com", "f.com"].map((host, index) =>
-		post(String(index), `https://${host}/x`),
+	const posts = ["a.com", "b.com", "c.com", "d.com", "e.com", "f.com"].map(
+		(host, index) => post(String(index), `https://${host}/x`),
 	);
 
 	assert.equal(domains(posts).length, 5);
@@ -219,19 +290,30 @@ test("domains are capped at five", () => {
 test("keywords are counted on word boundaries, per bucket", () => {
 	// Neutral slugs: buckets are whatever the vocabulary declares, so this
 	// proves the counting for any name rather than for one taxonomy.
-	const vocabulary = { first: ["ai"], second: ["ui"], third: ["rust", "c++", "c#"] };
+	const vocabulary = {
+		first: ["ai"],
+		second: ["ui"],
+		third: ["rust", "c++", "c#"],
+	};
 	const posts = [
 		post("1", "said the html thing"),
 		post("2", "an ai post about ui and rust"),
 		post("3", "c++ and C# and AI again"),
 	];
 
-	assert.deepEqual(keywords(posts, vocabulary), { first: 2, second: 1, third: 3 });
+	assert.deepEqual(keywords(posts, vocabulary), {
+		first: 2,
+		second: 1,
+		third: 3,
+	});
 });
 
 test("terms are counted per keyword, and the totals are their sum", () => {
 	const vocabulary = { first: ["ai"], second: ["figma"], third: ["rust"] };
-	const posts = [post("1", "an ai post about figma and rust"), post("2", "rust again")];
+	const posts = [
+		post("1", "an ai post about figma and rust"),
+		post("2", "rust again"),
+	];
 	const record = build("alpha", author, posts, vocabulary);
 
 	// Sparse: a term that never fired is absent, not zero.
@@ -248,7 +330,10 @@ test("no inference module is imported and no network call is made", async () => 
 		"Configuration/Keyword/Keyword.ts",
 	];
 	for (const relative of sources) {
-		const source = readFileSync(join(root(), "Maintain", "Source", relative), "utf8");
+		const source = readFileSync(
+			join(root(), "Maintain", "Source", relative),
+			"utf8",
+		);
 		assert.doesNotMatch(
 			source,
 			/from\s+["'][^"']*(?:infer|classify|openai|anthropic|node:https?|node:net|node:child_process)[^"']*["']/i,

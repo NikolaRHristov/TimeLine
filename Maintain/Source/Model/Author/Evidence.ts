@@ -1,5 +1,5 @@
-import type { Author } from "./Author.ts";
 import type { Media } from "../Post/Post.ts";
+import type { Author } from "./Author.ts";
 
 /**
  * One vocabulary per bucket.
@@ -146,7 +146,8 @@ function domain(url: string): string | null {
 	} catch {
 		return null;
 	}
-	if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+	if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
+		return null;
 	const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
 	if (host === "" || SHORTENER.has(host)) return null;
 	return host;
@@ -173,7 +174,10 @@ export function domains(posts: readonly EvidencePost[]): DomainHit[] {
 
 	return [...counts.entries()]
 		.map(([name, count]) => ({ domain: name, count }))
-		.sort((left, right) => right.count - left.count || compare(left.domain, right.domain))
+		.sort(
+			(left, right) =>
+				right.count - left.count || compare(left.domain, right.domain),
+		)
 		.slice(0, DOMAIN_LIMIT);
 }
 
@@ -201,7 +205,10 @@ function occurrences(haystack: string, keyword: string): number {
  * the same counting summed per bucket, derived from here so the two can never
  * disagree.
  */
-export function terms(posts: readonly EvidencePost[], vocabulary: Vocabulary): TermHits {
+export function terms(
+	posts: readonly EvidencePost[],
+	vocabulary: Vocabulary,
+): TermHits {
 	const haystack = posts.map((post) => post.text.toLowerCase()).join("\n");
 	const hits: TermHits = {};
 
@@ -234,7 +241,10 @@ export function totals(counted: TermHits): KeywordHits {
  * Counting is all this does: no weights, no thresholds, no decision. Turning
  * hits into a list is `author classify`'s job.
  */
-export function keywords(posts: readonly EvidencePost[], vocabulary: Vocabulary): KeywordHits {
+export function keywords(
+	posts: readonly EvidencePost[],
+	vocabulary: Vocabulary,
+): KeywordHits {
 	return totals(terms(posts, vocabulary));
 }
 
@@ -269,7 +279,9 @@ export function excerpts(posts: readonly EvidencePost[]): string[] {
 			compare(left.id, right.id),
 	);
 
-	return candidates.slice(0, EXCERPT_COUNT).map((candidate) => truncate(candidate.flat));
+	return candidates
+		.slice(0, EXCERPT_COUNT)
+		.map((candidate) => truncate(candidate.flat));
 }
 
 /**

@@ -365,15 +365,15 @@ writes `Author/<handle>.json`, calls the add command per handle behind
 
 ## Claim → test
 
-| Claim                    | Test                                                                        |
-| ------------------------ | --------------------------------------------------------------------------- |
-| CDP is reachable         | `curl -s http://127.0.0.1:9222/json/version` → JSON with `Protocol-Version` |
-| CLI parses like clap     | `maintain post like --help` lists `--url`, `--tab`, `--dry-run`             |
-| Schema is machine-usable | `maintain post like --schema` validates under draft 2020-12                 |
-| Like is idempotent       | run twice → second prints `{was:true}` and does not toggle                  |
-| Scrape is idempotent     | run twice → second prints `new:0`, post file count unchanged                |
-| Docs leak nothing        | `grep -rE "@[A-Za-z0-9_]{2,}                                                | /i/lists/[0-9]+" Documentation/` → no hits |
-| Distribution is cheap    | second `author classify` run makes zero model calls                         |
-| A page that never readies fails | `page list open` on an id the page never shows → `{error:"page-not-ready",expression,timeout,url}`, and the body never runs |
-| A distribution is dry until armed | `author distribute apply` → `{dryRun:true,"counts":{records:0,added:0}}`, and `git status --porcelain Source/Content` stays empty |
-| A distribution paces and stops | `node --test Target/Test/Distribute.test.js` → adds are sequential `[3000,3000]` apart, and a `rate-limited` answer stops the run with `remaining` naming the rest |
+| Claim                             | Test                                                                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CDP is reachable                  | `curl -s http://127.0.0.1:9222/json/version` → JSON with `Protocol-Version`                                                                                        |
+| CLI parses like clap              | `maintain post like --help` lists `--url`, `--tab`, `--dry-run`                                                                                                    |
+| Schema is machine-usable          | `maintain post like --schema` validates under draft 2020-12                                                                                                        |
+| Like is idempotent                | run twice → second prints `{was:true}` and does not toggle                                                                                                         |
+| Scrape is idempotent              | run twice → second prints `new:0`, post file count unchanged                                                                                                       |
+| Docs leak nothing                 | `grep -rE "@[A-Za-z0-9_]{2,}                                                                                                                                       | /i/lists/[0-9]+" Documentation/` → no hits |
+| Distribution is cheap             | second `author classify` run makes zero model calls                                                                                                                |
+| A page that never readies fails   | `page list open` on an id the page never shows → `{error:"page-not-ready",expression,timeout,url}`, and the body never runs                                        |
+| A distribution is dry until armed | `author distribute apply` → `{dryRun:true,"counts":{records:0,added:0}}`, and `git status --porcelain Source/Content` stays empty                                  |
+| A distribution paces and stops    | `node --test Target/Test/Distribute.test.js` → adds are sequential `[3000,3000]` apart, and a `rate-limited` answer stops the run with `remaining` naming the rest |

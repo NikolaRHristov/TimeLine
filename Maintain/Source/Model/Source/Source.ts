@@ -1,6 +1,6 @@
-import type { Configuration } from "../../Configuration/Schema/Schema.ts";
-import { configurationPath } from "../../Configuration/Load/Load.ts";
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
+import { configurationPath } from "../../Configuration/Load/Load.ts";
+import type { Configuration } from "../../Configuration/Schema/Schema.ts";
 
 /**
  * The three channels a post can be seen through.
@@ -28,15 +28,21 @@ export function route(configuration: Configuration, source: Source): Route {
 			return { url: configuration.routes.bookmarks, followTabs: false };
 		case "like":
 			if (configuration.routes.likes === "") {
-				throw fail("no-config", "`profile` is not set, so the likes route is unknown", {
-					expected: configurationPath(),
-					field: "profile",
-				});
+				throw fail(
+					"no-config",
+					"`profile` is not set, so the likes route is unknown",
+					{
+						expected: configurationPath(),
+						field: "profile",
+					},
+				);
 			}
 			return { url: configuration.routes.likes, followTabs: false };
 		case "history":
 			return { url: configuration.routes.history, followTabs: true };
 		default:
-			throw fail("usage", `unknown source: ${String(source)}`, { values: Source });
+			throw fail("usage", `unknown source: ${String(source)}`, {
+				values: Source,
+			});
 	}
 }

@@ -5,9 +5,8 @@ import { join } from "node:path";
 import { after, test } from "node:test";
 
 import type { Post } from "../Model/Post/Post.ts";
-import type { ShadowPost } from "../Store/Model/Model.ts";
-import { project } from "../Store/Model/Model.ts";
 import { merge } from "../Store/Merge/Merge.ts";
+import { project, type ShadowPost } from "../Store/Model/Model.ts";
 import { open as openPublic } from "../Store/Public/Public.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
 
@@ -38,7 +37,10 @@ function reading(id: string, overrides: Partial<Post> = {}): Post {
 
 test("a first reading is new, and firstSeenAt is the moment it was observed", () => {
 	const at = "2026-11-01T10:00:00.000Z";
-	const { post, isNew, changed } = merge(null, reading("1"), { source: "bookmark", at });
+	const { post, isNew, changed } = merge(null, reading("1"), {
+		source: "bookmark",
+		at,
+	});
 
 	assert.equal(isNew, true);
 	assert.equal(changed, true);
@@ -50,8 +52,14 @@ test("a first reading is new, and firstSeenAt is the moment it was observed", ()
 });
 
 test("a second source adds an observation, never a second record", () => {
-	const first = merge(null, reading("1"), { source: "bookmark", at: "2026-11-01T10:00:00.000Z" }).post;
-	const second = merge(first, reading("1"), { source: "like", at: "2026-11-01T11:00:00.000Z" });
+	const first = merge(null, reading("1"), {
+		source: "bookmark",
+		at: "2026-11-01T10:00:00.000Z",
+	}).post;
+	const second = merge(first, reading("1"), {
+		source: "like",
+		at: "2026-11-01T11:00:00.000Z",
+	});
 
 	assert.equal(second.isNew, false);
 	assert.equal(second.post.id, "1");
@@ -64,8 +72,14 @@ test("a second source adds an observation, never a second record", () => {
 });
 
 test("the same source observed twice keeps one observation and stays unchanged", () => {
-	const first = merge(null, reading("1"), { source: "bookmark", at: "2026-11-01T10:00:00.000Z" }).post;
-	const second = merge(first, reading("1"), { source: "bookmark", at: "2026-11-01T12:00:00.000Z" });
+	const first = merge(null, reading("1"), {
+		source: "bookmark",
+		at: "2026-11-01T10:00:00.000Z",
+	}).post;
+	const second = merge(first, reading("1"), {
+		source: "bookmark",
+		at: "2026-11-01T12:00:00.000Z",
+	});
 
 	assert.equal(second.post.observations.length, 1);
 	assert.equal(second.changed, false);
@@ -73,20 +87,40 @@ test("the same source observed twice keeps one observation and stays unchanged",
 });
 
 test("hidden is a tombstone: a later scrape cannot resurrect it", () => {
-	const first = merge(null, reading("1"), { source: "bookmark", at: "2026-11-01T10:00:00.000Z" }).post;
+	const first = merge(null, reading("1"), {
+		source: "bookmark",
+		at: "2026-11-01T10:00:00.000Z",
+	}).post;
 	const hidden: ShadowPost = { ...first, visibility: "hidden" };
-	const again = merge(hidden, reading("1"), { source: "bookmark", at: "2026-11-02T10:00:00.000Z" });
+	const again = merge(hidden, reading("1"), {
+		source: "bookmark",
+		at: "2026-11-02T10:00:00.000Z",
+	});
 
 	assert.equal(again.post.visibility, "hidden");
 });
 
 test("an empty reading never erases what the archive already had", () => {
-	const first = merge(null, reading("1", { text: "a real post", media: [{ kind: "image", url: "u" }] }), {
+	const first = merge(
+		null,
+		reading("1", {
+			text: "a real post",
+			media: [{ kind: "image", url: "u" }],
+		}),
+		{
+			source: "bookmark",
+			at: "2026-11-01T10:00:00.000Z",
+		},
+	).post;
+	const placeholder = reading("1", {
+		text: "",
+		media: [],
+		author: { handle: "", name: "", verified: false },
+	});
+	const again = merge(first, placeholder, {
 		source: "bookmark",
-		at: "2026-11-01T10:00:00.000Z",
-	}).post;
-	const placeholder = reading("1", { text: "", media: [], author: { handle: "", name: "", verified: false } });
-	const again = merge(first, placeholder, { source: "bookmark", at: "2026-11-02T10:00:00.000Z" });
+		at: "2026-11-02T10:00:00.000Z",
+	});
 
 	assert.equal(again.post.text, "a real post");
 	assert.equal(again.post.media.length, 1);
@@ -96,10 +130,18 @@ test("an empty reading never erases what the archive already had", () => {
 test("the shadow store round-trips a record and indexes it", () => {
 	const directory = temporary();
 	const store = openShadow(directory);
-	const { post } = merge(null, reading("42"), { source: "history", at: "2026-11-01T10:00:00.000Z" });
+	const { post } = merge(null, reading("42"), {
+		source: "history",
+		at: "2026-11-01T10:00:00.000Z",
+	});
 
 	store.write(post);
-	store.observe({ at: "2026-11-01T10:00:00.000Z", source: "history", statusId: "42", action: "observed" });
+	store.observe({
+		at: "2026-11-01T10:00:00.000Z",
+		source: "history",
+		statusId: "42",
+		action: "observed",
+	});
 	const index = store.reindex();
 
 	assert.equal(store.post("42")?.id, "42");
@@ -116,8 +158,18 @@ test("events are found by subject", () => {
 	const directory = temporary();
 	const store = openShadow(directory);
 
-	store.event("bookmark.added", "42", { source: "bookmark" }, "2026-11-01T10:00:00.000Z");
-	store.event("scrape.finished", "bookmark", { new: 1 }, "2026-11-01T10:00:01.000Z");
+	store.event(
+		"bookmark.added",
+		"42",
+		{ source: "bookmark" },
+		"2026-11-01T10:00:00.000Z",
+	);
+	store.event(
+		"scrape.finished",
+		"bookmark",
+		{ new: 1 },
+		"2026-11-01T10:00:01.000Z",
+	);
 
 	const about = store.events("42");
 	assert.equal(about.length, 1);
@@ -126,7 +178,10 @@ test("events are found by subject", () => {
 });
 
 test("the public projection drops the archive fields and keeps the post", () => {
-	const { post } = merge(null, reading("42"), { source: "bookmark", at: "2026-11-01T10:00:00.000Z" });
+	const { post } = merge(null, reading("42"), {
+		source: "bookmark",
+		at: "2026-11-01T10:00:00.000Z",
+	});
 	const published = project(post, "2026-11-02T10:00:00.000Z");
 
 	assert.equal(published.id, "42");
@@ -141,7 +196,10 @@ test("the public projection drops the archive fields and keeps the post", () => 
 test("the public store writes and removes one file per post", () => {
 	const content = temporary();
 	const store = openPublic(content);
-	const { post } = merge(null, reading("42"), { source: "bookmark", at: "2026-11-01T10:00:00.000Z" });
+	const { post } = merge(null, reading("42"), {
+		source: "bookmark",
+		at: "2026-11-01T10:00:00.000Z",
+	});
 
 	store.writeBookmark(project(post, "2026-11-02T10:00:00.000Z"));
 	assert.deepEqual(store.ids(), ["42"]);

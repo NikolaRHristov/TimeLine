@@ -1,5 +1,8 @@
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
-import type { AuthorRecord, DecisionRecord } from "../../Store/Author/Author.ts";
+import type {
+	AuthorRecord,
+	DecisionRecord,
+} from "../../Store/Author/Author.ts";
 import type { Completion } from "../Inference/Client.ts";
 import type { Evidence } from "./Evidence.ts";
 
@@ -64,7 +67,8 @@ function compare(left: string, right: string): number {
 }
 
 function record(value: unknown): Record<string, unknown> | null {
-	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+	if (value === null || typeof value !== "object" || Array.isArray(value))
+		return null;
 	return value as Record<string, unknown>;
 }
 
@@ -79,7 +83,10 @@ function message(error: unknown): string {
  * same evidence always yields the same groups, which is what makes a resumed
  * run ask about the same authors a previous run asked about.
  */
-export function batches(evidences: readonly Evidence[], limit: number = BATCH_LIMIT): Evidence[][] {
+export function batches(
+	evidences: readonly Evidence[],
+	limit: number = BATCH_LIMIT,
+): Evidence[][] {
 	if (!Number.isInteger(limit) || limit < 1) {
 		throw fail("usage", "a batch holds at least one author", { limit });
 	}
@@ -130,7 +137,9 @@ function block(evidence: Evidence, index: number, total: number): string {
 	const domains =
 		evidence.domains.length === 0
 			? "none"
-			: evidence.domains.map((hit) => `${hit.domain}\u00d7${hit.count}`).join(", ");
+			: evidence.domains
+					.map((hit) => `${hit.domain}\u00d7${hit.count}`)
+					.join(", ");
 
 	const lines = [
 		`AUTHOR ${index}/${total}`,
@@ -157,11 +166,18 @@ function block(evidence: Evidence, index: number, total: number): string {
  * budget on one prolific account, and would invite the model to answer about a
  * post instead of about the account.
  */
-export function prompt(evidences: readonly Evidence[], lists: readonly string[]): Completion {
-	const blocks = evidences.map((evidence, index) => block(evidence, index + 1, evidences.length));
+export function prompt(
+	evidences: readonly Evidence[],
+	lists: readonly string[],
+): Completion {
+	const blocks = evidences.map((evidence, index) =>
+		block(evidence, index + 1, evidences.length),
+	);
 	return {
 		system: system(lists),
-		user: [`AUTHORS: ${evidences.length}`, "", blocks.join("\n\n")].join("\n"),
+		user: [`AUTHORS: ${evidences.length}`, "", blocks.join("\n\n")].join(
+			"\n",
+		),
 	};
 }
 
@@ -182,7 +198,8 @@ function entries(payload: unknown): unknown[] {
 	if (Array.isArray(listed)) return listed;
 
 	throw fail("model-reply", "the reply is not a JSON array of decisions", {
-		expected: '{"decisions":[{"handle":"...","list":"...","reason":"..."}]}',
+		expected:
+			'{"decisions":[{"handle":"...","list":"...","reason":"..."}]}',
 	});
 }
 
@@ -205,7 +222,11 @@ function oneLine(value: unknown): string | null {
  * A rejected entry is never written to disk, which is what keeps a malformed
  * answer from becoming a permanent one.
  */
-export function parse(reply: string, handles: ReadonlySet<string>, lists: ReadonlySet<string>): Parsed {
+export function parse(
+	reply: string,
+	handles: ReadonlySet<string>,
+	lists: ReadonlySet<string>,
+): Parsed {
 	const text = unfence(reply);
 
 	let payload: unknown;
@@ -225,7 +246,10 @@ export function parse(reply: string, handles: ReadonlySet<string>, lists: Readon
 	for (const entry of entries(payload)) {
 		const detail = record(entry);
 		if (detail === null) {
-			rejected.push({ handle: null, reason: "an entry is not an object" });
+			rejected.push({
+				handle: null,
+				reason: "an entry is not an object",
+			});
 			continue;
 		}
 
@@ -235,11 +259,17 @@ export function parse(reply: string, handles: ReadonlySet<string>, lists: Readon
 			continue;
 		}
 		if (!handles.has(handle)) {
-			rejected.push({ handle, reason: "the reply names an author this batch did not ask about" });
+			rejected.push({
+				handle,
+				reason: "the reply names an author this batch did not ask about",
+			});
 			continue;
 		}
 		if (answered.has(handle)) {
-			rejected.push({ handle, reason: "the reply answers the same author twice" });
+			rejected.push({
+				handle,
+				reason: "the reply answers the same author twice",
+			});
 			continue;
 		}
 
@@ -248,13 +278,19 @@ export function parse(reply: string, handles: ReadonlySet<string>, lists: Readon
 		if (named === null) list = null;
 		else if (typeof named === "string" && lists.has(named)) list = named;
 		else {
-			rejected.push({ handle, reason: `\`list\` must be one of ${[...lists].join(", ")} or null` });
+			rejected.push({
+				handle,
+				reason: `\`list\` must be one of ${[...lists].join(", ")} or null`,
+			});
 			continue;
 		}
 
 		const reason = oneLine(detail["reason"]);
 		if (reason === null) {
-			rejected.push({ handle, reason: "`reason` must be one line of text" });
+			rejected.push({
+				handle,
+				reason: "`reason` must be one line of text",
+			});
 			continue;
 		}
 
@@ -286,7 +322,9 @@ export function parse(reply: string, handles: ReadonlySet<string>, lists: Readon
 		answered.add(handle);
 	}
 
-	const unanswered = [...handles].filter((handle) => !answered.has(handle)).sort(compare);
+	const unanswered = [...handles]
+		.filter((handle) => !answered.has(handle))
+		.sort(compare);
 
 	return { decisions, rejected, unanswered };
 }
@@ -316,7 +354,8 @@ export function place(
 	decision: Placement,
 	at: string,
 ): AuthorRecord {
-	const lists = decision.list === null ? (existing?.lists ?? []) : [decision.list];
+	const lists =
+		decision.list === null ? (existing?.lists ?? []) : [decision.list];
 
 	const record: DecisionRecord = {
 		by: decision.by,
@@ -328,9 +367,14 @@ export function place(
 
 	return {
 		handle: decision.handle,
-		name: existing?.name ?? (evidence.name === "" ? decision.handle : evidence.name),
+		name:
+			existing?.name ??
+			(evidence.name === "" ? decision.handle : evidence.name),
 		verified: existing?.verified ?? evidence.verified,
-		firstSeenAt: existing === null || existing.firstSeenAt === "" ? at : existing.firstSeenAt,
+		firstSeenAt:
+			existing === null || existing.firstSeenAt === ""
+				? at
+				: existing.firstSeenAt,
 		postCount: existing?.postCount ?? evidence.posts,
 		lists,
 		decision: record,

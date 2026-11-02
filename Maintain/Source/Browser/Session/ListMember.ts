@@ -1,9 +1,16 @@
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
-import { rateLimit } from "../../Model/List/Member.ts";
-import type { ListSurfaceState, MemberReport, MemberRequest } from "../../Model/List/Member.ts";
+import {
+	rateLimit,
+	type ListSurfaceState,
+	type MemberReport,
+	type MemberRequest,
+} from "../../Model/List/Member.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
-import type { ListMemberResult } from "../Selector/ListMember.ts";
-import { expression, readyExpression } from "../Selector/ListMember.ts";
+import {
+	expression,
+	readyExpression,
+	type ListMemberResult,
+} from "../Selector/ListMember.ts";
 import { withPage } from "./Page.ts";
 import type { Session } from "./Session.ts";
 
@@ -23,7 +30,12 @@ export type ListSurface = {
 	close(): Promise<void>;
 };
 
-export type ListMemberContext = { session: Session; tab: Tab; url: string; surface: ListSurface };
+export type ListMemberContext = {
+	session: Session;
+	tab: Tab;
+	url: string;
+	surface: ListSurface;
+};
 
 function stateOf(result: ListMemberResult | undefined): ListSurfaceState {
 	return {
@@ -36,7 +48,9 @@ function stateOf(result: ListMemberResult | undefined): ListSurfaceState {
 
 /** The dialog, as a surface the decision can drive. */
 export function surfaceOf(session: Session): ListSurface {
-	const ask = async (request: Parameters<typeof expression>[0]): Promise<ListSurfaceState> =>
+	const ask = async (
+		request: Parameters<typeof expression>[0],
+	): Promise<ListSurfaceState> =>
 		stateOf(await session.evaluate<ListMemberResult>(expression(request)));
 
 	return {
@@ -62,7 +76,10 @@ export function surfaceOf(session: Session): ListSurface {
  * before the click that would stage a change. A limit is reported as its own
  * failure code so a caller looping over handles stops instead of retrying.
  */
-export async function execute(surface: ListSurface, request: MemberRequest): Promise<MemberReport> {
+export async function execute(
+	surface: ListSurface,
+	request: MemberRequest,
+): Promise<MemberReport> {
 	const opened = await surface.open();
 	if (opened.rows.length === 0) {
 		// A menu that never appeared and a dialog that rendered empty are
@@ -71,12 +88,16 @@ export async function execute(surface: ListSurface, request: MemberRequest): Pro
 		// page failing to fetch the lists. Reporting them as one code sends the
 		// caller looking in the wrong place.
 		if (opened.opened !== true) {
-			throw fail("no-list-menu", "no Add/remove from Lists control in the profile header", {
-				handle: request.handle,
-				list: request.name,
-				alerts: opened.alerts,
-				hint: "an account's own profile has no such control; only another account's profile does",
-			});
+			throw fail(
+				"no-list-menu",
+				"no Add/remove from Lists control in the profile header",
+				{
+					handle: request.handle,
+					list: request.name,
+					alerts: opened.alerts,
+					hint: "an account's own profile has no such control; only another account's profile does",
+				},
+			);
 		}
 		throw fail("no-list-surface", "the list dialog rendered no rows", {
 			handle: request.handle,
@@ -87,24 +108,39 @@ export async function execute(surface: ListSurface, request: MemberRequest): Pro
 
 	const matches = opened.rows.filter((row) => row.name === request.name);
 	if (matches.length > 1) {
-		throw fail("unknown-list", `more than one list is called ${request.name}`, {
-			handle: request.handle,
-			list: request.name,
-			matches: matches.length,
-		});
+		throw fail(
+			"unknown-list",
+			`more than one list is called ${request.name}`,
+			{
+				handle: request.handle,
+				list: request.name,
+				matches: matches.length,
+			},
+		);
 	}
 	const row = matches[0];
 	if (row === undefined) {
-		throw fail("unknown-list", `no list named ${request.name} is offered for this handle`, {
-			handle: request.handle,
-			list: request.name,
-			offered: opened.rows.map((candidate) => candidate.name),
-		});
+		throw fail(
+			"unknown-list",
+			`no list named ${request.name} is offered for this handle`,
+			{
+				handle: request.handle,
+				list: request.name,
+				offered: opened.rows.map((candidate) => candidate.name),
+			},
+		);
 	}
 
 	if (row.checked) {
 		return request.apply
-			? { dryRun: false, added: false, alreadyMember: true, handle: request.handle, list: request.name, was: true }
+			? {
+					dryRun: false,
+					added: false,
+					alreadyMember: true,
+					handle: request.handle,
+					list: request.name,
+					was: true,
+				}
 			: {
 					dryRun: true,
 					action: "page list member add",
@@ -129,9 +165,15 @@ export async function execute(surface: ListSurface, request: MemberRequest): Pro
 	const picked = await surface.pick(request.name);
 	const limited = rateLimit(picked.alerts);
 	if (limited !== null) {
-		throw fail("rate-limited", limited, { handle: request.handle, list: request.name, stage: "pick" });
+		throw fail("rate-limited", limited, {
+			handle: request.handle,
+			list: request.name,
+			stage: "pick",
+		});
 	}
-	const staged = picked.rows.find((candidate) => candidate.name === request.name);
+	const staged = picked.rows.find(
+		(candidate) => candidate.name === request.name,
+	);
 	if (staged === undefined || staged.checked !== true) {
 		throw fail("cdp-error", "the row did not flip to checked", {
 			handle: request.handle,
@@ -143,19 +185,35 @@ export async function execute(surface: ListSurface, request: MemberRequest): Pro
 	const saved = await surface.save();
 	const denied = rateLimit(saved.alerts);
 	if (denied !== null) {
-		throw fail("rate-limited", denied, { handle: request.handle, list: request.name, stage: "save" });
+		throw fail("rate-limited", denied, {
+			handle: request.handle,
+			list: request.name,
+			stage: "save",
+		});
 	}
 	// A row that is back to unchecked while the dialog is still open means the
 	// page reverted the staging: report that instead of claiming a write.
-	const reverted = saved.rows.find((candidate) => candidate.name === request.name);
-	if (saved.rows.length > 0 && reverted !== undefined && reverted.checked !== true) {
+	const reverted = saved.rows.find(
+		(candidate) => candidate.name === request.name,
+	);
+	if (
+		saved.rows.length > 0 &&
+		reverted !== undefined &&
+		reverted.checked !== true
+	) {
 		throw fail("cdp-error", "the row reverted after Save", {
 			handle: request.handle,
 			list: request.name,
 		});
 	}
 
-	return { dryRun: false, added: true, handle: request.handle, list: request.name, was: false };
+	return {
+		dryRun: false,
+		added: true,
+		handle: request.handle,
+		list: request.name,
+		was: false,
+	};
 }
 
 /**
@@ -201,12 +259,22 @@ export async function withListMember<T>(
 	// simply has not rendered yet, which reads as a green light to apply.
 	return withPage(
 		url,
-		{ ready: readyExpression(), timeout: 15_000, ephemeral: true, onNotReady: "fail" },
+		{
+			ready: readyExpression(),
+			timeout: 15_000,
+			ephemeral: true,
+			onNotReady: "fail",
+		},
 		async (page) => {
 			await focus(page.session);
 			const surface = surfaceOf(page.session);
 			try {
-				return await body({ session: page.session, tab: page.tab, url: page.href, surface });
+				return await body({
+					session: page.session,
+					tab: page.tab,
+					url: page.href,
+					surface,
+				});
 			} finally {
 				await surface.close();
 			}

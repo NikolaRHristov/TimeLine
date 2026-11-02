@@ -1,11 +1,13 @@
-import type { CommandDefinition } from "../Parser.ts";
-import { universal } from "../Parser.ts";
+import { universal, type CommandDefinition } from "../Parser.ts";
 
 /** The command table, rendered from the same data the parser matches against. */
 export function commandList(commands: readonly CommandDefinition[]): string {
-	const width = Math.max(...commands.map((command) => command.path.join(" ").length));
+	const width = Math.max(
+		...commands.map((command) => command.path.join(" ").length),
+	);
 	const lines = commands.map(
-		(command) => `  ${command.path.join(" ").padEnd(width)}  ${command.summary}`,
+		(command) =>
+			`  ${command.path.join(" ").padEnd(width)}  ${command.summary}`,
 	);
 	return [
 		"maintain - a clap-shaped CLI over the Chrome DevTools Protocol.",
@@ -35,15 +37,24 @@ export function commandHelp(command: CommandDefinition): string {
 	usage.push("[--json] [--schema] [--help]");
 
 	const rows = [
-		...command.options.map((definition) => ({ definition, required: definition.required === true })),
+		...command.options.map((definition) => ({
+			definition,
+			required: definition.required === true,
+		})),
 		...universal.map((definition) => ({ definition, required: false })),
 	];
-	const nameWidth = Math.max(...rows.map(({ definition }) => `--${definition.name}`.length));
-	const kindWidth = Math.max(...rows.map(({ definition }) => definition.kind.length));
+	const nameWidth = Math.max(
+		...rows.map(({ definition }) => `--${definition.name}`.length),
+	);
+	const kindWidth = Math.max(
+		...rows.map(({ definition }) => definition.kind.length),
+	);
 	const lines = rows.map(({ definition, required }) => {
 		const name = `--${definition.name}`.padEnd(nameWidth);
 		const kind = definition.kind.padEnd(kindWidth);
-		const values = definition.values ? ` (${definition.values.join("|")})` : "";
+		const values = definition.values
+			? ` (${definition.values.join("|")})`
+			: "";
 		const repeat = definition.repeat === true ? " repeatable" : "";
 		const required_ = required ? " required" : "";
 		return `  ${name}  ${kind}  ${definition.description}${values}${repeat}${required_}`;

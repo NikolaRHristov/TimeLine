@@ -40,15 +40,26 @@ export type ListMemberResult = {
 	alerts: string[];
 };
 
-async function inPage(request: { op: string; name?: string }): Promise<unknown> {
-	const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-	const text = (node: Element | null): string => (node === null ? "" : (node.textContent ?? "").trim());
+async function inPage(request: {
+	op: string;
+	name?: string;
+}): Promise<unknown> {
+	const sleep = (ms: number): Promise<void> =>
+		new Promise((resolve) => setTimeout(resolve, ms));
+	const text = (node: Element | null): string =>
+		node === null ? "" : (node.textContent ?? "").trim();
 
 	/** The dialog with the most nodes: the page keeps smaller ones mounted too. */
 	const dialog = (): Element | null => {
 		let best: Element | null = null;
-		for (const candidate of Array.from(document.querySelectorAll('[role="dialog"]'))) {
-			if (best === null || candidate.querySelectorAll("*").length > best.querySelectorAll("*").length) {
+		for (const candidate of Array.from(
+			document.querySelectorAll('[role="dialog"]'),
+		)) {
+			if (
+				best === null ||
+				candidate.querySelectorAll("*").length >
+					best.querySelectorAll("*").length
+			) {
 				best = candidate;
 			}
 		}
@@ -57,7 +68,9 @@ async function inPage(request: { op: string; name?: string }): Promise<unknown> 
 
 	const cells = (): Element[] => {
 		const root = dialog();
-		return root === null ? [] : Array.from(root.querySelectorAll('[data-testid="listCell"]'));
+		return root === null
+			? []
+			: Array.from(root.querySelectorAll('[data-testid="listCell"]'));
 	};
 
 	/** "Alpha·70 membersExample Person@example_handle" -> "Alpha". */
@@ -67,10 +80,15 @@ async function inPage(request: { op: string; name?: string }): Promise<unknown> 
 	};
 
 	const rows = (): { name: string; checked: boolean }[] =>
-		cells().map((cell) => ({ name: nameOf(cell), checked: cell.getAttribute("aria-checked") === "true" }));
+		cells().map((cell) => ({
+			name: nameOf(cell),
+			checked: cell.getAttribute("aria-checked") === "true",
+		}));
 
 	const alerts = (): string[] =>
-		Array.from(document.querySelectorAll('[role="alert"], [data-testid="toast"]'))
+		Array.from(
+			document.querySelectorAll('[role="alert"], [data-testid="toast"]'),
+		)
 			.map((node) => text(node))
 			.filter((message) => message !== "");
 
@@ -78,12 +96,16 @@ async function inPage(request: { op: string; name?: string }): Promise<unknown> 
 		const root = dialog();
 		if (root === null) return null;
 		return (
-			Array.from(root.querySelectorAll('[role="button"], button')).find((node) => /^save$/i.test(text(node))) ?? null
+			Array.from(root.querySelectorAll('[role="button"], button')).find(
+				(node) => /^save$/i.test(text(node)),
+			) ?? null
 		);
 	};
 
 	const enabled = (node: Element | null): boolean =>
-		node !== null && (node as HTMLButtonElement).disabled !== true && node.getAttribute("aria-disabled") !== "true";
+		node !== null &&
+		(node as HTMLButtonElement).disabled !== true &&
+		node.getAttribute("aria-disabled") !== "true";
 
 	const snapshot = (extra: Record<string, unknown> = {}): unknown => {
 		const read = rows();
@@ -110,10 +132,19 @@ async function inPage(request: { op: string; name?: string }): Promise<unknown> 
 
 	if (request.op === "close") {
 		const root = dialog();
-		const closeButton = root === null ? null : root.querySelector('[data-testid="app-bar-close"]');
+		const closeButton =
+			root === null
+				? null
+				: root.querySelector('[data-testid="app-bar-close"]');
 		const clicked = press(closeButton);
 		if (!clicked) {
-			document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", keyCode: 27, bubbles: true }));
+			document.dispatchEvent(
+				new KeyboardEvent("keydown", {
+					key: "Escape",
+					keyCode: 27,
+					bubbles: true,
+				}),
+			);
 		}
 		await sleep(400);
 		return snapshot({ clicked });
@@ -131,15 +162,17 @@ async function inPage(request: { op: string; name?: string }): Promise<unknown> 
 		for (let attempt = 0; attempt < 25 && item === null; attempt += 1) {
 			await sleep(120);
 			item =
-				Array.from(document.querySelectorAll('[role="menuitem"]')).find((node) =>
-					/add\/remove from lists/i.test(node.textContent ?? ""),
+				Array.from(document.querySelectorAll('[role="menuitem"]')).find(
+					(node) =>
+						/add\/remove from lists/i.test(node.textContent ?? ""),
 				) ?? null;
 		}
 		if (item === null) return snapshot({ opened: false });
 		press(item);
 
 		/** The dialog fetches the account's lists before it has any row. */
-		for (let attempt = 0; attempt < 50 && rows().length === 0; attempt += 1) await sleep(150);
+		for (let attempt = 0; attempt < 50 && rows().length === 0; attempt += 1)
+			await sleep(150);
 		return snapshot({ opened: true });
 	}
 
@@ -147,7 +180,10 @@ async function inPage(request: { op: string; name?: string }): Promise<unknown> 
 		const wanted = request.name ?? "";
 		const matches = cells().filter((cell) => nameOf(cell) === wanted);
 		if (matches.length !== 1) {
-			return snapshot({ found: matches.length === 1, ambiguous: matches.length > 1 });
+			return snapshot({
+				found: matches.length === 1,
+				ambiguous: matches.length > 1,
+			});
 		}
 		const match = matches[0];
 		if (match === undefined) return snapshot({ found: false });

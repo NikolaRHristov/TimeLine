@@ -1,12 +1,15 @@
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { relative } from "node:path";
+
+import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { load, root } from "../../../Configuration/Load/Load.ts";
+import {
+	Source as Sources,
+	type Source,
+} from "../../../Model/Source/Source.ts";
+import type { Visibility } from "../../../Store/Model/Model.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
-import type { Source } from "../../../Model/Source/Source.ts";
-import { Source as Sources } from "../../../Model/Source/Source.ts";
-import type { Visibility } from "../../../Store/Model/Model.ts";
 
 /**
  * What each store holds, without reading any post's content.
@@ -28,13 +31,23 @@ export const Definition: CommandDefinition = {
 		const publicStore = openPublic(contentDirectory());
 		const posts = shadow.all();
 
-		const byVisibility: Record<Visibility, number> = { shadow: 0, public: 0, hidden: 0 };
-		const bySource: Record<Source, number> = { bookmark: 0, like: 0, history: 0 };
+		const byVisibility: Record<Visibility, number> = {
+			shadow: 0,
+			public: 0,
+			hidden: 0,
+		};
+		const bySource: Record<Source, number> = {
+			bookmark: 0,
+			like: 0,
+			history: 0,
+		};
 
 		for (const post of posts) {
-			byVisibility[post.visibility] = (byVisibility[post.visibility] ?? 0) + 1;
+			byVisibility[post.visibility] =
+				(byVisibility[post.visibility] ?? 0) + 1;
 			for (const source of Sources) {
-				if (post.observations.some((entry) => entry.source === source)) bySource[source] += 1;
+				if (post.observations.some((entry) => entry.source === source))
+					bySource[source] += 1;
 			}
 		}
 

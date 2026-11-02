@@ -11,7 +11,10 @@ type Pending = {
 
 export type CdpClient = {
 	/** Send one protocol command; resolves with its `result`. */
-	send<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T>;
+	send<T = unknown>(
+		method: string,
+		params?: Record<string, unknown>,
+	): Promise<T>;
 	/** Subscribe to a protocol event by method name. */
 	on(method: string, handler: (params: unknown) => void): void;
 	/** True once the socket is gone; further sends fail fast. */
@@ -28,11 +31,20 @@ export type ConnectOptions = { timeout?: number };
  * pending call is rejected when the socket closes, so a dead tab surfaces as
  * `cdp-unreachable` instead of a hung promise.
  */
-export async function connect(webSocketDebuggerUrl: string, options: ConnectOptions = {}): Promise<CdpClient> {
+export async function connect(
+	webSocketDebuggerUrl: string,
+	options: ConnectOptions = {},
+): Promise<CdpClient> {
 	const timeout = options.timeout ?? 15_000;
 	const socket = await new Promise<WebSocket>((resolve, reject) => {
 		const timer = setTimeout(() => {
-			reject(fail("cdp-unreachable", "opening the target websocket timed out", { url: webSocketDebuggerUrl }));
+			reject(
+				fail(
+					"cdp-unreachable",
+					"opening the target websocket timed out",
+					{ url: webSocketDebuggerUrl },
+				),
+			);
 		}, timeout);
 		let socket: WebSocket;
 		try {
@@ -42,7 +54,8 @@ export async function connect(webSocketDebuggerUrl: string, options: ConnectOpti
 			reject(
 				fail("cdp-unreachable", "could not open the target websocket", {
 					url: webSocketDebuggerUrl,
-					reason: error instanceof Error ? error.message : String(error),
+					reason:
+						error instanceof Error ? error.message : String(error),
 				}),
 			);
 			return;
@@ -53,7 +66,13 @@ export async function connect(webSocketDebuggerUrl: string, options: ConnectOpti
 		});
 		socket.addEventListener("error", () => {
 			clearTimeout(timer);
-			reject(fail("cdp-unreachable", "the target websocket refused the connection", { url: webSocketDebuggerUrl }));
+			reject(
+				fail(
+					"cdp-unreachable",
+					"the target websocket refused the connection",
+					{ url: webSocketDebuggerUrl },
+				),
+			);
 		});
 	});
 
@@ -72,7 +91,13 @@ export async function connect(webSocketDebuggerUrl: string, options: ConnectOpti
 	};
 
 	socket.addEventListener("message", (event: MessageEvent) => {
-		let message: { id?: number; method?: string; params?: unknown; result?: unknown; error?: CdpError };
+		let message: {
+			id?: number;
+			method?: string;
+			params?: unknown;
+			result?: unknown;
+			error?: CdpError;
+		};
 		try {
 			message = JSON.parse(String(event.data));
 		} catch {
@@ -86,10 +111,14 @@ export async function connect(webSocketDebuggerUrl: string, options: ConnectOpti
 			clearTimeout(entry.timer);
 			if (message.error !== undefined) {
 				entry.reject(
-					fail("cdp-error", `${entry.method}: ${message.error.message}`, {
-						method: entry.method,
-						code: message.error.code,
-					}),
+					fail(
+						"cdp-error",
+						`${entry.method}: ${message.error.message}`,
+						{
+							method: entry.method,
+							code: message.error.code,
+						},
+					),
 				);
 				return;
 			}
@@ -98,7 +127,8 @@ export async function connect(webSocketDebuggerUrl: string, options: ConnectOpti
 		}
 
 		if (typeof message.method === "string") {
-			for (const handler of listeners.get(message.method) ?? []) handler(message.params);
+			for (const handler of listeners.get(message.method) ?? [])
+				handler(message.params);
 		}
 	});
 
@@ -110,27 +140,51 @@ export async function connect(webSocketDebuggerUrl: string, options: ConnectOpti
 	});
 
 	return {
-		send<T = unknown>(method: string, params: Record<string, unknown> = {}): Promise<T> {
+		send<T = unknown>(
+			method: string,
+			params: Record<string, unknown> = {},
+		): Promise<T> {
 			if (gone) {
-				return Promise.reject(fail("cdp-unreachable", "the target websocket is closed", { method }));
+				return Promise.reject(
+					fail("cdp-unreachable", "the target websocket is closed", {
+						method,
+					}),
+				);
 			}
 			const id = (sequence += 1);
 			return new Promise<T>((resolve, reject) => {
 				const timer = setTimeout(() => {
 					pending.delete(id);
-					reject(fail("cdp-error", `${method} timed out`, { method, timeout }));
+					reject(
+						fail("cdp-error", `${method} timed out`, {
+							method,
+							timeout,
+						}),
+					);
 				}, timeout);
-				pending.set(id, { method, resolve: resolve as (value: unknown) => void, reject, timer });
+				pending.set(id, {
+					method,
+					resolve: resolve as (value: unknown) => void,
+					reject,
+					timer,
+				});
 				try {
 					socket.send(JSON.stringify({ id, method, params }));
 				} catch (error) {
 					clearTimeout(timer);
 					pending.delete(id);
 					reject(
-						fail("cdp-unreachable", "could not send on the target websocket", {
-							method,
-							reason: error instanceof Error ? error.message : String(error),
-						}),
+						fail(
+							"cdp-unreachable",
+							"could not send on the target websocket",
+							{
+								method,
+								reason:
+									error instanceof Error
+										? error.message
+										: String(error),
+							},
+						),
 					);
 				}
 			});
@@ -150,7 +204,11 @@ export async function connect(webSocketDebuggerUrl: string, options: ConnectOpti
 			gone = true;
 			for (const [, entry] of pending) {
 				clearTimeout(entry.timer);
-				entry.reject(fail("cdp-unreachable", "the session was closed", { method: entry.method }));
+				entry.reject(
+					fail("cdp-unreachable", "the session was closed", {
+						method: entry.method,
+					}),
+				);
 			}
 			pending.clear();
 			try {

@@ -80,7 +80,28 @@ export type MemberRequest = {
  * different shapes rather than one shape with holes.
  */
 export type MemberReport =
-	| { dryRun: true; action: "page list member add"; handle: string; list: string; member: false; wouldAdd: true }
-	| { dryRun: true; action: "page list member add"; handle: string; list: string; member: true; wouldAdd: false }
+	| {
+			dryRun: true;
+			action: "page list member add";
+			handle: string;
+			list: string;
+			member: false;
+			wouldAdd: true;
+	  }
+	| {
+			dryRun: true;
+			action: "page list member add";
+			handle: string;
+			list: string;
+			member: true;
+			wouldAdd: false;
+	  }
 	| { dryRun: false; added: true; handle: string; list: string; was: false }
-	| { dryRun: false; added: false; alreadyMember: true; handle: string; list: string; was: true };
+	| {
+			dryRun: false;
+			added: false;
+			alreadyMember: true;
+			handle: string;
+			list: string;
+			was: true;
+	  };

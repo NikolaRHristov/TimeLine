@@ -24,7 +24,13 @@ function capture<T>(work: () => T): { value: T; text: string } {
 }
 
 test("a page that became ready is handed over silently", () => {
-	const { text } = capture(() => assertReady(true, { expression: EXPRESSION, timeout: 15_000, url: URL_ }));
+	const { text } = capture(() =>
+		assertReady(true, {
+			expression: EXPRESSION,
+			timeout: 15_000,
+			url: URL_,
+		}),
+	);
 
 	assert.equal(text, "");
 });
@@ -33,7 +39,11 @@ test("a page that never became ready fails as page-not-ready, naming what was wa
 	let thrown: unknown = null;
 	const { text } = capture(() => {
 		try {
-			assertReady(false, { expression: EXPRESSION, timeout: 15_000, url: URL_ });
+			assertReady(false, {
+				expression: EXPRESSION,
+				timeout: 15_000,
+				url: URL_,
+			});
 		} catch (error) {
 			thrown = error;
 		}
@@ -56,11 +66,19 @@ test("a page that never became ready fails as page-not-ready, naming what was wa
 
 test("a scrape warns instead of failing, so the posts that did render are read", () => {
 	const { value, text } = capture(() =>
-		assertReady(false, { expression: EXPRESSION, timeout: 25_000, url: URL_, mode: "warn" }),
+		assertReady(false, {
+			expression: EXPRESSION,
+			timeout: 25_000,
+			url: URL_,
+			mode: "warn",
+		}),
 	);
 
 	assert.equal(value, undefined);
-	assert.match(text, /^maintain: the page never became ready within 25000 ms: /);
+	assert.match(
+		text,
+		/^maintain: the page never became ready within 25000 ms: /,
+	);
 	assert.match(text, /article/);
 	assert.match(text, /https:\/\/x\.com\/example/);
 	assert.match(text, /continuing\n$/);

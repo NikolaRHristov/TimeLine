@@ -1,15 +1,22 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+
 import { flag } from "../Cli/Parser/Argument/Flag.ts";
 import { option } from "../Cli/Parser/Argument/Option.ts";
-import type { CommandDefinition } from "../Cli/Parser/Parser.ts";
-import { parse } from "../Cli/Parser/Parser.ts";
 import { isFailure } from "../Cli/Parser/Output/Failure.ts";
+import { parse, type CommandDefinition } from "../Cli/Parser/Parser.ts";
 import { schema } from "../Cli/Schema/Schema.ts";
 import { Definition as PostLike } from "../Command/Post/Like/Like.ts";
 
 const commands: CommandDefinition[] = [
-	{ path: ["tab", "list"], summary: "list", options: [], async run() { return {}; } },
+	{
+		path: ["tab", "list"],
+		summary: "list",
+		options: [],
+		async run() {
+			return {};
+		},
+	},
 	{
 		path: ["post", "like"],
 		summary: "like",
@@ -20,7 +27,9 @@ const commands: CommandDefinition[] = [
 			flag("dry-run", "resolve only"),
 		],
 		alternatives: [["url"], ["tab", "index"]],
-		async run() { return {}; },
+		async run() {
+			return {};
+		},
 	},
 	{
 		path: ["post", "like", "remove"],
@@ -29,7 +38,9 @@ const commands: CommandDefinition[] = [
 			option("url", "string", "permalink", { required: true }),
 			option("payload", "json", "json"),
 		],
-		async run() { return {}; },
+		async run() {
+			return {};
+		},
 	},
 ];
 
@@ -44,7 +55,10 @@ const codeOf = (run: () => unknown): string => {
 };
 
 test("a command path and its options are split at the first flag", () => {
-	const parsed = parse(["post", "like", "--url", "https://x.com/a/status/1", "--dry-run"], commands);
+	const parsed = parse(
+		["post", "like", "--url", "https://x.com/a/status/1", "--dry-run"],
+		commands,
+	);
 	assert.equal(parsed.command?.path.join(" "), "post like");
 	assert.equal(parsed.values["url"], "https://x.com/a/status/1");
 	assert.equal(parsed.values["dry-run"], true);
@@ -68,40 +82,73 @@ test("defaults apply when an option is absent", () => {
 });
 
 test("--name=value and --name value are the same", () => {
-	const inline = parse(["post", "like", "--url=https://x.com/a/status/2"], commands);
-	const spaced = parse(["post", "like", "--url", "https://x.com/a/status/2"], commands);
+	const inline = parse(
+		["post", "like", "--url=https://x.com/a/status/2"],
+		commands,
+	);
+	const spaced = parse(
+		["post", "like", "--url", "https://x.com/a/status/2"],
+		commands,
+	);
 	assert.equal(inline.values["url"], spaced.values["url"]);
 });
 
 test("a JSON option keeps its equals signs", () => {
-	const parsed = parse(["post", "like", "remove", "--url", "u", "--payload", '{"q":"a=b"}'], commands);
+	const parsed = parse(
+		["post", "like", "remove", "--url", "u", "--payload", '{"q":"a=b"}'],
+		commands,
+	);
 	assert.deepEqual(parsed.values["payload"], { q: "a=b" });
 });
 
 test("an unknown option is a usage failure, not a crash", () => {
-	assert.equal(codeOf(() => parse(["post", "like", "--nope", "1"], commands)), "usage");
+	assert.equal(
+		codeOf(() => parse(["post", "like", "--nope", "1"], commands)),
+		"usage",
+	);
 });
 
 test("a value option without a value is a usage failure", () => {
-	assert.equal(codeOf(() => parse(["post", "like", "--url"], commands)), "usage");
+	assert.equal(
+		codeOf(() => parse(["post", "like", "--url"], commands)),
+		"usage",
+	);
 });
 
 test("an unknown command is a usage failure", () => {
-	assert.equal(codeOf(() => parse(["post", "nope"], commands)), "usage");
+	assert.equal(
+		codeOf(() => parse(["post", "nope"], commands)),
+		"usage",
+	);
 });
 
 test("a required option is enforced", () => {
-	assert.equal(codeOf(() => parse(["post", "like", "remove"], commands)), "usage");
+	assert.equal(
+		codeOf(() => parse(["post", "like", "remove"], commands)),
+		"usage",
+	);
 });
 
 test("the real `post like` schema is draft 2020-12 and names its flags", () => {
 	const document = schema(PostLike) as Record<string, unknown>;
-	assert.equal(document["$schema"], "https://json-schema.org/draft/2020-12/schema");
+	assert.equal(
+		document["$schema"],
+		"https://json-schema.org/draft/2020-12/schema",
+	);
 	const properties = document["properties"] as Record<string, unknown>;
 	for (const name of ["--url", "--tab", "--index", "--dry-run"]) {
 		assert.ok(name in properties, `missing ${name}`);
 	}
-	assert.equal((properties["--dry-run"] as Record<string, unknown>)["type"], "boolean");
-	assert.equal((properties["--index"] as Record<string, unknown>)["type"], "integer");
-	assert.deepEqual(document["anyOf"], [{ required: ["--url"] }, { required: ["--tab", "--index"] }]);
+	assert.equal(
+		(properties["--dry-run"] as Record<string, unknown>)["type"],
+		"boolean",
+	);
+	assert.equal(
+		(properties["--index"] as Record<string, unknown>)["type"],
+		"integer",
+	);
+	assert.deepEqual(document["anyOf"], [
+		{ required: ["--url"] },
+		{ required: ["--tab", "--index"] },
+	]);
 });

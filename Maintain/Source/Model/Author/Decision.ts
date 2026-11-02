@@ -20,7 +20,12 @@ export type Rules = {
 };
 
 /** One weighted thing that scored for one list. */
-export type Contribution = { name: string; count: number; weight: number; points: number };
+export type Contribution = {
+	name: string;
+	count: number;
+	weight: number;
+	points: number;
+};
 
 /** What one list makes of one author. */
 export type ListScore = {
@@ -91,7 +96,10 @@ function covers(host: string, key: string): boolean {
  * Longest, because `gist.github.com` is a better answer than `github.com` when
  * a rules file weights both, and a host must never score twice for one list.
  */
-function mostSpecific(host: string, weights: Record<string, number>): string | null {
+function mostSpecific(
+	host: string,
+	weights: Record<string, number>,
+): string | null {
 	let found: string | null = null;
 	for (const key of Object.keys(weights)) {
 		if (!covers(host, key)) continue;
@@ -122,7 +130,12 @@ export function score(evidence: Evidence, rules: Rules): ListScore[] {
 			if (count === 0) continue;
 			const earned = weight * count;
 			keywordPoints += earned;
-			contributions.push({ name: term, count, weight, points: round(earned) });
+			contributions.push({
+				name: term,
+				count,
+				weight,
+				points: round(earned),
+			});
 		}
 
 		let domainPoints = 0;
@@ -132,10 +145,18 @@ export function score(evidence: Evidence, rules: Rules): ListScore[] {
 			const weight = domains[key] ?? 0;
 			const earned = weight * hit.count;
 			domainPoints += earned;
-			contributions.push({ name: hit.domain, count: hit.count, weight, points: round(earned) });
+			contributions.push({
+				name: hit.domain,
+				count: hit.count,
+				weight,
+				points: round(earned),
+			});
 		}
 
-		contributions.sort((left, right) => right.points - left.points || compare(left.name, right.name));
+		contributions.sort(
+			(left, right) =>
+				right.points - left.points || compare(left.name, right.name),
+		);
 		scored.push({
 			list,
 			score: round(keywordPoints + domainPoints),
@@ -151,13 +172,17 @@ export function score(evidence: Evidence, rules: Rules): ListScore[] {
 /** The arithmetic in one line, naming at most three contributions. */
 function detail(scored: ListScore): string {
 	if (scored.top.length === 0) return `${scored.list} scored 0`;
-	const shown = scored.top.slice(0, 3).map((entry) => `${entry.name}×${entry.count}=${points(entry.points)}`);
+	const shown = scored.top
+		.slice(0, 3)
+		.map((entry) => `${entry.name}×${entry.count}=${points(entry.points)}`);
 	const rest = scored.top.length - shown.length;
 	return `${scored.list} ${points(scored.score)} (${shown.join(", ")}${rest > 0 ? `, +${rest} more` : ""})`;
 }
 
 function runnerUpText(scored: ListScore | undefined): string {
-	return scored === undefined ? "no other list" : `${scored.list} ${points(scored.score)}`;
+	return scored === undefined
+		? "no other list"
+		: `${scored.list} ${points(scored.score)}`;
 }
 
 /**
@@ -169,7 +194,8 @@ function runnerUpText(scored: ListScore | undefined): string {
  */
 export function decide(evidence: Evidence, rules: Rules): Decision | Ambiguous {
 	const ranked = score(evidence, rules).sort(
-		(left, right) => right.score - left.score || compare(left.list, right.list),
+		(left, right) =>
+			right.score - left.score || compare(left.list, right.list),
 	);
 	const best = ranked[0];
 
@@ -187,7 +213,11 @@ export function decide(evidence: Evidence, rules: Rules): Decision | Ambiguous {
 	const gap = round(best.score - (runnerUp?.score ?? 0));
 	const threshold = rules.threshold;
 
-	if (best.score > 0 && best.score >= threshold.score && gap >= threshold.gap) {
+	if (
+		best.score > 0 &&
+		best.score >= threshold.score &&
+		gap >= threshold.gap
+	) {
 		return {
 			handle: evidence.handle,
 			list: best.list,
@@ -213,7 +243,13 @@ export function decide(evidence: Evidence, rules: Rules): Decision | Ambiguous {
 			? `${detail(best)}; runner-up ${runnerUpText(runnerUp)}; below the ${points(threshold.score)} minimum`
 			: `${detail(best)}; runner-up ${runnerUpText(runnerUp)}; gap ${points(gap)} under ${points(threshold.gap)}`;
 
-	return { handle: evidence.handle, list: null, score: best.score, gap, reason };
+	return {
+		handle: evidence.handle,
+		list: null,
+		score: best.score,
+		gap,
+		reason,
+	};
 }
 
 /**

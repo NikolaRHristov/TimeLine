@@ -46,7 +46,17 @@ export const Tab = {
 	},
 
 	/** The four fields a tab is allowed to print. */
-	summary(tab: Tab): { id: string; title: string; url: string; active: boolean } {
-		return { id: tab.id, title: tab.title, url: tab.url, active: tab.active };
+	summary(tab: Tab): {
+		id: string;
+		title: string;
+		url: string;
+		active: boolean;
+	} {
+		return {
+			id: tab.id,
+			title: tab.title,
+			url: tab.url,
+			active: tab.active,
+		};
 	},
 };

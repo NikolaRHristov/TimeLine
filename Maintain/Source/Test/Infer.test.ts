@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
+import {
+	existsSync,
+	mkdirSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -11,8 +18,14 @@ import { root } from "../Configuration/Load/Load.ts";
 import { DEFAULT_RULES } from "../Configuration/Rules/Rules.ts";
 import type { Author } from "../Model/Author/Author.ts";
 import type { Evidence } from "../Model/Author/Evidence.ts";
-import type { ModelDecision } from "../Model/Author/Infer.ts";
-import { BATCH_LIMIT, batches, parse, place, prompt } from "../Model/Author/Infer.ts";
+import {
+	BATCH_LIMIT,
+	batches,
+	parse,
+	place,
+	prompt,
+	type ModelDecision,
+} from "../Model/Author/Infer.ts";
 import type { Post } from "../Model/Post/Post.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
@@ -30,14 +43,20 @@ function temporary(): string {
 
 after(async () => {
 	for (const close of servers) await close();
-	for (const path of directories) rmSync(path, { recursive: true, force: true });
+	for (const path of directories)
+		rmSync(path, { recursive: true, force: true });
 });
 
 function authorOf(handle: string): Author {
 	return { handle, name: handle.toUpperCase(), verified: false };
 }
 
-function reading(handle: string, id: string, text: string, links: string[] = []): Post {
+function reading(
+	handle: string,
+	id: string,
+	text: string,
+	links: string[] = [],
+): Post {
 	return {
 		id,
 		url: `https://x.com/${handle}/status/${id}`,
@@ -50,17 +69,26 @@ function reading(handle: string, id: string, text: string, links: string[] = [])
 }
 
 /** An archive on disk, one bookmarked post per entry. */
-function archive(entries: [handle: string, id: string, text: string, links?: string[]][]): string {
+function archive(
+	entries: [handle: string, id: string, text: string, links?: string[]][],
+): string {
 	const directory = temporary();
 	const store = openShadow(directory);
 	for (const [handle, id, text, links] of entries) {
-		store.write(merge(null, reading(handle, id, text, links), { source: "bookmark", at: AT }).post);
+		store.write(
+			merge(null, reading(handle, id, text, links), {
+				source: "bookmark",
+				at: AT,
+			}).post,
+		);
 	}
 	return directory;
 }
 
 /** A content collection on disk holding the given author records. */
-function content(records: { handle: string; lists: string[]; by: string; reason: string }[]): string {
+function content(
+	records: { handle: string; lists: string[]; by: string; reason: string }[],
+): string {
 	const directory = temporary();
 	mkdirSync(join(directory, "Author"), { recursive: true });
 	for (const record of records) {
@@ -74,7 +102,11 @@ function content(records: { handle: string; lists: string[]; by: string; reason:
 					firstSeenAt: AT,
 					postCount: 1,
 					lists: record.lists,
-					decision: { by: record.by, confidence: 1, reason: record.reason },
+					decision: {
+						by: record.by,
+						confidence: 1,
+						reason: record.reason,
+					},
 				},
 				null,
 				"\t",
@@ -86,14 +118,21 @@ function content(records: { handle: string; lists: string[]; by: string; reason:
 }
 
 /** One evidence record, built by hand so a test says what it means. */
-function evidence(handle: string, text: string, links: string[] = []): Evidence {
+function evidence(
+	handle: string,
+	text: string,
+	links: string[] = [],
+): Evidence {
 	const posts = [reading(handle, "1", text, links)];
 	return {
 		handle,
 		name: handle,
 		verified: false,
 		posts: posts.length,
-		domains: links.map((url) => ({ domain: new URL(url).hostname, count: 1 })),
+		domains: links.map((url) => ({
+			domain: new URL(url).hostname,
+			count: 1,
+		})),
 		keywords: {},
 		terms: {},
 		excerpts: posts.map((post) => post.text),
@@ -117,7 +156,9 @@ type Stub = {
  * does with a reply that is not JSON. `handler` sees the user message and the
  * call index, so a test can make the second batch misbehave.
  */
-async function stub(handler: (user: string, index: number) => Answer): Promise<Stub> {
+async function stub(
+	handler: (user: string, index: number) => Answer,
+): Promise<Stub> {
 	const calls: { system: string; user: string }[] = [];
 
 	const server = createServer((request, response) => {
@@ -130,7 +171,11 @@ async function stub(handler: (user: string, index: number) => Answer): Promise<S
 			let messages: { role?: unknown; content?: unknown }[] = [];
 			try {
 				const parsed = JSON.parse(body) as { messages?: unknown };
-				if (Array.isArray(parsed.messages)) messages = parsed.messages as { role?: unknown; content?: unknown }[];
+				if (Array.isArray(parsed.messages))
+					messages = parsed.messages as {
+						role?: unknown;
+						content?: unknown;
+					}[];
 			} catch {
 				messages = [];
 			}
@@ -143,20 +188,38 @@ async function stub(handler: (user: string, index: number) => Answer): Promise<S
 			calls.push({ system: field("system"), user: field("user") });
 
 			const answer = handler(field("user"), calls.length - 1);
-			response.writeHead(answer.status ?? 200, { "content-type": "application/json" });
+			response.writeHead(answer.status ?? 200, {
+				"content-type": "application/json",
+			});
 			response.end(
-				JSON.stringify({ choices: [{ message: { role: "assistant", content: answer.content ?? "" } }] }),
+				JSON.stringify({
+					choices: [
+						{
+							message: {
+								role: "assistant",
+								content: answer.content ?? "",
+							},
+						},
+					],
+				}),
 			);
 		});
 	});
 
-	await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+	await new Promise<void>((resolve) =>
+		server.listen(0, "127.0.0.1", resolve),
+	);
 	const address = server.address() as AddressInfo;
 
-	const close = (): Promise<void> => new Promise<void>((resolve) => server.close(() => resolve()));
+	const close = (): Promise<void> =>
+		new Promise<void>((resolve) => server.close(() => resolve()));
 	servers.push(close);
 
-	return { url: `http://127.0.0.1:${address.port}/v1/chat/completions`, calls, close };
+	return {
+		url: `http://127.0.0.1:${address.port}/v1/chat/completions`,
+		calls,
+		close,
+	};
 }
 
 type Output = {
@@ -221,7 +284,9 @@ async function run(
 
 /** Every handle a request asked about, in the order the prompt listed them. */
 function asked(user: string): string[] {
-	return [...user.matchAll(/^handle: (.+)$/gm)].map((match) => match[1] ?? "");
+	return [...user.matchAll(/^handle: (.+)$/gm)].map(
+		(match) => match[1] ?? "",
+	);
 }
 
 /** A well-formed reply for whatever the request asked about. */
@@ -248,7 +313,9 @@ function ambiguous(count: number): [string, string, string][] {
 }
 
 test("a batch never carries more than the limit, and the last one carries the rest", () => {
-	const records = ambiguous(60).map(([handle]) => evidence(handle, "figma typography compiler"));
+	const records = ambiguous(60).map(([handle]) =>
+		evidence(handle, "figma typography compiler"),
+	);
 	const grouped = batches(records);
 
 	assert.equal(BATCH_LIMIT, 25);
@@ -256,10 +323,7 @@ test("a batch never carries more than the limit, and the last one carries the re
 		grouped.map((group) => group.length),
 		[25, 25, 10],
 	);
-	assert.equal(
-		grouped.flat().length,
-		60,
-	);
+	assert.equal(grouped.flat().length, 60);
 	// Order is preserved, so the same archive always asks the same questions.
 	assert.deepEqual(
 		grouped.flat().map((entry) => entry.handle),
@@ -271,13 +335,18 @@ test("a batch limit below one is refused instead of looping", () => {
 	assert.throws(
 		() => batches([evidence("alpha", "figma")], 0),
 		(error: unknown) =>
-			typeof error === "object" && error !== null && "code" in error && (error as { code: unknown }).code === "usage",
+			typeof error === "object" &&
+			error !== null &&
+			"code" in error &&
+			(error as { code: unknown }).code === "usage",
 	);
 });
 
 test("the prompt is per author over aggregated evidence, not per post", () => {
 	const posts = [
-		reading("designer", "1", "figma typography", ["https://dribbble.com/shots"]),
+		reading("designer", "1", "figma typography", [
+			"https://dribbble.com/shots",
+		]),
 		reading("designer", "2", "figma figma", ["https://dribbble.com/x"]),
 	];
 	const record: Evidence = {
@@ -322,10 +391,17 @@ test("every answer is cached on disk with by:model, and the run says how many it
 	assert.equal(output.counts.deferred, 0);
 	assert.equal(output.batches, 2);
 
-	const record = JSON.parse(readFileSync(join(directory, "Author", "alpha07.json"), "utf8")) as {
+	const record = JSON.parse(
+		readFileSync(join(directory, "Author", "alpha07.json"), "utf8"),
+	) as {
 		handle: string;
 		lists: string[];
-		decision: { by: string; confidence: number; reason: string; score?: number };
+		decision: {
+			by: string;
+			confidence: number;
+			reason: string;
+			score?: number;
+		};
 	};
 	assert.equal(record.handle, "alpha07");
 	assert.deepEqual(record.lists, ["CODE"]);
@@ -357,12 +433,17 @@ test("a second run asks nothing at all and needs no endpoint", async () => {
 test("a reply that is not JSON fails the batch and writes nothing", async () => {
 	const storage = archive(ambiguous(3));
 	const directory = temporary();
-	const server = await stub(() => ({ content: "Sure! Here is my classification: alpha01 looks like CODE." }));
+	const server = await stub(() => ({
+		content: "Sure! Here is my classification: alpha01 looks like CODE.",
+	}));
 
 	await assert.rejects(
 		() => run({ storage, content: directory, url: server.url }),
 		(error: unknown) =>
-			typeof error === "object" && error !== null && "code" in error && (error as { code: unknown }).code === "model-reply",
+			typeof error === "object" &&
+			error !== null &&
+			"code" in error &&
+			(error as { code: unknown }).code === "model-reply",
 	);
 
 	// Nothing was cached: the malformed answer left no trace to trust later.
@@ -400,8 +481,16 @@ test("an entry that names an unknown author, an unknown list, or no reason is re
 		content: JSON.stringify({
 			decisions: [
 				{ handle: "alpha01", list: "CODE", reason: "compiler talk" },
-				{ handle: "stranger", list: "CODE", reason: "not in this batch" },
-				{ handle: "alpha02", list: "SPORTS", reason: "a list nobody configured" },
+				{
+					handle: "stranger",
+					list: "CODE",
+					reason: "not in this batch",
+				},
+				{
+					handle: "alpha02",
+					list: "SPORTS",
+					reason: "a list nobody configured",
+				},
 				{ handle: "alpha03", list: "CODE", reason: "   " },
 			],
 		}),
@@ -423,28 +512,55 @@ test("an entry that names an unknown author, an unknown list, or no reason is re
 
 test("a manual decision is never asked about and never rewritten", async () => {
 	const storage = archive(ambiguous(2));
-	const directory = content([{ handle: "alpha01", lists: ["UI"], by: "manual", reason: "I know this account" }]);
-	const before = readFileSync(join(directory, "Author", "alpha01.json"), "utf8");
+	const directory = content([
+		{
+			handle: "alpha01",
+			lists: ["UI"],
+			by: "manual",
+			reason: "I know this account",
+		},
+	]);
+	const before = readFileSync(
+		join(directory, "Author", "alpha01.json"),
+		"utf8",
+	);
 	const server = await stub((user) => ({ content: answer(user, "CODE") }));
 
 	const output = await run({ storage, content: directory, url: server.url });
 
 	assert.equal(output.counts.asked, 1);
-	assert.deepEqual(server.calls.flatMap((call) => asked(call.user)), ["alpha02"]);
-	assert.equal(readFileSync(join(directory, "Author", "alpha01.json"), "utf8"), before);
-	assert.deepEqual(output.preserved, [{ handle: "alpha01", list: "UI", reason: "I know this account" }]);
+	assert.deepEqual(
+		server.calls.flatMap((call) => asked(call.user)),
+		["alpha02"],
+	);
+	assert.equal(
+		readFileSync(join(directory, "Author", "alpha01.json"), "utf8"),
+		before,
+	);
+	assert.deepEqual(output.preserved, [
+		{ handle: "alpha01", list: "UI", reason: "I know this account" },
+	]);
 });
 
 test("a decline is a decision too: cached, list untouched, and not asked twice", async () => {
 	const storage = archive(ambiguous(1));
-	const directory = content([{ handle: "alpha01", lists: ["UI"], by: "rule", reason: "an earlier guess" }]);
+	const directory = content([
+		{
+			handle: "alpha01",
+			lists: ["UI"],
+			by: "rule",
+			reason: "an earlier guess",
+		},
+	]);
 	const server = await stub((user) => ({ content: answer(user, null) }));
 
 	const first = await run({ storage, content: directory, url: server.url });
 	assert.equal(first.counts.declined, 1);
 	assert.equal(first.counts.placed, 0);
 
-	const record = JSON.parse(readFileSync(join(directory, "Author", "alpha01.json"), "utf8")) as {
+	const record = JSON.parse(
+		readFileSync(join(directory, "Author", "alpha01.json"), "utf8"),
+	) as {
 		lists: string[];
 		decision: { by: string; confidence: number };
 	};
@@ -463,7 +579,10 @@ test("--limit prices a partial run, and the rest is reported as deferred", async
 	const directory = temporary();
 	const server = await stub((user) => ({ content: answer(user) }));
 
-	const output = await run({ storage, content: directory, url: server.url }, { limit: 10 });
+	const output = await run(
+		{ storage, content: directory, url: server.url },
+		{ limit: 10 },
+	);
 
 	assert.equal(output.counts.asked, 10);
 	assert.equal(output.counts.deferred, 20);
@@ -476,7 +595,10 @@ test("--dry-run asks nothing and spends nothing", async () => {
 	const directory = temporary();
 	const server = await stub((user) => ({ content: answer(user) }));
 
-	const output = await run({ storage, content: directory, url: server.url }, { "dry-run": true });
+	const output = await run(
+		{ storage, content: directory, url: server.url },
+		{ "dry-run": true },
+	);
 
 	assert.equal(server.calls.length, 0);
 	assert.equal(output.counts.asked, 0);
@@ -492,19 +614,28 @@ test("a run with work to do and no endpoint configured is a named failure", asyn
 	await assert.rejects(
 		() => run({ storage, content: directory, url: "" }),
 		(error: unknown) =>
-			typeof error === "object" && error !== null && "code" in error && (error as { code: unknown }).code === "no-model",
+			typeof error === "object" &&
+			error !== null &&
+			"code" in error &&
+			(error as { code: unknown }).code === "no-model",
 	);
 });
 
 test("an endpoint that refuses the request is a model-error, not a crash", async () => {
 	const storage = archive(ambiguous(1));
 	const directory = temporary();
-	const server = await stub(() => ({ status: 401, content: '{"error":"bad key"}' }));
+	const server = await stub(() => ({
+		status: 401,
+		content: '{"error":"bad key"}',
+	}));
 
 	await assert.rejects(
 		() => run({ storage, content: directory, url: server.url }),
 		(error: unknown) =>
-			typeof error === "object" && error !== null && "code" in error && (error as { code: unknown }).code === "model-error",
+			typeof error === "object" &&
+			error !== null &&
+			"code" in error &&
+			(error as { code: unknown }).code === "model-error",
 	);
 });
 
@@ -518,12 +649,20 @@ test("a fenced reply is still JSON, and a bare array is accepted", () => {
 		lists,
 	);
 	assert.deepEqual(
-		fenced.decisions.map((decision) => [decision.handle, decision.list, decision.by]),
+		fenced.decisions.map((decision) => [
+			decision.handle,
+			decision.list,
+			decision.by,
+		]),
 		[["alpha01", "UI", "model"]],
 	);
 	assert.deepEqual(fenced.unanswered, []);
 
-	const bare = parse('[{"handle":"alpha01","list":null,"reason":"nothing fits"}]', handles, lists);
+	const bare = parse(
+		'[{"handle":"alpha01","list":null,"reason":"nothing fits"}]',
+		handles,
+		lists,
+	);
 	assert.equal(bare.decisions[0]?.list, null);
 	// Optional numbers are carried when given and absent when not.
 	assert.equal(bare.decisions[0]?.score, undefined);
@@ -543,7 +682,14 @@ test("place() keeps the history a classification must not rewrite", () => {
 	const placed = place(
 		existing,
 		evidence("alpha01", "figma"),
-		{ handle: "alpha01", list: "CODE", reason: "compiler talk", by: "model", score: 4, gap: 2 },
+		{
+			handle: "alpha01",
+			list: "CODE",
+			reason: "compiler talk",
+			by: "model",
+			score: 4,
+			gap: 2,
+		},
 		AT,
 	);
 
@@ -551,14 +697,22 @@ test("place() keeps the history a classification must not rewrite", () => {
 	assert.equal(placed.postCount, 9);
 	assert.equal(placed.name, "Alpha");
 	assert.deepEqual(placed.lists, ["CODE"]);
-	assert.deepEqual(placed.decision, { by: "model", confidence: 4, reason: "compiler talk", score: 4, gap: 2 });
+	assert.deepEqual(placed.decision, {
+		by: "model",
+		confidence: 4,
+		reason: "compiler talk",
+		score: 4,
+		gap: 2,
+	});
 });
 
 test("the model pass takes its notion of ambiguity from the rules file", async () => {
 	// A threshold raised to an impossible height: every author must become
 	// ambiguous, which can only happen if the command reads the file rather
 	// than restating a cut-off in code.
-	const rules = JSON.parse(readFileSync(join(root(), DEFAULT_RULES), "utf8")) as { threshold: unknown };
+	const rules = JSON.parse(
+		readFileSync(join(root(), DEFAULT_RULES), "utf8"),
+	) as { threshold: unknown };
 	rules.threshold = { score: 1000, gap: 1000 };
 	const file = join(temporary(), "Rules.json");
 	writeFileSync(file, JSON.stringify(rules), "utf8");
@@ -567,7 +721,12 @@ test("the model pass takes its notion of ambiguity from the rules file", async (
 	const directory = temporary();
 	const server = await stub((user) => ({ content: answer(user) }));
 
-	const output = await run({ storage, content: directory, url: server.url, rules: file });
+	const output = await run({
+		storage,
+		content: directory,
+		url: server.url,
+		rules: file,
+	});
 
 	assert.equal(output.counts.ambiguous, 3);
 	assert.equal(output.counts.asked, 3);

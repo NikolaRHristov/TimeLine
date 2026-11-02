@@ -29,13 +29,20 @@ function capture<T>(work: () => T): { value: T; text: string } {
 /** A rules file with weights for the given slugs, and a threshold that passes. */
 function rules(...slugs: string[]): Rules {
 	const lists: Rules["lists"] = {};
-	for (const slug of slugs) lists[slug] = { keywords: { term: 1 }, domains: {} };
+	for (const slug of slugs)
+		lists[slug] = { keywords: { term: 1 }, domains: {} };
 	return { version: 1, threshold: { score: 1, gap: 1 }, lists };
 }
 
 function configuration(...slugs: string[]) {
 	return validate(
-		{ lists: slugs.map((slug, index) => ({ slug, name: slug.toUpperCase(), id: String(index + 1) })) },
+		{
+			lists: slugs.map((slug, index) => ({
+				slug,
+				name: slug.toUpperCase(),
+				id: String(index + 1),
+			})),
+		},
 		"the test map",
 	);
 }
@@ -62,7 +69,10 @@ test("an unknown slug fails unknown-list naming the configured set", () => {
 	assert.equal(isFailure(thrown), true);
 	if (!isFailure(thrown)) return;
 	assert.equal(thrown.code, "unknown-list");
-	assert.equal(thrown.detail, `"foo" is not configured; configured lists: reading, recipes`);
+	assert.equal(
+		thrown.detail,
+		`"foo" is not configured; configured lists: reading, recipes`,
+	);
 	assert.deepEqual(thrown.toObject()["configured"], ["reading", "recipes"]);
 });
 
@@ -76,7 +86,10 @@ test("an empty map says none rather than naming an empty list", () => {
 
 	assert.equal(isFailure(thrown), true);
 	if (!isFailure(thrown)) return;
-	assert.equal(thrown.detail, `"foo" is not configured; configured lists: none`);
+	assert.equal(
+		thrown.detail,
+		`"foo" is not configured; configured lists: none`,
+	);
 	assert.deepEqual(thrown.toObject()["configured"], []);
 });
 
@@ -86,7 +99,9 @@ test("a configured slug resolves to its id", () => {
 });
 
 test("the rules are narrowed to the configured lists, and the rest are dropped", () => {
-	const { value: scoped, text } = capture(() => scope(rules("recipes", "CODE"), configuration("reading", "recipes")));
+	const { value: scoped, text } = capture(() =>
+		scope(rules("recipes", "CODE"), configuration("reading", "recipes")),
+	);
 
 	// `reading` is configured but unweighted: the rules pass cannot place anyone
 	// there, while the model pass may still choose it.
@@ -105,7 +120,9 @@ test("no identifier map leaves the rules file as the vocabulary, and says so", (
 });
 
 test("a map that declares no lists leaves the rules file as the vocabulary, and says so", () => {
-	const { value: scoped, text } = capture(() => scope(rules("CODE"), configuration()));
+	const { value: scoped, text } = capture(() =>
+		scope(rules("CODE"), configuration()),
+	);
 
 	assert.deepEqual(scoped.slugs, ["CODE"]);
 	assert.match(text, /declares no lists/);
@@ -114,7 +131,10 @@ test("a map that declares no lists leaves the rules file as the vocabulary, and 
 test("the content schema takes list slugs as strings, never as an enumeration", () => {
 	// `astro:content` only resolves inside a build, so the claim is read off the
 	// file: this is the second place a closed taxonomy could grow back.
-	const schema = readFileSync(join(root(), "Source/content.config.ts"), "utf8");
+	const schema = readFileSync(
+		join(root(), "Source/content.config.ts"),
+		"utf8",
+	);
 
 	assert.match(schema, /lists: z\.array\(z\.string\(\)\)/);
 	assert.equal(/["'](AI|UI|CODE)["']/.test(schema), false);

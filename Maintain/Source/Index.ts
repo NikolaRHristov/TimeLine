@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { commandHelp, commandList } from "./Cli/Parser/Output/Help.ts";
 import { toFailure } from "./Cli/Parser/Output/Failure.ts";
+import { commandHelp, commandList } from "./Cli/Parser/Output/Help.ts";
 import { parse } from "./Cli/Parser/Parser.ts";
 import { commands } from "./Cli/Registry/Registry.ts";
 import { schema } from "./Cli/Schema/Schema.ts";
@@ -18,7 +18,11 @@ async function main(argv: readonly string[]): Promise<void> {
 	const parsed = parse(argv, commands);
 
 	if (parsed.help === true) {
-		process.stdout.write(parsed.command === null ? commandList(commands) : commandHelp(parsed.command));
+		process.stdout.write(
+			parsed.command === null
+				? commandList(commands)
+				: commandHelp(parsed.command),
+		);
 		return;
 	}
 	if (parsed.command === null) return;
@@ -30,13 +34,22 @@ async function main(argv: readonly string[]): Promise<void> {
 
 	const result = await parsed.command.run(parsed.values);
 	const interactive = process.stdout.isTTY === true && parsed.json === false;
-	process.stdout.write(interactive ? human(parsed.command.path, result) : `${stringify(result)}\n`);
+	process.stdout.write(
+		interactive
+			? human(parsed.command.path, result)
+			: `${stringify(result)}\n`,
+	);
 }
 
 /** The only table in the CLI: the same objects `tab list --json` prints. */
 function human(path: readonly string[], result: unknown): string {
-	if (path.join(" ") === "tab list" && result !== null && typeof result === "object") {
-		const tabs = (result as { tabs?: Record<string, unknown>[] }).tabs ?? [];
+	if (
+		path.join(" ") === "tab list" &&
+		result !== null &&
+		typeof result === "object"
+	) {
+		const tabs =
+			(result as { tabs?: Record<string, unknown>[] }).tabs ?? [];
 		return render(tabs, [
 			{ key: "active", header: "ACTIVE" },
 			{ key: "id", header: "ID" },
@@ -50,7 +63,9 @@ function human(path: readonly string[], result: unknown): string {
 main(process.argv.slice(2)).catch((error: unknown) => {
 	const failure = toFailure(error);
 	if (process.env["MAINTAIN_DEBUG"] !== undefined) {
-		process.stderr.write(`${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`);
+		process.stderr.write(
+			`${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`,
+		);
 	}
 	process.stdout.write(`${stringify(failure.toObject())}\n`);
 	process.exitCode = 2;

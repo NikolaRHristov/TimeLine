@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
+import {
+	existsSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	statSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -8,7 +14,11 @@ import { after, test } from "node:test";
 import { isFailure } from "../Cli/Parser/Output/Failure.ts";
 import { Definition as Init } from "../Command/Config/Init/Init.ts";
 import { Definition as Show } from "../Command/Config/Show/Show.ts";
-import { EXAMPLE_CONFIGURATION, load, root } from "../Configuration/Load/Load.ts";
+import {
+	EXAMPLE_CONFIGURATION,
+	load,
+	root,
+} from "../Configuration/Load/Load.ts";
 
 /** One scratch root per process; every case gets its own map below it. */
 const scratch = mkdtempSync(join(tmpdir(), "maintain-config-"));
@@ -34,7 +44,10 @@ function at(name: string): string {
 
 type Result = Record<string, unknown>;
 
-async function run(definition: typeof Init, values: Record<string, unknown>): Promise<Result> {
+async function run(
+	definition: typeof Init,
+	values: Record<string, unknown>,
+): Promise<Result> {
 	return (await definition.run(values as never)) as Result;
 }
 
@@ -69,7 +82,10 @@ test("config init writes the tracked example, creating the parent directory", as
 	assert.equal(existsSync(path), true);
 	assert.equal((result["next"] as string[]).length, 3);
 
-	const written = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+	const written = JSON.parse(readFileSync(path, "utf8")) as Record<
+		string,
+		unknown
+	>;
 	assert.equal(written["profile"], "");
 	assert.deepEqual(written["lists"], []);
 	// The map is the person's own: it is not world-readable.
@@ -96,7 +112,11 @@ test("config init --force composes: a later step does not undo an earlier one", 
 	await run(Init, {});
 	await run(Init, { force: true, profile: "someone" });
 	await run(Init, { force: true, list: ["reading=111"] });
-	const result = await run(Init, { force: true, list: ["recipes=222"], "cdp-port": 9333 });
+	const result = await run(Init, {
+		force: true,
+		list: ["recipes=222"],
+		"cdp-port": 9333,
+	});
 
 	// The onboarding sequence the command prints runs `init --force` once per
 	// fact. Each run must build on the last, or the sequence is a trap.
@@ -155,7 +175,15 @@ test("a missing map names the absolute path and a copy command that runs", () =>
 	// Both paths are absolute, so the command works from anywhere - and it is
 	// executed here, because a copy command that only looks right is useless.
 	assert.match(copy, new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-	assert.match(copy, new RegExp(join(root(), EXAMPLE_CONFIGURATION).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+	assert.match(
+		copy,
+		new RegExp(
+			join(root(), EXAMPLE_CONFIGURATION).replace(
+				/[.*+?^${}()|[\]\\]/g,
+				"\\$&",
+			),
+		),
+	);
 
 	execFileSync("sh", ["-c", copy], { stdio: "ignore" });
 	assert.deepEqual(load().lists, []);

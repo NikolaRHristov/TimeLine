@@ -23,18 +23,18 @@ with identical JSON shapes. See `Reference/Transport.md`.
 
 ## Environment
 
-| Variable              | Default                                                 | Meaning                                  |
-| --------------------- | ------------------------------------------------------- | ---------------------------------------- |
-| `MAINTAIN_CDP_PORT`   | `9222`                                                  | Port of the browser's debugging endpoint |
-| `MAINTAIN_CONFIG`     | `Maintain/Configuration/Local/Configuration.local.json` | Identifier map                           |
-| `MAINTAIN_STORAGE`    | `Maintain/Storage/Shadow`                               | Shadow store root                        |
-| `MAINTAIN_VOCABULARY` | `Configuration/Keyword/Keyword.ts` (tracked default)    | Keyword vocabulary, `{slug: [term, …]}`  |
-| `MAINTAIN_RULES`      | `Maintain/Configuration/Rules/Rules.json`               | Weighted rules for `author classify`     |
-| `MAINTAIN_MODEL_URL`  | unset (required by `author classify infer`)             | OpenAI-compatible chat-completions URL   |
-| `MAINTAIN_MODEL_KEY`  | unset                                                   | Bearer token for that endpoint           |
-| `MAINTAIN_MODEL`      | unset                                                   | Model id to ask for, when the endpoint needs one |
-| `MAINTAIN_MODEL_TIMEOUT` | `120`                                                | Seconds before one request is abandoned  |
-| `MAINTAIN_DEBUG`      | unset                                                   | Print a failure's stack trace to stderr  |
+| Variable                 | Default                                                 | Meaning                                          |
+| ------------------------ | ------------------------------------------------------- | ------------------------------------------------ |
+| `MAINTAIN_CDP_PORT`      | `9222`                                                  | Port of the browser's debugging endpoint         |
+| `MAINTAIN_CONFIG`        | `Maintain/Configuration/Local/Configuration.local.json` | Identifier map                                   |
+| `MAINTAIN_STORAGE`       | `Maintain/Storage/Shadow`                               | Shadow store root                                |
+| `MAINTAIN_VOCABULARY`    | `Configuration/Keyword/Keyword.ts` (tracked default)    | Keyword vocabulary, `{slug: [term, …]}`          |
+| `MAINTAIN_RULES`         | `Maintain/Configuration/Rules/Rules.json`               | Weighted rules for `author classify`             |
+| `MAINTAIN_MODEL_URL`     | unset (required by `author classify infer`)             | OpenAI-compatible chat-completions URL           |
+| `MAINTAIN_MODEL_KEY`     | unset                                                   | Bearer token for that endpoint                   |
+| `MAINTAIN_MODEL`         | unset                                                   | Model id to ask for, when the endpoint needs one |
+| `MAINTAIN_MODEL_TIMEOUT` | `120`                                                   | Seconds before one request is abandoned          |
+| `MAINTAIN_DEBUG`         | unset                                                   | Print a failure's stack trace to stderr          |
 
 Missing config exits 2 with
 `{error:"no-config", expected:"<path>", copy:"<copy command>", next:"maintain config init"}`.
@@ -42,31 +42,31 @@ No command reads identifiers from argv.
 
 ## Commands
 
-| Command                 | Options                                                                 | Result                                                   |
-| ----------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
-| `config init`           | `--profile`, `--list <slug>=<id>` (repeatable), `--cdp-port`, `--force` | `{written,overwritten,profile,lists,cdp,next}`           |
-| `config show`           | `--reveal`, `--list <slug>`                                             | `{path,profile,cdp,lists,routes,content,storage}`        |
-| `tab list`              | -                                                                       | `{tabs:[{id,title,url,active}]}`                         |
-| `tab focus`             | `--id`                                                                  | `{focused:true,id}`                                      |
-| `post extract`          | `--tab`, `--index`                                                      | `{post:{id,url,author,text,postedAt,media,metrics}}`     |
-| `post like`             | `--url` \| `--tab --index`, `--dry-run`                                 | `{liked:true,post:{id,url},was:bool}`                    |
-| `post like remove`      | same                                                                    | `{liked:false,…}`                                        |
-| `post bookmark add`     | same                                                                    | `{bookmarked:true,…}`                                    |
-| `post bookmark remove`  | same                                                                    | `{bookmarked:false,…}`                                   |
-| `page bookmarks open`   | `--tab`                                                                 | `{navigated:true,url,count}`                             |
-| `page bookmarks scrape` | `--limit`, `--max-idle`, `--tab`                                        | `{source,scraped,new,updated,events}`                    |
-| `page list open`        | `--name <slug>`                                                         | `{navigated:true,slug,url}`                              |
-| `page list member add`  | `--name`, `--handle`, `--apply`                                         | `{added:true,handle,list}`                               |
-| `store scrape`          | `--source bookmark\|like\|history`, `--limit`, `--max-idle`, `--tab`    | `{source,scraped,new,updated,events}`                    |
-| `store publish`         | `--id` \| `--source` \| `--since` \| `--all`                            | `{published,unchanged,hidden}`                           |
-| `store hide`            | `--id`                                                                  | `{hidden:true,id,removed,unchanged}`                     |
-| `store status`          | -                                                                       | `{shadow:{…},public:{…}}`                                |
-| `author evidence build` | -                                                                       | `{archive,posts,authors:[…],skipped}`                    |
-| `author classify rules` | -                                                                       | `{rules,threshold,lists,counts,decisions,ambiguous,preserved}` |
-| `author classify infer` | `--limit`, `--dry-run`                                                  | `{counts,batches,asked,decisions,unanswered,rejected,failed,preserved}` |
-| `author distribute apply` | `--apply`, `--dry-run`                                                  | `{counts,plan,written,added,failed,remaining,stopped}`   |
-| `event append`          | `--kind`, `--subject`, `--payload`                                      | `{written:true,path}`                                    |
-| `event tail`            | `--follow`, `--dir shadow\|public`, `--since`, `--interval`             | `{directory,count,events}` or JSON lines                 |
+| Command                   | Options                                                                 | Result                                                                  |
+| ------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `config init`             | `--profile`, `--list <slug>=<id>` (repeatable), `--cdp-port`, `--force` | `{written,overwritten,profile,lists,cdp,next}`                          |
+| `config show`             | `--reveal`, `--list <slug>`                                             | `{path,profile,cdp,lists,routes,content,storage}`                       |
+| `tab list`                | -                                                                       | `{tabs:[{id,title,url,active}]}`                                        |
+| `tab focus`               | `--id`                                                                  | `{focused:true,id}`                                                     |
+| `post extract`            | `--tab`, `--index`                                                      | `{post:{id,url,author,text,postedAt,media,metrics}}`                    |
+| `post like`               | `--url` \| `--tab --index`, `--dry-run`                                 | `{liked:true,post:{id,url},was:bool}`                                   |
+| `post like remove`        | same                                                                    | `{liked:false,…}`                                                       |
+| `post bookmark add`       | same                                                                    | `{bookmarked:true,…}`                                                   |
+| `post bookmark remove`    | same                                                                    | `{bookmarked:false,…}`                                                  |
+| `page bookmarks open`     | `--tab`                                                                 | `{navigated:true,url,count}`                                            |
+| `page bookmarks scrape`   | `--limit`, `--max-idle`, `--tab`                                        | `{source,scraped,new,updated,events}`                                   |
+| `page list open`          | `--name <slug>`                                                         | `{navigated:true,slug,url}`                                             |
+| `page list member add`    | `--name`, `--handle`, `--apply`                                         | `{added:true,handle,list}`                                              |
+| `store scrape`            | `--source bookmark\|like\|history`, `--limit`, `--max-idle`, `--tab`    | `{source,scraped,new,updated,events}`                                   |
+| `store publish`           | `--id` \| `--source` \| `--since` \| `--all`                            | `{published,unchanged,hidden}`                                          |
+| `store hide`              | `--id`                                                                  | `{hidden:true,id,removed,unchanged}`                                    |
+| `store status`            | -                                                                       | `{shadow:{…},public:{…}}`                                               |
+| `author evidence build`   | -                                                                       | `{archive,posts,authors:[…],skipped}`                                   |
+| `author classify rules`   | -                                                                       | `{rules,threshold,lists,counts,decisions,ambiguous,preserved}`          |
+| `author classify infer`   | `--limit`, `--dry-run`                                                  | `{counts,batches,asked,decisions,unanswered,rejected,failed,preserved}` |
+| `author distribute apply` | `--apply`, `--dry-run`                                                  | `{counts,plan,written,added,failed,remaining,stopped}`                  |
+| `event append`            | `--kind`, `--subject`, `--payload`                                      | `{written:true,path}`                                                   |
+| `event tail`              | `--follow`, `--dir shadow\|public`, `--since`, `--interval`             | `{directory,count,events}` or JSON lines                                |
 
 `--tab` takes a target id from `tab list` or its zero-based index in that list.
 A tab a browser extension currently holds a debugger on is never selected:
@@ -243,10 +243,10 @@ neither, so a dry run stays dry and two runs print the same bytes.
 
 ## Distribution: the model breaks the tie
 
-`author classify infer` is the second half of the same pass: it takes exactly the
-authors the rules left in `ambiguous` and asks a model about them, then caches
-every answer. It is the only command in this tool that spends money, so it is
-built to spend as little as possible.
+`author classify infer` is the second half of the same pass: it takes exactly
+the authors the rules left in `ambiguous` and asks a model about them, then
+caches every answer. It is the only command in this tool that spends money, so
+it is built to spend as little as possible.
 
 ```bash
 export MAINTAIN_MODEL_URL=http://127.0.0.1:8642/v1/chat/completions
@@ -262,15 +262,15 @@ Four things bound the spend, in order of how much they save:
 
 - **A cached answer is never asked for twice.** Every decision is written to
   `Source/Content/Author/<handle>.json` with `decision.by: "model"`, so a second
-  run over an unchanged archive makes no request at all and prints
-  `"asked": 0`. Nothing is cached for a reply that could not be trusted, which
-  is what makes a re-run ask again instead of inheriting a guess.
+  run over an unchanged archive makes no request at all and prints `"asked": 0`.
+  Nothing is cached for a reply that could not be trusted, which is what makes a
+  re-run ask again instead of inheriting a guess.
 - **A manual decision is not a question.** `decision.by: "manual"` is never
   asked about, never scored and never written over - it is reported in
   `preserved` with the reason on file, even when the model volunteers an answer
   for that handle in the same batch.
-- **At most 25 authors per request.** One reply has to be read whole, so the
-  cap is what keeps a large ambiguity from becoming one answer a model truncates
+- **At most 25 authors per request.** One reply has to be read whole, so the cap
+  is what keeps a large ambiguity from becoming one answer a model truncates
   halfway through. It is not an option: a caller that could raise it could also
   make a batch unanswerable.
 - **A failed batch costs one batch.** A reply that is not JSON, an endpoint that
@@ -284,21 +284,31 @@ the handles a real run would have asked about, with the batch count.
 
 The request is per author, over the aggregated evidence record - top domains,
 keyword hits per bucket, up to three capped excerpts - and never per post. A
-mixed timeline is normal, so the question is about the account's body of work;
-a prompt that listed every post would spend the batch's budget on one prolific
+mixed timeline is normal, so the question is about the account's body of work; a
+prompt that listed every post would spend the batch's budget on one prolific
 account and invite an answer about a post instead of about the account.
 
 The reply must be JSON only, in the same shape the rules classifier emits:
 
 ```json
-{ "decisions": [{ "handle": "<handle>", "list": "<slug>", "score": 6, "gap": 3, "reason": "one line" }] }
+{
+	"decisions": [
+		{
+			"handle": "<handle>",
+			"list": "<slug>",
+			"score": 6,
+			"gap": 3,
+			"reason": "one line"
+		}
+	]
+}
 ```
 
 - `list` must be a slug the identifier map declares - the rules file's own keys
   when no map is set - or `null` for "none of them". A slug nobody configured is
-  rejected rather than cached: it is a decision nothing could ever apply.
-  A decline is a decision like any other: it is cached too, so the same account
-  is not asked about on every run, and it leaves the record's `lists` alone.
+  rejected rather than cached: it is a decision nothing could ever apply. A
+  decline is a decision like any other: it is cached too, so the same account is
+  not asked about on every run, and it leaves the record's `lists` alone.
 - `score` and `gap` are the model's own numbers and are optional; they are
   recorded, never checked against the rules' arithmetic - the rules already
   refused to decide, so there is nothing here to verify them against.

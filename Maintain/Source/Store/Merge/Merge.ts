@@ -11,7 +11,8 @@ export type MergeResult = {
 	changed: boolean;
 };
 
-const same = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
+const same = (left: unknown, right: unknown): boolean =>
+	JSON.stringify(left) === JSON.stringify(right);
 
 /**
  * Fold one reading of a post into the record already on file.

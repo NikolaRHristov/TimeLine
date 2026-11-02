@@ -1,6 +1,6 @@
-import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { option } from "../../../Cli/Parser/Argument/Option.ts";
 import { fail } from "../../../Cli/Parser/Output/Failure.ts";
+import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { contentDirectory, shadowDirectory } from "../../../Store/Path/Path.ts";
 import { open as openPublic } from "../../../Store/Public/Public.ts";
 import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
@@ -15,7 +15,11 @@ import { open as openShadow } from "../../../Store/Shadow/Shadow.ts";
 export const Definition: CommandDefinition = {
 	path: ["store", "hide"],
 	summary: "Withhold one post and delete its published file.",
-	options: [option("id", "string", "Status id of the post to withhold.", { required: true })],
+	options: [
+		option("id", "string", "Status id of the post to withhold.", {
+			required: true,
+		}),
+	],
 	async run(values): Promise<unknown> {
 		const id = String(values["id"]);
 		const shadow = openShadow(shadowDirectory());

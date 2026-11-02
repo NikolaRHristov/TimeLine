@@ -1,6 +1,6 @@
+import { discover } from "../../../Browser/Target/Discovery.ts";
 import type { CommandDefinition } from "../../../Cli/Parser/Parser.ts";
 import { connection } from "../../../Configuration/Load/Load.ts";
-import { discover } from "../../../Browser/Target/Discovery.ts";
 import { Tab as TabModel } from "../../../Model/Tab/Tab.ts";
 
 export const Definition: CommandDefinition = {

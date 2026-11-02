@@ -76,11 +76,11 @@ slug declared twice keeps its first id.
 Writes the map from the tracked example, then applies the flags. Non-interactive
 by construction - every value is a flag, which is what makes it agent-drivable.
 
-| Flag                 | Kind               | Meaning                                   |
-| -------------------- | ------------------ | ----------------------------------------- |
-| `--profile <handle>` | string             | Your handle; a leading `@` is stripped    |
-| `--list <slug>=<id>` | string, repeatable | One configured list. Repeat once per list |
-| `--cdp-port <n>`     | integer            | Port of the DevTools endpoint             |
+| Flag                 | Kind               | Meaning                                                 |
+| -------------------- | ------------------ | ------------------------------------------------------- |
+| `--profile <handle>` | string             | Your handle; a leading `@` is stripped                  |
+| `--list <slug>=<id>` | string, repeatable | One configured list. Repeat once per list               |
+| `--cdp-port <n>`     | integer            | Port of the DevTools endpoint                           |
 | `--force`            | boolean            | Replace an existing map, keeping its values as the base |
 
 - No flags: writes the example's defaults and prints the next three commands.

@@ -42,7 +42,8 @@ export const DEFAULT_TIMEOUT = 120;
 const BODY_LIMIT = 400;
 
 function record(value: unknown): Record<string, unknown> | null {
-	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+	if (value === null || typeof value !== "object" || Array.isArray(value))
+		return null;
 	return value as Record<string, unknown>;
 }
 
@@ -77,7 +78,8 @@ function content(payload: unknown): string | null {
 /** `MAINTAIN_MODEL_TIMEOUT`, in seconds; a bad value degrades to the default. */
 function timeout(): number {
 	const configured = process.env[TIMEOUT_ENV];
-	if (configured === undefined || !/^\d+$/.test(configured.trim())) return DEFAULT_TIMEOUT;
+	if (configured === undefined || !/^\d+$/.test(configured.trim()))
+		return DEFAULT_TIMEOUT;
 	const seconds = Number(configured.trim());
 	return seconds > 0 ? seconds : DEFAULT_TIMEOUT;
 }
@@ -125,7 +127,9 @@ export function open(): Complete {
 		};
 		if (model !== "") body["model"] = model;
 
-		const headers: Record<string, string> = { "content-type": "application/json" };
+		const headers: Record<string, string> = {
+			"content-type": "application/json",
+		};
 		if (key !== "") headers["authorization"] = `Bearer ${key}`;
 
 		let response: Response;
@@ -137,11 +141,15 @@ export function open(): Complete {
 				signal: AbortSignal.timeout(seconds * 1000),
 			});
 		} catch (error) {
-			throw fail("model-error", "the model endpoint could not be reached", {
-				url,
-				timeout: seconds,
-				reason: message(error),
-			});
+			throw fail(
+				"model-error",
+				"the model endpoint could not be reached",
+				{
+					url,
+					timeout: seconds,
+					reason: message(error),
+				},
+			);
 		}
 
 		let raw: string;
@@ -156,11 +164,15 @@ export function open(): Complete {
 		}
 
 		if (!response.ok) {
-			throw fail("model-error", "the model endpoint refused the request", {
-				url,
-				status: response.status,
-				body: raw.slice(0, BODY_LIMIT),
-			});
+			throw fail(
+				"model-error",
+				"the model endpoint refused the request",
+				{
+					url,
+					status: response.status,
+					body: raw.slice(0, BODY_LIMIT),
+				},
+			);
 		}
 
 		let payload: unknown;

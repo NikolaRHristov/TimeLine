@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdirSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -9,13 +16,22 @@ import { parse } from "../Cli/Parser/Parser.ts";
 import { schema } from "../Cli/Schema/Schema.ts";
 import { Definition } from "../Command/Author/Distribute/Apply.ts";
 import type { Rules } from "../Model/Author/Decision.ts";
-import type { Add, Applied, Deps, Planned } from "../Model/Author/Distribute.ts";
-import { REPEAT_LIMIT, SPACING, apply, resolve } from "../Model/Author/Distribute.ts";
-import type { Evidence } from "../Model/Author/Evidence.ts";
-import { totals } from "../Model/Author/Evidence.ts";
+import {
+	apply,
+	REPEAT_LIMIT,
+	resolve,
+	SPACING,
+	type Add,
+	type Applied,
+	type Deps,
+	type Planned,
+} from "../Model/Author/Distribute.ts";
+import { totals, type Evidence } from "../Model/Author/Evidence.ts";
 import type { Post } from "../Model/Post/Post.ts";
-import type { AuthorRecord } from "../Store/Author/Author.ts";
-import { open as openAuthors } from "../Store/Author/Author.ts";
+import {
+	open as openAuthors,
+	type AuthorRecord,
+} from "../Store/Author/Author.ts";
 import { merge } from "../Store/Merge/Merge.ts";
 import { open as openShadow } from "../Store/Shadow/Shadow.ts";
 
@@ -30,7 +46,8 @@ function temporary(): string {
 }
 
 after(() => {
-	for (const path of directories) rmSync(path, { recursive: true, force: true });
+	for (const path of directories)
+		rmSync(path, { recursive: true, force: true });
 });
 
 /** Two lists with one term each: `figma figma` is UI 4, `compiler` is CODE 3. */
@@ -46,7 +63,10 @@ const RULES: Rules = {
 const LISTS = ["UI", "CODE"];
 
 /** One evidence record, built by hand so a test says what it means. */
-function evidence(handle: string, terms: Record<string, Record<string, number>> = {}): Evidence {
+function evidence(
+	handle: string,
+	terms: Record<string, Record<string, number>> = {},
+): Evidence {
 	return {
 		handle,
 		name: handle,
@@ -60,7 +80,12 @@ function evidence(handle: string, terms: Record<string, Record<string, number>> 
 }
 
 /** A record as the Author collection holds it. */
-function stored(handle: string, lists: string[], by: string, reason = "on file"): AuthorRecord {
+function stored(
+	handle: string,
+	lists: string[],
+	by: string,
+	reason = "on file",
+): AuthorRecord {
 	return {
 		handle,
 		name: handle,
@@ -77,17 +102,29 @@ function collection(records: readonly AuthorRecord[]): string {
 	const directory = temporary();
 	mkdirSync(join(directory, "Author"), { recursive: true });
 	for (const entry of records) {
-		writeFileSync(join(directory, "Author", `${entry.handle}.json`), `${JSON.stringify(entry, null, "\t")}\n`, "utf8");
+		writeFileSync(
+			join(directory, "Author", `${entry.handle}.json`),
+			`${JSON.stringify(entry, null, "\t")}\n`,
+			"utf8",
+		);
 	}
 	return directory;
 }
 
 /** A plan entry that needs no record: the sequencing tests are not about writing. */
-function planned(handle: string, list = "UI", by: Planned["by"] = "rule"): Planned {
+function planned(
+	handle: string,
+	list = "UI",
+	by: Planned["by"] = "rule",
+): Planned {
 	return { handle, list, by, reason: "a reason", write: false };
 }
 
-function deps(store: Deps["store"], add: Add, pause: Deps["pause"] = async () => {}): Deps {
+function deps(
+	store: Deps["store"],
+	add: Add,
+	pause: Deps["pause"] = async () => {},
+): Deps {
 	return {
 		apply: true,
 		at: AT,
@@ -109,10 +146,20 @@ const codeOf = async (run: () => Promise<unknown>): Promise<string> => {
 };
 
 test("a rule decision is planned, and its record is the thing to write first", () => {
-	const plan = resolve([evidence("alpha", { UI: { figma: 2 } })], RULES, LISTS, []);
+	const plan = resolve(
+		[evidence("alpha", { UI: { figma: 2 } })],
+		RULES,
+		LISTS,
+		[],
+	);
 
 	assert.deepEqual(
-		plan.plan.map((entry) => [entry.handle, entry.list, entry.by, entry.write]),
+		plan.plan.map((entry) => [
+			entry.handle,
+			entry.list,
+			entry.by,
+			entry.write,
+		]),
 		[["alpha", "UI", "rule", true]],
 	);
 	// The reason is the arithmetic that produced it: a decision nobody can
@@ -126,11 +173,19 @@ test("a rule decision is planned, and its record is the thing to write first", (
 });
 
 test("a cached model decision is planned from the record's lists and never rewritten", () => {
-	const records = [stored("alpha", ["CODE"], "model", "the account writes compilers")];
+	const records = [
+		stored("alpha", ["CODE"], "model", "the account writes compilers"),
+	];
 	const plan = resolve([evidence("alpha")], RULES, LISTS, records);
 
 	assert.deepEqual(
-		plan.plan.map((entry) => [entry.handle, entry.list, entry.by, entry.write, entry.reason]),
+		plan.plan.map((entry) => [
+			entry.handle,
+			entry.list,
+			entry.by,
+			entry.write,
+			entry.reason,
+		]),
 		[["alpha", "CODE", "model", false, "the account writes compilers"]],
 	);
 	assert.deepEqual(plan.unresolved, []);
@@ -140,12 +195,27 @@ test("a manual decision is preserved, distributed, and marked as not to be writt
 	// The rules would place alpha in UI; the person said CODE. The person wins,
 	// and the record is not this pass's to touch. A hand-edited reason can carry
 	// a newline, so the one-line guarantee is made here rather than in the file.
-	const records = [stored("alpha", ["CODE"], "manual", "I know this\naccount")];
-	const plan = resolve([evidence("alpha", { UI: { figma: 2 } })], RULES, LISTS, records);
+	const records = [
+		stored("alpha", ["CODE"], "manual", "I know this\naccount"),
+	];
+	const plan = resolve(
+		[evidence("alpha", { UI: { figma: 2 } })],
+		RULES,
+		LISTS,
+		records,
+	);
 
-	assert.deepEqual(plan.preserved, [{ handle: "alpha", list: "CODE", reason: "I know this account" }]);
+	assert.deepEqual(plan.preserved, [
+		{ handle: "alpha", list: "CODE", reason: "I know this account" },
+	]);
 	assert.deepEqual(
-		plan.plan.map((entry) => [entry.handle, entry.list, entry.by, entry.write, entry.reason]),
+		plan.plan.map((entry) => [
+			entry.handle,
+			entry.list,
+			entry.by,
+			entry.write,
+			entry.reason,
+		]),
 		[["alpha", "CODE", "manual", false, "I know this account"]],
 	);
 });
@@ -158,7 +228,9 @@ test("an ambiguous author with no decision on file is unresolved, not guessed at
 });
 
 test("a model decline is a decision: it is reported, not left unresolved", () => {
-	const plan = resolve([evidence("alpha")], RULES, LISTS, [stored("alpha", [], "model", "nothing fits")]);
+	const plan = resolve([evidence("alpha")], RULES, LISTS, [
+		stored("alpha", [], "model", "nothing fits"),
+	]);
 
 	assert.deepEqual(plan.declined, ["alpha"]);
 	assert.deepEqual(plan.unresolved, []);
@@ -166,11 +238,17 @@ test("a model decline is a decision: it is reported, not left unresolved", () =>
 });
 
 test("a list the identifier map does not declare is skipped, never applied", () => {
-	const plan = resolve([evidence("alpha")], RULES, LISTS, [stored("alpha", ["SPORTS"], "model", "a list nobody configured")]);
+	const plan = resolve([evidence("alpha")], RULES, LISTS, [
+		stored("alpha", ["SPORTS"], "model", "a list nobody configured"),
+	]);
 
 	assert.deepEqual(plan.plan, []);
 	assert.deepEqual(plan.skipped, [
-		{ handle: "alpha", list: "SPORTS", reason: "the identifier map does not declare this list" },
+		{
+			handle: "alpha",
+			list: "SPORTS",
+			reason: "the identifier map does not declare this list",
+		},
 	]);
 });
 
@@ -190,7 +268,10 @@ test("without --apply nothing is written and no membership is attempted", async 
 	assert.deepEqual(calls, []);
 	assert.deepEqual(result.written, []);
 	assert.deepEqual(result.added, []);
-	assert.deepEqual(result.remaining.map((entry) => entry.handle), ["alpha", "beta"]);
+	assert.deepEqual(
+		result.remaining.map((entry) => entry.handle),
+		["alpha", "beta"],
+	);
 	// Nothing reached the content collection either: a dry run leaves no
 	// Author directory behind, because it had no record to write.
 	assert.equal(existsSync(join(directory, "Author")), false);
@@ -198,20 +279,36 @@ test("without --apply nothing is written and no membership is attempted", async 
 
 test("with --apply every record is on disk before the first membership is added", async () => {
 	const store = openAuthors(collection([]));
-	const plan = [planned("alpha"), planned("beta")].map((entry) => ({ ...entry, score: 4, gap: 4, write: true }));
+	const plan = [planned("alpha"), planned("beta")].map((entry) => ({
+		...entry,
+		score: 4,
+		gap: 4,
+		write: true,
+	}));
 	const present: boolean[] = [];
 
-	const result = await apply(plan, deps(store, async (handle) => {
-		present.push(existsSync(join(store.directory, `${handle}.json`)));
-		return "added";
-	}));
+	const result = await apply(
+		plan,
+		deps(store, async (handle) => {
+			present.push(existsSync(join(store.directory, `${handle}.json`)));
+			return "added";
+		}),
+	);
 
 	assert.deepEqual(present, [true, true]);
 	assert.deepEqual(result.written, ["alpha", "beta"]);
 
-	const written = JSON.parse(readFileSync(join(store.directory, "alpha.json"), "utf8")) as {
+	const written = JSON.parse(
+		readFileSync(join(store.directory, "alpha.json"), "utf8"),
+	) as {
 		lists: string[];
-		decision: { by: string; confidence: number; score?: number; gap?: number; reason: string };
+		decision: {
+			by: string;
+			confidence: number;
+			score?: number;
+			gap?: number;
+			reason: string;
+		};
 	};
 	assert.deepEqual(written.lists, ["UI"]);
 	assert.equal(written.decision.by, "rule");
@@ -227,27 +324,40 @@ test("memberships are added one at a time, three seconds apart", async () => {
 	const log: string[] = [];
 	const pauses: number[] = [];
 
-	const result = await apply([planned("alpha"), planned("beta"), planned("gamma")], {
-		...deps(
-			store,
-			async (handle) => {
-				log.push(`start:${handle}`);
-				await Promise.resolve();
-				log.push(`end:${handle}`);
-				return "added";
-			},
-			async (ms) => {
-				pauses.push(ms);
-			},
-		),
-	});
+	const result = await apply(
+		[planned("alpha"), planned("beta"), planned("gamma")],
+		{
+			...deps(
+				store,
+				async (handle) => {
+					log.push(`start:${handle}`);
+					await Promise.resolve();
+					log.push(`end:${handle}`);
+					return "added";
+				},
+				async (ms) => {
+					pauses.push(ms);
+				},
+			),
+		},
+	);
 
 	// Sequential: no add starts before the previous one ended.
-	assert.deepEqual(log, ["start:alpha", "end:alpha", "start:beta", "end:beta", "start:gamma", "end:gamma"]);
+	assert.deepEqual(log, [
+		"start:alpha",
+		"end:alpha",
+		"start:beta",
+		"end:beta",
+		"start:gamma",
+		"end:gamma",
+	]);
 	// Spaced: one wait between each pair, never before the first or after the last.
 	assert.deepEqual(pauses, [SPACING, SPACING]);
 	assert.equal(SPACING, 3_000);
-	assert.deepEqual(result.added.map((entry) => entry.handle), ["alpha", "beta", "gamma"]);
+	assert.deepEqual(
+		result.added.map((entry) => entry.handle),
+		["alpha", "beta", "gamma"],
+	);
 	assert.deepEqual(result.remaining, []);
 });
 
@@ -262,7 +372,11 @@ test("a rate-limited answer stops the run and says how far it got", async () => 
 			store,
 			async (handle) => {
 				attempts.push(handle);
-				if (handle === "gamma") throw fail("rate-limited", "You are over the daily limit for adding people to Lists.");
+				if (handle === "gamma")
+					throw fail(
+						"rate-limited",
+						"You are over the daily limit for adding people to Lists.",
+					);
 				return "added";
 			},
 			async (ms) => {
@@ -271,9 +385,15 @@ test("a rate-limited answer stops the run and says how far it got", async () => 
 		),
 	);
 
-	assert.deepEqual(result.added.map((entry) => entry.handle), ["alpha", "beta"]);
+	assert.deepEqual(
+		result.added.map((entry) => entry.handle),
+		["alpha", "beta"],
+	);
 	assert.deepEqual(result.failed, []);
-	assert.deepEqual(result.remaining.map((entry) => entry.handle), ["delta"]);
+	assert.deepEqual(
+		result.remaining.map((entry) => entry.handle),
+		["delta"],
+	);
 	assert.deepEqual(attempts, ["alpha", "beta", "gamma"]);
 	// No retry: the limited handle was attempted exactly once, and nothing was
 	// added after it.
@@ -292,10 +412,15 @@ test("the same failure for every handle stops the run instead of grinding on", a
 	const attempts: string[] = [];
 
 	const result = await apply(
-		["alpha", "beta", "gamma", "delta", "epsilon"].map((handle) => planned(handle)),
+		["alpha", "beta", "gamma", "delta", "epsilon"].map((handle) =>
+			planned(handle),
+		),
 		deps(store, async (handle) => {
 			attempts.push(handle);
-			throw fail("no-list-menu", "no Add/remove from Lists control in the profile header");
+			throw fail(
+				"no-list-menu",
+				"no Add/remove from Lists control in the profile header",
+			);
 		}),
 	);
 
@@ -304,16 +429,25 @@ test("the same failure for every handle stops the run instead of grinding on", a
 	assert.equal(result.failed.length, REPEAT_LIMIT);
 	assert.equal(result.stopped?.reason, "repeated-failure");
 	assert.equal(result.stopped?.error, "no-list-menu");
-	assert.deepEqual(result.remaining.map((entry) => entry.handle), ["delta", "epsilon"]);
+	assert.deepEqual(
+		result.remaining.map((entry) => entry.handle),
+		["delta", "epsilon"],
+	);
 });
 
 test("one failed handle does not end the run, and a success resets the streak", async () => {
 	const store = openAuthors(collection([]));
 
 	const result = await apply(
-		["alpha", "beta", "gamma", "delta", "epsilon"].map((handle) => planned(handle)),
+		["alpha", "beta", "gamma", "delta", "epsilon"].map((handle) =>
+			planned(handle),
+		),
 		deps(store, async (handle) => {
-			if (handle === "beta" || handle === "delta" || handle === "epsilon") {
+			if (
+				handle === "beta" ||
+				handle === "delta" ||
+				handle === "epsilon"
+			) {
 				throw fail("cdp-error", "the row did not flip to checked");
 			}
 			return "added";
@@ -324,8 +458,14 @@ test("one failed handle does not end the run, and a success resets the streak", 
 	// between them is what keeps a coincidence from reading as a condition:
 	// without the reset, this run would have stopped at epsilon.
 	assert.equal(result.stopped, null);
-	assert.deepEqual(result.failed.map((entry) => entry.handle), ["beta", "delta", "epsilon"]);
-	assert.deepEqual(result.added.map((entry) => entry.handle), ["alpha", "gamma"]);
+	assert.deepEqual(
+		result.failed.map((entry) => entry.handle),
+		["beta", "delta", "epsilon"],
+	);
+	assert.deepEqual(
+		result.added.map((entry) => entry.handle),
+		["alpha", "gamma"],
+	);
 });
 
 test("an already-member answer is reported as such, never as a write", async () => {
@@ -333,27 +473,54 @@ test("an already-member answer is reported as such, never as a write", async () 
 
 	const result = await apply(
 		[planned("alpha"), planned("beta")],
-		deps(store, async (handle) => (handle === "beta" ? "already" : "added")),
+		deps(store, async (handle) =>
+			handle === "beta" ? "already" : "added",
+		),
 	);
 
-	assert.deepEqual(result.added.map((entry) => entry.handle), ["alpha"]);
-	assert.deepEqual(result.already.map((entry) => entry.handle), ["beta"]);
+	assert.deepEqual(
+		result.added.map((entry) => entry.handle),
+		["alpha"],
+	);
+	assert.deepEqual(
+		result.already.map((entry) => entry.handle),
+		["beta"],
+	);
 	assert.equal(result.stopped, null);
 });
 
 test("a manual record survives an apply run byte for byte", async () => {
-	const directory = collection([stored("alpha", ["UI"], "manual", "I know this account")]);
-	const before = readFileSync(join(directory, "Author", "alpha.json"), "utf8");
+	const directory = collection([
+		stored("alpha", ["UI"], "manual", "I know this account"),
+	]);
+	const before = readFileSync(
+		join(directory, "Author", "alpha.json"),
+		"utf8",
+	);
 	const store = openAuthors(directory);
-	const plan = resolve([evidence("alpha", { UI: { figma: 2 } })], RULES, LISTS, store.all()).plan;
+	const plan = resolve(
+		[evidence("alpha", { UI: { figma: 2 } })],
+		RULES,
+		LISTS,
+		store.all(),
+	).plan;
 
-	const result: Applied = await apply(plan, deps(store, async () => "added"));
+	const result: Applied = await apply(
+		plan,
+		deps(store, async () => "added"),
+	);
 
-	assert.equal(readFileSync(join(directory, "Author", "alpha.json"), "utf8"), before);
+	assert.equal(
+		readFileSync(join(directory, "Author", "alpha.json"), "utf8"),
+		before,
+	);
 	assert.deepEqual(result.written, []);
 	// The filing is still carried out: a manual decision the pass ignored would
 	// be one the person has to re-enter by hand.
-	assert.deepEqual(result.added.map((entry) => [entry.handle, entry.list, entry.by]), [["alpha", "UI", "manual"]]);
+	assert.deepEqual(
+		result.added.map((entry) => [entry.handle, entry.list, entry.by]),
+		[["alpha", "UI", "manual"]],
+	);
 });
 
 /** One bookmarked post, as the archive stores it. */
@@ -374,7 +541,12 @@ function archive(entries: readonly [string, string, string][]): string {
 	const directory = temporary();
 	const store = openShadow(directory);
 	for (const [handle, id, text] of entries) {
-		store.write(merge(null, reading(handle, id, text), { source: "bookmark", at: AT }).post);
+		store.write(
+			merge(null, reading(handle, id, text), {
+				source: "bookmark",
+				at: AT,
+			}).post,
+		);
 	}
 	return directory;
 }
@@ -402,12 +574,20 @@ const KEYS = [
  * dry run only needs a vocabulary.
  */
 async function run(
-	paths: { storage: string; content: string; rules: string; vocabulary: string },
+	paths: {
+		storage: string;
+		content: string;
+		rules: string;
+		vocabulary: string;
+	},
 	values: Record<string, unknown> = {},
 ): Promise<Record<string, unknown>> {
 	const previous = new Map(KEYS.map((key) => [key, process.env[key]]));
 
-	process.env["MAINTAIN_CONFIG"] = join(temporary(), "Configuration.local.json");
+	process.env["MAINTAIN_CONFIG"] = join(
+		temporary(),
+		"Configuration.local.json",
+	);
 	process.env["MAINTAIN_RULES"] = paths.rules;
 	process.env["MAINTAIN_VOCABULARY"] = paths.vocabulary;
 	process.env["MAINTAIN_STORAGE"] = paths.storage;
@@ -426,17 +606,27 @@ async function run(
 
 test("the command's dry run changes nothing on disk", async () => {
 	const rules = json("Rules.json", RULES);
-	const vocabulary = json("Vocabulary.json", { UI: ["figma"], CODE: ["compiler"] });
+	const vocabulary = json("Vocabulary.json", {
+		UI: ["figma"],
+		CODE: ["compiler"],
+	});
 	const storage = archive([
 		["alpha", "1", "figma figma layout"],
 		["beta", "2", "nothing in particular"],
 	]);
-	const content = collection([stored("beta", ["CODE"], "manual", "I know this account")]);
+	const content = collection([
+		stored("beta", ["CODE"], "manual", "I know this account"),
+	]);
 	const before = readFileSync(join(content, "Author", "beta.json"), "utf8");
 
 	const output = await run({ storage, content, rules, vocabulary });
 	const counts = output["counts"] as Record<string, number>;
-	const plan = output["plan"] as { handle: string; list: string; by: string; reason: string }[];
+	const plan = output["plan"] as {
+		handle: string;
+		list: string;
+		by: string;
+		reason: string;
+	}[];
 
 	assert.equal(output["dryRun"], true);
 	assert.equal(output["apply"], false);
@@ -449,7 +639,9 @@ test("the command's dry run changes nothing on disk", async () => {
 		],
 	);
 	assert.match(plan[0]?.reason ?? "", /figma/);
-	assert.deepEqual(output["preserved"], [{ handle: "beta", list: "CODE", reason: "I know this account" }]);
+	assert.deepEqual(output["preserved"], [
+		{ handle: "beta", list: "CODE", reason: "I know this account" },
+	]);
 	assert.equal(counts["memberships"], 2);
 	assert.equal(counts["handles"], 2);
 	assert.equal(counts["records"], 0);
@@ -460,22 +652,32 @@ test("the command's dry run changes nothing on disk", async () => {
 
 	// Nothing changed: the manual record is byte-identical and no record was
 	// created for the author the rules placed.
-	assert.equal(readFileSync(join(content, "Author", "beta.json"), "utf8"), before);
+	assert.equal(
+		readFileSync(join(content, "Author", "beta.json"), "utf8"),
+		before,
+	);
 	assert.equal(existsSync(join(content, "Author", "alpha.json")), false);
 });
 
 test("applying without an identifier map is a named failure, not a guessed list", async () => {
 	const rules = json("Rules.json", RULES);
-	const vocabulary = json("Vocabulary.json", { UI: ["figma"], CODE: ["compiler"] });
+	const vocabulary = json("Vocabulary.json", {
+		UI: ["figma"],
+		CODE: ["compiler"],
+	});
 	const storage = archive([["alpha", "1", "figma figma layout"]]);
 	const content = temporary();
 
-	const code = await codeOf(() => run({ storage, content, rules, vocabulary }, { apply: true }));
+	const code = await codeOf(() =>
+		run({ storage, content, rules, vocabulary }, { apply: true }),
+	);
 	assert.equal(code, "no-config");
 });
 
 test("--apply and --dry-run together are refused rather than silently ordered", async () => {
-	const code = await codeOf(() => Definition.run({ apply: true, "dry-run": true }));
+	const code = await codeOf(() =>
+		Definition.run({ apply: true, "dry-run": true }),
+	);
 	assert.equal(code, "usage");
 });
 
@@ -484,12 +686,18 @@ test("the command documents --apply as a flag, and argv without it leaves the wr
 	const properties = document["properties"] as Record<string, unknown>;
 	for (const name of ["--apply", "--dry-run"]) {
 		assert.ok(name in properties, `missing ${name}`);
-		assert.equal((properties[name] as Record<string, unknown>)["type"], "boolean");
+		assert.equal(
+			(properties[name] as Record<string, unknown>)["type"],
+			"boolean",
+		);
 	}
 
 	const quiet = parse(["author", "distribute", "apply"], [Definition]);
 	assert.equal(quiet.values["apply"], undefined);
 
-	const armed = parse(["author", "distribute", "apply", "--apply"], [Definition]);
+	const armed = parse(
+		["author", "distribute", "apply", "--apply"],
+		[Definition],
+	);
 	assert.equal(armed.values["apply"], true);
 });

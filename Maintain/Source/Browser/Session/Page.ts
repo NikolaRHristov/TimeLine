@@ -1,13 +1,10 @@
-import type { Tab } from "../../Model/Tab/Tab.ts";
 import { connection } from "../../Configuration/Load/Load.ts";
-import type { DiscoveryOptions } from "../Target/Discovery.ts";
-import { discover } from "../Target/Discovery.ts";
+import type { Tab } from "../../Model/Tab/Tab.ts";
+import { discover, type DiscoveryOptions } from "../Target/Discovery.ts";
 import { close, open } from "../Target/Lifecycle.ts";
 import { select, selectHandle } from "../Target/Select.ts";
-import { assertReady } from "./Ready.ts";
-import type { ReadinessMode } from "./Ready.ts";
-import type { Session } from "./Session.ts";
-import { attach } from "./Session.ts";
+import { assertReady, type ReadinessMode } from "./Ready.ts";
+import { attach, type Session } from "./Session.ts";
 
 export type PageContext = { session: Session; tab: Tab; href: string };
 
@@ -92,11 +89,20 @@ export async function withPage<T>(
 				mode: options.onNotReady,
 			});
 		}
-		const href = await session.evaluate<string>("location.href").catch(() => url);
-		return await body({ session, tab, href: typeof href === "string" ? href : url });
+		const href = await session
+			.evaluate<string>("location.href")
+			.catch(() => url);
+		return await body({
+			session,
+			tab,
+			href: typeof href === "string" ? href : url,
+		});
 	} finally {
 		session.close();
-		if (opened === true && (options.close === true || options.ephemeral === true)) {
+		if (
+			opened === true &&
+			(options.close === true || options.ephemeral === true)
+		) {
 			try {
 				await close(tab.id, endpoint);
 			} catch {

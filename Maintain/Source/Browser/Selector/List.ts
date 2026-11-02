@@ -10,17 +10,23 @@ export type ListInPageRequest = { op: "ready" } | { op: "members" };
 export type ListInPageResult = { ready: boolean; members: string[] };
 
 function inPage(request: { op: "ready" | "members" }): unknown {
-	const rows = Array.from(document.querySelectorAll('[data-testid="UserCell"]'));
-	const header = document.querySelector('[data-testid="ListHeader"], [data-testid="primaryColumn"] h2');
+	const rows = Array.from(
+		document.querySelectorAll('[data-testid="UserCell"]'),
+	);
+	const header = document.querySelector(
+		'[data-testid="ListHeader"], [data-testid="primaryColumn"] h2',
+	);
 	const members = rows
 		.map((row) => {
 			const anchor = row.querySelector('a[href^="/"]');
-			const href = anchor === null ? "" : (anchor.getAttribute("href") ?? "");
+			const href =
+				anchor === null ? "" : (anchor.getAttribute("href") ?? "");
 			return href.replace(/\//g, "");
 		})
 		.filter((handle) => /^[A-Za-z0-9_]{1,30}$/.test(handle));
 
-	if (request.op === "members") return { ready: header !== null || rows.length > 0, members };
+	if (request.op === "members")
+		return { ready: header !== null || rows.length > 0, members };
 	return { ready: header !== null || rows.length > 0, members: [] };
 }
 

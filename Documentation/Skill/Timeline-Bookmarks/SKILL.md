@@ -85,13 +85,13 @@ operating procedure.
    resolves the id from the map. The id never appears on a command line, and an
    unconfigured slug fails `unknown-list` naming the configured set.
 
-9. **Apply the decisions - only when you mean to.** `pnpm maintain author
-   distribute apply` prints the plan and changes nothing at all; add `--apply`
-   to write the decision records and then add the memberships, one at a time,
-   three seconds apart. A `rate-limited` answer stops the run and reports
-   `remaining`: run it again later, because the records are already on disk, so
-   it re-derives the same plan and reports the handles already on their list as
-   `already` instead of adding them twice.
+9. **Apply the decisions - only when you mean to.**
+   `pnpm maintain author distribute apply` prints the plan and changes nothing
+   at all; add `--apply` to write the decision records and then add the
+   memberships, one at a time, three seconds apart. A `rate-limited` answer
+   stops the run and reports `remaining`: run it again later, because the
+   records are already on disk, so it re-derives the same plan and reports the
+   handles already on their list as `already` instead of adding them twice.
 
 ## Token-efficiency rules
 
@@ -105,8 +105,8 @@ The pipeline exists to keep model work out of the loop.
   about it without reading a record.
 - The only stage that spends tokens is `author classify infer`, and it asks only
   about the authors the rules left ambiguous. Its second run prints `"asked": 0`
-  - a rising `asked` on an unchanged archive means the cache was not written,
-  so look at the Author collection before looking at the prompt.
+    - a rising `asked` on an unchanged archive means the cache was not written,
+      so look at the Author collection before looking at the prompt.
 - The identifier map decides the slugs; `Rules.json` only weighs them. Weights
   for a slug the map does not declare are dropped with a warning, and the model
   is offered only the configured slugs - so declare a list before tuning it, and

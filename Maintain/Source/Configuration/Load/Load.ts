@@ -1,15 +1,17 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
+
 import { fail, isFailure } from "../../Cli/Parser/Output/Failure.ts";
 import type { List } from "../../Model/List/List.ts";
-import type { Configuration } from "../Schema/Schema.ts";
-import { empty, validate } from "../Schema/Schema.ts";
+import { empty, validate, type Configuration } from "../Schema/Schema.ts";
 
 /** Where the identifier map lives, relative to the repository root. */
-export const DEFAULT_CONFIGURATION = "Maintain/Configuration/Local/Configuration.local.json";
+export const DEFAULT_CONFIGURATION =
+	"Maintain/Configuration/Local/Configuration.local.json";
 
 /** The tracked example a fresh clone copies (or `config init` writes from). */
-export const EXAMPLE_CONFIGURATION = "Maintain/Configuration/Example/Configuration.example.json";
+export const EXAMPLE_CONFIGURATION =
+	"Maintain/Configuration/Example/Configuration.example.json";
 
 /** The marker that names the repository root: the workspace file. */
 const ROOT_MARKER = "pnpm-workspace.yaml";
@@ -38,15 +40,20 @@ export function root(): string {
 		directory = parent;
 	}
 
-	process.stderr.write(`maintain: no ${ROOT_MARKER} above ${import.meta.dirname}; using ${process.cwd()}\n`);
+	process.stderr.write(
+		`maintain: no ${ROOT_MARKER} above ${import.meta.dirname}; using ${process.cwd()}\n`,
+	);
 
 	return process.cwd();
 }
 
 export function configurationPath(): string {
 	const configured = process.env["MAINTAIN_CONFIG"];
-	if (configured === undefined || configured.length === 0) return join(root(), DEFAULT_CONFIGURATION);
-	return isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
+	if (configured === undefined || configured.length === 0)
+		return join(root(), DEFAULT_CONFIGURATION);
+	return isAbsolute(configured)
+		? configured
+		: resolve(process.cwd(), configured);
 }
 
 /** Read and validate the map; a missing file is `no-config`, never a crash. */
@@ -105,7 +112,9 @@ export function example(): Configuration {
 		return validate(JSON.parse(readFileSync(path, "utf8")), path);
 	} catch (error) {
 		const detail = error instanceof Error ? error.message : String(error);
-		process.stderr.write(`maintain: ${EXAMPLE_CONFIGURATION} is unreadable (${detail}); using built-in defaults\n`);
+		process.stderr.write(
+			`maintain: ${EXAMPLE_CONFIGURATION} is unreadable (${detail}); using built-in defaults\n`,
+		);
 		return empty();
 	}
 }
@@ -148,7 +157,9 @@ export function connection(): { host: string; port: number } {
 		configuration = load();
 	} catch (error) {
 		const detail = error instanceof Error ? error.message : String(error);
-		process.stderr.write(`maintain: using the default CDP endpoint (${detail})\n`);
+		process.stderr.write(
+			`maintain: using the default CDP endpoint (${detail})\n`,
+		);
 	}
 
 	const fromEnvironment = process.env["MAINTAIN_CDP_PORT"];

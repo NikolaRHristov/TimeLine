@@ -1,8 +1,20 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import {
+	appendFileSync,
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	readFileSync,
+	writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
+
 import { fail } from "../../Cli/Parser/Output/Failure.ts";
-import type { EventKind, EventRecord } from "../../Model/Event/Event.ts";
-import { fileName, subjectSuffix } from "../../Model/Event/Event.ts";
+import {
+	fileName,
+	subjectSuffix,
+	type EventKind,
+	type EventRecord,
+} from "../../Model/Event/Event.ts";
 import { stringify } from "../../Output/Json/Json.ts";
 import type { ObservationEntry, ShadowPost } from "../Model/Model.ts";
 
@@ -27,7 +39,12 @@ export type ShadowStore = {
 	/** How many lines `Observation.jsonl` holds; 0 when it was never written. */
 	observationCount(): number;
 	/** Write one event file and return its path. */
-	event(kind: EventKind, subject: string, payload?: Record<string, unknown>, at?: string): string;
+	event(
+		kind: EventKind,
+		subject: string,
+		payload?: Record<string, unknown>,
+		at?: string,
+	): string;
 	/** Every event about `subject`, oldest first. */
 	events(subject?: string): ShadowEvent[];
 	/** Rebuild `Index.json` from the directory; cheap to call after a batch. */
@@ -51,7 +68,8 @@ function readJson(path: string): unknown {
 }
 
 function record(value: unknown): Record<string, unknown> | null {
-	if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+	if (value === null || typeof value !== "object" || Array.isArray(value))
+		return null;
 	return value as Record<string, unknown>;
 }
 
@@ -87,7 +105,11 @@ export function open(directory: string): ShadowStore {
 
 		write(post: ShadowPost): string {
 			if (!STATUS_ID.test(post.id)) {
-				throw fail("io-error", "a post id must be numeric before it becomes a filename", { id: post.id });
+				throw fail(
+					"io-error",
+					"a post id must be numeric before it becomes a filename",
+					{ id: post.id },
+				);
 			}
 			const path = join(postDirectory(), `${post.id}.json`);
 			try {
@@ -96,7 +118,8 @@ export function open(directory: string): ShadowStore {
 			} catch (error) {
 				throw fail("io-error", "could not write the shadow record", {
 					path,
-					reason: error instanceof Error ? error.message : String(error),
+					reason:
+						error instanceof Error ? error.message : String(error),
 				});
 			}
 			return path;
@@ -125,7 +148,8 @@ export function open(directory: string): ShadowStore {
 			} catch (error) {
 				throw fail("io-error", "could not append the observation log", {
 					path,
-					reason: error instanceof Error ? error.message : String(error),
+					reason:
+						error instanceof Error ? error.message : String(error),
 				});
 			}
 		},
@@ -133,14 +157,22 @@ export function open(directory: string): ShadowStore {
 		observationCount(): number {
 			let raw: string;
 			try {
-				raw = readFileSync(join(directory, "Observation.jsonl"), "utf8");
+				raw = readFileSync(
+					join(directory, "Observation.jsonl"),
+					"utf8",
+				);
 			} catch {
 				return 0;
 			}
 			return raw.split("\n").filter((line) => line.trim() !== "").length;
 		},
 
-		event(kind: EventKind, subject: string, payload: Record<string, unknown> = {}, at?: string): string {
+		event(
+			kind: EventKind,
+			subject: string,
+			payload: Record<string, unknown> = {},
+			at?: string,
+		): string {
 			const moment = at ?? new Date().toISOString();
 			const record: EventRecord = { at: moment, kind, subject, payload };
 			const name = fileName(moment, kind, subject);
@@ -149,28 +181,42 @@ export function open(directory: string): ShadowStore {
 				let path = join(eventDirectory(), name);
 				// Same millisecond, same kind, same subject: keep both rather than
 				// overwrite the earlier one.
-				for (let attempt = 2; existsSync(path) && attempt < 100; attempt += 1) {
-					path = join(eventDirectory(), name.replace(/\.json$/, `-${attempt}.json`));
+				for (
+					let attempt = 2;
+					existsSync(path) && attempt < 100;
+					attempt += 1
+				) {
+					path = join(
+						eventDirectory(),
+						name.replace(/\.json$/, `-${attempt}.json`),
+					);
 				}
 				writeFileSync(path, `${stringify(record)}\n`, "utf8");
 				return path;
 			} catch (error) {
 				throw fail("io-error", "could not write the event file", {
 					directory: eventDirectory(),
-					reason: error instanceof Error ? error.message : String(error),
+					reason:
+						error instanceof Error ? error.message : String(error),
 				});
 			}
 		},
 
 		events(subject?: string): ShadowEvent[] {
-			const suffix = subject === undefined ? ".json" : subjectSuffix(subject);
+			const suffix =
+				subject === undefined ? ".json" : subjectSuffix(subject);
 			const found: ShadowEvent[] = [];
 			for (const name of entries(eventDirectory(), suffix)) {
 				const value = record(readJson(join(eventDirectory(), name)));
 				if (value === null || typeof value["at"] !== "string") continue;
-				found.push({ file: join(eventDirectory(), name), record: value as unknown as EventRecord });
+				found.push({
+					file: join(eventDirectory(), name),
+					record: value as unknown as EventRecord,
+				});
 			}
-			return found.sort((left, right) => left.record.at.localeCompare(right.record.at));
+			return found.sort((left, right) =>
+				left.record.at.localeCompare(right.record.at),
+			);
 		},
 
 		reindex(): string {
@@ -187,7 +233,8 @@ export function open(directory: string): ShadowStore {
 			} catch (error) {
 				throw fail("io-error", "could not write the shadow index", {
 					path,
-					reason: error instanceof Error ? error.message : String(error),
+					reason:
+						error instanceof Error ? error.message : String(error),
 				});
 			}
 			return path;
