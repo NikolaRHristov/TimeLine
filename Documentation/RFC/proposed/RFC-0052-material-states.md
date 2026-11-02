@@ -20,9 +20,9 @@ The material arrives as a context value from the sheet that mounts the component
 `paper` - and the component reads its tokens through that context. It never inspects a computed
 background, and it never branches on a parent's class name.
 
-Detection looks cheap and fails in exactly the case that matters: a component nested one level deeper
-than expected, or mounted in a preview, reads the wrong material and produces a dark card on a light
-ground that no test catches because the markup is correct.
+Detection looks cheap and fails in exactly the case that matters: a component nested one level
+deeper than expected, or mounted in a preview, reads the wrong material and produces a dark card on
+a light ground that no test catches because the markup is correct.
 
 ### 2. One component, two materials, four names
 
@@ -30,8 +30,8 @@ A component that must appear on both surfaces reads `face`, `line`, `ink` and `m
 material it was given. The chrome ramp and the paper ramp both provide those four names, so the
 component has one stylesheet and no second copy.
 
-A fork - `Card.tsx` and `PaperCard.tsx` - is the failure this rule exists to prevent, because the two
-diverge on the first change that only one of them receives.
+A fork - `Card.tsx` and `PaperCard.tsx` - is the failure this rule exists to prevent, because the
+two diverge on the first change that only one of them receives.
 
 ### 3. The seam is a boundary, not a blend
 
@@ -44,45 +44,45 @@ gradient.
 
 ### 4. A wrong material fails review, not the build
 
-The material cannot be checked mechanically without a rendered tree, so the rule is enforced in review
-and in one verification: the design verifier asserts the four surfaces' computed backgrounds against
-the spec. A component on the wrong material is visible there as a value, not as an opinion.
+The material cannot be checked mechanically without a rendered tree, so the rule is enforced in
+review and in one verification: the design verifier asserts the four surfaces' computed backgrounds
+against the spec. A component on the wrong material is visible there as a value, not as an opinion.
 
 ## Context
 
 RFC-0045 defines the two ramps. The composition is dark above the seam and light below it, and the
-first component that appears on both sides - a card, a badge, a link - forces the question of whether
-it is one component or two. Without a rule the answer is two, and the second copy is written by
-whoever needed it first.
+first component that appears on both sides - a card, a badge, a link - forces the question of
+whether it is one component or two. Without a rule the answer is two, and the second copy is written
+by whoever needed it first.
 
 ## Alternatives considered
 
-**A CSS custom-property cascade set by the mounting sheet.** This is the mechanism the rule uses, not
-an alternative to it: the context is a set of custom properties, and the rule is that a component
-reads them rather than sniffing.
+**A CSS custom-property cascade set by the mounting sheet.** This is the mechanism the rule uses,
+not an alternative to it: the context is a set of custom properties, and the rule is that a
+component reads them rather than sniffing.
 
 **A separate component per material.** Rejected on rule 2.
 
-**`prefers-color-scheme` as a third material.** Rejected for now: the two materials are a property of
-the composition, not of the reader's preference. A reader-preference theme is a different record and
-would multiply every component's states by two.
+**`prefers-color-scheme` as a third material.** Rejected for now: the two materials are a property
+of the composition, not of the reader's preference. A reader-preference theme is a different record
+and would multiply every component's states by two.
 
 ## Consequences
 
-- The token set grows two aliases per material name, which the contract check already requires to have
-  readers.
+- The token set grows two aliases per material name, which the contract check already requires to
+  have readers.
 - A component's sheet is written once and reviewed once, whichever surface it lands on.
-- The material is explicit at every mount site, which is a small verbosity for a large predictability
-  gain.
+- The material is explicit at every mount site, which is a small verbosity for a large
+  predictability gain.
 
 ## Verification
 
-| Claim                          | Test                                                                     |
-| ------------------------------ | ------------------------------------------------------------------------ |
-| No component detects a material | `grep` for `getComputedStyle` in `Source/Component/` returns nothing      |
-| Both ramps provide four names  | the token contract fails if a ramp is missing `face`, `line`, `ink`, `muted` |
-| The seam is its own material   | the verifier asserts the seam's background equals the seam token, not either ramp |
-| No forked component            | `find Source/Component -name "*Paper*"` returns nothing                   |
+| Claim                           | Test                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| No component detects a material | `grep` for `getComputedStyle` in `Source/Component/` returns nothing              |
+| Both ramps provide four names   | the token contract fails if a ramp is missing `face`, `line`, `ink`, `muted`      |
+| The seam is its own material    | the verifier asserts the seam's background equals the seam token, not either ramp |
+| No forked component             | `find Source/Component -name "*Paper*"` returns nothing                           |
 
 ## Open questions
 

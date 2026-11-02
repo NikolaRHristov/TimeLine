@@ -3,25 +3,25 @@
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `Global.css`, the
 material mixins, every component's public props, the token contract check **Decision class:**
 methodology **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0045 (the token
-set and the material), RFC-0044 (the toolchain floor and its upgrade policy), RFC-0049 (the component
-states)
+set and the material), RFC-0044 (the toolchain floor and its upgrade policy), RFC-0049 (the
+component states)
 
 ## Decision
 
 A design system is a set of names that other code depends on, so its changes are versioned and its
 retirements are staged. Four moves are allowed and no others: add, alias, deprecate, remove.
 
-The system's version is the shape of its token set - the names and their roles - not the values behind
-them. Changing `--chrome-void` from `#1c1c1e` to `#1b1b1d` is not a version change; renaming it, or
-removing it, is.
+The system's version is the shape of its token set - the names and their roles - not the values
+behind them. Changing `--chrome-void` from `#1c1c1e` to `#1b1b1d` is not a version change; renaming
+it, or removing it, is.
 
 Five rules make that enforceable.
 
 ### 1. A token arrives with a reader
 
-A token is added in the same change as the sheet or component that reads it. A token nobody reads is a
-defect the contract check already refuses, and the reason is not tidiness: an unread token is a name
-someone will guess the meaning of later, and guess wrong.
+A token is added in the same change as the sheet or component that reads it. A token nobody reads is
+a defect the contract check already refuses, and the reason is not tidiness: an unread token is a
+name someone will guess the meaning of later, and guess wrong.
 
 ### 2. A rename is an alias, not a rewrite
 
@@ -68,12 +68,12 @@ surprise. This record is that posture applied to the design system.
 
 ## Alternatives considered
 
-**No version, only a changelog.** Rejected: a changelog records what happened; a version states what a
-consumer may rely on.
+**No version, only a changelog.** Rejected: a changelog records what happened; a version states what
+a consumer may rely on.
 
-**Semantic versioning on the package.** Rejected as the primary signal: the site is not a library, and
-the package version moves for reasons that have nothing to do with the design system. The token shape
-is the thing a consumer depends on, so the token shape is the version.
+**Semantic versioning on the package.** Rejected as the primary signal: the site is not a library,
+and the package version moves for reasons that have nothing to do with the design system. The token
+shape is the thing a consumer depends on, so the token shape is the version.
 
 **Removing a token as soon as nothing in-tree reads it.** Rejected on rule 2: an external clone is a
 reader the check cannot see.
@@ -87,12 +87,12 @@ reader the check cannot see.
 
 ## Verification
 
-| Claim                       | Test                                                                         |
-| --------------------------- | ---------------------------------------------------------------------------- |
-| No unread token             | `TokenContract.mjs` fails on an orphan token (already enforced)               |
-| A rename keeps the old name | the check reports the alias as deprecated and names its removal version       |
-| A removal is proved         | the check reports zero reads before the name is deleted                       |
-| Deprecation is build-time   | the warning appears in `pnpm run check` output, not in the browser console    |
+| Claim                       | Test                                                                       |
+| --------------------------- | -------------------------------------------------------------------------- |
+| No unread token             | `TokenContract.mjs` fails on an orphan token (already enforced)            |
+| A rename keeps the old name | the check reports the alias as deprecated and names its removal version    |
+| A removal is proved         | the check reports zero reads before the name is deleted                    |
+| Deprecation is build-time   | the warning appears in `pnpm run check` output, not in the browser console |
 
 ## Open questions
 

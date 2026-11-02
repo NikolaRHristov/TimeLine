@@ -218,7 +218,10 @@ const measured = [
 					<ul class="post__links">
 						{links.map((item) => (
 							<li>
-								<a class="post__link" href={item.url} rel="noopener noreferrer nofollow">
+								<a
+									class="post__link"
+									href={item.url}
+									rel="noopener noreferrer nofollow">
 									{item.url}
 								</a>
 							</li>
@@ -241,8 +244,16 @@ const measured = [
 					<a href={entry.data.url} rel="noopener noreferrer">
 						{Content.Page.Bookmark.Detail.Open}
 					</a>
-					<span>{fill(Content.Page.Bookmark.Detail.Saved, { day: day(entry.data.firstSeenAt) })}</span>
-					<span>{fill(Content.Page.Bookmark.Detail.LastRead, { day: day(entry.data.scrapedAt) })}</span>
+					<span>
+						{fill(Content.Page.Bookmark.Detail.Saved, {
+							day: day(entry.data.firstSeenAt),
+						})}
+					</span>
+					<span>
+						{fill(Content.Page.Bookmark.Detail.LastRead, {
+							day: day(entry.data.scrapedAt),
+						})}
+					</span>
 					<a href={BookmarkHref(entry.id)}>{Content.Page.Bookmark.Detail.Permalink}</a>
 				</footer>
 			</article>
