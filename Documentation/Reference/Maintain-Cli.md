@@ -30,6 +30,10 @@ with identical JSON shapes. See `Reference/Transport.md`.
 | `MAINTAIN_STORAGE`    | `Maintain/Storage/Shadow`                               | Shadow store root                        |
 | `MAINTAIN_VOCABULARY` | `Configuration/Keyword/Keyword.ts` (tracked default)    | Keyword vocabulary, `{slug: [term, …]}`  |
 | `MAINTAIN_RULES`      | `Maintain/Configuration/Rules/Rules.json`               | Weighted rules for `author classify`     |
+| `MAINTAIN_MODEL_URL`  | unset (required by `author classify infer`)             | OpenAI-compatible chat-completions URL   |
+| `MAINTAIN_MODEL_KEY`  | unset                                                   | Bearer token for that endpoint           |
+| `MAINTAIN_MODEL`      | unset                                                   | Model id to ask for, when the endpoint needs one |
+| `MAINTAIN_MODEL_TIMEOUT` | `120`                                                | Seconds before one request is abandoned  |
 | `MAINTAIN_DEBUG`      | unset                                                   | Print a failure's stack trace to stderr  |
 
 Missing config exits 2 with
@@ -40,7 +44,7 @@ No command reads identifiers from argv.
 
 | Command                 | Options                                                                 | Result                                                   |
 | ----------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------- |
-| `config init`           | `--profile`, `--list <slug>=<id>` (repeatable), `--cdp-port`, `--force` | `{written,profile,lists,cdp,next}`                       |
+| `config init`           | `--profile`, `--list <slug>=<id>` (repeatable), `--cdp-port`, `--force` | `{written,overwritten,profile,lists,cdp,next}`           |
 | `config show`           | `--reveal`, `--list <slug>`                                             | `{path,profile,cdp,lists,routes,content,storage}`        |
 | `tab list`              | -                                                                       | `{tabs:[{id,title,url,active}]}`                         |
 | `tab focus`             | `--id`                                                                  | `{focused:true,id}`                                      |
@@ -58,7 +62,9 @@ No command reads identifiers from argv.
 | `store hide`            | `--id`                                                                  | `{hidden:true,id,removed,unchanged}`                     |
 | `store status`          | -                                                                       | `{shadow:{…},public:{…}}`                                |
 | `author evidence build` | -                                                                       | `{archive,posts,authors:[…],skipped}`                    |
-| `author classify rules` | -                                                                       | `{rules,threshold,counts,decisions,ambiguous,preserved}` |
+| `author classify rules` | -                                                                       | `{rules,threshold,lists,counts,decisions,ambiguous,preserved}` |
+| `author classify infer` | `--limit`, `--dry-run`                                                  | `{counts,batches,asked,decisions,unanswered,rejected,failed,preserved}` |
+| `author distribute apply` | `--apply`, `--dry-run`                                                  | `{counts,plan,written,added,failed,remaining,stopped}`   |
 | `event append`          | `--kind`, `--subject`, `--payload`                                      | `{written:true,path}`                                    |
 | `event tail`            | `--follow`, `--dir shadow\|public`, `--since`, `--interval`             | `{directory,count,events}` or JSON lines                 |
 
@@ -200,6 +206,13 @@ those weights can explain:
 }
 ```
 
+The identifier map decides which slugs exist; the rules file only says how to
+weigh them. A weight for a slug the map does not declare is dropped with a
+warning, so a map of `reading` and `recipes` never receives a decision naming
+`CODE`. With no map - or a map that declares no lists - there is nothing to
+narrow to, so the rules file's own keys are the list vocabulary and the command
+says so on stderr. `lists` in the output is the set actually in force.
+
 A placement needs both halves of the threshold. `score` is the best list's
 total; `gap` is that list's lead over the runner-up. `threshold.score` and
 `threshold.gap` are read from the rules file, never from the TypeScript - a
@@ -228,6 +241,153 @@ previous guesses, so this pass may supersede them.
 The command reads the shadow archive and the Author collection and writes
 neither, so a dry run stays dry and two runs print the same bytes.
 
+## Distribution: the model breaks the tie
+
+`author classify infer` is the second half of the same pass: it takes exactly the
+authors the rules left in `ambiguous` and asks a model about them, then caches
+every answer. It is the only command in this tool that spends money, so it is
+built to spend as little as possible.
+
+```bash
+export MAINTAIN_MODEL_URL=http://127.0.0.1:8642/v1/chat/completions
+export MAINTAIN_MODEL_KEY=<token>          # when the endpoint wants one
+export MAINTAIN_MODEL=<model-id>           # when the endpoint wants one
+pnpm maintain author classify infer
+# {"counts":{"authors":175,"ambiguous":159,"asked":159,"cached":0,"manual":1,
+#  "placed":53,"declined":106,"unanswered":0,"rejected":0,"failed":0,"deferred":0},
+#  "batches":7,"asked":["<handle>",…],"decisions":[…],"preserved":[…]}
+```
+
+Four things bound the spend, in order of how much they save:
+
+- **A cached answer is never asked for twice.** Every decision is written to
+  `Source/Content/Author/<handle>.json` with `decision.by: "model"`, so a second
+  run over an unchanged archive makes no request at all and prints
+  `"asked": 0`. Nothing is cached for a reply that could not be trusted, which
+  is what makes a re-run ask again instead of inheriting a guess.
+- **A manual decision is not a question.** `decision.by: "manual"` is never
+  asked about, never scored and never written over - it is reported in
+  `preserved` with the reason on file, even when the model volunteers an answer
+  for that handle in the same batch.
+- **At most 25 authors per request.** One reply has to be read whole, so the
+  cap is what keeps a large ambiguity from becoming one answer a model truncates
+  halfway through. It is not an option: a caller that could raise it could also
+  make a batch unanswerable.
+- **A failed batch costs one batch.** A reply that is not JSON, an endpoint that
+  refuses, or a batch that times out is reported in `failed` with its handles,
+  and the next batch still runs. Every batch failing is a `model-error` failure
+  instead of a report, so `"asked": 0` can never be mistaken for a cache hit.
+
+`--limit <n>` prices a partial run: it asks about at most `n` authors and
+reports the rest in `counts.deferred`. `--dry-run` asks about nothing and prints
+the handles a real run would have asked about, with the batch count.
+
+The request is per author, over the aggregated evidence record - top domains,
+keyword hits per bucket, up to three capped excerpts - and never per post. A
+mixed timeline is normal, so the question is about the account's body of work;
+a prompt that listed every post would spend the batch's budget on one prolific
+account and invite an answer about a post instead of about the account.
+
+The reply must be JSON only, in the same shape the rules classifier emits:
+
+```json
+{ "decisions": [{ "handle": "<handle>", "list": "<slug>", "score": 6, "gap": 3, "reason": "one line" }] }
+```
+
+- `list` must be a slug the identifier map declares - the rules file's own keys
+  when no map is set - or `null` for "none of them". A slug nobody configured is
+  rejected rather than cached: it is a decision nothing could ever apply.
+  A decline is a decision like any other: it is cached too, so the same account
+  is not asked about on every run, and it leaves the record's `lists` alone.
+- `score` and `gap` are the model's own numbers and are optional; they are
+  recorded, never checked against the rules' arithmetic - the rules already
+  refused to decide, so there is nothing here to verify them against.
+- `reason` is required and is flattened to one line. A decision nobody can
+  explain is a decision nobody can review.
+- An entry naming an unknown handle, a slug that is not configured, or no reason
+  is **rejected**: it is reported in `rejected` with the reason, it is not
+  cached, and the rest of the reply still counts. A malformed entry therefore
+  cannot become a permanent one.
+
+A record written here carries every field the site's Author schema requires -
+`firstSeenAt` and `postCount` from the record already on file, so a
+classification never restamps an author's history, and `confidence` from the
+model's own score.
+
+## Distribution: applying the decisions
+
+`author distribute apply` is the last stage: it turns the decisions into the
+site's author records, and then - only with `--apply` - into list memberships on
+X. Without the flag it prints the plan and changes nothing at all, so the safe
+thing for a gated launch to do by accident is nothing.
+
+```bash
+pnpm maintain author distribute apply
+# {"dryRun":true,"apply":false,"lists":["<slug>",…],"spacing":3000,
+#  "counts":{"authors":175,"handles":16,"memberships":16,"manual":1,"declined":0,
+#  "unresolved":159,"skipped":1,"records":0,"added":0,"already":0,"failed":0,
+#  "remaining":16},
+#  "plan":[{"handle":"<handle>","list":"<slug>","by":"rule","reason":"…"}],
+#  "preserved":[…],"declined":[],"unresolved":[…],"skipped":[…],"stopped":null}
+```
+
+The three sources keep the precedence the earlier passes set, and this command
+re-decides none of it:
+
+| Source   | Where it lives                        | This stage               |
+| -------- | ------------------------------------- | ------------------------ |
+| `rule`   | in memory, from the weighted rules    | writes the record        |
+| `model`  | `Source/Content/Author/<handle>.json` | reads it, writes nothing |
+| `manual` | the same file, `decision.by:"manual"` | never writes it          |
+
+- A **rule** decision exists only in memory - `author classify rules` writes
+  nothing - so its record is created here, before any membership.
+- A **model** decision was cached by `author classify infer`. The record's
+  `lists` is the filing it decided, and an empty `lists` is a decline: reported
+  in `declined`, and nothing is added.
+- A **manual** decision is the person's own answer. The record is never written
+  again, and the filing is distributed like any other - a decision this stage
+  declined to carry out would be one the person has to re-enter by hand.
+- An author the rules left ambiguous with no decision on file is `unresolved`:
+  `author classify infer` has not run for them, and this stage does not guess.
+- A list the identifier map does not declare is `skipped`. A membership is named
+  by the map's slug, and a row the dialog cannot offer is not a decision.
+
+`--apply` needs the identifier map, because the map is what names a list; a dry
+run needs only the rules file. It writes every decision record first and then
+adds one membership at a time through the same primitive `page list member add`
+uses, waiting three seconds between writes (`"spacing": 3000`, a floor on top of
+the profile load in front of every add). The order is the safety story: a record
+is the durable statement of what this run decided, so a run that stops halfway
+leaves a plan on disk that the next run reads instead of re-deriving, and every
+membership that exists is one a record explains.
+
+A rate limit stops the run on the first answer, and is never retried - a retry
+loop against a limit is what makes it longer. The report says how far it got:
+
+```json
+{
+	"counts": { "memberships": 52, "added": 11, "remaining": 41 },
+	"stopped": {
+		"reason": "rate-limited",
+		"handle": "<handle>",
+		"list": "<slug>",
+		"error": "rate-limited",
+		"detail": "You are over the daily limit for adding people to Lists.",
+		"attempted": 12
+	},
+	"remaining": [{ "handle": "<handle>", "list": "<slug>", "by": "rule" }]
+}
+```
+
+The same error three times in a row stops the run as well
+(`"reason": "repeated-failure"`): a control that moved or a list X renamed
+repeats for every handle, and continuing would spend one profile load per author
+proving the same point. A single failure is recorded in `failed` and the next
+handle runs, because one unreachable profile must not end a distribution. Both
+stops still exit 0 - the summary is the deliverable - with one line on stderr
+naming where the run stopped.
+
 ## Example
 
 ```bash
@@ -255,10 +415,11 @@ Every failure is one object, exit 2, no stack trace on stdout:
 
 Known codes: `no-config`, `config-exists`, `unknown-list`, `no-list-menu`,
 `no-list-surface`, `no-tab`, `no-post`, `page-not-ready`, `rate-limited`,
-`schema-invalid`, `cdp-unreachable`, `cdp-error`, `io-error`, `usage`,
-`internal`. A code is a contract; the `detail` string is not. `--help` and
-`--schema` are rendered from the same table the parser matches against, so a
-command cannot drift from its own documentation.
+`schema-invalid`, `no-rules`, `no-model`, `model-error`, `model-reply`,
+`cdp-unreachable`, `cdp-error`, `io-error`, `usage`, `internal`. A code is a
+contract; the `detail` string is not. `--help` and `--schema` are rendered from
+the same table the parser matches against, so a command cannot drift from its
+own documentation.
 
 ## Tests
 

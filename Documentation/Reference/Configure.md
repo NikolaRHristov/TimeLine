@@ -81,11 +81,17 @@ by construction - every value is a flag, which is what makes it agent-drivable.
 | `--profile <handle>` | string             | Your handle; a leading `@` is stripped    |
 | `--list <slug>=<id>` | string, repeatable | One configured list. Repeat once per list |
 | `--cdp-port <n>`     | integer            | Port of the DevTools endpoint             |
-| `--force`            | boolean            | Overwrite an existing map                 |
+| `--force`            | boolean            | Replace an existing map, keeping its values as the base |
 
 - No flags: writes the example's defaults and prints the next three commands.
 - An existing map without `--force` is `config-exists` - list ids cannot be
   rediscovered from the interface, so replacing them is deliberate.
+- With `--force` on an existing map, that map is the base: only the flags given
+  are changed. The onboarding sequence the command prints runs `init --force`
+  once per fact (the handle, then each list), and each step must not undo the
+  one before it. `--list` replaces the entry for its slug and appends the rest,
+  so wiring a second list does not drop the first. To start over from scratch,
+  delete the file first.
 - The write is atomic: a temporary file beside the target, then a rename. A
   reader never sees half a map. The parent directory is created if missing.
 - Mode `0600`. The map carries a public handle and public list ids - **never**
@@ -103,7 +109,8 @@ maintain config show --reveal # {"lists":[{"slug":"alpha","id":"1"}], …}
 
 `--list <slug>` narrows the output to one list. The slug is resolved against the
 map, never against a hardcoded set, so an unconfigured slug is `unknown-list`
-with the configured set in `configured`:
+whose message names the configured set (`detail`) and repeats it in
+`configured`:
 
 ```bash
 maintain config show --list alpha # one entry
