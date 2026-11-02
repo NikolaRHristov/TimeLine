@@ -14,22 +14,28 @@ copy and their structure is the composition itself.
 
 Six rules make that enforceable.
 
-### 0. A route that performs an action is not a showcase
+### 0. The workspace is the only data surface
 
-The distinction is the route's job, not its position:
+Every route that is not `/Workspace` is a showcase: no collection reads, no counts, no records. The
+workspace holds the data - the drawer's columns are the Voted queue, the curated picks and the
+activity trail, and the canvas is the published side.
 
-- **Explains** - the homepage. A reader arrives knowing nothing, and the page's work is to state
-  what the system is. No collection, no counts. This is the showcase.
-- **Does** - `/Voted` (a visitor ranks candidates), `/Activity` (the event trail), `/Bookmark`,
-  `/List`. Each exists so a reader can _perform_ or _read_ something, and a copy-only version of
-  them deletes the feature rather than presenting it.
+This is one rule with one consequence: **a reader who wants to do something goes to the workspace; a
+reader who wants to understand something reads a showcase page.** Splitting it any other way
+produces two half-surfaces that each explain a feature they cannot perform.
 
-An earlier draft of this record converted every public route to a showcase, which was wrong for the
-reason above: `/Voted` without the vote queue is a page about voting that cannot be voted on. A
-showcase surface is the front door, not the building.
+An earlier draft of this record drew the line at "does the route perform an action", keeping
+`/Voted` and `/Activity` as data pages because a vote queue is a thing you can do. That was wrong
+twice over: it contradicted the product decision that the archive lives in one place, and it left
+the drawer's own Voted column competing with a second, public vote queue for the same records.
 
-A route that does something still follows the material, the data states (RFC-0050) and the component
-states (RFC-0049). It is a product surface under the design system, not an exception to it.
+A showcase page still follows the material (RFC-0045), the component states (RFC-0049) and the data
+states (RFC-0050) - it simply has no data to be in a state about.
+
+**The one exception is a record detail route.** `/Bookmark/<id>` and `/List/<slug>` render one
+record, because a link has to point at something and a shared permalink that resolves to marketing
+copy is a broken link. A detail route is a projection of the canvas, not a showcase, and it keeps
+its data.
 
 ### 1. A showcase page reads nothing
 
