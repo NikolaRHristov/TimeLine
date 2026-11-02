@@ -1,11 +1,15 @@
+/*
+ * The Tailwind entry: the four layers, and nothing else.
+ *
+ * Tokens live in `Global.css`, not here. A custom property declared in this file
+ * would be a second place the palette is stated, and the first one a reader of
+ * the sheets would not think to open - the token check that runs with
+ * `pnpm run check` reports an unread declaration wherever it appears.
+ *
+ * `@tailwind variants` stays because the sibling sites' shells emit it and a
+ * plugin's variant lands in that layer; dropping it would silently discard one.
+ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 @tailwind variants;
-
-@layer base {
-	:root {
-		--background-light: theme("colors.white");
-		--background-dark: theme("colors.black");
-	}
-}

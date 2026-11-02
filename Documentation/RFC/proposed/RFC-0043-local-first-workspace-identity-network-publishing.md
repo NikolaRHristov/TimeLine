@@ -7,8 +7,8 @@ shadow store and publication), RFC-0003 (the transport seam), RFC-0005 (a room i
 RFC-0007 (the envelope), RFC-0012 (audiences), RFC-0013 (identity, keys and authority), RFC-0017
 (the client surface), RFC-0019 (vocabulary, `circle`), RFC-0024 §5 (an action is idempotent by id),
 RFC-0027 (votes rank, the authority selects), RFC-0030 (the sync rules), RFC-0040 (a client
-timestamp is a claim); t_1621cc5c (substrate research); t_ab85d9de (the workspace session and network
-layer)
+timestamp is a claim); t_1621cc5c (substrate research); t_ab85d9de (the workspace session and
+network layer)
 
 ## Decision
 

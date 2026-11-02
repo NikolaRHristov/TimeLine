@@ -56,7 +56,7 @@ its entry.
 - **RFC-0027** - Product surface and curation economics. _Cards: `t_406cc8ab`._
 - **RFC-0035** - Notifications, presence and attention.
 - **RFC-0039** - Billing and metering.
-- **RFC-0043** - Local-first workspace: identity, network and publishing.
+- **RFC-0043** - Local-first workspace: identity, network and publishing. _Cards: `t_ab85d9de`._
 
 ### Policy
 
