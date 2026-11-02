@@ -92,10 +92,9 @@ Nothing scraped is public by default.
 | **Shadow** | `Maintain/Storage/Shadow/` | no (gitignored) | every observation, raw: post JSON keyed by status id, `Observation.jsonl` append-only log, `Index.json` id→file map |
 | **Public** | `Source/Content/`          | yes             | only records explicitly promoted, as Astro collection JSON                                                          |
 
-Promotion is a separate, reversible command (`store publish`), so withholding a
-record is the default state rather than a correction applied afterwards. Shadow
-rows carry `visibility: "shadow" | "public" | "hidden"`; `hidden` is a tombstone
-that survives re-scrapes.
+Promotion is a separate, reversible command (`store publish`), so withholding a record is the
+default state rather than a correction applied afterwards. Shadow rows carry
+`visibility: "shadow" | "public" | "hidden"`; `hidden` is a tombstone that survives re-scrapes.
 
 Rules:
 
