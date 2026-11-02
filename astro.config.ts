@@ -54,6 +54,31 @@ const Env = loadEnv(process.env["NODE_ENV"] ?? "production", Here, "");
 // compiler writes the file's text into the bundle. Nothing reads Markdown at
 // run time, and the site ships no copy it does not print.
 const Layer = await Content();
+
+// The same layer, also written as a module.
+//
+// `vite.define` substitutes a static `process.env.NAME`, and the page uses
+// computed access, so the dev module runner leaves it alone and every string
+// arrives undefined. Writing the map as a real import gives both dev and build
+// one source that cannot go stale: it is regenerated on every config load, and
+// `Content/` stays the only place a word is edited.
+{
+	const { mkdir, writeFile } = await import("node:fs/promises");
+	const Target = resolve(Here, "Source", "Generated", "Content.ts");
+	await mkdir(dirname(Target), { recursive: true });
+	const Body = Object.entries(Layer.Define)
+		.map(
+			([Name, Literal]) =>
+				`	${JSON.stringify(Name.replace(/^process\.env\./, ""))}: ${Literal},`,
+		)
+		.join("\n");
+	await writeFile(
+		Target,
+		`// generated - do not edit. Source: Content/**/*.md, resolved by Scripts/Content.ts.\nexport const Strings: Readonly<Record<string, string>> = {\n${Body}\n};\n`,
+		"utf8",
+	);
+}
+
 const Origin = Layer.Values["ORIGIN"];
 
 if (Origin === undefined) {
@@ -146,6 +171,14 @@ export default defineConfig({
 			},
 		}),
 		(await import("@astrojs/sitemap")).default(),
+		// The dynamic half of the page. The shell and the published canvas are
+		// static HTML - they are the same for every reader and a service worker
+		// can serve them from cache - while the workspace itself hydrates, because
+		// what a person sees in their own drawer depends on who is signed in and
+		// which network they belong to. Solid rather than a heavier runtime: the
+		// workspace re-renders a handful of lists and a grid, and fine-grained
+		// reactivity keeps that off the main thread.
+		(await import("@astrojs/solid-js")).default(),
 		// The site has more than one page and one shared stylesheet. Pruning the
 		// source after inlining the first page leaves the later pages without the
 		// shared rules, so the source stays whole and each page inlines its own

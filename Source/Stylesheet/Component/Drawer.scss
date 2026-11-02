@@ -1,0 +1,385 @@
+@use "../Material.scss" as Material;
+
+// The drawer: the private workspace above the published canvas.
+//
+// The drawer is one band of columns, and the shape of the band is the message -
+// a selected column rises into a tab (square top-left corner, rounded
+// everywhere else) while the others stay flush cards. That single corner tells a
+// reader which column is live without a heading colour or an underline, so it is
+// a modifier rather than something each column rebuilds.
+//
+// An item is one row: icon or thumbnail, a title, a meta line, an action. The
+// three heights in the composition (36px, 44px, 28px) are three content shapes -
+// text, media, and a control - so the height lives on the modifier that also
+// decides the padding.
+//
+// A drag ghost is the affordance that publishes: dashed, tinted with the accent
+// of the column it belongs to, and never a real item. Its colour arrives as
+// `--ghost-tone`, because the column decides which stage the drop feeds.
+.drawer {
+	@include Material.panel;
+
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-3);
+	padding: 1.25rem 1.75rem 1rem;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		height: 1.875rem;
+		flex-shrink: 0;
+	}
+
+	&__title-group {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	// The depth chevrons: a control, so a square, not a link.
+	&__depth {
+		@include Material.reset;
+		@include Material.control;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		flex-shrink: 0;
+
+		svg {
+			width: 12px;
+			height: 12px;
+		}
+	}
+
+	&__heading {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		white-space: nowrap;
+	}
+
+	&__eyebrow {
+		@include Material.label;
+	}
+
+	&__name {
+		font-size: 13px;
+		font-weight: 600;
+		line-height: normal;
+		color: var(--chrome-ink-bright);
+	}
+
+	&__hint {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		white-space: nowrap;
+
+		svg {
+			width: 14px;
+			height: 14px;
+			flex-shrink: 0;
+		}
+	}
+
+	&__hint-text {
+		font-size: 12px;
+		line-height: normal;
+		color: var(--chrome-ink-faint);
+	}
+
+	&__views {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	&__view {
+		@include Material.reset;
+
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 10px;
+		background: var(--chrome-line-strong);
+		border-radius: 6px;
+		font-size: 11px;
+		line-height: normal;
+		color: var(--chrome-ink-muted);
+		white-space: nowrap;
+
+		svg {
+			width: 12px;
+			height: 12px;
+		}
+
+		&--active {
+			background: var(--chrome-active);
+			font-weight: 600;
+			color: var(--chrome-ink);
+		}
+	}
+
+	&__tabs {
+		display: flex;
+		align-items: flex-end;
+		width: 100%;
+		height: 1.375rem;
+		flex-shrink: 0;
+	}
+
+	&__tabs-spacer {
+		display: flex;
+		flex: 1 0 0;
+		justify-content: flex-end;
+		min-width: 1px;
+	}
+
+	&__add {
+		@include Material.reset;
+
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 8px;
+		background: var(--chrome-control);
+		border-radius: 6px;
+		font-size: 11px;
+		line-height: normal;
+		color: var(--chrome-ink-faint);
+		white-space: nowrap;
+
+		svg {
+			width: 11px;
+			height: 11px;
+		}
+	}
+
+	&__columns {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+		width: 100%;
+		height: 15rem;
+		flex-shrink: 0;
+	}
+}
+
+.drawer-column {
+	@include Material.face;
+
+	display: flex;
+	flex-direction: column;
+	flex: 1 0 0;
+	min-width: 1px;
+	height: 100%;
+	overflow: clip;
+
+	// The live column rises into the tab row above it.
+	&--active {
+		background: var(--chrome-raised);
+		border-color: var(--chrome-line-strong);
+		border-radius: 0 0.75rem 0.75rem;
+	}
+
+	&__inner {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		flex: 1 0 0;
+		min-height: 1px;
+		width: 100%;
+		padding: 10px;
+		overflow: clip;
+	}
+}
+
+.drawer-item {
+	@include Material.reset;
+	@include Material.card;
+
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 0 8px 0 10px;
+	flex-shrink: 0;
+
+	// Three content shapes, three heights.
+	&--text {
+		height: 2.25rem;
+	}
+
+	&--media {
+		height: 2.75rem;
+	}
+
+	&--control {
+		height: 1.75rem;
+		justify-content: center;
+		padding-inline: 10px 8px;
+	}
+
+	&--selected {
+		border-color: var(--stage-source);
+
+		.drawer-item__title,
+		.drawer-item__meta,
+		.drawer-item__icon {
+			color: var(--stage-source);
+		}
+	}
+
+	&--ghost {
+		height: 1.75rem;
+		background: var(--chrome-void);
+		border: 1px dashed var(--ghost-tone);
+		opacity: 0.5;
+
+		.drawer-item__title {
+			font-size: 10px;
+			font-weight: 400;
+			color: var(--ghost-tone);
+		}
+	}
+
+	&__icon {
+		width: 12px;
+		height: 12px;
+		flex-shrink: 0;
+		color: var(--chrome-ink-faint);
+	}
+
+	&__thumb {
+		width: 1.75rem;
+		height: 1.75rem;
+		border-radius: 6px;
+		object-fit: cover;
+		flex-shrink: 0;
+		background: var(--chrome-line);
+	}
+
+	&__avatar {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 999px;
+		background: var(--chrome-line-strong);
+		font-size: 10px;
+		font-weight: 600;
+		color: var(--chrome-ink);
+		flex-shrink: 0;
+		text-transform: uppercase;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+		flex: 1 0 0;
+		min-width: 1px;
+		line-height: normal;
+	}
+
+	&__title {
+		@include Material.ellipsis;
+
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--chrome-ink);
+	}
+
+	&__meta {
+		@include Material.ellipsis;
+
+		font-size: 9px;
+		color: var(--chrome-ink-faint);
+	}
+
+	&__action {
+		width: 12px;
+		height: 12px;
+		color: var(--chrome-ink-faint);
+		flex-shrink: 0;
+	}
+
+	&--control &__action {
+		width: 10px;
+		height: 10px;
+	}
+}
+
+// The publish bar: the seam between the private drawer and the public canvas.
+// It states the destination of a drop and nothing else.
+.publish {
+	@include Material.panel;
+
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-4);
+	height: 2.5rem;
+	padding-inline: 1.75rem;
+
+	&__group {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		white-space: nowrap;
+	}
+
+	&__step {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 999px;
+		background: var(--chrome-control);
+		color: var(--chrome-ink-muted);
+		flex-shrink: 0;
+
+		svg {
+			width: 11px;
+			height: 11px;
+		}
+	}
+
+	&__label {
+		font-size: 13px;
+		line-height: normal;
+		color: var(--chrome-ink-bright);
+	}
+
+	&__rule {
+		flex: 1 0 0;
+		min-width: 1px;
+		height: 1px;
+		background: var(--chrome-line-strong);
+	}
+
+	&__note {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 13px;
+		line-height: normal;
+		color: var(--chrome-ink-faint);
+		white-space: nowrap;
+
+		svg {
+			width: 12px;
+			height: 12px;
+			flex-shrink: 0;
+		}
+	}
+}

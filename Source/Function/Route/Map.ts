@@ -40,6 +40,7 @@ export const CanonicalPath: ReadonlySet<string> = new Set([
 	"/Bookmark",
 	"/List",
 	"/Voted",
+	"/Workspace",
 ]);
 
 /**

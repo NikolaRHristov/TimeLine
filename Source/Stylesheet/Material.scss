@@ -1,0 +1,90 @@
+// The instrument-panel material.
+//
+// One flat fill per face and one line per edge, with no elevation: no gradient,
+// no blur, no cast shadow. The depth a panel needs is drawn instead - a raised
+// face is lighter than the void behind it, an inset track is darker than the
+// card it sits in, and a selected edge is a coloured line rather than a glow.
+// That keeps every surface readable at a 9px type size, which is what the
+// drawer's meta lines are set in.
+//
+// The mixins exist so a component sheet states structure, not colour. A sheet
+// that wrote `background: #2c2c2e` would be a second place the palette lives;
+// these read the tokens declared in `Global.css`, so a theme change is one edit.
+
+// The drawer's ground: the darkest face in the composition.
+@mixin panel {
+	background: var(--chrome-void);
+	color: var(--chrome-ink);
+}
+
+// A face that sits above the ground but below a selected card.
+@mixin face($surface: var(--chrome-deep), $line: var(--chrome-line)) {
+	background: $surface;
+	border: 1px solid $line;
+	border-radius: var(--radius-column);
+}
+
+// A row inside a column. Every item in the drawer is one of these, so the
+// radius, the line and the fill are stated once.
+@mixin card {
+	background: var(--chrome-control);
+	border: 1px solid var(--chrome-line-strong);
+	border-radius: var(--radius-card);
+}
+
+// A control the person presses: square-ish, quiet, one step above its ground.
+@mixin control {
+	background: var(--chrome-control);
+	border: 1px solid var(--chrome-line-strong);
+	border-radius: var(--radius-card);
+	color: var(--chrome-ink-muted);
+}
+
+// The track an event sits on. Darker than the card that carries it, so a
+// progress bar reads as a groove rather than as a second card.
+@mixin inset($height: 100%, $radius: 2px) {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	width: 100%;
+	height: $height;
+	background: var(--chrome-control);
+	border-radius: $radius;
+	overflow: clip;
+}
+
+// The eyebrow voice: uppercase, tracked, faint. Used for the rail's axis name
+// and the drawer's depth path, so the two read as the same kind of label.
+@mixin label($size: 11px) {
+	font-size: $size;
+	font-weight: 400;
+	line-height: normal;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--chrome-ink-muted);
+}
+
+// The one-line truncation every drawer title and meta line needs.
+@mixin ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+// A row or a control that is a real `<button>`.
+//
+// The composition's rows and bands are buttons because they are actions, and a
+// `div` with a click handler is the version of that a keyboard cannot reach.
+// Resetting here rather than per sheet keeps the reset from drifting: one rule
+// makes a button look like the row it replaced, and every component inherits it.
+@mixin reset {
+	appearance: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	font: inherit;
+	color: inherit;
+	text-align: inherit;
+	cursor: pointer;
+}

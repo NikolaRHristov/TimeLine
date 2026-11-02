@@ -1,0 +1,36 @@
+@use "../Material.scss" as Material;
+
+// The workspace frame: the rail beside the page column.
+//
+// Two surfaces, one frame. The rail is fixed-width chrome and the body is the
+// flexible side, so the composition holds at every width without a breakpoint
+// until the rail itself has to fold - which it does below 900px, where the rail
+// becomes a strip above the drawer instead of a column beside it. That is the
+// only layout change in the whole workspace: everything inside either surface is
+// already fluid.
+//
+// The frame fills the viewport because the workspace is an application surface,
+// not an article. A page that mounts it owns the screen, which is why the shell
+// header is not part of this component.
+.workspace {
+	display: flex;
+	align-items: stretch;
+	min-height: 100dvh;
+	background: var(--chrome-void);
+	color: var(--chrome-ink);
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		flex: 1 0 0;
+		min-width: 0;
+	}
+
+	@media (max-width: 900px) {
+		flex-direction: column;
+
+		.workspace__body {
+			width: 100%;
+		}
+	}
+}

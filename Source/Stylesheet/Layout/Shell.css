@@ -23,6 +23,17 @@
 	padding-inline: var(--space-6);
 }
 
+/* The same column, released.
+ *
+ * An application surface is laid out against the viewport, not against a measure:
+ * a drawer of columns and a six-track grid have their own proportions and a
+ * 48rem cap would squeeze both. Only a page that mounts one asks for this, so the
+ * prose measure stays the default everywhere else. */
+.page--wide {
+	max-width: none;
+	padding-inline: 0;
+}
+
 /* The first focusable element on the page: off-screen until it is focused. */
 .skip {
 	position: absolute;

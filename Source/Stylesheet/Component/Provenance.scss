@@ -1,0 +1,188 @@
+@use "../Material.scss" as Material;
+
+// The provenance rail: the drum of stage bands beside the workspace.
+//
+// The rail answers one question the rest of the page cannot - where the work
+// sits along the pipeline - so it is drawn as depth rather than as a list. Each
+// band is one stage, and its height, opacity and marker size are the
+// perspective: the selected stage is the tall, opaque band in the middle, and
+// the stages above and below fall away toward the edges of the drum.
+//
+// Every dimension arrives from the component as a custom property
+// (`--band-height`, `--band-opacity`, `--marker-size`, ...) because the ladder
+// of depths is data, not styling. A sheet that hardcoded seven band heights
+// would make adding an eighth stage a stylesheet change, which is the thing
+// this arrangement exists to avoid.
+//
+// A band's colour is its stage's own accent from `Global.css`, so a band, a
+// column header and an event pill that share a colour are naming the same stage
+// rather than decorating three unrelated things.
+.provenance {
+	@include Material.panel;
+
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	width: 14rem;
+	flex-shrink: 0;
+	padding: var(--space-4) var(--space-3);
+	border-right: 1px solid var(--chrome-line);
+
+	&__header {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		white-space: nowrap;
+	}
+
+	// The eyebrow names the axis; the title names what is read along it.
+	&__eyebrow {
+		@include Material.label;
+
+		color: var(--chrome-ink-muted);
+	}
+
+	&__title {
+		font-size: 13px;
+		font-weight: 600;
+		line-height: normal;
+		color: var(--chrome-ink-bright);
+	}
+
+	// `overflow: clip` keeps a marker from bleeding into its neighbour, which is
+	// what makes the stack read as one cylinder instead of a list of bars.
+	&__drum {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		height: 16.75rem;
+		overflow: clip;
+	}
+
+	&__band {
+		@include Material.reset;
+
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		width: 100%;
+		height: var(--band-height);
+		opacity: var(--band-opacity);
+		overflow: clip;
+		flex-shrink: 0;
+
+		// The selected stage carries a tinted plate, so the eye finds the current
+		// position before it reads a single label.
+		&--selected {
+			gap: 3px;
+			opacity: 1;
+			background: rgb(99 102 241 / 8%);
+		}
+	}
+
+	&__band-label {
+		width: 100%;
+		font-size: var(--band-label-size, 9px);
+		font-weight: 600;
+		line-height: normal;
+		color: #fff;
+		white-space: nowrap;
+	}
+
+	&__track {
+		@include Material.inset(var(--track-height), 2px);
+
+		flex-shrink: 0;
+	}
+
+	// The selected stage's track is a capsule; the rest are flat rails. That one
+	// difference is what makes the selection legible in a stack of near-identical
+	// bars.
+	&__band--selected &__track {
+		border-radius: 999px;
+	}
+
+	&__progress {
+		height: 100%;
+		width: var(--band-progress);
+		background: var(--band-tone);
+		border-radius: inherit;
+		flex-shrink: 0;
+	}
+
+	// A marker is an event on the track, drawn on top of the progress bar with a
+	// border in the void colour - so it reads as a cut rather than a dot.
+	&__marker {
+		position: absolute;
+		top: var(--marker-top, 0);
+		left: var(--marker-left);
+		width: var(--marker-size);
+		height: var(--marker-size);
+		background: var(--band-tone);
+		border: var(--marker-border, 1px) solid var(--chrome-void);
+		border-radius: var(--marker-radius);
+	}
+
+	&__caption {
+		width: 100%;
+		font-size: 9px;
+		line-height: normal;
+		text-align: right;
+		color: var(--band-tone);
+	}
+
+	// The two fades turn a hard-clipped stack into a drum: the bands nearest the
+	// edges dissolve instead of ending.
+	&__fade {
+		position: absolute;
+		left: 0;
+		width: 100%;
+		height: 2.5rem;
+		pointer-events: none;
+
+		&--top {
+			top: 0;
+			background: linear-gradient(to bottom, var(--chrome-void), rgb(28 28 30 / 0%));
+		}
+
+		&--bottom {
+			top: 14.25rem;
+			background: linear-gradient(to bottom, rgb(28 28 30 / 0%), var(--chrome-void));
+		}
+	}
+
+	&__scroll {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		height: 1.9375rem;
+	}
+
+	&__scroll-track {
+		position: relative;
+		width: 100%;
+		height: 6px;
+		background: var(--chrome-control);
+		border-radius: 999px;
+		flex-shrink: 0;
+	}
+
+	&__scroll-thumb {
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 6px;
+		width: var(--scroll-thumb);
+		background: var(--stage-source);
+		border-radius: 999px;
+	}
+
+	&__scroll-note {
+		font-size: 10px;
+		line-height: normal;
+		color: var(--chrome-ink-faint);
+	}
+}

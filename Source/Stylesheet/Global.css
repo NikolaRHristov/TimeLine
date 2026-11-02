@@ -48,6 +48,52 @@
 	--content-width: 48rem;
 }
 
+/**
+ * The workspace chrome: the private side of the archive.
+ *
+ * A second palette, because the workspace is a dark instrument panel around a
+ * light canvas - the same split the composition draws. These are the Figma
+ * values verbatim, so a designer reading a layer's fill finds the same hex in
+ * the sheet. They are declared next to the light tokens rather than in a
+ * component sheet, because three sheets read them: the provenance rail, the
+ * drawer and the publish bar.
+ *
+ * The four stage accents are the event pipeline's own colours, not decoration:
+ * a band, a marker and a column header that share a colour are describing the
+ * same stage of the same event.
+ */
+:root {
+	--chrome-void: #1c1c1e;
+	--chrome-deep: #1f1f21;
+	--chrome-raised: #232325;
+	--chrome-control: #2c2c2e;
+	--chrome-active: #48484a;
+	--chrome-line: #2e2e30;
+	--chrome-line-strong: #3a3a3c;
+
+	--chrome-ink-bright: #e5e5ea;
+	--chrome-ink: #d1d1d6;
+	--chrome-ink-muted: #8e8e93;
+	--chrome-ink-faint: #636366;
+
+	--stage-source: #6366f1;
+	--stage-ingestion: #34d399;
+	--stage-processing: #f59e0b;
+	--stage-review: #ec4899;
+	--stage-publish: #6e9efa;
+	--stage-file: #f0a045;
+	--stage-template: #9b77fa;
+
+	--canvas: #fafafa;
+	--tile-1: #e2e2e2;
+	--tile-2: #e9e9e9;
+	--tile-3: #eee;
+
+	--radius-tile: 1.5rem;
+	--radius-card: 0.5rem;
+	--radius-column: 0.75rem;
+}
+
 html {
 	-webkit-tap-highlight-color: transparent;
 }

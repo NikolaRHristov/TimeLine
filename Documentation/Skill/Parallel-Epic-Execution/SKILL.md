@@ -24,7 +24,7 @@ out of other agents' hands. Defer them.
   to "check" a one-line change.
 - You are the coordinator deciding what runs now and what waits for the boundary.
 
-Do not use it for a single-agent, single-change task — there the build _is_ the check, and deferring
+Do not use it for a single-agent, single-change task - there the build _is_ the check, and deferring
 it just delays the answer.
 
 ## The rules
@@ -32,8 +32,8 @@ it just delays the answer.
 1. **No build per edit.** A worker that changed TypeScript does not run the site build, does not
    reinstall dependencies, and does not re-scrape. It runs the narrowest thing that proves its own
    change: the package's `check`, or a single `node` invocation of the command it touched.
-2. **Validate at the epic boundary, once.** The coordinator runs the full pass — `pnpm run check`,
-   the site build, formatting, the module build — after the last card in the epic lands. Doing it
+2. **Validate at the epic boundary, once.** The coordinator runs the full pass - `pnpm run check`,
+   the site build, formatting, the module build - after the last card in the epic lands. Doing it
    per card repeats the same minutes N times and tells you nothing new.
 3. **Storage is not rebuilt.** The shadow store, the scraped reference cache and the SpacetimeDB
    projection are append-only and expensive to produce. A code change never justifies re-scraping;
@@ -42,7 +42,7 @@ it just delays the answer.
    editing `Maintain/Source` and the site at once is fine; two workers editing the same folder is a
    merge conflict with extra steps.
 5. **A rename lands whole.** Folder renames and their import updates go in one pass, never
-   half-applied — a half-renamed tree fails every other worker's check and looks like their bug.
+   half-applied - a half-renamed tree fails every other worker's check and looks like their bug.
 6. **Report the deferred cost.** Say plainly which validation was skipped and when it will run, so a
    green narrow check is never mistaken for a green epic.
 
@@ -58,12 +58,12 @@ it just delays the answer.
 
 ## The epic boundary
 
-At the end, one pass, in this order — each step cheap enough that failing early saves the rest:
+At the end, one pass, in this order - each step cheap enough that failing early saves the rest:
 
 1. `pnpm run check` (types)
 2. `spacetime build` (module types + wasm)
 3. `pnpm exec prettier --check .` (style)
-4. `pnpm run build` (site — the expensive one, last)
+4. `pnpm run build` (site - the expensive one, last)
 5. a single scrape of the source the epic touched, if it touched a parser
 
 ## Pitfalls
@@ -72,6 +72,12 @@ At the end, one pass, in this order — each step cheap enough that failing earl
   Install once at the start of an epic, never inside it.
 - **`astro build` needs Node >= 22.23.4.** A worker on an older node reads that as a broken repo and
   starts fixing what is not broken. Check `node --version` before blaming the code.
+- **Prefix `pnpm` with `timeout` to keep it in the foreground.** Some runtimes background a bare
+  `pnpm run …` and report the wrapper's status instead of the check's, which reads as "unverified".
+  `timeout 300 pnpm run check` returns the real exit code.
+- **Put the newer Node on `PATH` inside the same command.**
+  `PATH="…/v26.5.1/bin:$PATH" timeout 420 pnpm run build` passes; the same build fails with
+  `Node.js v22.23.0 is not supported by Astro` when the bundled interpreter wins.
 - **A per-card build hides real breakage** behind noise: the failure you see is usually another
   worker's in-progress file, not yours. That is exactly why validation belongs at the boundary,
   after the tree stops moving.

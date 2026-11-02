@@ -8,6 +8,11 @@ packages:
 # the build work offline.
 allowBuilds:
   "@firebase/util": true
+  # sass watches files through @parcel/watcher, whose post-install picks the
+  # native binding for this platform. Approving it is what lets `astro dev`
+  # rebuild a stylesheet on save; unapproved, pnpm exits 1 and every `pnpm run`
+  # stops behind the dependency precheck.
+  "@parcel/watcher": true
   esbuild: true
   protobufjs: true
   # re2 is firebase-tools' regex engine for Security Rules. Approving the build

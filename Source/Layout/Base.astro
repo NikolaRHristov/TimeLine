@@ -31,9 +31,22 @@ import { ClientRouter } from "astro:transitions";
 interface Props {
 	Title?: string;
 	Description?: string;
+	/**
+	 * Render the content column at full width.
+	 *
+	 * The shell's measure is right for prose - an article wants 48rem - and wrong
+	 * for an application surface, which is laid out against the viewport. A page
+	 * that mounts one opts in rather than overriding the shell's own rule, so the
+	 * measure stays a single decision made in one place.
+	 */
+	Wide?: boolean;
 }
 
-const { Title = Content.Brand.Title, Description = Content.Brand.Description } = Astro.props;
+const {
+	Title = Content.Brand.Title,
+	Description = Content.Brand.Description,
+	Wide = false,
+} = Astro.props;
 
 const Path = Astro.url.pathname;
 const Canonical = new URL(Path, Site).href;
@@ -117,7 +130,7 @@ const Year = new Date().getFullYear();
 			</div>
 		</header>
 
-		<main id="main" class="page shell-main">
+		<main id="main" class:list={["page", "shell-main", { "page--wide": Wide }]}>
 			<slot />
 		</main>
 

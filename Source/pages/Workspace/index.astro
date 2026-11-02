@@ -1,0 +1,192 @@
+---
+/**
+ * The workspace page: the archive's private side, drawn as one composition.
+ *
+ * Everything the page knows is read at build time from the content collections
+ * and handed to the Solid island as plain data. That split is deliberate - the
+ * shell, the rail and the canvas are static HTML a service worker can serve from
+ * cache, while the workspace hydrates because what a person sees in their own
+ * drawer depends on who they are and which network they belong to.
+ *
+ * An empty archive is a normal state here, not an error: every collection is
+ * read with a default, so a fresh clone renders the composition with empty
+ * columns instead of throwing. The page never reads the shadow store or the
+ * database - the collections are the only source.
+ */
+import Workspace from "@Component/Workspace/Workspace.tsx";
+import Base from "@Layout/Base.astro";
+import { BookmarkHref } from "@Library/Link.ts";
+import { getCollection } from "astro:content";
+
+const bookmarks = await getCollection("Bookmark");
+const voted = await getCollection("Voted");
+const curated = await getCollection("Curated");
+const authors = await getCollection("Author");
+const events = await getCollection("Event");
+
+/** The first line of a post, short enough to be one drawer row. */
+const Line = (Text: string, Length = 34) => {
+	const Flat = Text.replace(/\s+/g, " ").trim();
+
+	return Flat.length > Length ? `${Flat.slice(0, Length - 1)}…` : Flat;
+};
+
+/**
+ * The most recent first, so the drawer opens on what was just filed.
+ *
+ * The key is read through a function rather than named as a string, because each
+ * collection keeps its timestamps under a different field and a `keyof` lookup
+ * into `data` would have to be re-derived per collection anyway.
+ */
+const Recent = <T,>(Items: T[], Read: (Item: T) => string) =>
+	[...Items].sort((Left, Right) => Read(Right).localeCompare(Read(Left)));
+
+const Stages = [
+	{
+		Key: "source",
+		Label: `Source · ${bookmarks.length} events`,
+		Tone: "#6366f1",
+		Events: bookmarks.length,
+		Caption: `${bookmarks.length} events · Source · Selected`,
+	},
+	{
+		Key: "ingestion",
+		Label: `Ingestion · ${events.length} events`,
+		Tone: "#34d399",
+		Events: events.length,
+	},
+	{
+		Key: "processing",
+		Label: `Processing · ${voted.length} events`,
+		Tone: "#f59e0b",
+		Events: voted.length,
+	},
+	{
+		Key: "review",
+		Label: `Review · ${curated.length} events`,
+		Tone: "#ec4899",
+		Events: curated.length,
+	},
+];
+
+const Columns = [
+	{
+		Key: "bookmark",
+		Label: "Bookmarks",
+		Tone: "#6366f1",
+		Ghost: "Drag to showcase ↓",
+		Entries: Recent(bookmarks, (Entry) => Entry.data.firstSeenAt)
+			.slice(0, 4)
+			.map((Entry) => ({
+				Id: Entry.data.id,
+				Title: Line(Entry.data.text),
+				Meta: `@${Entry.data.author.handle} · ${Entry.data.metrics.likes} likes`,
+				Kind: "text" as const,
+				Icon: "file-text",
+			})),
+	},
+	{
+		Key: "voted",
+		Label: "Voted",
+		Tone: "#f0a045",
+		Ghost: "Drag to showcase ↓",
+		Entries: Recent(voted, (Entry) => Entry.data.nominatedAt)
+			.slice(0, 4)
+			.map((Entry) => ({
+				Id: Entry.data.id,
+				Title: Line(Entry.data.title ?? Entry.data.url),
+				Meta: `${Entry.data.status} · ${Entry.data.votes} votes`,
+				Kind: "text" as const,
+				Icon: "layout",
+			})),
+	},
+	{
+		Key: "curated",
+		Label: "Curated",
+		Tone: "#9b77fa",
+		Ghost: "Drag to showcase ↓",
+		Entries: [...curated]
+			.sort((Left, Right) => Left.data.rank - Right.data.rank)
+			.slice(0, 4)
+			.map((Entry) => ({
+				Id: Entry.data.id,
+				Title: Line(
+					bookmarks.find((Bookmark) => Bookmark.data.id === Entry.data.id)?.data.text ??
+						Entry.data.id,
+				),
+				Meta: `Rank ${Entry.data.rank} · ${Entry.data.votes} votes`,
+				Kind: "text" as const,
+				Icon: "layout",
+			})),
+	},
+	{
+		Key: "author",
+		Label: "Authors",
+		Tone: "#6e9efa",
+		Ghost: "Drag to showcase ↓",
+		Entries: Recent(authors, (Entry) => Entry.data.firstSeenAt)
+			.slice(0, 4)
+			.map((Entry) => ({
+				Id: Entry.data.handle,
+				Title: `@${Entry.data.handle}`,
+				Meta: `${Entry.data.postCount} posts · ${Entry.data.lists.length} lists`,
+				Kind: "comment" as const,
+				Avatar: Entry.data.name.slice(0, 2),
+			})),
+	},
+];
+
+/**
+ * The canvas starts with what the owner already curated, in rank order.
+ *
+ * The first pick takes a wide tile and the rest a standard one, which is the
+ * composition's own hierarchy: one thing leads the page, the rest support it.
+ */
+const Order = [
+	{ Column: 1, Row: 1, ColumnSpan: 3, RowSpan: 2 },
+	{ Column: 4, Row: 1, ColumnSpan: 3, RowSpan: 2 },
+	{ Column: 1, Row: 3, ColumnSpan: 2, RowSpan: 2 },
+	{ Column: 3, Row: 3, ColumnSpan: 2, RowSpan: 2 },
+	{ Column: 5, Row: 3, ColumnSpan: 2, RowSpan: 2 },
+];
+
+const Tiles = [...curated]
+	.sort((Left, Right) => Left.data.rank - Right.data.rank)
+	.slice(0, Order.length)
+	.map((Entry, Index) => {
+		const Source = bookmarks.find((Bookmark) => Bookmark.data.id === Entry.data.id);
+		const Seat = Order[Index] ?? Order[Order.length - 1];
+
+		return {
+			Id: Entry.data.id,
+			Column: Seat.Column,
+			Row: Seat.Row,
+			ColumnSpan: Seat.ColumnSpan,
+			RowSpan: Seat.RowSpan,
+			Tone: (Index === 0 ? "plain" : "quiet") as "plain" | "quiet",
+			Eyebrow: `Rank ${Entry.data.rank}`,
+			Title: Source === undefined ? Entry.data.id : Line(Source.data.text, 64),
+			Meta:
+				Source === undefined
+					? `${Entry.data.votes} votes at approval`
+					: `@${Source.data.author.handle} · ${Source.data.metrics.likes} likes`,
+			Href: BookmarkHref(Entry.data.id),
+			Stage: "#6366f1",
+		};
+	});
+---
+
+<Base Title="Workspace" Description="The private side of the archive." Wide>
+	<Workspace
+		client:load
+		Stages={Stages}
+		Columns={Columns}
+		Tiles={Tiles}
+		Note="Scroll through source timelines · Source selected"
+		Eyebrow="Depth / Schema"
+		Title="My Files"
+		Hint="Private workspace - drag items ↓ to publish"
+		Destination="Showcase · Network"
+		Instruction="Drop private items here to publish"
+	/>
+</Base>

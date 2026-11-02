@@ -27,6 +27,7 @@ export const Route = {
 	List: Canonical("List"),
 	Activity: Canonical("Activity"),
 	Voted: Canonical("Voted"),
+	Workspace: Canonical("Workspace"),
 } as const;
 
 /** One published post. */
