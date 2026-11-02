@@ -1,0 +1,45 @@
+---
+/**
+ * Temporary verification route. Deleted after the build it proves.
+ */
+import Control from "@Component/Surface/Control.astro";
+import SurfaceState from "@Component/Surface/State.astro";
+import Base from "@Layout/Base.astro";
+import { Read } from "@Library/DataState.ts";
+
+const Empty = Read({ Count: 0, Remedy: "pnpm run tool scrape" });
+const Partial = Read({ Count: 18, Total: 20 });
+const Stale = Read({ Count: 3, At: "2026-10-01T09:00:00Z", Now: "2026-11-02T09:00:00Z" });
+const Failed = Read({ Count: 0, Code: "no-post", Remedy: "pnpm run tool scrape --post 3" });
+const Ready = Read({ Count: 1 });
+---
+
+<Base Title="Probe">
+	<p>
+		<Control Label="Rest" State={{}} Href="/" />
+	</p>
+	<p>
+		<Control Label="Hover" State={{ Hover: true }} Href="/" />
+	</p>
+	<p>
+		<Control Label="Focus" State={{ Focus: true }} Href="/" />
+	</p>
+	<p>
+		<Control Label="Active" State={{ Active: true }} Href="/" />
+	</p>
+	<p>
+		<Control Label="Selected" State={{ Selected: true }} Href="/" />
+	</p>
+	<p>
+		<Control Label="Locked" State={{ Locked: "Publishing needs a session" }} />
+	</p>
+	<p>
+		<Control Label="Busy" State={{ Busy: true }} />
+	</p>
+
+	<SurfaceState Read={Empty} Title="Nothing saved" Body="The archive holds nothing yet." />
+	<SurfaceState Read={Partial} Title="Some posts" Body="Two records did not arrive." />
+	<SurfaceState Read={Stale} Title="Older copy" Body="This surface is older than the build." />
+	<SurfaceState Read={Failed} Title="Read failed" Body="The tool reported a failure." />
+	<SurfaceState Read={Ready} Title="Never drawn" Body="Ready renders nothing." />
+</Base>

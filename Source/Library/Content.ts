@@ -531,6 +531,10 @@ export const Content = {
 				process.env["CONTENT_STRING_PAGE_SHOWCASE_LEDE"],
 				"CONTENT_STRING_PAGE_SHOWCASE_LEDE",
 			),
+			Link: content(
+				process.env["CONTENT_STRING_PAGE_SHOWCASE_LINK"],
+				"CONTENT_STRING_PAGE_SHOWCASE_LINK",
+			),
 			Pillar: {
 				Authenticated: {
 					Name: content(
@@ -602,10 +606,6 @@ export const Content = {
 			Lede: content(
 				process.env["CONTENT_STRING_PAGE_LIST_LEDE"],
 				"CONTENT_STRING_PAGE_LIST_LEDE",
-			),
-			Rule: content(
-				process.env["CONTENT_STRING_PAGE_LIST_RULE"],
-				"CONTENT_STRING_PAGE_LIST_RULE",
 			),
 			/**
 			 * The page's own sections, one idea each (RFC-0053 rule 2).
@@ -903,10 +903,6 @@ export const Content = {
 	},
 	Word: {
 		Across: content(process.env["CONTENT_STRING_WORD_ACROSS"], "CONTENT_STRING_WORD_ACROSS"),
-		Approved: content(
-			process.env["CONTENT_STRING_WORD_APPROVED"],
-			"CONTENT_STRING_WORD_APPROVED",
-		),
 		Candidate: content(
 			process.env["CONTENT_STRING_WORD_CANDIDATE"],
 			"CONTENT_STRING_WORD_CANDIDATE",
@@ -935,10 +931,6 @@ export const Content = {
 		Recorded: content(
 			process.env["CONTENT_STRING_WORD_RECORDED"],
 			"CONTENT_STRING_WORD_RECORDED",
-		),
-		Rejected: content(
-			process.env["CONTENT_STRING_WORD_REJECTED"],
-			"CONTENT_STRING_WORD_REJECTED",
 		),
 		Saved: content(process.env["CONTENT_STRING_WORD_SAVED"], "CONTENT_STRING_WORD_SAVED"),
 		Unsorted: content(

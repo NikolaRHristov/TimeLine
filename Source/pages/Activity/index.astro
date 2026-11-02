@@ -1,142 +1,39 @@
 ---
 /**
- * The event log, newest first, grouped by the day it landed.
+ * Activity: what the log is, rather than the log.
  *
- * Events are files, so this page is a build-time read of the Event collection -
- * no client JavaScript, no feed to poll. The live view of the same directory is
- * `node Maintain/Target/Index.js event tail --follow`, which prints the files as
- * they land.
+ * The route used to print the event collection newest first, each row a moment,
+ * a kind and a subject. It was the pipeline's own record rendered as a page -
+ * and on a clone that has not run the pipeline it was one note saying so.
  *
- * The page is the provenance rail read in full. The rail shows one band per
- * pipeline step and the counts on them; this shows every event on those steps,
- * and each row carries the accent of the step its kind belongs to - from the one
- * stage map in `Library/Stage.ts`, the same map the rail's bands read, so a
- * colour names the same step in both places.
+ * RFC-0053 makes it a showcase page: no collection is read, no row is drawn, no
+ * timestamp is printed.
+ * The three sections say what a motion is, what a subject lets a reader follow,
+ * and why the page and the tool layer can never disagree about the archive's
+ * history. The rail is the workspace's drum reused as a table of contents.
  *
- * A day is the day the event landed rather than the day it was written about:
- * the trail answers what the pipeline did and when, so a day is a section a
- * reader can scan.
- *
- * A subject that resolves to a published post is a link; anything else is text.
- * That distinction is the whole value of the page: it says which events changed
- * something a visitor can see, without pretending the rest did not happen.
+ * The live view of the same directory is the tool layer's own `event tail
+ * --follow`, which is where a reader who wants the log goes.
  */
+import Board, { type Frame } from "@Component/Showcase/Board.astro";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
-import { BookmarkHref, Route } from "@Library/Link.ts";
-import { EventAccent } from "@Library/Stage.ts";
-import { fill } from "@Library/Text.ts";
-import "@Stylesheet/Component/Note.scss";
-import "@Stylesheet/Component/Trail.scss";
-import { getCollection } from "astro:content";
+import { Route } from "@Library/Link.ts";
 
-const events = (await getCollection("Event")).sort((left, right) =>
-	right.data.at.localeCompare(left.data.at),
-);
-const bookmarks = new Set((await getCollection("Bookmark")).map((entry) => entry.id));
-
-type Entry = (typeof events)[number];
-
-/**
- * The log in day groups, in the order it is already in.
- *
- * One pass over the sorted events: the array is newest first, so a group is
- * appended the first time a day is seen and extended while the day does not
- * change. Nothing re-sorts, so the order of a group is the order of the log.
- */
-const Groups = events.reduce<{ Day: string; Events: Entry[] }[]>((Groups, Entry) => {
-	const Day = Entry.data.at.slice(0, 10);
-	const Last = Groups[Groups.length - 1];
-
-	if (Last !== undefined && Last.Day === Day) {
-		Last.Events.push(Entry);
-	} else {
-		Groups.push({ Day, Events: [Entry] });
-	}
-
-	return Groups;
-}, []);
-
-const lede = fill(Content.Page.Activity.Lede, {
-	count: String(events.length),
-	eventNoun: events.length === 1 ? Content.Word.Event : Content.Word.Events,
-});
-const moment = (value: string): string => `${value.slice(11, 19)}Z`;
-const isPost = (subject: string): boolean => bookmarks.has(subject);
-const countNoun = (count: number): string =>
-	count === 1 ? Content.Word.Event : Content.Word.Events;
+const Page: Frame = {
+	Eyebrow: Content.Page.Activity.Eyebrow,
+	Title: Content.Page.Activity.Title,
+	Lede: Content.Page.Activity.Lede,
+	Rail: Content.Showcase.Rail,
+	Boxes: [
+		{ Key: "Record", ...Content.Page.Activity.Section.Record },
+		{ Key: "Subject", ...Content.Page.Activity.Section.Subject },
+		{ Key: "Replay", ...Content.Page.Activity.Section.Replay },
+	],
+	Close: Content.Showcase.Close,
+};
 ---
 
-<Base Title={Content.Route.Activity} Description={Content.Page.Activity.Description}>
-	<article class="sheet">
-		<header class="sheet__head">
-			<h1 class="sheet__title">{Content.Route.Activity}</h1>
-			<p class="sheet__lede">{lede}</p>
-		</header>
-
-		{Groups.length > 0 && (
-			<div class="trail">
-				{Groups.map((Group) => (
-					<section class="trail__day">
-						<h2 class="trail__head">
-							<time class="trail__date" datetime={Group.Day}>
-								{Group.Day}
-							</time>
-							<span class="trail__count">
-								{Group.Events.length} {countNoun(Group.Events.length)}
-							</span>
-						</h2>
-
-						<ol class="trail__list">
-							{Group.Events.map((entry) => (
-								<li
-									class="trail__row"
-									style={`--row-tone: ${EventAccent(entry.data.kind)}`}>
-									<span class="trail__marker" aria-hidden="true" />
-
-									<p class="trail__line">
-										<time class="trail__time" datetime={entry.data.at}>
-											{moment(entry.data.at)}
-										</time>
-										<span class="trail__kind">{entry.data.kind}</span>
-										<span class="trail__subject">
-											{isPost(entry.data.subject) ? (
-												<a
-													class="trail__link"
-													href={BookmarkHref(entry.data.subject)}>
-													{entry.data.subject}
-												</a>
-											) : (
-												entry.data.subject
-											)}
-										</span>
-										{typeof entry.data.payload?.count === "number" && (
-											<span class="trail__meta">
-												{fill(Content.Page.Activity.PostCount, {
-													count: String(entry.data.payload.count),
-												})}
-											</span>
-										)}
-									</p>
-								</li>
-							))}
-						</ol>
-					</section>
-				))}
-			</div>
-		)}
-
-		{events.length === 0 && (
-			<section class="note">
-				<h2 class="note__title">{Content.Empty.Activity}</h2>
-				<p class="note__body">{Content.Page.Activity.EmptyBody}</p>
-			</section>
-		)}
-
-		<footer class="sheet__foot">
-			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
-			<span>·</span>
-			<a href={Route.List}>{Content.Route.Lists}</a>
-		</footer>
-	</article>
+<Base Title={Content.Page.Activity.Title} Description={Content.Page.Activity.Description} Wide>
+	<Board Page={Page} Href={Route.Workspace} />
 </Base>

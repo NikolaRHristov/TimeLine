@@ -98,13 +98,17 @@ credible: they show what the operator can see, which is the connection and not t
 ## The guard
 
 `Scripts/Position.mjs` is plain JavaScript with no dependencies, because it runs before anything is
-compiled. Three checks, each of which can fail:
+compiled. Four checks, each of which can fail:
 
 1. **The brand appears once.** One mention, in the attribution file; `Source/` names it zero times.
 2. **One word for the unit of action.** No `request`, `job` or `action` anywhere under `Content/`,
    matched as whole words, so `redaction` is not `action`.
 3. **A claim names its protocol or its record.** Every claim names a record; a claim about
    cryptography names a cipher suite; every claim has a key in the content wrapper.
+4. **A showcase card is a claim too.** Every `Card/*/Body.md` and `Pillar/*/Note.md` under
+   `Content/String/Page/Showcase/` answers to the same rule. A card title and the masthead do not: a
+   heading is a heading, and a rule that demanded a cipher suite from one would be obeyed by making
+   the headings worse.
 
 ```
 $ node Scripts/Position.mjs
@@ -119,6 +123,16 @@ PASS Grant: RFC-0047
 PASS Moderation: RFC-0031
 PASS Motion: RFC-0024
 PASS Status: RFC-0048
+== showcase
+PASS Card/Canvas/Body
+PASS Card/Drawer/Body
+PASS Card/Motion/Body
+PASS Card/Network/Body
+PASS Card/Provenance/Body
+PASS Card/Seam/Body
+PASS Pillar/Authenticated/Note
+PASS Pillar/Authorised/Note
+PASS Pillar/Encrypted/Note
 ---
 RESULT positioned
 ```
@@ -136,6 +150,7 @@ breaking the real tree. Exit 0 means the position holds, exit 1 means it does no
 | The vocabulary is used           | `grep -rniE "\b(requests?\|jobs?\|actions?)\b" Content/` → no match                             |
 | A banned word fails              | an `action` in a content file → `FAIL` naming the file and the line                             |
 | Every claim names a record       | `node Scripts/Position.mjs` prints the RFC each claim is decided by                             |
+| A showcase card is a claim       | every `Card/*/Body.md` and `Pillar/*/Note.md` prints `PASS` under `== showcase`                 |
 | A cipher claim names its suite   | a claim about encryption with no suite → `FAIL`, exit 1                                         |
 | A claim resolves through Content | every `Content/String/Claim/*.md` has a `CONTENT_STRING_CLAIM_*` in `Source/Library/Content.ts` |
 | The guard runs in the check      | `pnpm run check` ends with `RESULT positioned`                                                  |

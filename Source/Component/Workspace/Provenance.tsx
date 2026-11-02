@@ -156,10 +156,23 @@ export default function Provenance(Props: Props) {
 						const Shape = () => Step(Distance);
 						const Active = () => Distance === 0;
 
+						/**
+						 * What the band is, in this drum.
+						 *
+						 * A contents band that leads somewhere is a link, so a press
+						 * on the rail works with no script running. A slot past the
+						 * stage list is depth rather than content and stays inert -
+						 * `aria-hidden`, because a screen reader has no use for a
+						 * ghost. Everything else is the button the pipeline rail has
+						 * always drawn.
+						 */
+						const Tag = () =>
+							Entry().Href === undefined ? "button" : Slot().Real ? "a" : "span";
+
 						return (
-							<button
-								type="button"
-								role="listitem"
+							<Dynamic
+								component={Tag()}
+								role={Contents() ? undefined : "listitem"}
 								class="provenance__band"
 								classList={{ "provenance__band--selected": Active() }}
 								style={{
@@ -174,8 +187,16 @@ export default function Provenance(Props: Props) {
 									"--marker-border": `${Shape().Border}px`,
 									"--marker-top": `${Shape().Top}px`,
 								}}
-								aria-pressed={Active()}
-								onClick={() => Props.OnSelect?.(Entry().Key)}>
+								href={Tag() === "a" ? Entry().Href : undefined}
+								type={Tag() === "button" ? "button" : undefined}
+								aria-pressed={Tag() === "button" ? Active() : undefined}
+								aria-current={Tag() === "a" && Active() ? "true" : undefined}
+								aria-hidden={Tag() === "span" ? "true" : undefined}
+								onClick={
+									Tag() === "button"
+										? () => Props.OnSelect?.(Entry().Key)
+										: undefined
+								}>
 								<Show when={Shape().Label > 0 && Slot().Real}>
 									<span class="provenance__band-label">{Entry().Label}</span>
 								</Show>
@@ -197,7 +218,7 @@ export default function Provenance(Props: Props) {
 								<Show when={Active() && Entry().Caption !== undefined}>
 									<span class="provenance__caption">{Entry().Caption}</span>
 								</Show>
-							</button>
+							</Dynamic>
 						);
 					}}
 				</For>

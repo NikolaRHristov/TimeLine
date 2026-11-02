@@ -10,7 +10,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 - **Filename** - `RFC-NNNN-kebab-case-title.md`.
 - **Location** - `proposed/` while open, `implemented/` once shipped.
-- **Numbering** - assigned on creation, never reused. `0056` is the next free number.
+- **Numbering** - assigned on creation, never reused. `0057` is the next free number.
 - **Supersession** - a new record marks the old one `Superseded by`, and both stay.
 - **Cards** - every record names the cards that implement it, by id.
 
@@ -18,7 +18,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 ## The records
 
-Fifty-five are written; none is implemented. A record moves to `implemented/` only when its
+Fifty-six are written; none is implemented. A record moves to `implemented/` only when its
 verification table passes against the shipped code.
 
 Every file in `proposed/` appears below, and the count above is the number of files there. A record
@@ -78,6 +78,7 @@ its entry.
 - **RFC-0028** - Data lifecycle and retention.
 - **RFC-0032** - Rate limiting and abuse resistance.
 - **RFC-0038** - Legal posture.
+- **RFC-0056** - Identity carried by others.
 - **RFC-0041** - Analytics without reading content.
 
 ### Governance

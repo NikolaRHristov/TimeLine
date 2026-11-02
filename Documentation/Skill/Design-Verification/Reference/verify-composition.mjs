@@ -54,10 +54,19 @@ const Frame = [
 		"8,10,12,16,22,28,44,28,22,16,12,10,8",
 	],
 	["the seam is light, not panel dark", (Box) => Box.seamBackground, "rgb(236, 236, 236)"],
+	// The seam states what a drop would do, or why it cannot - never a record's
+	// title, which would change on every selection. `/Workspace` is public
+	// (RFC-0054), so the build's own state is the anonymous one: the seam is
+	// `locked` and its line is the reason (RFC-0049, RFC-0013).
 	[
-		"the seam names a stage, never a record",
+		"the seam states why it is locked",
 		(Box) => Box.seamNote,
-		"Drop private items here to publish · Source timeline selected",
+		"Publishing needs an identity - a published record carries an author",
+	],
+	[
+		"the publish control is locked, not absent",
+		(Box) => `${Box.seamState}/${Box.seamDisabled}`,
+		"locked/true",
 	],
 
 	// The composition grows downward from the canvas (RFC-0046 §4, RFC-0047 §5,
@@ -139,6 +148,8 @@ const Probe = `(() => {
 		statusWords: [...document.querySelectorAll(".status__value")].map((Value) => Value.textContent.trim()),
 		seamBackground: getComputedStyle(document.querySelector(".publish")).backgroundColor,
 		seamNote: document.querySelector(".publish__note")?.textContent?.trim(),
+		seamState: document.querySelector(".publish__control")?.dataset.controlState,
+		seamDisabled: document.querySelector(".publish__control")?.getAttribute("aria-disabled"),
 	});
 })()`;
 

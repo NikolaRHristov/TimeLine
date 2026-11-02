@@ -19,20 +19,21 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Column } from "../Component/Workspace/DrawerColumn.tsx";
 import type { Stage } from "../Component/Workspace/Provenance.tsx";
+import { StageAccent } from "../Library/Stage.ts";
 import { Own, Room } from "../Script/Session/Context.ts";
 import { Seats, type Tile } from "../Script/Workspace/Seat.ts";
 import { store, type WorkspaceStore } from "../Script/Workspace/Store.ts";
 
 const Stages: Stage[] = [
-	{ Key: "source", Label: "Source · 2 events", Tone: "var(--stage-source)", Events: 2 },
-	{ Key: "ingestion", Label: "Ingestion · 1 event", Tone: "var(--stage-ingestion)", Events: 1 },
+	{ Key: "source", Label: "Source · 2 events", Tone: StageAccent.source, Events: 2 },
+	{ Key: "ingestion", Label: "Ingestion · 1 event", Tone: StageAccent.ingestion, Events: 1 },
 ];
 
 const Columns: Column[] = [
 	{
 		Key: "bookmark",
 		Label: "Bookmarks",
-		Tone: "var(--stage-source)",
+		Tone: StageAccent.source,
 		Ghost: "Drag to showcase ↓",
 		Entries: [
 			{ Id: "1", Title: "A saved post", Meta: "@someone · 12 likes", Kind: "text" },

@@ -8,11 +8,28 @@ and the provider position)
 
 ## Decision
 
-The pages that are not the workspace are a **showcase of the system**, not a view of the archive.
-They render no collection, carry no counts, and hold no records. Their content is copy and their
-structure is the composition itself.
+The pages that **explain** the product are a showcase of the system; the pages that **do** something
+keep their data. They render no collection, carry no counts, and hold no records. Their content is
+copy and their structure is the composition itself.
 
-Five rules make that enforceable.
+Six rules make that enforceable.
+
+### 0. A route that performs an action is not a showcase
+
+The distinction is the route's job, not its position:
+
+- **Explains** - the homepage. A reader arrives knowing nothing, and the page's work is to state
+  what the system is. No collection, no counts. This is the showcase.
+- **Does** - `/Voted` (a visitor ranks candidates), `/Activity` (the event trail), `/Bookmark`,
+  `/List`. Each exists so a reader can _perform_ or _read_ something, and a copy-only version of
+  them deletes the feature rather than presenting it.
+
+An earlier draft of this record converted every public route to a showcase, which was wrong for the
+reason above: `/Voted` without the vote queue is a page about voting that cannot be voted on. A
+showcase surface is the front door, not the building.
+
+A route that does something still follows the material, the data states (RFC-0050) and the component
+states (RFC-0049). It is a product surface under the design system, not an exception to it.
 
 ### 1. A showcase page reads nothing
 

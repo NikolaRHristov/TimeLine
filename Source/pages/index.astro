@@ -1,238 +1,52 @@
 ---
 /**
- * The front page: the workspace with its private half dropped.
+ * The front page: the system stated, not the archive counted.
  *
- * The composition `/Workspace` mounts is the product - a provenance rail, a seam
- * and a bento canvas - and this page is that composition without the drawer. The
- * drawer's four columns are the one part a reader never sees, so the band they
- * occupied carries the page's own masthead instead, and the canvas takes
- * everything under the seam.
+ * This route used to be the Curated index drawn on the canvas - the owner's
+ * picks in rank order, filled out with the newest bookmarks. It read four
+ * collections to do it, which made the page a dashboard over somebody's private
+ * archive: thin on a fresh clone, stale behind a cache, and never a
+ * demonstration of what the system is.
  *
- * The canvas is the Curated index. The owner's picks take the seats first, in
- * rank order, because curation is the judgement this archive exists to publish;
- * the Bookmark feed fills the seats the picks do not claim, newest first, so an
- * archive with one pick still reads as a page rather than as one card. A seat
- * neither reaches stays empty at its own grey, which is the canvas's stated
- * state for a thin archive rather than a hole to fill.
+ * RFC-0053 turns it around. A page that is not the workspace is a showcase, and
+ * a showcase page reads nothing (rule 1): it is copy and composition, so it is
+ * `ready` by construction, it renders the same on a fresh clone as on a full
+ * archive, and no count on it can be wrong.
  *
- * Everything is read at build time and handed to the island as plain data, so
- * the page paints from the build and hydrates only to answer a press on the
- * rail. The rule that keeps it honest - every route renders its content with
- * scripts switched off - is audited by `Documentation/Skill/Progressive-
- * Enhancement`.
+ * The data did not disappear - it moved. `/Workspace` is public (RFC-0054) and
+ * is where a person's own records live; this page says what that surface is
+ * made of, in three sections, and the closing band is the way in.
  *
- * The rail's stages are counted exactly as `/Workspace` counts them: the
- * bookmarks on file at `source`, the recorded events at `ingestion`, the queue at
- * `processing`, the approved picks at `review`. The counts are collection sizes
- * rather than anything the page computes, so the rail and the archive cannot
- * disagree about how much work sits at each step.
+ * The rail is the workspace's own drum, mounted rather than copied, repurposed
+ * as a table of contents (rule 3): one band per section, each a link to its own
+ * anchor.
  */
-import { Seats, type Tile } from "@Component/Workspace/Bento.tsx";
-import type { Stage } from "@Component/Workspace/Provenance.tsx";
-import Showcase from "@Component/Workspace/Showcase.tsx";
+import Board, { type Frame } from "@Component/Showcase/Board.astro";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
-import { BookmarkHref, Primary } from "@Library/Link.ts";
-import { StageAccent } from "@Library/Stage.ts";
-import { fill } from "@Library/Text.ts";
-import { getCollection } from "astro:content";
+import { Route } from "@Library/Link.ts";
 
-const bookmarks = await getCollection("Bookmark");
-const curated = await getCollection("Curated");
-const voted = await getCollection("Voted");
-const events = await getCollection("Event");
-
-/** The first line of a post, short enough to be one tile's title. */
-const Line = (Text: string, Length = 64): string => {
-	const Flat = Text.replace(/\s+/g, " ").trim();
-
-	return Flat.length > Length ? `${Flat.slice(0, Length - 1)}…` : Flat;
+/**
+ * The page, in the content layer's words.
+ *
+ * Every string resolves through `@Library/Content.ts`, which is baked from
+ * `Content/**` at build time, so no sentence is written in a component and the
+ * page has nothing to read at run time.
+ */
+const Page: Frame = {
+	Eyebrow: Content.Page.Index.Eyebrow,
+	Title: Content.Page.Index.Title,
+	Lede: Content.Page.Index.Lede,
+	Rail: Content.Showcase.Rail,
+	Boxes: [
+		{ Key: "Source", ...Content.Page.Index.Section.Source },
+		{ Key: "Processing", ...Content.Page.Index.Section.Processing },
+		{ Key: "Review", ...Content.Page.Index.Section.Review },
+	],
+	Close: Content.Showcase.Close,
 };
-
-/**
- * When a post is dated: when it was written, or when the pipeline first saw it.
- *
- * The two are not the same fact and the fallback is the honest one - a post
- * whose page never showed a timestamp is still in the archive as of the day it
- * was filed, and a tile sorted by nothing at all would move on every build.
- */
-const When = (Entry: (typeof bookmarks)[number]): string =>
-	Entry.data.postedAt ?? Entry.data.firstSeenAt;
-
-const Day = (Value: string): string => Value.slice(0, 10);
-
-/** `1 event` rather than `1 events`: the rail prints these next to a band. */
-const Count = (Value: number, One: string, Many: string): string =>
-	`${Value} ${Value === 1 ? One : Many}`;
-
-const Stages: Stage[] = [
-	{
-		Key: "source",
-		Label: `Source · ${Count(bookmarks.length, Content.Word.Event, Content.Word.Events)}`,
-		Tone: StageAccent.source,
-		Events: bookmarks.length,
-		Caption: `${Count(bookmarks.length, Content.Word.Event, Content.Word.Events)} · Source · Selected`,
-	},
-	{
-		Key: "ingestion",
-		Label: `Ingestion · ${Count(events.length, Content.Word.Event, Content.Word.Events)}`,
-		Tone: StageAccent.ingestion,
-		Events: events.length,
-	},
-	{
-		Key: "processing",
-		Label: `Processing · ${Count(voted.length, Content.Word.Event, Content.Word.Events)}`,
-		Tone: StageAccent.processing,
-		Events: voted.length,
-	},
-	{
-		Key: "review",
-		Label: `Review · ${Count(curated.length, Content.Word.Event, Content.Word.Events)}`,
-		Tone: StageAccent.review,
-		Events: curated.length,
-	},
-];
-
-/**
- * The picks, joined to the record each one points at.
- *
- * `Curated/<id>.json` carries the rank and the vote count frozen at approval
- * time, never the payload: the post itself comes from the Bookmark collection,
- * or from the Voted entry when the owner curated a candidate that was never
- * published as a bookmark. An entry whose payload has vanished is dropped rather
- * than drawn as a dead link.
- */
-const Picks = [...curated]
-	.sort((Left, Right) => Left.data.rank - Right.data.rank || Left.id.localeCompare(Right.id))
-	.map((Entry) => {
-		const Source = bookmarks.find((Record) => Record.data.id === Entry.data.id);
-		const Candidate = voted.find((Record) => Record.data.id === Entry.data.id);
-
-		if (Source === undefined && Candidate === undefined) {
-			return null;
-		}
-
-		return {
-			Id: Entry.data.id,
-			Eyebrow: `Rank ${Entry.data.rank}`,
-			Title:
-				Source === undefined
-					? Line(Candidate?.data.title ?? Candidate?.data.url ?? Entry.data.id)
-					: Line(Source.data.text),
-			Meta:
-				Source === undefined
-					? `${Count(Entry.data.votes, Content.Word.Vote, Content.Word.Votes)} at approval`
-					: `@${Source.data.author.handle} · ${Source.data.metrics.likes} likes`,
-			Href: Source === undefined ? (Candidate?.data.url ?? "") : BookmarkHref(Entry.data.id),
-		};
-	})
-	.filter((Entry) => Entry !== null);
-
-/** The feed, newest first: what fills the seats the picks leave. */
-const Feed = [...bookmarks]
-	.sort((Left, Right) => When(Right).localeCompare(When(Left)))
-	.map((Entry) => ({
-		Id: Entry.data.id,
-		Eyebrow: Content.Page.Index.Latest,
-		Title: Line(Entry.data.text),
-		Meta: `@${Entry.data.author.handle} · ${Day(When(Entry))}`,
-		Href: BookmarkHref(Entry.data.id),
-	}));
-
-/**
- * The canvas: the picks, then the feed, one record per seat.
- *
- * A record is placed once - a post that is both picked and recent keeps its pick
- * seat - and the list stops at the seat table's length, because the mosaic is the
- * layout: a record without a seat would have nowhere to land, and a seat table
- * longer than the data is drawn from the seats themselves.
- */
-const Tiles: Tile[] = [...Picks, ...Feed]
-	.filter(
-		(Entry, Index, All) => All.findIndex((Candidate) => Candidate?.Id === Entry?.Id) === Index,
-	)
-	.slice(0, Seats.length)
-	.map((Entry, Index) => ({ ...Seats[Index], ...Entry }));
-
-/** The slugs this archive actually uses - the person's lists, not a fixed set. */
-const lists = [...new Set(bookmarks.flatMap((Entry) => Entry.data.lists))].sort();
-
-const total = bookmarks.length;
-
-/**
- * One sentence for the masthead.
- *
- * Assembled from one template rather than as interleaved markup: the optional
- * `across N lists` clause used to sit between two text nodes, which left the
- * sentence reading `0 saved posts , 0 events recorded.` - a stray space before
- * the comma, visible exactly in the empty state this page is supposed to make
- * look deliberate. The words come from `Content/`; only the counts and the
- * singular/plural choice are made here.
- */
-const summary = fill(Content.Page.Index.Lede, {
-	total: String(total),
-	saved: Content.Word.Saved,
-	postNoun: total === 1 ? Content.Word.Post : Content.Word.Posts,
-	across:
-		lists.length > 0
-			? ` ${Content.Word.Across} ${lists.length} ${
-					lists.length === 1 ? Content.Word.List : Content.Word.Lists
-				}`
-			: "",
-	events: String(events.length),
-	eventNoun: events.length === 1 ? Content.Word.Event : Content.Word.Events,
-	recorded: Content.Word.Recorded,
-});
-
-const description = fill(Content.Page.Index.Description, {
-	total: String(total),
-	lists: String(lists.length),
-});
-
-/**
- * The masthead: the page's name, what it holds, and the ways out.
- *
- * A `Bare` page has no shell header, so this band is the only navigation the
- * reader gets - which is why it carries the primary routes rather than only the
- * title. The words are the shell's own, so the header of every other page and
- * this band name the same destinations with the same names.
- */
-const Head = {
-	Eyebrow: Content.Brand.Short,
-	Title: Content.Route.Curated,
-	Lede: summary,
-	Label: Content.Shell.Primary,
-	Links: Primary,
-};
-
-/**
- * An empty archive explains itself where the mosaic would be.
- *
- * The canvas draws ten grey seats whatever the data holds - that is the layout's
- * own answer to a thin archive - but ten empty seats do not say what fills them.
- * The note does, with the three commands in the order they run.
- */
-const Empty =
-	total === 0
-		? {
-				Title: Content.Empty.Bookmarks,
-				Body: Content.Page.Index.EmptyBody,
-				Steps: [Content.Example.Scrape, Content.Example.Publish, Content.Example.Build],
-				Hint: Content.Page.Index.EmptyHint,
-				Reference: Content.Reference.Configure,
-			}
-		: undefined;
 ---
 
-<Base Description={description} Wide Bare>
-	<Showcase
-		client:visible
-		Stages={Stages}
-		Tiles={Tiles}
-		Note="Scroll through source timelines"
-		Head={Head}
-		Destination="Showcase · Network"
-		Instruction="Owner's picks, in rank order"
-		Empty={Empty}
-	/>
+<Base Description={Content.Page.Index.Description} Wide>
+	<Board Page={Page} Href={Route.Workspace} />
 </Base>

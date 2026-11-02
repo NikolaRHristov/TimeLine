@@ -85,7 +85,7 @@
 		&--selected {
 			gap: 3px;
 			opacity: 1;
-			background: color-mix(in srgb, var(--stage-source) 8%, transparent);
+			background: color-mix(in srgb, var(--band-tone) 8%, transparent);
 		}
 	}
 

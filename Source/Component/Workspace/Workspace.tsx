@@ -152,6 +152,17 @@ export default function Workspace(Props: Props) {
 			: `Private workspace - signed in as @${Identity.Name}`;
 	};
 
+	/**
+	 * Why a drop cannot cross the seam, or `undefined` when it can.
+	 *
+	 * The page states the reason the build knows - no identity is on this page -
+	 * and the session decides whether it still applies. A slot that names an
+	 * identity has one, so the seam offers the verb and names the stage a drop
+	 * would file into; until then the seam states the reason it is locked, which
+	 * is what RFC-0049 rule 4 asks of a control an actor may not use.
+	 */
+	const LockReason = () => (Slot().Identity === null ? Props.Locked : undefined);
+
 	const Publish_ = (Key: string) => {
 		const Column = Props.Columns.find((Candidate) => Candidate.Key === Key);
 		const Entry =
@@ -216,7 +227,7 @@ export default function Workspace(Props: Props) {
 				Label={Contract().Destination}
 				Note={Props.Instruction}
 				Context={StageName()}
-				Locked={Props.Locked}
+				Locked={LockReason()}
 				OnPublish={() => Publish_(Store.State.Column)}
 			/>
 

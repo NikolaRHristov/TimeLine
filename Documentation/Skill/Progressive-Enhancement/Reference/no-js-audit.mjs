@@ -80,6 +80,12 @@ const Profiles = [
 			{ Selector: ".drawer__eyebrow", Min: 1 },
 			{ Selector: ".drawer__tabs", Min: 1 },
 			{ Selector: "section.drawer-column", Min: 4 },
+			// The anonymous workspace is the build's own state (RFC-0054), so its
+			// explanation is content and not a nicety: a reader whose browser runs
+			// no scripts must still learn why the drawer is empty and what fills
+			// it, and the four lanes must still be drawn around that note.
+			{ Selector: ".drawer__empty", Min: 1 },
+			{ Selector: ".drawer__empty code", Min: 1 },
 			{ Selector: "article.bento__tile", Min: 1 },
 			{ Selector: ".publish__label", Min: 1 },
 			{ Selector: ".provenance__band", Min: 1 },

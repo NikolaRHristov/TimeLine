@@ -1,0 +1,165 @@
+@use "../Material.scss" as Material;
+
+// The board: one showcase page (RFC-0053).
+//
+// The frame is `Workspace.scss` - the rail beside the page column - so this
+// sheet draws the page side only: the hero, the boxes and the closing band.
+//
+// The boxes are the canvas's material with the container taken away. The canvas
+// is a six-track grid because it holds records that must line up; a showcase
+// page holds no records, so its boxes are larger, fewer and free of the inset:
+// each one runs to the right edge of the viewport and keeps the tile's own 24px
+// corner on the side that is still inside the page. The fill is the same three
+// greys and the corner is the same token, so the two surfaces cannot drift into
+// two designs - only the constraint is gone.
+.board {
+	// The rail is a table of contents, so it stays in view while the page is
+	// read. It is sticky rather than fixed: it is the same 224px panel the
+	// workspace draws, and a fixed one would leave the frame behind it. The
+	// offset clears the shell's own sticky header.
+	.provenance {
+		position: sticky;
+		top: calc(var(--header-height) + var(--space-4));
+	}
+
+	&__page {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-10);
+		padding-block: var(--space-10) 0;
+		// No inset on the right: a box that stopped short of the edge would be
+		// the canvas again, with a wider margin.
+		padding-inline: var(--rhythm-block) 0;
+	}
+
+	&__hero {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		max-width: 46rem;
+	}
+
+	&__eyebrow {
+		@include Material.label(var(--text-2xs), var(--color-ink-faint));
+
+		margin: 0;
+	}
+
+	// The one step the type scale gains for this surface (RFC-0053 rule 4). A
+	// showcase page is read in headings, so the page states its name at a size
+	// no other surface uses and the boxes follow one step down.
+	&__title {
+		margin: 0;
+		font-size: var(--text-3xl);
+		font-weight: 600;
+		line-height: 1.02;
+		letter-spacing: -0.03em;
+		color: var(--color-ink);
+	}
+
+	&__lede {
+		margin: 0;
+		max-width: 38rem;
+		font-size: var(--text-lg);
+		line-height: 1.5;
+		color: var(--color-ink-muted);
+	}
+
+	// One idea per box, at a size the canvas never reaches, and no alignment
+	// between them: the left edge steps in and out, the right edge is the page's
+	// own. The text sits at the bottom of the box, so the air is above the claim
+	// and the claim is what a reader arrives at.
+	&__box {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		gap: var(--space-4);
+		padding: var(--space-10) var(--rhythm-block);
+		border-radius: var(--radius-tile) 0 0 var(--radius-tile);
+		color: var(--color-ink);
+
+		&:nth-of-type(3n + 1) {
+			min-height: 26rem;
+			background: var(--tile-1);
+		}
+
+		&:nth-of-type(3n + 2) {
+			min-height: 20rem;
+			margin-inline-start: var(--space-10);
+			background: var(--tile-2);
+		}
+
+		&:nth-of-type(3n + 3) {
+			min-height: 24rem;
+			margin-inline-start: var(--space-4);
+			background: var(--tile-3);
+		}
+	}
+
+	&__claim {
+		margin: 0;
+		max-width: 22ch;
+		font-size: var(--text-2xl);
+		font-weight: 600;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+	}
+
+	&__body {
+		margin: 0;
+		max-width: 40rem;
+		font-size: var(--text-base);
+		line-height: 1.6;
+		color: var(--color-ink-muted);
+	}
+
+	// The closing band: the one invitation this deployment can honour, because
+	// the workspace is public (RFC-0054, RFC-0053 rule 5).
+	&__close {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-2) var(--space-4);
+		padding-block: var(--space-8) var(--space-10);
+		border-top: var(--hairline);
+	}
+
+	&__open {
+		font-size: var(--text-lg);
+		font-weight: 600;
+		color: var(--color-ink);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	// A narrow screen has no room for a second column or a stepped edge: the rail
+	// becomes a strip above the page (the frame's own breakpoint), and the boxes
+	// take the full width at one size.
+	@media (max-width: 900px) {
+		.provenance {
+			position: static;
+			width: 100%;
+		}
+
+		&__page {
+			padding-inline: var(--space-6) 0;
+		}
+
+		&__title {
+			font-size: var(--text-2xl);
+		}
+
+		&__box,
+		&__box:nth-of-type(3n + 1),
+		&__box:nth-of-type(3n + 2),
+		&__box:nth-of-type(3n + 3) {
+			min-height: auto;
+			margin-inline-start: 0;
+			padding: var(--space-8) var(--space-6);
+		}
+
+		&__claim {
+			max-width: none;
+		}
+	}
+}

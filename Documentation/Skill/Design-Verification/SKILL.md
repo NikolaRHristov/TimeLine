@@ -64,6 +64,13 @@ drawer starts at `240` (the rail plus the ground showing through); the seam is `
 under it; the canvas is `900` tall directly under that. The drum draws thirteen bands and its ladder
 reads `8, 10, 12, 16, 22, 28, 44, 28, 22, 16, 12, 10, 8` from edge to centre and back.
 
+The composition then grows downward. Three bands follow the canvas on its own 20px rhythm, in the
+order a reader meets them - the swimlanes, the spectrometer, the status footer - and the rail's
+security cluster is bottom-aligned in the rail column, so its last mark sits on the footer's
+baseline. The lane air is measured against the canvas's own gap rather than against a literal, so
+the invariant survives a change to either. The footer's four values are asserted as words, because a
+status band that reports itself only in colour is the failure RFC-0048 exists to prevent.
+
 Those are the numbers that a screenshot cannot distinguish and a stylesheet can silently lose.
 
 ## Extending it

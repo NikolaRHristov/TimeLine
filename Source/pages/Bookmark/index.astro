@@ -1,150 +1,40 @@
 ---
 /**
- * Every published post, as the canvas.
+ * Bookmarks: what a saved post is, stated rather than listed.
  *
- * The index used to be prose: headings per list, a roster per author. That was
- * the archive read as a document, and it made the published side look like a
- * different site from the workspace that fills it. The records now take the
- * composition's own seats - one tile per post, the same sheet, the same greys -
- * so the page a reader sees is the canvas the owner works on.
+ * The route used to draw every published post on the canvas, band after band.
+ * That was the archive read as a page, and on a fresh clone - which is what
+ * anyone hosting their own starts with - it was an empty grid with an
+ * explanation under it.
  *
- * Placement is rank-driven and the rank is the owner's, not the crowd's: the
- * curated records take the seats in rank order, so rank 1 is the hero, and the
- * uncurated ones follow newest first. The seat table itself lives with the
- * canvas (`Bento.Seats`) because it is the layout, not the data - a page decides
- * which record goes on the canvas, never where.
+ * RFC-0053 makes it a showcase page instead: no collection is read, no count is
+ * shown, no tile is drawn. Three sections say what a bookmark is here - a capture, a private
+ * record, a thing filed under a name - and the rail is the workspace's drum
+ * reused as a table of contents.
  *
- * The mosaic is ten seats. An archive longer than that repeats the composition
- * as another band rather than inventing a second layout: each band completes
- * itself with its own empty seats, so a band holding three records still reads
- * as a composed page. That is also why an empty archive renders no canvas at
- * all and prints the commands that fill it instead of a grid of holes.
+ * The record itself is still public: `/Bookmark/<id>` renders one post on the
+ * workspace ground, and `/Workspace` is where a person's own records live
+ * (RFC-0054). This page is the explanation, and it cannot be empty.
  */
-import Bento, { Seats } from "@Component/Workspace/Bento.tsx";
+import Board, { type Frame } from "@Component/Showcase/Board.astro";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
-import { BookmarkHref, Route } from "@Library/Link.ts";
-import { StageAccent } from "@Library/Stage.ts";
-import { fill } from "@Library/Text.ts";
-import "@Stylesheet/Component/Archive.scss";
-import "@Stylesheet/Component/Note.scss";
-import { getCollection } from "astro:content";
+import { Route } from "@Library/Link.ts";
 
-const bookmarks = await getCollection("Bookmark");
-const curated = await getCollection("Curated");
-
-/** The owner's rank, by id. A record without one is placed after every ranked record. */
-const Rank = new Map(curated.map((entry) => [entry.id, entry.data.rank]));
-
-const Recency = (entry: (typeof bookmarks)[number]): string =>
-	entry.data.postedAt ?? entry.data.firstSeenAt;
-
-/**
- * The order the seats are filled in: rank ascending, then newest first.
- *
- * Two records the owner ranked are ordered by that rank alone - the archive does
- * not second-guess a curation decision with a timestamp. An unranked record
- * cannot claim a ranked record's seat, which is what keeps the hero stable as
- * new posts arrive.
- */
-const Ordered = [...bookmarks].sort((left, right) => {
-	const leftRank = Rank.get(left.id);
-	const rightRank = Rank.get(right.id);
-
-	if (leftRank !== undefined && rightRank !== undefined) {
-		return leftRank - rightRank;
-	}
-
-	if (leftRank !== undefined) {
-		return -1;
-	}
-
-	if (rightRank !== undefined) {
-		return 1;
-	}
-
-	return Recency(right).localeCompare(Recency(left));
-});
-
-/** One line of a post, short enough to sit in a tile. */
-const Line = (Text: string, Length = 64): string => {
-	const Flat = Text.replace(/\s+/g, " ").trim();
-
-	return Flat.length > Length ? `${Flat.slice(0, Length - 1)}…` : Flat;
+const Page: Frame = {
+	Eyebrow: Content.Page.Bookmark.Eyebrow,
+	Title: Content.Page.Bookmark.Title,
+	Lede: Content.Page.Bookmark.Lede,
+	Rail: Content.Showcase.Rail,
+	Boxes: [
+		{ Key: "Capture", ...Content.Page.Bookmark.Section.Capture },
+		{ Key: "Private", ...Content.Page.Bookmark.Section.Private },
+		{ Key: "Filed", ...Content.Page.Bookmark.Section.Filed },
+	],
+	Close: Content.Showcase.Close,
 };
-
-/**
- * One tile: the seat its position in the order gives it, and what the record
- * says in it.
- *
- * The eyebrow is the account, the meta line is the count and the list the post
- * was filed under - the two facts a reader uses to decide whether to open it.
- * The edge is the source accent, because a tile is a record as it was captured.
- */
-const Tile = (entry: (typeof bookmarks)[number], Index: number) => ({
-	...Seats[Index],
-	Id: entry.id,
-	Eyebrow: `@${entry.data.author.handle}`,
-	Title: Line(entry.data.text),
-	Meta: `${entry.data.metrics.likes} ${Content.Page.Bookmark.Detail.Metric.Likes} · ${
-		entry.data.lists[0] ?? Content.Word.Unsorted
-	}`,
-	Href: BookmarkHref(entry.id),
-	Stage: StageAccent.source,
-});
-
-/**
- * The bands the canvas is drawn in.
- *
- * A band is one full pass of the seat table. Slicing before mapping is what
- * makes the seat index a rank within the band, so the second band opens with a
- * hero again instead of running off the end of the table.
- */
-const Bands = Array.from({ length: Math.ceil(Ordered.length / Seats.length) }, (_, Band) =>
-	Ordered.slice(Band * Seats.length, (Band + 1) * Seats.length).map(Tile),
-);
-
-const total = bookmarks.length;
-const description = fill(Content.Page.Bookmark.Description, { total: String(total) });
-const lede = fill(Content.Page.Bookmark.Lede, {
-	total: String(total),
-	saved: Content.Word.Saved,
-	postNoun: total === 1 ? Content.Word.Post : Content.Word.Posts,
-});
 ---
 
-<Base Title={Content.Route.Bookmarks} Description={description} Wide>
-	<article>
-		<header class="archive__block sheet__head">
-			<h1 class="sheet__title">{Content.Route.Bookmarks}</h1>
-			<p class="sheet__lede">{lede}</p>
-		</header>
-
-		{Bands.map((Tiles) => (
-			<Bento Tiles={Tiles} />
-		))}
-
-		{total === 0 && (
-			<div class="archive__block">
-				<section class="note">
-					<h2 class="note__title">{Content.Empty.Bookmarks}</h2>
-					<p class="note__body">{Content.Document.EmptyBookmarks}</p>
-					<ol>
-						<li>
-							<code>{Content.Example.Scrape}</code>
-						</li>
-						<li>
-							<code>{Content.Example.Publish}</code>
-						</li>
-					</ol>
-				</section>
-			</div>
-		)}
-
-		<footer class="archive__block sheet__foot">
-			<a href={Route.List}>{Content.Route.Lists}</a>
-			<span>·</span>
-			<a href={Route.Activity}>{Content.Route.Activity}</a>
-		</footer>
-	</article>
+<Base Title={Content.Page.Bookmark.Title} Description={Content.Page.Bookmark.Description} Wide>
+	<Board Page={Page} Href={Route.Workspace} />
 </Base>

@@ -59,19 +59,3 @@ export const OwnKey = "own";
 export function Key(Context: Context): string {
 	return Context.Kind === "own" ? OwnKey : `room:${Context.RoomId}`;
 }
-
-/** Whether two contexts address the same place. */
-export function Same(Left: Context, Right: Context): boolean {
-	return Key(Left) === Key(Right);
-}
-
-/**
- * Whether a context is a room.
- *
- * A predicate rather than a comparison at each call site: `Kind` is a literal
- * union, and a caller that wrote `Context.Kind === "room"` inline would have to
- * be found and changed if a third kind ever appeared.
- */
-export function IsRoom(Context: Context): Context is Extract<Context, { Kind: "room" }> {
-	return Context.Kind === "room";
-}

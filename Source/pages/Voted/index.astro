@@ -1,236 +1,40 @@
 ---
 /**
- * The Voted index: the candidate queue.
+ * Voted: the queue, explained rather than shown.
  *
- * A candidate is public here and nowhere else. Approving one is a command the
- * owner runs, and the Curated index on the homepage is the only place an
- * approved entry appears - so this page can be as open as it likes without
- * publishing anything.
+ * The page used to render the candidate roster with its counts, its authors and
+ * a `Vote` control per row when a vote store was configured. Everything about
+ * that page depended on a collection, and on a clone with no vote store it was
+ * an empty state with three commands in it.
  *
- * The page is the drawer's column band turned public, because this is the one
- * public surface that is a queue: one column per state a record can be in, each a
- * stack of cards. The frame comes from `Component/Column.scss` - the same face,
- * corner and inner padding the lists index draws - and the cards come from
- * `Component/Queue.scss`, because a queue card carries a vote count, a note and a
- * control where a list column carries one line of post text.
+ * RFC-0053 makes it a showcase page: no collection is read, no count is shown,
+ * no roster is drawn.
+ * The three sections state what a candidate is, what a vote does and what
+ * settling one means, which is the part a reader needs before any queue is worth
+ * looking at. The rail is the workspace's drum reused as a table of contents.
  *
- * A rejection is a state, not a deletion: a rejected entry keeps its column, its
- * link and its count, and is struck through. Nothing a reader could have seen
- * disappears because the owner decided against it.
- *
- * Two builds of this page exist, and both are normal:
- *
- * - **No vote configuration** (every fresh clone). The counts on file are
- *   shown, the line under the heading says voting is not configured, and there
- *   are no buttons. No request, no error, no empty page.
- * - **A configured project.** The same cards, plus a `Vote` control on each
- *   candidate and the live counts fetched by `Source/Script/Vote/Widget.ts`.
- *
- * Nothing is fetched while this page is built: the numbers come from the
- * content collection, which `maintain vote sync` refreshed last time the owner
- * ran it.
- *
- * The `data-vote-*` attributes are the widget's contract, and they are on the
- * same elements as the queue classes on purpose: the markup is styled by the
- * stylesheet and found by the script, and neither has to know about the other.
+ * Nothing is lost by the change: a candidate is public in the archive, and the
+ * owner's own queue is drawn in the workspace's drawer (RFC-0054).
  */
-import "@Stylesheet/Component/Column.scss";
-import "@Stylesheet/Component/Note.scss";
-import "@Stylesheet/Component/Queue.scss";
+import Board, { type Frame } from "@Component/Showcase/Board.astro";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
 import { Route } from "@Library/Link.ts";
-import { StatusAccent, type StatusKey } from "@Library/Stage.ts";
-import { fill } from "@Library/Text.ts";
-import { read as readConfiguration } from "@Script/Vote/Configuration.ts";
-import { getCollection } from "astro:content";
 
-const voted = await getCollection("Voted");
-const configuration = readConfiguration();
-const configured = configuration !== null;
-
-type Entry = (typeof voted)[number];
-
-/**
- * The three states of one record, in the order a record moves through them.
- *
- * A state is a column and a stage is a step, which is why the label comes from
- * the site's words and the accent from the stage map rather than from a colour
- * this page chooses.
- */
-const States: { Status: StatusKey; Label: string }[] = [
-	{ Status: "candidate", Label: Content.Word.Candidates },
-	{ Status: "approved", Label: Content.Word.Approved },
-	{ Status: "rejected", Label: Content.Word.Rejected },
-];
-
-/**
- * Best-supported first, ties broken by the older nomination and then by id so
- * the order never depends on the filesystem. One order for all three columns:
- * a column is a ranking of the same field, whichever state it holds.
- */
-const Order = (left: Entry, right: Entry): number =>
-	right.data.votes - left.data.votes ||
-	left.data.nominatedAt.localeCompare(right.data.nominatedAt) ||
-	left.id.localeCompare(right.id);
-
-const Queues = States.map((State) => ({
-	...State,
-	Tone: StatusAccent(State.Status),
-	Entries: voted.filter((entry) => entry.data.status === State.Status).sort(Order),
-}));
-
-const candidates = voted.filter((entry) => entry.data.status === "candidate").sort(Order);
-
-const description = fill(Content.Page.Voted.Description, { count: String(candidates.length) });
-const lede = fill(Content.Page.Voted.Lede, {
-	count: String(candidates.length),
-	candidateNoun: candidates.length === 1 ? Content.Word.Candidate : Content.Word.Candidates,
-});
-const day = (value: string): string => value.slice(0, 10);
-const label = (entry: Entry): string =>
-	entry.data.title !== undefined && entry.data.title !== "" ? entry.data.title : entry.data.url;
-const author = (entry: Entry): string =>
-	entry.data.author.handle === ""
-		? Content.Page.Voted.UnknownAuthor
-		: `@${entry.data.author.handle}`;
+const Page: Frame = {
+	Eyebrow: Content.Page.Voted.Eyebrow,
+	Title: Content.Page.Voted.Title,
+	Lede: Content.Page.Voted.Lede,
+	Rail: Content.Showcase.Rail,
+	Boxes: [
+		{ Key: "Nominate", ...Content.Page.Voted.Section.Nominate },
+		{ Key: "Rank", ...Content.Page.Voted.Section.Rank },
+		{ Key: "Settle", ...Content.Page.Voted.Section.Settle },
+	],
+	Close: Content.Showcase.Close,
+};
 ---
 
-<Base Title={Content.Route.Voted} Description={description}>
-	<article class="sheet">
-		<header class="sheet__head">
-			<h1 class="sheet__title">{Content.Route.Voted}</h1>
-			<p class="sheet__lede">{lede}</p>
-			{!configured && (
-				<p class="sheet__lede">
-					{Content.Page.Voted.NotConfiguredBefore}
-					<code>{Content.Reference.Voting}</code>
-					{Content.Page.Voted.NotConfiguredAfter}
-				</p>
-			)}
-		</header>
-
-		{voted.length === 0 && (
-			<section class="note">
-				<h2 class="note__title">{Content.Empty.Voted}</h2>
-				<p class="note__body">{Content.Page.Voted.EmptyBody}</p>
-				<ol>
-					<li>
-						<code>{Content.Example.Nominate}</code>
-					</li>
-					<li>
-						<code>{Content.Example.Queue}</code>
-					</li>
-					<li>
-						<code>{Content.Example.Approve}</code>
-					</li>
-				</ol>
-				<p class="note__body">
-					{Content.Page.Voted.EmptyHintBefore}
-					<code>{Content.Reference.Voting}</code>
-					{Content.Page.Voted.EmptyHintAfter}
-				</p>
-			</section>
-		)}
-
-		{voted.length > 0 && (
-			<div data-vote>
-				<ul class="queue">
-					{Queues.map((Queue) => (
-						<li class="column" style={`--column-tone: ${Queue.Tone}`}>
-							<div class="column__inner">
-								<div class="column__head">
-									<h2 class="queue__name">
-										<span class="queue__mark" aria-hidden="true" />
-										{Queue.Label}
-									</h2>
-									<span class="column__count">{Queue.Entries.length}</span>
-								</div>
-
-								<ol class="queue__list">
-									{Queue.Entries.map((entry) => (
-										<li
-											class:list={[
-												"queue__card",
-												{
-													"queue__card--tombstone":
-														entry.data.status === "rejected",
-												},
-											]}
-											data-vote-row>
-											<a
-												class="queue__title"
-												href={entry.data.url}
-												rel="noopener noreferrer">
-												{label(entry)}
-											</a>
-
-											<p class="queue__meta">
-												<span class="queue__tally">
-													<span class="queue__votes" data-vote-total>
-														{entry.data.votes}
-													</span>
-													<span>
-														{entry.data.votes === 1
-															? Content.Word.Vote
-															: Content.Word.Votes}
-													</span>
-												</span>
-												{" · "}
-												{author(entry)}
-												{" · "}
-												{fill(Content.Page.Voted.Nominated, {
-													day: day(entry.data.nominatedAt),
-												})}
-												{entry.data.lists.length > 0 &&
-													` · ${entry.data.lists.join(", ")}`}
-											</p>
-
-											{entry.data.note !== undefined &&
-												entry.data.note !== "" && (
-													<p class="queue__note">{entry.data.note}</p>
-												)}
-
-											{configured && entry.data.status === "candidate" && (
-												<button
-													class="queue__vote"
-													data-vote-id={entry.data.id}
-													type="button">
-													{Content.Page.Voted.Button}
-												</button>
-											)}
-										</li>
-									))}
-								</ol>
-							</div>
-						</li>
-					))}
-				</ul>
-
-				{configured && <p class="queue__status" data-vote-status hidden />}
-			</div>
-		)}
-
-		<footer class="sheet__foot">
-			<a href={Route.Home}>{Content.Route.Curated}</a>
-			<span>·</span>
-			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
-			<span>·</span>
-			<a href={Route.List}>{Content.Route.Lists}</a>
-			<span>·</span>
-			<a href={Route.Activity}>{Content.Route.Activity}</a>
-		</footer>
-	</article>
+<Base Title={Content.Page.Voted.Title} Description={Content.Page.Voted.Description} Wide>
+	<Board Page={Page} Href={Route.Workspace} />
 </Base>
-
-{configuration !== null && (
-	<script
-		type="application/json"
-		id="Vote-Configuration"
-		set:html={JSON.stringify(configuration)}
-	/>
-)}
-
-<script>
-	import "@Script/Vote/Widget";
-</script>

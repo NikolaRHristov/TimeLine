@@ -12,9 +12,10 @@
  * holds no state (RFC-0053), so there is nothing to hydrate - and a page that ships
  * no JavaScript cannot fail to render without it.
  *
- * Every word arrives from the page, which reads it from `@Library/Content.ts`. No
- * sentence is written here.
+ * Every word arrives from the page or from `@Library/Content.ts`. No sentence is
+ * written here.
  */
+import { Content } from "@Library/Content.ts";
 import "@Stylesheet/Component/Spread.scss";
 
 export interface Card {
@@ -73,7 +74,7 @@ const Tone = { quiet: "spread__box--quiet", loud: "spread__box--loud" };
 				<p class="spread__body">{Card.Body}</p>
 				{Card.Href !== undefined && (
 					<a class="spread__more" href={Card.Href}>
-						See it in the workspace
+						{Content.Page.Showcase.Link}
 					</a>
 				)}
 			</article>

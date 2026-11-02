@@ -38,6 +38,8 @@ what is intended, the RFCs state what was decided, and the skills state how to d
 - **`Reference/Voting.md`** - the Voted index, owner approval, and bringing your own Firebase.
 - **`Reference/Design-Composition.md`** - the measured geometry of the workspace frame: the rail's
   depth table, the drawer's item heights, the canvas grid.
+- **`Reference/Session.md`** - the session layer: the slot, the two contexts, the role matrix, the
+  one verb across the seam, and the four states an island may name.
 - **`Reference/Showcase-Layout-Research.md`** - what four published pages do with their vertical
   space, and which of it the showcase surface took.
 

@@ -206,6 +206,7 @@
 	// so the two bands' state words start on the same x. A band that aligned its
 	// column heads and not its rows would look aligned and read crooked.
 	&__step {
+		position: relative;
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
@@ -225,6 +226,21 @@
 		@include Material.label(var(--text-3xs), var(--color-ink-muted));
 
 		margin: 0;
+	}
+
+	// The step's name, read out with the state and never drawn: the axis above the
+	// lanes already prints it, and a cell that announced a bare `absent` would say
+	// nothing a reader could attach to a step.
+	&__step-name {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		clip-path: inset(50%);
+		border: 0;
 	}
 
 	&__step[data-state="running"] &__mark {

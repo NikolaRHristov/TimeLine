@@ -1,0 +1,122 @@
+---
+/**
+ * The board: one showcase page, drawn from copy and structure alone.
+ *
+ * A showcase page reads no collection (RFC-0053 rule 1). Everything here comes
+ * from the page's own words and the composition's own parts, so the page is
+ * `ready` by construction: it has nothing to be empty of, it renders the same on
+ * a fresh clone as on a full archive, and it cannot fail without JavaScript
+ * because it ships none.
+ *
+ * The frame is the workspace's - the provenance rail beside the page column -
+ * and the rail is the same drum, mounted rather than copied (RFC-0053 rule 3).
+ * It is a table of contents there: one band per section, in reading order, each
+ * one a link to its own anchor, so a press on the rail works with no script
+ * running.
+ *
+ * The boxes are the canvas's material with the container taken away (RFC-0053
+ * rule 2). The canvas is a six-track grid because it holds records that must
+ * line up; a showcase page holds no records, so its boxes are larger, fewer and
+ * free of the inset - each one runs to the right edge of the viewport and keeps
+ * the tile's own 24px corner on the side that is still inside the page.
+ *
+ * No sentence is written here: every string arrives from the page, which reads
+ * it from `@Library/Content.ts`.
+ */
+import Provenance, { type Stage } from "@Component/Workspace/Provenance.tsx";
+import "@Stylesheet/Component/Board.scss";
+import "@Stylesheet/Component/Workspace.scss";
+
+/** One box: a single idea, and the anchor the contents rail links to. */
+export interface Box {
+	/** The anchor, and the key the rail selects. */
+	Key: string;
+	/** The box's family, e.g. `Source`. */
+	Eyebrow: string;
+	/** The claim, as a heading. */
+	Title: string;
+	/** The supporting sentence. */
+	Body: string;
+}
+
+/** The frame every showcase page shares, in the page's own words. */
+export interface Frame {
+	/** The small line above the page's title. */
+	Eyebrow: string;
+	/** The page's title, and the document's only `<h1>`. */
+	Title: string;
+	/** The sentence under the title. */
+	Lede: string;
+	/** The contents rail's words. */
+	Rail: { Eyebrow: string; Title: string; Note: string };
+	/** The page's sections, in reading order. */
+	Boxes: readonly Box[];
+	/** The closing band's words. */
+	Close: { Label: string; Link: string };
+}
+
+interface Props {
+	Page: Frame;
+	/** Where the closing band leads: the workspace, which RFC-0054 makes public. */
+	Href: string;
+}
+
+const { Page, Href } = Astro.props;
+
+/**
+ * The rail's bands: one per section, in reading order.
+ *
+ * `Events` is 1 for every section, because a section carries no quantity - a
+ * track whose length came from a count would be a count this page does not
+ * have. The tone is the chrome's own ink for the same reason: an accent names a
+ * pipeline stage (RFC-0047), and a section of a showcase page is not one.
+ *
+ * The first section is the one the drum opens on. The rail is navigation, not
+ * a position indicator: the browser marks where a jump landed, and the drum
+ * states the order a reader can move through.
+ */
+const Stages: Stage[] = Page.Boxes.map((Entry) => ({
+	Key: Entry.Key,
+	Label: Entry.Eyebrow,
+	Tone: "var(--chrome-ink-muted)",
+	Events: 1,
+	Href: `#${Entry.Key}`,
+}));
+---
+
+<div class="workspace board">
+	<Provenance
+		Stages={Stages}
+		Selected={Page.Boxes[0]?.Key ?? ""}
+		Eyebrow={Page.Rail.Eyebrow}
+		Title={Page.Rail.Title}
+		Note={Page.Rail.Note}
+	/>
+
+	<div class="workspace__body">
+		<article class="board__page">
+			<header class="board__hero">
+				<p class="board__eyebrow">{Page.Eyebrow}</p>
+				<h1 class="board__title">{Page.Title}</h1>
+				<p class="board__lede">{Page.Lede}</p>
+			</header>
+
+			{Page.Boxes.map((Entry) => (
+				<section class="board__box" id={Entry.Key} aria-labelledby={`${Entry.Key}-Title`}>
+					<p class="board__eyebrow">{Entry.Eyebrow}</p>
+					<h2 class="board__claim" id={`${Entry.Key}-Title`}>
+						{Entry.Title}
+					</h2>
+					<p class="board__body">{Entry.Body}</p>
+				</section>
+			))}
+
+			<footer class="board__close">
+				<p class="board__eyebrow">{Page.Close.Label}</p>
+				<a class="board__open" href={Href}>
+					{Page.Close.Link}
+				</a>
+			</footer>
+		</article>
+	</div>
+</div>

@@ -13,20 +13,6 @@
  */
 export type IslandState = "live" | "snapshot" | "static" | "joined";
 
-/** The ladder, in the order a client descends it. */
-export const Ladder: readonly IslandState[] = ["live", "snapshot", "static", "joined"];
-
-/**
- * Whether a state's rows are current.
- *
- * `snapshot` counts: it is the last state the client received and carries the
- * time it received it. `static` does not - it is the build's projection as of
- * the build - and `joined` describes a room whose rows are not readable at all.
- */
-export function IsCurrent(State: IslandState): boolean {
-	return State === "live" || State === "snapshot";
-}
-
 /**
  * When a state's rows are current to, as `2026-11-02 12:04 UTC`.
  *

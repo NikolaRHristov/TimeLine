@@ -28,16 +28,16 @@ import ProvenanceRail from "@Component/Workspace/ProvenanceRail.tsx";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
 import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
+import { Bookmarks, Curated, Events } from "@Library/Record.ts";
 import { StageAccent } from "@Library/Stage.ts";
 import { fill } from "@Library/Text.ts";
 import "@Stylesheet/Component/Note.scss";
 import "@Stylesheet/Component/Pill.scss";
 import "@Stylesheet/Component/Post.scss";
 import "@Stylesheet/Component/Workspace.scss";
-import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
-	const bookmarks = await getCollection("Bookmark");
+	const bookmarks = await Bookmarks();
 
 	return bookmarks.map((entry) => ({
 		params: { Id: entry.id },
@@ -55,7 +55,7 @@ const day = (value: string): string => value.slice(0, 10);
  * id - the curated file carries the rank and the votes frozen at approval time,
  * never a copy of the post.
  */
-const curated = await getCollection("Curated");
+const curated = await Curated();
 const rank = curated.find((candidate) => candidate.id === entry.id) ?? null;
 
 /**
@@ -73,7 +73,7 @@ const Kinds = [
 ] as const;
 
 /** The trail of this post: the events whose subject is its id, and nothing else. */
-const touched = (await getCollection("Event")).filter((event) => event.data.subject === entry.id);
+const touched = (await Events()).filter((event) => event.data.subject === entry.id);
 
 /**
  * One band per kind that actually happened.

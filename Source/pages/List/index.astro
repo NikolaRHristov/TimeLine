@@ -1,173 +1,40 @@
 ---
 /**
- * The lists index: one column per slug the published posts carry.
+ * Lists: the rule behind the names, not the names themselves.
  *
- * The set is derived from the posts, never from a fixed list of names - the
- * person who configured the archive decides what its lists are called, and this
- * page reads that decision back out of the published content. A clone with one
- * synthetic post therefore shows one column, and a clone with none shows the
- * empty state rather than a directory of links that go nowhere.
+ * The index used to be one column per list slug, derived from the published
+ * posts, each column previewing its newest four. It was an honest view of an
+ * archive and a poor first page: on a clone with one post it showed one column,
+ * and on a clone with none it showed a note explaining the absence.
  *
- * A column is the drawer's column drawn as a public surface: the same face, the
- * same 12px corner, the same 10px inner padding and the same one-line rows -
- * without the drop ghost, the stage tint or the private hint. The geometry comes
- * from `Material.face` in `Component/Column.scss`, not from
- * `Component/Drawer.scss`: a page that imported the drawer would inherit its
- * publish affordances along with its shape.
+ * RFC-0053 makes it a showcase page (rule 1): no collection is read, so the page
+ * states what a list is - a name the owner gives a set of records - and the rail
+ * becomes a table of contents. A name that no published record carries has no
+ * page, which is the rule the sections say in words rather than the empty grid
+ * that used to say it by accident.
  *
- * The head of a column is the slug and the count, and the rows under it are the
- * newest posts filed there, because that pair is what decides whether a reader
- * opens the column at all. Four rows: the drawer shows four, and a longer
- * preview would be a second index.
- *
- * A slug has a page only while a published post carries it, which is what keeps
- * `/List/<slug>` from existing for a name that resolves to nothing. A derived
- * index cannot show that absence, so the page states the rule in words under the
- * grid rather than leaving a reader to wonder why a list they configured is
- * missing.
- *
- * The unsorted bucket is for a post no list has claimed yet. It is listed like
- * any other list because it is one: a visitor looking for something they know
- * they saved should be able to find the posts the pipeline has not filed.
+ * `/List/<slug>` still renders one list's canvas; it is a data surface and reads
+ * the archive it filters.
  */
+import Board, { type Frame } from "@Component/Showcase/Board.astro";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
-import { BookmarkHref, ListHref, Route } from "@Library/Link.ts";
-import { fill } from "@Library/Text.ts";
-import "@Stylesheet/Component/Column.scss";
-import "@Stylesheet/Component/Note.scss";
-import { getCollection } from "astro:content";
+import { Route } from "@Library/Link.ts";
 
-/** The bucket a post lands in when no list has claimed it. */
-const Unsorted = Content.Word.Unsorted;
-
-/** How many rows a column previews before it stops: the drawer's own count. */
-const Preview = 4;
-
-const bookmarks = await getCollection("Bookmark");
-
-const counted = new Map<string, number>();
-const previews = new Map<string, (typeof bookmarks)[number][]>();
-
-/**
- * The newest first, before the buckets are filled.
- *
- * Walking one ordered archive and stopping each bucket at `Preview` is what
- * makes a preview the newest four rather than the first four the filesystem
- * happened to list.
- */
-const newest = [...bookmarks].sort((left, right) =>
-	(right.data.postedAt ?? right.data.firstSeenAt).localeCompare(
-		left.data.postedAt ?? left.data.firstSeenAt,
-	),
-);
-
-for (const entry of newest) {
-	const lists = entry.data.lists.length > 0 ? entry.data.lists : [Unsorted];
-
-	for (const list of lists) {
-		counted.set(list, (counted.get(list) ?? 0) + 1);
-
-		const bucket = previews.get(list) ?? [];
-
-		if (bucket.length < Preview) {
-			bucket.push(entry);
-			previews.set(list, bucket);
-		}
-	}
-}
-
-/** Alphabetical, with the unsorted bucket last: it is the remainder, not a name. */
-const lists = [...counted].sort(([left], [right]) => {
-	if (left === Unsorted) return 1;
-	if (right === Unsorted) return -1;
-	return left.localeCompare(right);
-});
-
-const total = bookmarks.length;
-const description = fill(Content.Page.List.Description, {
-	listCount: String(lists.length),
-	listNoun: Content.Word.Lists,
-	across: Content.Word.Across,
-	total: String(total),
-	saved: Content.Word.Saved,
-	postNoun: Content.Word.Posts,
-});
-const lede = fill(Content.Page.List.Lede, {
-	listCount: String(lists.length),
-	listNoun: lists.length === 1 ? Content.Word.List : Content.Word.Lists,
-	across: Content.Word.Across,
-	total: String(total),
-	saved: Content.Word.Saved,
-	postNoun: total === 1 ? Content.Word.Post : Content.Word.Posts,
-});
-
-/** One line of a post, short enough to sit in a column row. */
-const Line = (Text: string, Length = 48): string => {
-	const Flat = Text.replace(/\s+/g, " ").trim();
-
-	return Flat.length > Length ? `${Flat.slice(0, Length - 1)}…` : Flat;
+const Page: Frame = {
+	Eyebrow: Content.Page.List.Eyebrow,
+	Title: Content.Page.List.Title,
+	Lede: Content.Page.List.Lede,
+	Rail: Content.Showcase.Rail,
+	Boxes: [
+		{ Key: "Name", ...Content.Page.List.Section.Name },
+		{ Key: "Filter", ...Content.Page.List.Section.Filter },
+		{ Key: "Slug", ...Content.Page.List.Section.Slug },
+	],
+	Close: Content.Showcase.Close,
 };
 ---
 
-<Base Title={Content.Route.Lists} Description={description} Wide>
-	<article>
-		<header class="page sheet__head">
-			<h1 class="sheet__title">{Content.Route.Lists}</h1>
-			<p class="sheet__lede">{lede}</p>
-		</header>
-
-		{lists.length > 0 && (
-			<ul class="column-grid">
-				{lists.map(([list, count]) => (
-					<li class="column">
-						<div class="column__inner">
-							<div class="column__head">
-								<a class="column__slug" href={ListHref(list)}>
-									{list}
-								</a>
-								<span class="column__count">
-									{count} {count === 1 ? Content.Word.Post : Content.Word.Posts}
-								</span>
-							</div>
-
-							{previews.get(list)?.map((entry) => (
-								<a class="column__item" href={BookmarkHref(entry.id)}>
-									<span class="column__title">{Line(entry.data.text)}</span>
-									<span class="column__meta">@{entry.data.author.handle}</span>
-								</a>
-							))}
-						</div>
-					</li>
-				))}
-			</ul>
-		)}
-
-		<div class="page">
-			{lists.length > 0 && <p class="column-grid__note">{Content.Page.List.Rule}</p>}
-
-			{lists.length === 0 && (
-				<section class="note">
-					<h2 class="note__title">{Content.Empty.Lists}</h2>
-					<p class="note__body">{Content.Page.List.EmptyBody}</p>
-					<ol>
-						<li>
-							<code>{Content.Example.Scrape}</code>
-						</li>
-						<li>
-							<code>{Content.Example.Publish}</code>
-						</li>
-					</ol>
-				</section>
-			)}
-		</div>
-
-		<footer class="page sheet__foot">
-			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
-			<span>·</span>
-			<a href={Route.Voted}>{Content.Route.Voted}</a>
-			<span>·</span>
-			<a href={Route.Activity}>{Content.Route.Activity}</a>
-		</footer>
-	</article>
+<Base Title={Content.Page.List.Title} Description={Content.Page.List.Description} Wide>
+	<Board Page={Page} Href={Route.Workspace} />
 </Base>

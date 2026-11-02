@@ -150,6 +150,40 @@ rather than leaving holes.
 
 ---
 
+## The bands below the canvas
+
+The composition grows downward from the canvas (RFC-0046, RFC-0047, RFC-0048). Three bands follow it
+on the canvas's own 20px rhythm, and the rail's column closes with the fourth surface. These values
+come from the three records rather than from the Figma frame, which stops at the canvas.
+
+- **Swimlanes** - `1104` wide at `288`, `20` under the canvas. White face on the paper, `1px`
+  `#f5f5f5` edge, `24px` corner, `24` padding. One lane per actor, laid out on the shared four
+  tracks; the lane air is `28`, deliberately greater than the canvas's `20` gap. Two arrows always,
+  facing opposite ways.
+- **Spectrometer** - the same inset and the same corner, `20` under the swimlanes. One row per peer,
+  one column per step, and the same four tracks as the lanes: `--band-columns` is `14.5rem` plus
+  four equal tracks, declared once in `Global.css`. A column head carries three lines - the step,
+  the suite in the monospace face at `9px`, and the record the state is read from - with the record
+  anchored to the bottom so the four heads share one baseline.
+- **Status footer** - `1200` wide at `240`, `20` under the spectrometer and flush at the bottom of
+  the composition: `#ececec`, a `#d8d8d8` top rule, `12` block padding and `48` inline padding, so
+  its first word starts on the panels' left edge. Four textual states, no tint and no mark: the word
+  is the signal.
+- **Security cluster** - `200` wide, centred in the rail's `224`, bottom-aligned in the rail column.
+  Four marks, each with a state and the record that makes it a claim.
+
+The rail is a column the height of the composition: the drum stays `224 × 360` at the top of it and
+the cluster closes it. That arrangement is what puts the cluster's last mark on the footer's own
+baseline - one instrument read across two columns.
+
+A state is drawn as the shape of a mark and the word beside it, never as a tint: filled is `running`
+or `engaged`, a solid outline is `available`, a dashed outline is `absent`, a dotted one is a record
+the client could not read. A `1px` stroke in a line token is `1.5:1` on the paper, so the marks are
+stroked in the muted ink; the open states are square because a corner radius eats the corner mark of
+a dashed or dotted border.
+
+---
+
 ## The palette
 
 - **Chrome** - `#1c1c1e` ground, `#1f1f21` inactive face, `#232325` active face, `#2c2c2e` control,
@@ -167,12 +201,16 @@ naming the same stage.
 
 ## Where it lives in the code
 
-- **Tokens** - `Source/Stylesheet/Global.css`, one `:root` block per ramp.
+- **Tokens** - `Source/Stylesheet/Global.css`, one `:root` block per ramp, plus `--band-columns` for
+  the axis the two bands below the canvas share.
 - **Mixins** - `Source/Stylesheet/Material.scss`: `panel`, `face`, `card`, `control`, `inset`,
   `label`, `ellipsis`, `reset`.
 - **Sheets** - `Source/Stylesheet/Component/`, one sheet per part, each built from a `Material`
   mixin; `Source/Stylesheet/Layout/` holds the shell and the page frame.
 - **Components** - `Source/Component/Workspace/`, one file per part, Solid `.tsx`.
+- **Vocabulary** - `Source/Library/Capability.ts` states the four steps and the states once;
+  `Source/Library/Band.ts` states what the build can prove about the network, so the bands are one
+  value rather than nine props assembled at a call site.
 
 A number in this file that a sheet hardcodes as a literal instead of a custom property is a defect
 in the sheet, not in the design.

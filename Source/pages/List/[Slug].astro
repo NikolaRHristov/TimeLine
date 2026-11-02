@@ -31,15 +31,15 @@ import Bento, { Seats, type Tile } from "@Component/Workspace/Bento.tsx";
 import Base from "@Layout/Base.astro";
 import { Content } from "@Library/Content.ts";
 import { BookmarkHref, Route } from "@Library/Link.ts";
+import { Bookmarks } from "@Library/Record.ts";
 import { fill } from "@Library/Text.ts";
 import "@Stylesheet/Component/Note.scss";
-import { getCollection } from "astro:content";
 
 /** The bucket a post lands in when no list has claimed it. */
 const Unsorted = Content.Word.Unsorted;
 
 export async function getStaticPaths() {
-	const bookmarks = await getCollection("Bookmark");
+	const bookmarks = await Bookmarks();
 	const slugs = new Set<string>();
 
 	for (const entry of bookmarks) {
@@ -57,7 +57,7 @@ export async function getStaticPaths() {
 
 const { Slug } = Astro.props;
 
-const bookmarks = await getCollection("Bookmark");
+const bookmarks = await Bookmarks();
 
 const entries = bookmarks
 	.filter((entry) => (entry.data.lists.length > 0 ? entry.data.lists : [Unsorted]).includes(Slug))
@@ -136,7 +136,7 @@ const Bands = Array.from({ length: Math.ceil(entries.length / Seats.length) }, (
 		)}
 
 		<footer class="page sheet__foot">
-			<a href={Route.List}>{Content.Page.List.Detail.AllLists}</a>
+			<a href={Route.List}>{Content.Route.Lists}</a>
 			<span>·</span>
 			<a href={Route.Bookmark}>{Content.Route.Bookmarks}</a>
 		</footer>

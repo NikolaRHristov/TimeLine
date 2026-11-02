@@ -115,6 +115,11 @@ export default function Swimlanes(Props: Props) {
 										<span class="swimlane__state">
 											{Lane.Steps[Step.Key] ?? "unknown"}
 										</span>
+										{/* The axis above names the step, so the cell prints only
+										    the state; without this line a screen reader would
+										    hear four bare states with nothing to attach them
+										    to. */}
+										<span class="swimlane__step-name">{Step.Label}</span>
 									</div>
 								)}
 							</For>
