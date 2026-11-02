@@ -115,7 +115,6 @@ export default function Workspace(Props: Props) {
 				Eyebrow: Column?.Label ?? "",
 				Title: Entry.Title,
 				Meta: Entry.Meta,
-				Stage: Column?.Tone,
 			},
 		]);
 	};

@@ -56,11 +56,11 @@ jobs:
 
     strategy:
       matrix:
-        # The floor first, then the development line. The floor is the number
-        # `package.json` records as `engines.node` and `Scripts/Compatibility.mjs`
-        # enforces; a matrix that names an older Node tests a build that cannot
-        # exist, and one that names only the newest hides a floor that has moved
-        # past what a clone can actually install.
+        # One job per supported line, not per release. The exact patch floor is
+        # `package.json` `engines.node`, and `Scripts/Compatibility.mjs` fails the
+        # job when the runner's interpreter falls below it - so the matrix proves
+        # each line builds and the guard proves the floor, rather than the matrix
+        # hard-coding a patch version a runner image may not carry.
         node-version: ["22", "24", "26"]
 
     steps:

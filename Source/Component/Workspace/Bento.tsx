@@ -23,8 +23,6 @@ export interface Tile {
 	Title?: string;
 	Meta?: string;
 	Href?: string;
-	/** The stage accent drawn along the top edge. */
-	Stage?: string;
 }
 
 interface Props {
@@ -112,12 +110,7 @@ export default function Bento(Props: Props) {
 							style={{
 								"grid-column": `${Tile.Column} / span ${Tile.ColumnSpan}`,
 								"grid-row": `${Tile.Row} / span ${Tile.RowSpan}`,
-								"--tile-stage": Tile.Stage ?? "transparent",
 							}}>
-							<Show when={Tile.Stage !== undefined}>
-								<span class="bento__stage" />
-							</Show>
-
 							<Show when={Filled}>
 								<Show when={Tile.Eyebrow !== undefined}>
 									<p class="bento__eyebrow">{Tile.Eyebrow}</p>

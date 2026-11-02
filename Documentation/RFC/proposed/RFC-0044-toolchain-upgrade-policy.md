@@ -105,8 +105,8 @@ answers both.
 - Whether to commit `pnpm-lock.yaml` and drop the machine-wide ignore, which is what would make
   `--frozen-lockfile` meaningful. It is the owner's rule, so it stays their call.
 - Whether the Node workflow should test the floor (22.23.4) and the development line (24) as a
-  matrix, or only the floor. It currently names both; the cost of the second job is a duplicated
-  install.
+  matrix, or only the floor. It currently names the three supported lines - 22, 24, 26 - and the
+  guard supplies the patch floor; the cost of each extra job is a duplicated install.
 - What a Tailwind 4 migration costs. It removes `tailwindcss/nesting` and moves the theme into CSS,
   so the estimate needs a spike against `postcss.config.js`, not a version bump.
 - What the Sass `@import` to `@use` migration costs across `Source/Layout/Base.astro` and the two

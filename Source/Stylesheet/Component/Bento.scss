@@ -93,18 +93,10 @@
 		text-underline-offset: 3px;
 	}
 
-	// The stage accent, as a hairline along the top of a filled tile. It is the
-	// only colour on the canvas, and it is the same accent the drawer used for
-	// the column the tile came from - so a published tile still says where it
-	// was published from.
-	&__stage {
-		position: absolute;
-		inset-block-start: 0;
-		inset-inline: 1.5rem;
-		height: 3px;
-		border-radius: 999px;
-		background: var(--tile-stage, transparent);
-	}
+	// A tile carries no accent. The composition puts stage colour on three
+	// things - a rail band, a column head and an event row - and the canvas is
+	// none of them: it is the published side, where a record is valued by its
+	// rank (the grey it sits on) rather than by the pipeline it came from.
 
 	@media (max-width: 900px) {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
