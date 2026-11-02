@@ -10,4 +10,8 @@ allowBuilds:
   "@firebase/util": true
   esbuild: true
   protobufjs: true
+  # re2 is firebase-tools' regex engine for Security Rules. Approving the build
+  # installs the prebuilt native binding; leaving it unapproved makes
+  # `pnpm install` exit 1 and takes every `pnpm run` down with it.
+  re2: true
   sharp: true

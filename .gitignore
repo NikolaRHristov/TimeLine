@@ -26,3 +26,9 @@ Maintain/Target/
 .turbo/
 
 node_modules/
+
+# Local secrets: Firebase token, any API key. The global ignore also covers
+# `.env`, but a token in this repo deserves a rule that travels with the repo.
+.env
+.env.*
+!.env.example
