@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Same shape as Firestore.rules: a user's own files only, everything else shut.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{uid}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
