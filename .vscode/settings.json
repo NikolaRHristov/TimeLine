@@ -2,10 +2,7 @@
 	"[astro]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
-	"[typescript]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
-	},
-	"[typescriptreact]": {
+	"[css]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 	"[javascript]": {
@@ -20,47 +17,51 @@
 	"[markdown]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
 	"[yaml]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
-	"[css]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
-	},
-	"editor.defaultFormatter": "esbenp.prettier-vscode",
-	"editor.formatOnSave": true,
+	"astro.content-intellisense": true,
 	"editor.codeActionsOnSave": {
 		"source.organizeImports": "explicit"
 	},
-	"editor.insertSpaces": false,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"editor.detectIndentation": false,
-	"editor.tabSize": 4,
+	"editor.formatOnSave": true,
+	"editor.insertSpaces": false,
 	"editor.rulers": [100],
+	"editor.tabSize": 4,
+	"files.associations": {
+		"*.mdx": "markdown"
+	},
 	"files.eol": "\n",
-	"files.trimTrailingWhitespace": true,
-	"files.insertFinalNewline": true,
 	"files.exclude": {
 		"**/.DS_Store": true,
 		"**/.astro": true,
 		"**/.cache": true,
 		"**/.git": true,
 		"**/.turbo": true,
+		"**/Target": false,
 		"**/Thumbs.db": true,
 		"**/node_modules": true,
-		"**/Target": false,
 		"**/tmp": false
 	},
+	"files.insertFinalNewline": true,
+	"files.trimTrailingWhitespace": true,
 	"search.exclude": {
 		"**/.astro": true,
 		"**/Maintain/Storage": true,
 		"**/Maintain/Target": true,
 		"**/Target": true,
 		"**/node_modules": true,
-		"**/pnpm-lock.yaml": true
+		"**/pnpm-lock.yaml": true,
+		"**/tmp": true
 	},
-	"files.associations": {
-		"*.mdx": "markdown"
-	},
-	"astro.content-intellisense": true,
-	"typescript.tsdk": "node_modules/typescript/lib",
-	"typescript.enablePromptUseWorkspaceTsdk": true
+	"typescript.enablePromptUseWorkspaceTsdk": true,
+	"typescript.tsdk": "node_modules/typescript/lib"
 }
