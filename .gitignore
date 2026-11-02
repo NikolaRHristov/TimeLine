@@ -18,7 +18,9 @@ Maintain/Target/
 
 # Compiled site: `astro build` writes it and regenerates it on the next run.
 # Committed once by accident, it publishes every post the archive held.
-Target/
+# Root-anchored: an unanchored `Target/` also matches the real source directory
+# `Maintain/Source/Browser/Target/`, silently ignoring new files added there.
+/Target/
 
 # Turbo's run cache.
 .turbo/
