@@ -1,1 +1,1 @@
-The network moves what you send between peers over the peer-carried transport: sealed with AES-GCM-256, keys wrapped to each device with X25519, and no key held anywhere the operator can reach (RFC-0026, RFC-0013).
+The network moves what you send between peers over the peer-carried transport: sealed with AES-GCM-256, keys wrapped to each device with X25519, and no key held anywhere the operator can reach - so it cannot read, index, rank or moderate what it carries (RFC-0026, RFC-0013, RFC-0031).

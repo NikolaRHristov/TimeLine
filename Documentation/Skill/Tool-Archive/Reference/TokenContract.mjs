@@ -284,6 +284,13 @@ function arrayOf(text, name) {
 	return [...match[1].matchAll(/"([^"]*)"/g)].map((entry) => entry[1]);
 }
 
+/** The value of `export const Name = "value";`. */
+function stringOf(text, name) {
+	const match = new RegExp(`export const ${name}\\b[^=]*=\\s*"([^"]*)"`).exec(text);
+
+	return match === null ? null : match[1];
+}
+
 /** The `name: "value"` pairs in `export const Name = { ... };`. */
 function recordOf(text, name) {
 	const match = new RegExp(`export const ${name}\\b[^=]*=\\s*\\{([\\s\\S]*?)\\n\\};`, "m").exec(
@@ -638,6 +645,32 @@ function main() {
 	const readStates =
 		dataModule === undefined ? [] : (arrayOf(dataModule.text, "DataState") ?? []);
 	const codes = dataModule === undefined ? [] : (arrayOf(dataModule.text, "FailureCode") ?? []);
+
+	// The attribute a state is published on is declared in the module too, so the
+	// name the check scans for is stated once. A module that renames it is not
+	// silently unenforced: the mismatch is reported until this check follows.
+	const stateAttribute =
+		stateModule === undefined ? null : (stringOf(stateModule.text, "StateAttribute") ?? null);
+	const readAttribute =
+		dataModule === undefined ? null : (stringOf(dataModule.text, "ReadAttribute") ?? null);
+
+	if (stateAttribute !== null && stateAttribute !== "data-control-state") {
+		report(
+			6,
+			STATE_MODULE,
+			1,
+			`StateAttribute is "${stateAttribute}" and this check scans for "data-control-state" - rename it here too, or the vocabulary stops being enforced`,
+		);
+	}
+
+	if (readAttribute !== null && readAttribute !== "data-read") {
+		report(
+			6,
+			DATA_MODULE,
+			1,
+			`ReadAttribute is "${readAttribute}" and this check scans for "data-read" - rename it here too, or the vocabulary stops being enforced`,
+		);
+	}
 
 	if (stateModule !== undefined && states.length === 0) {
 		report(

@@ -138,6 +138,14 @@ Opacity differs by column: `0.55` on the first, `0.50` on the rest. Label 10px i
 The seam is light on purpose. It belongs to neither surface, so it reads as a rule between the dark
 chrome and the light canvas rather than as part of either.
 
+The left group is a control and not a caption: publishing is the one verb that crosses this seam
+(RFC-0043 §4). A reader who may not publish sees the control in `locked` rather than without it
+(RFC-0049 rule 4, RFC-0054 §3) - the label keeps its ink and gains a 12px lock after the right chip,
+and the right-hand line states the reason instead of the stage
+(`Publishing needs an identity - a published record carries an author`, RFC-0013). The control
+carries `aria-disabled` and points its `aria-describedby` at that line, so the reason belongs to the
+control rather than sitting beside it.
+
 ---
 
 ## The canvas
@@ -208,6 +216,11 @@ naming the same stage.
 - **Sheets** - `Source/Stylesheet/Component/`, one sheet per part, each built from a `Material`
   mixin; `Source/Stylesheet/Layout/` holds the shell and the page frame.
 - **Components** - `Source/Component/Workspace/`, one file per part, Solid `.tsx`.
+- **State** - `Source/Script/Workspace/Store.ts` holds what a person is doing - the selected stage,
+  the live column, the view, the open record, the published tiles and the session slot - so the rail
+  and the body are two islands reading one value rather than two components each holding their own.
+  `Source/Script/Workspace/Seat.ts` states the canvas's seat table, which the store publishes into
+  and the canvas fills.
 - **Vocabulary** - `Source/Library/Capability.ts` states the four steps and the states once;
   `Source/Library/Band.ts` states what the build can prove about the network, so the bands are one
   value rather than nine props assembled at a call site.

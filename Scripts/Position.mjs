@@ -25,15 +25,15 @@
  *      because the rule binds the copy and not the tables.
  *
  *   3. A claim names its protocol or its record. A showcase claim is a
- *      capability a reader can check (RFC-0053, RFC-0046 rule 2), so every file
- *      under `Content/String/Claim/` names a record (`RFC-NNNN`), and a claim
- *      that talks about cryptography names the cipher suite as well. "Your
- *      content is unreadable to us" is not a claim until it says
- *      `AES-GCM-256`; `End-to-end encrypted` never is one.
+ *      capability a reader can check (RFC-0053, RFC-0046 rule 2), so every card
+ *      body and pillar note under `Content/String/Page/Showcase/` names a record
+ *      (`RFC-NNNN`), and a claim that talks about cryptography names the cipher
+ *      suite as well. "Your content is unreadable to us" is not a claim until it
+ *      says `AES-GCM-256`; `End-to-end encrypted` never is one.
  *
- * It also checks that every claim has a key in `Source/Library/Content.ts`, so a
- * claim file that no page can resolve fails here rather than at build time with
- * a missing define.
+ * The copy is checked where it is printed. A claim kept in its own file beside
+ * the page would be a sentence the site ships without printing, and the rule
+ * would then be satisfied by a document rather than by the product.
  *
  * Plain JavaScript, no dependencies, on purpose: this runs inside `pnpm run
  * check` before anything is compiled, and it has to speak on a tree that does
@@ -57,9 +57,6 @@ const Root = Flag === -1 ? resolve(Here, "..") : resolve(process.argv[Flag + 1] 
 
 /** The one file allowed to name the company. */
 const Attribution = "Content/String/Brand/Attribution.md";
-
-/** The folder whose every file is a showcase claim. */
-const Claim = "Content/String/Claim";
 
 /**
  * Folders that are generated, installed or archived - never read as copy.
@@ -135,18 +132,6 @@ function Walk(Directory) {
 	}
 
 	return Files.sort();
-}
-
-/** `Content/String/Claim/Cipher.md` -> `CONTENT_STRING_CLAIM_CIPHER`. */
-function Key(File) {
-	return File.replace(/\.[^./]+$/, "")
-		.split("/")
-		.map((Segment) =>
-			Segment.replace(/[^A-Za-z0-9]+/g, "_")
-				.replace(/^_+|_+$/g, "")
-				.toUpperCase(),
-		)
-		.join("_");
 }
 
 function Read(File) {
@@ -298,63 +283,17 @@ function Judge(Sentence) {
 	return Problems;
 }
 
-/** The content wrapper, or empty when the tree has none yet. */
-function Wrapper() {
-	try {
-		return Read("Source/Library/Content.ts");
-	} catch {
-		// A tree with no content wrapper has no key to resolve: every claim then
-		// reports the missing key, which is the honest answer.
-		return "";
-	}
-}
-
-/** Check 3 - every file under `Content/String/Claim/` is a claim. */
-function CheckClaims() {
-	Section("claims");
-
-	const Files = Walk(Claim);
-
-	if (Files.length === 0) {
-		Line("FAIL", `${Claim}/ holds no claim; a showcase page states capabilities (RFC-0053)`);
-		return false;
-	}
-
-	const Content = Wrapper();
-	let Ok = true;
-
-	for (const File of Files) {
-		const Sentence = Read(File);
-		const Name = File.slice(File.lastIndexOf("/") + 1, -3);
-		const Problems = Judge(Sentence);
-
-		if (!Content.includes(`CONTENT_STRING_CLAIM_${Key(File).split("CLAIM_")[1]}`)) {
-			Problems.push(`has no key in Source/Library/Content.ts (Content.Claim.${Name})`);
-		}
-
-		if (Problems.length === 0) {
-			Line("PASS", `${Name}: ${Record.exec(Sentence)[0]}`);
-			continue;
-		}
-
-		Ok = false;
-
-		for (const Problem of Problems) {
-			Line("FAIL", `${File}: ${Problem}`);
-		}
-	}
-
-	return Ok;
-}
-
 /**
- * Check 4 - every card on a showcase page is a claim too.
+ * Check 3 - every card on a showcase page is a claim.
  *
  * A card body and a pillar note are the sentences a reader meets first, so they
- * answer to the same rule as the claim files. The masthead and the card titles
- * do not: a title is a heading and the eyebrow is the component's own name, and
- * a rule that demanded a cipher suite from a heading would be obeyed by making
- * the headings worse.
+ * answer to the rule: each names the protocol that carries it or the record it is
+ * computed from. The masthead and the card titles do not - a heading is a heading,
+ * and a rule that demanded a cipher suite from one would be obeyed by making the
+ * headings worse.
+ *
+ * The copy is checked where it is printed, not in a separate claim file: a claim
+ * kept beside the page instead of on it is copy the site ships without printing.
  */
 function CheckShowcase() {
 	Section("showcase");
@@ -391,10 +330,9 @@ function CheckShowcase() {
 
 const BrandOk = CheckBrand();
 const VocabularyOk = CheckVocabulary();
-const ClaimOk = CheckClaims();
 const ShowcaseOk = CheckShowcase();
 
-const Positioned = BrandOk && VocabularyOk && ClaimOk && ShowcaseOk;
+const Positioned = BrandOk && VocabularyOk && ShowcaseOk;
 
 process.stdout.write("---\n");
 process.stdout.write(Positioned ? "RESULT positioned\n" : "RESULT mispositioned\n");

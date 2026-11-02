@@ -1,1 +1,0 @@
-We cannot moderate what we cannot read, so the only lever is the room rather than the post: a report row names the author, and redaction and room suspension are the whole of what the operator can do (RFC-0031).

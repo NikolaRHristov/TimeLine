@@ -73,25 +73,6 @@ export const Content = {
 		Short: content(process.env["CONTENT_STRING_BRAND_SHORT"], "CONTENT_STRING_BRAND_SHORT"),
 		Title: content(process.env["CONTENT_STRING_BRAND_TITLE"], "CONTENT_STRING_BRAND_TITLE"),
 	},
-	/**
-	 * The capability claims a showcase page states (RFC-0053, RFC-0055 rule 4).
-	 *
-	 * A claim is not a slogan: it names the protocol that carries it or the
-	 * record it is computed from, so a reader can check it against the record
-	 * the way every other surface in this repository states a fact with the
-	 * command that proves it. `Scripts/Position.mjs` fails on a claim whose
-	 * sentence names neither.
-	 */
-	Claim: {
-		Cipher: content(process.env["CONTENT_STRING_CLAIM_CIPHER"], "CONTENT_STRING_CLAIM_CIPHER"),
-		Grant: content(process.env["CONTENT_STRING_CLAIM_GRANT"], "CONTENT_STRING_CLAIM_GRANT"),
-		Moderation: content(
-			process.env["CONTENT_STRING_CLAIM_MODERATION"],
-			"CONTENT_STRING_CLAIM_MODERATION",
-		),
-		Motion: content(process.env["CONTENT_STRING_CLAIM_MOTION"], "CONTENT_STRING_CLAIM_MOTION"),
-		Status: content(process.env["CONTENT_STRING_CLAIM_STATUS"], "CONTENT_STRING_CLAIM_STATUS"),
-	},
 	Document: {
 		EmptyBookmarks: content(
 			process.env["CONTENT_DOCUMENT_EMPTYBOOKMARKS"],
@@ -903,6 +884,10 @@ export const Content = {
 	},
 	Word: {
 		Across: content(process.env["CONTENT_STRING_WORD_ACROSS"], "CONTENT_STRING_WORD_ACROSS"),
+		Approved: content(
+			process.env["CONTENT_STRING_WORD_APPROVED"],
+			"CONTENT_STRING_WORD_APPROVED",
+		),
 		Candidate: content(
 			process.env["CONTENT_STRING_WORD_CANDIDATE"],
 			"CONTENT_STRING_WORD_CANDIDATE",
@@ -931,6 +916,10 @@ export const Content = {
 		Recorded: content(
 			process.env["CONTENT_STRING_WORD_RECORDED"],
 			"CONTENT_STRING_WORD_RECORDED",
+		),
+		Rejected: content(
+			process.env["CONTENT_STRING_WORD_REJECTED"],
+			"CONTENT_STRING_WORD_REJECTED",
 		),
 		Saved: content(process.env["CONTENT_STRING_WORD_SAVED"], "CONTENT_STRING_WORD_SAVED"),
 		Unsorted: content(

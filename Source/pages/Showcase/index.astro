@@ -8,9 +8,11 @@
  * swimlane flow (RFC-0047), so the last thing read is the mechanism rather than a
  * slogan.
  *
- * The copy is written here while this page is a demonstration. RFC-0053 requires it
- * to move into `Content/` and resolve through `@Library/Content.ts` before the page
- * ships; the card that lands the homepage does that move.
+ * The copy lives in `Content/String/Page/Showcase/` and resolves through
+ * `@Library/Content.ts` like every other string: the masthead, the six cards and
+ * the three pillars. Every card body and pillar note names the protocol or the
+ * record it rests on, and `Scripts/Position.mjs` fails the build when one does
+ * not (RFC-0055 rule 4).
  *
  * No collection is read and no island is mounted: the page is `ready` by
  * construction, renders identically on an empty archive, and cannot fail without

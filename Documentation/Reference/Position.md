@@ -58,19 +58,27 @@ grep -rn "DELO" Source/ --exclude-dir=Generated             # no match
 appears there by construction. Counting it would make one mention look like two; the guard reports
 it as `INFO` and counts the copy.
 
+A page that renders `Bare` has no shell and therefore no signature line. `/Workspace` is that page:
+the composition owns the viewport, and a footer under it would push every proportion the design
+states in absolute pixels.
+
 ## The claim form
 
 A showcase claim is a capability the reader can check, not an adjective (RFC-0053, RFC-0046 rule 2).
-Every file under `Content/String/Claim/` therefore names a record - `RFC-NNNN` - and a claim that
+Every card body and pillar note on a showcase page names a record - `RFC-NNNN` - and a claim that
 talks about cryptography names its cipher suite as well.
 
-| Claim        | Says                                                  | Names                                           |
-| ------------ | ----------------------------------------------------- | ----------------------------------------------- |
-| `Motion`     | what a motion is, and that it is idempotent           | RFC-0024, RFC-0026                              |
-| `Cipher`     | the content is unreadable to the operator             | AES-GCM-256, HKDF-SHA256, X25519, RFC-0013      |
-| `Grant`      | the reader decides who sees it                        | the `see` step, AES-GCM-256, RFC-0047, RFC-0013 |
-| `Moderation` | the operator cannot moderate what it cannot read      | the report row, RFC-0031                        |
-| `Status`     | the operator answers for the network, not the content | RFC-0048, RFC-0038                              |
+| Claim on the page      | Says                                                 | Names                                      |
+| ---------------------- | ---------------------------------------------------- | ------------------------------------------ |
+| `Card/Provenance`      | the rail counts collections, so it cannot disagree   | RFC-0001                                   |
+| `Card/Drawer`          | nothing reaches a canvas without a publish record    | RFC-0043                                   |
+| `Card/Seam`            | publishing is the only verb that crosses             | RFC-0043                                   |
+| `Card/Canvas`          | a tile carries its own placement                     | RFC-0045                                   |
+| `Card/Network`         | the operator cannot read, index, rank or moderate it | AES-GCM-256, X25519, RFC-0026, RFC-0031    |
+| `Card/Motion`          | what a motion is, and that it is idempotent          | RFC-0024, RFC-0026                         |
+| `Pillar/Authenticated` | both halves of the handshake are drawn               | RFC-0047, RFC-0013                         |
+| `Pillar/Encrypted`     | the suite, not a summary of it                       | AES-GCM-256, HKDF-SHA256, X25519, RFC-0013 |
+| `Pillar/Authorised`    | `see` is the first permission, and grants are named  | RFC-0047                                   |
 
 The two forms are not interchangeable:
 
@@ -78,9 +86,11 @@ The two forms are not interchangeable:
 - `End-to-end encrypted` is not, because there is nothing to hold it against. A capability whose
   protocol cannot be named is `UNKNOWN`, and UNKNOWN is drawn rather than described.
 
-Copy reaches a page through `@Library/Content.ts` like every other string: `Content.Claim.Cipher`,
-`Content.Claim.Grant`, and so on. No claim is written into a component, and the guard fails a claim
-file that has no key in `Source/Library/Content.ts`.
+Copy reaches the page through `@Library/Content.ts` like every other string: the cards are
+`Content.Page.Showcase.Card.<Name>.{Title,Body}`, the pillars
+`Content.Page.Showcase.Pillar.<Name>. {Name,Note}`. No sentence is written into a component, and the
+guard reads the copy where the page prints it - a claim kept in a file of its own would be a
+sentence the site ships without printing.
 
 ## The operator's side
 
@@ -98,17 +108,15 @@ credible: they show what the operator can see, which is the connection and not t
 ## The guard
 
 `Scripts/Position.mjs` is plain JavaScript with no dependencies, because it runs before anything is
-compiled. Four checks, each of which can fail:
+compiled. Three checks, each of which can fail:
 
 1. **The brand appears once.** One mention, in the attribution file; `Source/` names it zero times.
 2. **One word for the unit of action.** No `request`, `job` or `action` anywhere under `Content/`,
    matched as whole words, so `redaction` is not `action`.
-3. **A claim names its protocol or its record.** Every claim names a record; a claim about
-   cryptography names a cipher suite; every claim has a key in the content wrapper.
-4. **A showcase card is a claim too.** Every `Card/*/Body.md` and `Pillar/*/Note.md` under
-   `Content/String/Page/Showcase/` answers to the same rule. A card title and the masthead do not: a
-   heading is a heading, and a rule that demanded a cipher suite from one would be obeyed by making
-   the headings worse.
+3. **A claim names its protocol or its record.** Every `Card/*/Body.md` and `Pillar/*/Note.md` under
+   `Content/String/Page/Showcase/` names a record, and a claim about cryptography names a cipher
+   suite. A card title and the masthead do not: a heading is a heading, and a rule that demanded a
+   cipher suite from one would be obeyed by making the headings worse.
 
 ```
 $ node Scripts/Position.mjs
@@ -117,12 +125,6 @@ INFO Source/Generated/Content.ts carries it 1 time(s) - the same string, compile
 PASS Content/String/Brand/Attribution.md names it once, and Source/ names it 0 times
 == vocabulary
 PASS no copy calls a motion a request, a job or an action
-== claims
-PASS Cipher: RFC-0013
-PASS Grant: RFC-0047
-PASS Moderation: RFC-0031
-PASS Motion: RFC-0024
-PASS Status: RFC-0048
 == showcase
 PASS Card/Canvas/Body
 PASS Card/Drawer/Body
@@ -137,20 +139,18 @@ PASS Pillar/Encrypted/Note
 RESULT positioned
 ```
 
-It degrades rather than crashes: a tree with no content wrapper reports every claim as missing its
-key, and `--root <path>` points the guard at a fixture so a failure path can be tested without
-breaking the real tree. Exit 0 means the position holds, exit 1 means it does not.
+It degrades rather than crashes: a tree with no showcase copy reports `INFO` and passes, and
+`--root <path>` points the guard at a fixture so a failure path can be tested without breaking the
+real tree. Exit 0 means the position holds, exit 1 means it does not.
 
 ## Claim → test
 
-| Claim                            | Test                                                                                            |
-| -------------------------------- | ----------------------------------------------------------------------------------------------- |
-| The brand appears once           | `node Scripts/Position.mjs` → `PASS`, one mention, in the attribution file                      |
-| A second mention fails           | a `DELO` in any `Source/` file → `FAIL`, exit 1                                                 |
-| The vocabulary is used           | `grep -rniE "\b(requests?\|jobs?\|actions?)\b" Content/` → no match                             |
-| A banned word fails              | an `action` in a content file → `FAIL` naming the file and the line                             |
-| Every claim names a record       | `node Scripts/Position.mjs` prints the RFC each claim is decided by                             |
-| A showcase card is a claim       | every `Card/*/Body.md` and `Pillar/*/Note.md` prints `PASS` under `== showcase`                 |
-| A cipher claim names its suite   | a claim about encryption with no suite → `FAIL`, exit 1                                         |
-| A claim resolves through Content | every `Content/String/Claim/*.md` has a `CONTENT_STRING_CLAIM_*` in `Source/Library/Content.ts` |
-| The guard runs in the check      | `pnpm run check` ends with `RESULT positioned`                                                  |
+| Claim                           | Test                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------- |
+| The brand appears once          | `node Scripts/Position.mjs` → `PASS`, one mention, in the attribution file      |
+| A second mention fails          | a `DELO` in any `Source/` file → `FAIL`, exit 1                                 |
+| The vocabulary is used          | `grep -rniE "\b(requests?\|jobs?\|actions?)\b" Content/` → no match             |
+| A banned word fails             | an `action` in a content file → `FAIL` naming the file and the line             |
+| A showcase claim names a record | every `Card/*/Body.md` and `Pillar/*/Note.md` prints `PASS` under `== showcase` |
+| A cipher claim names its suite  | a claim about encryption with no suite → `FAIL`, exit 1                         |
+| The guard runs in the check     | `pnpm run check` ends with `RESULT positioned`                                  |

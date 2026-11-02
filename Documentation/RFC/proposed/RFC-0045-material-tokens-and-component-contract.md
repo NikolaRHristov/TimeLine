@@ -316,10 +316,12 @@ The four shapes a page builds are the component's public surface: `Stage`, `Colu
 
 Six rules complete the contract:
 
-1. **Data flows down; state lives in one place.** `Workspace` holds the only signals - the selected
-   stage, the live column, the view, the open record and the tiles published this session - and
-   passes each down as a value plus a callback. Every other component is a function of its props, so
-   the same component renders an empty archive and a full one.
+1. **Data flows down; state lives in one place.** `Source/Script/Workspace/Store.ts` holds the only
+   signals - the selected stage, the live column, the view, the open record, the tiles published
+   this session and the session slot - and every island reads them and dispatches to them, so a rail
+   and a body on one page cannot disagree about what is selected or what is published. Every
+   component is a function of its props, so the same component renders an empty archive and a full
+   one.
 2. **A component never reads a collection.** `astro:content` is imported by pages and by nothing
    under `Source/Component/`; the page derives the four shapes and hands them over. A component that
    read a collection would be a second source of truth, and the empty-archive state would differ

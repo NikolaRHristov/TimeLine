@@ -2,11 +2,18 @@
 /**
  * One read, rendered - the six data states in one place (RFC-0050).
  *
- * Every surface that reads a collection renders its state through this
- * component, so `empty` looks the same on every page and the failure vocabulary
- * is printed once rather than invented per surface. The state itself is derived
- * by `@Library/DataState.ts` from the read the page performed; nothing here
- * decides which state it is, and nothing takes a flag.
+ * Every page that reads a collection renders its state through this component,
+ * so `empty` looks the same on every page and the failure vocabulary is printed
+ * once rather than invented per surface. The state itself is derived by
+ * `@Library/DataState.ts` from the read the page performed; nothing here decides
+ * which state it is, and nothing takes a flag.
+ *
+ * An island cannot mount this component - it is Astro markup, and the drawer is
+ * Solid - so an island draws the same attribute (`data-read`) and the same three
+ * lines itself, from the same module. That is one vocabulary with two
+ * renderings, not two vocabularies: the state, the ratio and the stamp are
+ * computed by the module in both cases, and the check fails the build when
+ * either side names a state the set does not have.
  *
  * `ready` renders nothing at all: the records below are the surface. The other
  * five render the note - the panel an empty state already used - because a
