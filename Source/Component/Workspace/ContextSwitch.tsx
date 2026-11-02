@@ -36,7 +36,9 @@ export default function ContextSwitch(Props: Props) {
 						<button
 							type="button"
 							class="context__tab"
-							classList={{ "context__tab--active": Key(Entry) === Key(Props.Selected) }}
+							classList={{
+								"context__tab--active": Key(Entry) === Key(Props.Selected),
+							}}
 							aria-pressed={Key(Entry) === Key(Props.Selected)}
 							onClick={() => Props.OnSelect(Entry)}>
 							{Entry.Label}

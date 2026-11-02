@@ -23,6 +23,7 @@ import Workspace from "@Component/Workspace/Workspace.tsx";
 import Base from "@Layout/Base.astro";
 import { BookmarkHref } from "@Library/Link.ts";
 import { ColumnAccent, StageAccent } from "@Library/Stage.ts";
+import { Own } from "@Script/Session/Context.ts";
 import { getCollection } from "astro:content";
 
 const bookmarks = await getCollection("Bookmark");

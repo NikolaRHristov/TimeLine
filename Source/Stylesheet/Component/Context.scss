@@ -33,7 +33,12 @@
 	// through, so the selected one is the only filled shape on it.
 	&__tab {
 		@include Material.reset;
-		@include Material.control(transparent, transparent, var(--chrome-ink-muted), var(--radius-sm));
+		@include Material.control(
+			transparent,
+			transparent,
+			var(--chrome-ink-muted),
+			var(--radius-sm)
+		);
 		@include Material.ellipsis;
 
 		height: 1.5rem;

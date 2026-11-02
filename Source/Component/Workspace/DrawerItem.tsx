@@ -25,6 +25,13 @@ export interface Entry {
 	Thumb?: string;
 	/** The two-letter mark for a comment row. */
 	Avatar?: string;
+	/**
+	 * The identity whose subkey signed the record, when the drawer knows it.
+	 *
+	 * A row is published under its author's signature (RFC-0012 rule 2), so a
+	 * record whose author is unknown can be shown but not addressed to a room.
+	 */
+	Author?: string;
 	/** Whether the workspace currently has this row open. */
 	Selected?: boolean;
 }

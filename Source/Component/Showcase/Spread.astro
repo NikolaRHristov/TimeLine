@@ -57,39 +57,35 @@ const Tone = { quiet: "spread__box--quiet", loud: "spread__box--loud" };
 		<p class="spread__hero-lede">{Lede}</p>
 	</header>
 
-	{
-		Cards.map((Card) => {
-			const class: string = [
-				"spread__box",
-				Card.Href === undefined ? "" : "spread__box--link",
-				Card.Tone === undefined ? "" : Tone[Card.Tone],
-			]
-				.filter(Boolean)
-				.join(" ");
+	{Cards.map((Card) => {
+		const Class: string = [
+			"spread__box",
+			Card.Href === undefined ? "" : "spread__box--link",
+			Card.Tone === undefined ? "" : Tone[Card.Tone],
+		]
+			.filter(Boolean)
+			.join(" ");
 
-			return (
-				<article class={class}>
-					<p class="spread__eyebrow">{Card.Eyebrow}</p>
-					<h2 class="spread__title">{Card.Title}</h2>
-					<p class="spread__body">{Card.Body}</p>
-					{Card.Href !== undefined && (
-						<a class="spread__more" href={Card.Href}>
-							See it in the workspace
-						</a>
-					)}
-				</article>
-			);
-		})
-	}
+		return (
+			<article class={Class}>
+				<p class="spread__eyebrow">{Card.Eyebrow}</p>
+				<h2 class="spread__title">{Card.Title}</h2>
+				<p class="spread__body">{Card.Body}</p>
+				{Card.Href !== undefined && (
+					<a class="spread__more" href={Card.Href}>
+						See it in the workspace
+					</a>
+				)}
+			</article>
+		);
+	})}
 
 	<footer class="spread__pillars">
-		{
-			Pillars.map((Pillar) => (
-				<div class="spread__pillar">
-					<p class="spread__pillar-name">{Pillar.Name}</p>
-					<p class="spread__pillar-note">{Pillar.Note}</p>
-				</div>
-			))
-		}
+		{Pillars.map((Pillar) => (
+			<div class="spread__pillar">
+				<p class="spread__pillar-name">{Pillar.Name}</p>
+				<p class="spread__pillar-note">{Pillar.Note}</p>
+			</div>
+		))}
 	</footer>
 </div>

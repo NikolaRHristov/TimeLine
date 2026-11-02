@@ -1,6 +1,11 @@
 import "@Stylesheet/Component/Workspace.scss";
+import { OwnKey, type Context } from "@Script/Session/Context.ts";
+import { CrossTheSeam } from "@Script/Session/Seam.ts";
+import { Enter } from "@Script/Session/Session.ts";
+import { UseSession } from "@Script/Session/Use.ts";
 import { createSignal, Show } from "solid-js";
 import Bento, { Seats, type Tile } from "./Bento.tsx";
+import ContextSwitch from "./ContextSwitch.tsx";
 import Drawer, { type DrawerView } from "./Drawer.tsx";
 import { type Column } from "./DrawerColumn.tsx";
 import Provenance, { type Stage } from "./Provenance.tsx";
@@ -15,11 +20,15 @@ import Publish from "./Publish.tsx";
  * else arrives as props, so the same component renders an empty archive and a
  * full one, and a page decides what the workspace is looking at.
  *
- * Publishing is the composition's core gesture, and it is modelled rather than
- * mocked: an open record takes the next seat the canvas has empty, so the
- * drawer's queue and the canvas's layout cannot disagree. A record that is
- * already published is not placed twice - a second drop opens it instead, which
- * is what a person pressing the same row twice expects.
+ * The session layer decides the rest: which context is selected, what standing
+ * the identity has in it, and which of the four states is on screen. It starts
+ * empty, so the first render - the server's and the client's - is the build's
+ * own view, and a session that never resolves leaves exactly that in place.
+ *
+ * Publishing is the composition's core gesture, and it crosses the seam rather
+ * than writing the canvas: `CrossTheSeam` is the only path from a drawer record
+ * to a tile, so an act that is not a publication cannot reach the canvas even by
+ * mistake.
  */
 interface Props {
 	Stages: Stage[];
@@ -33,10 +42,12 @@ interface Props {
 	Title: string;
 	/** The lock line beside the title. */
 	Hint: string;
-	/** The publish bar's destination. */
-	Destination: string;
 	/** The publish bar's standing instruction. */
 	Instruction: string;
+	/** The contexts the rail may select, in the order it prints them. */
+	Contexts: Context[];
+	/** When the build's view is current to, as an ISO timestamp. */
+	AsOf: string | null;
 }
 
 /** The cells a tile occupies, as `column:row` keys. */
@@ -68,15 +79,30 @@ function FreeSeat(Tiles: Tile[]): Tile | undefined {
 }
 
 export default function Workspace(Props: Props) {
+	const Session = UseSession(Props.Contexts, Props.AsOf);
+
 	const [Stage, SetStage] = createSignal(Props.Stages[0]?.Key ?? "");
 	const [Active, SetActive] = createSignal(Props.Columns[0]?.Key ?? "");
 	const [View, SetView] = createSignal<DrawerView>("list");
 	const [Open, SetOpen] = createSignal<string | null>(null);
 	const [Published, SetPublished] = createSignal<Tile[]>(Props.Tiles);
 
-	/** The column a record belongs to, which is also the stage it publishes into. */
-	const Owner = (Id: string) =>
-		Props.Columns.find((Column) => Column.Entries.some((Entry) => Entry.Id === Id));
+	/**
+	 * The island's whole input (RFC-0043 §7), composed per read.
+	 *
+	 * The drawer is handed over as the same value every time, which is what makes
+	 * a context switch unable to touch it: `Enter` passes it straight through and
+	 * only the canvas and the destination are looked up per context. The own
+	 * context's canvas is the live tile set; a room falls back to the build's,
+	 * because a canvas whose rows are not readable is not an empty canvas.
+	 */
+	const Contract = () =>
+		Enter(Session.Slot(), {
+			Drawer: Props.Columns,
+			Canvases: { [OwnKey]: Published() },
+			Built: Props.Tiles,
+			Pending: [],
+		});
 
 	/**
 	 * The selected stage's short name, for the seam's note.
@@ -107,6 +133,27 @@ export default function Workspace(Props: Props) {
 			return;
 		}
 
+		/**
+		 * UNKNOWN - a drawer record's signing identity.
+		 *
+		 * A drawer row carries the handle the page showed, not the identity whose
+		 * subkey signed the record, so `Author` is empty until the shadow store
+		 * records one. Publishing into the owner's own canvas does not read it;
+		 * publishing into a room does, and is refused with `not-author` until the
+		 * identity migration lands (RFC-0013's implementing card). The version is
+		 * the same gap: a drawer record has no version until the store keeps one.
+		 */
+		const Crossed = CrossTheSeam({
+			Act: "publish",
+			Context: Contract().Context,
+			Standing: Contract().Standing,
+			Record: { Id: Entry.Id, Author: Entry.Author ?? "", Version: 1 },
+		});
+
+		if (!Crossed.Crossed) {
+			return;
+		}
+
 		SetPublished((Current) => [
 			...Current,
 			{
@@ -129,6 +176,14 @@ export default function Workspace(Props: Props) {
 			/>
 
 			<div class="workspace__body">
+				<ContextSwitch
+					Contexts={Session.Slot().Contexts}
+					Selected={Contract().Context}
+					State={Contract().State}
+					AsOf={Contract().AsOf}
+					OnSelect={Session.Select}
+				/>
+
 				<Drawer
 					Eyebrow={Props.Eyebrow}
 					Title={Props.Title}
@@ -143,7 +198,11 @@ export default function Workspace(Props: Props) {
 					OnPublish={(Key) => Publish_(Key)}
 				/>
 
-				<Publish Label={Props.Destination} Note={Props.Instruction} Context={StageName()} />
+				<Publish
+					Label={Contract().Destination}
+					Note={Props.Instruction}
+					Context={StageName()}
+				/>
 
 				<Show when={View() === "list"} fallback={<Bento Tiles={Published()} />}>
 					<Bento Tiles={Published()} />
