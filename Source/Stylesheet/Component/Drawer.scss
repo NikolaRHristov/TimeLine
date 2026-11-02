@@ -222,6 +222,13 @@
 		height: 2.75rem;
 	}
 
+	// A comment row leads with a 24px avatar instead of a glyph, so it takes the
+	// media row's height: the two lines of text still set the box, and a 44px row
+	// is what makes the avatar sit in it rather than stretch it.
+	&--comment {
+		height: 2.75rem;
+	}
+
 	&--control {
 		height: 1.75rem;
 		justify-content: center;
