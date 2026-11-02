@@ -94,8 +94,8 @@ error names the file and the field.
 ## Step 5 - serve
 
 ```bash
-pnpm run Run      # dev server on http://localhost:9999
-npx astro preview # or preview the built output
+pnpm run Run               # dev server on http://localhost:9999
+pnpm exec astro preview    # or preview the built output
 ```
 
 ## Acting on a post

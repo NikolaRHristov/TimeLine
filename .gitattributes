@@ -1,0 +1,4 @@
+# Shell scripts keep LF. With `core.autocrlf=true` a checkout would otherwise
+# write CRLF, and the shebang reads as `env: bash\r`: the interpreter is not
+# found and the script refuses to run on macOS and Linux.
+*.sh text eol=lf

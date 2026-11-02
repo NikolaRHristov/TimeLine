@@ -25,7 +25,7 @@ expected and the exact copy command:
 	"error": "no-config",
 	"detail": "the identifier map is missing",
 	"expected": "<absolute path>",
-	"copy": "mkdir -p Maintain/Configuration/Local && cp Maintain/Configuration/Example/Configuration.example.json Maintain/Configuration/Local/Configuration.local.json",
+	"copy": "mkdir -p \"<absolute directory>\" && cp \"<absolute example>\" \"<absolute path>\"",
 	"next": "maintain config init"
 }
 ```
@@ -43,6 +43,8 @@ expected and the exact copy command:
 | `routes.history`   | string (url)                 | `https://x.com/i/history`   | Container page the `history` source walks                               |
 | `content.root`     | string (repository-relative) | `Source/Content`            | Where the site's collections live                                       |
 | `storage.shadow`   | string (repository-relative) | `Maintain/Storage/Shadow`   | Where the shadow store lives                                            |
+| `spacetime.url`    | string (url)                 | `http://127.0.0.1:3010`     | The SpacetimeDB server `store push` projects into                       |
+| `spacetime.database` | string                     | `timeline`                  | The database module `store push` calls `observe` on                     |
 
 `routes.likes` is derived from `profile` on purpose: one key cannot drift from
 the other. Set it explicitly only if the derived URL is wrong for you.
@@ -151,6 +153,38 @@ stderr and the tracked vocabulary is used instead - counting is an aid, not a
 prerequisite. Buckets need not match your `lists`: a list with no bucket of the
 same slug still scores on domains, and the rules loader says so.
 
+### Weights
+
+`author classify rules` scores each author against the tracked
+`Maintain/Configuration/Rules/Rules.json`, which ships keyed to the example
+slugs. Neither direction is silent:
+
+- a slug your map declares but the weights file does not is still scored on
+  domains - an empty keyword list is not an error;
+- a weight for a slug your map does **not** declare is dropped, with a warning
+  on stderr naming it, so the weights file can never re-introduce a list you
+  did not configure.
+
+Point `MAINTAIN_RULES` at your own file to bring your own weights:
+
+```json
+{
+	"threshold": { "score": 3, "gap": 3 },
+	"lists": {
+		"alpha": {
+			"keywords": { "retrieval": 2, "embedding": 1 },
+			"domains": { "arxiv.org": 1 }
+		}
+	}
+}
+```
+
+`threshold.score` is the score a list needs before an author is assigned to it
+and `threshold.gap` the margin over the runner-up; below either, the author is
+left ambiguous rather than guessed. A weight is a non-negative number - a string
+such as `"strong"`, a negative number or a term the vocabulary never counts is
+ignored with a warning on stderr, and the rest of the file still loads.
+
 ## Failure codes
 
 | Code             | When                                              | Carries                                  |
@@ -175,9 +209,9 @@ scripts/audit-leaks.sh            # the repo this script lives in
 scripts/audit-leaks.sh . '^Update\.sh$'
 ```
 
-1. **No absolute machine paths.** `file:///`, `/Users/…`, `/Volumes/…`, `/home/…`
-   in a tracked file. Anchored to a letter so documentation that *quotes* the
-   forbidden form does not fail the check.
+1. **No absolute machine paths.** No `file:///` URL, and no `/Users`, `/Volumes`
+   or `/home` prefix followed by a name, in a tracked file. Anchored to a letter
+   so documentation that *quotes* the forbidden form does not fail the check.
 2. **No private origin names.** The wordlist lives in
    `Maintain/Configuration/Local/Origin.txt` - gitignored, because a tracked
    list of the names you are hiding would itself be the leak. Beside it,

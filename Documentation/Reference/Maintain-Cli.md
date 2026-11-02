@@ -10,7 +10,9 @@ pnpm maintain <group> <command> [options] [--json] [--schema]
 ```
 
 `pnpm maintain` is the package script `node Maintain/Target/Index.js`, so
-`pnpm run tool` has to have built the tool layer first. From source, the same
+`pnpm run Build` (capital B) has to have compiled the tool layer first -
+`pnpm run tool` is the *runner* (the same `node Target/Index.js`), not the
+compiler. From source, the same
 entry point is `node Maintain/Source/Index.ts` (Node >= 22.18 strips the types).
 
 `--json` is implied when stdout is not a TTY. `--schema` prints the command's
@@ -480,7 +482,7 @@ The parser, the target selector and both stores run without a browser:
 
 ```bash
 pnpm --filter timeline-maintain test
-# node --test "Maintain/Target/Test/*.test.js", after `pnpm run tool`
+# node --test "Maintain/Target/Test/*.test.js", after `pnpm run Build`
 ```
 
 Everything else is verified against the live endpoint - the claim-to-test table

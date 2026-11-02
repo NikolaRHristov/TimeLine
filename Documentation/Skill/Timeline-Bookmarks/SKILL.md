@@ -148,6 +148,11 @@ stdout is not a TTY.
   and both gitignored. A committed build publishes every post id the archive held.
 - **Never write identifiers into a tracked file.** Handles, list ids and post ids belong in
   `Maintain/Configuration/Local/`. Docs use `<handle>`, `<slug>`, `<list-id>`.
+- **Tests read the real identifier map unless you unset `MAINTAIN_CONFIG`.** The suite points
+  storage, content and rules at temporary directories but resolves the map normally, so an exported
+  `MAINTAIN_CONFIG` left over from a probe narrows the taxonomy under the tests and eight
+  classification tests fail with an empty decision set. `unset MAINTAIN_CONFIG` before
+  `pnpm --filter timeline-maintain test`.
 
 ## Claim → test
 

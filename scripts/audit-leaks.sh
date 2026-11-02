@@ -25,9 +25,13 @@ ALLOW=${2:-'^Update\.sh$'}
 cd "$REPO" 2>/dev/null || { echo "FAIL cannot cd $REPO"; exit 2; }
 git rev-parse --git-dir >/dev/null 2>&1 || { echo "FAIL not a git repo: $REPO"; exit 2; }
 
-# Anchoring file:/// to an ASCII letter keeps prose that QUOTES the forbidden
-# form out of the result.
-PATTERN='file:///[A-Za-z]|/Users/[a-z]|/Volumes/|/home/[a-z]'
+# The pattern is assembled from pieces so this file cannot match itself: a
+# checker that spells the forbidden form is the first thing it would flag.
+# `file:///` is anchored to an ASCII letter so prose that QUOTES the form stays
+# out of the result; a slash-prefixed root is matched as written.
+SCHEME='file:///'
+ROOT='/'
+PATTERN="${SCHEME}[A-Za-z]|${ROOT}Users/[a-z]|${ROOT}Volumes/|${ROOT}home/[a-z]"
 ORIGIN=Maintain/Configuration/Local/Origin.txt
 PUBLIC=Maintain/Configuration/Local/Origin.public.txt
 fail=0
