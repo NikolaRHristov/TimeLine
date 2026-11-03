@@ -59,6 +59,8 @@ rules; a worked instance lives in `Reference/` behind a one-line pointer.
   collection, build the site.
 - **`Skill/Timeline-Browser-Transport/`** - driving the person's own browser over CDP, and what a
   relaunch silently drops.
+- **`Skill/Chat-Research/`** - asking a web chat product a research question over CDP: the four
+  drivers, the checks a composer send needs, and the output contract that keeps the answer readable.
 - **`Skill/Timeline-Site-Build/`** - the Astro build: the config layer that decides whether a page
   compiles, and the island layer that decides whether it is the page.
 - **`Skill/Progressive-Enhancement/`** - the first paint is the server's; the no-script audit that

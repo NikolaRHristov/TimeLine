@@ -10,6 +10,7 @@ task, not after it fails.**
 | ------------------------------------------------------------ | ---------------------------------------------------------- |
 | Reading or refreshing the saved-post archive                 | `Documentation/Skill/Timeline-Bookmarks/SKILL.md`          |
 | Driving a browser tab over CDP (click, type, scroll, scrape) | `Documentation/Skill/Timeline-Browser-Transport/SKILL.md`  |
+| Asking a web chat product a research question over CDP       | `Documentation/Skill/Chat-Research/SKILL.md`               |
 | The site build fails, or a built page must be proven         | `Documentation/Skill/Timeline-Site-Build/SKILL.md`         |
 | A page must paint before its JavaScript runs                 | `Documentation/Skill/Progressive-Enhancement/SKILL.md`     |
 | Proving a built page matches the design                      | `Documentation/Skill/Design-Verification/SKILL.md`         |

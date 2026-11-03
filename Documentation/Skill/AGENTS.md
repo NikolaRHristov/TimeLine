@@ -10,6 +10,9 @@ Read the skill before the task. A skill states the failure it exists to prevent.
 
 ## The set
 
+- **`Chat-Research/`** - asking a web chat product a research question over CDP and reading the
+  answer back: the three checks a composer send needs, the output contract the prompt must carry,
+  and the mode and model that are part of the question.
 - **`Design-Verification/`** - proving a built page matches the design rather than merely compiling.
   Two verifiers, `verify-composition.mjs` and `verify-spread.mjs`, asserting numbers read from
   `Documentation/Reference/Design-Composition.md`.
