@@ -93,17 +93,26 @@ than clicking a dead button and reporting success.
 
 ## The output contract the prompt must carry
 
-The answer is read as `document.body.innerText`. A markdown table flattens into unreadable fragments
-in that read - and in every text-only reader - and a table is what a model reaches for when asked
-for findings. So the prompt states the shape it wants:
+The question is asked in full, and the model structures its own reply. The reasoning, the caveats
+and the part it could not establish are what make a research answer worth having, and a shape
+demanded up front discards them first: a model told to answer in a fixed number of short lines drops
+the qualifier before it drops the finding. Constrain only what the reader cannot consume, and leave
+the rest to the model.
 
-> Plain lines, one finding per line: `path:line - what is wrong - the command that proves it`. No
-> tables, no headings. At most N lines.
+Two exceptions, each with a reason of its own:
 
-An answer that streams needs a completion signal that does not depend on the site's own markup: ask
-for a terminal marker (`finish with END_OF_ANSWER_<nonce>`) and poll until the text stops changing
-(`cdp-read.mjs --stable 3`), never sleep a fixed time. A fixed sleep returns whatever the network
-happened to deliver, which is a partial answer that reads as a whole one.
+- **Status extraction** - a verdict the caller acts on mechanically (triage, pass/fail per item, one
+  row per issue) may name the shape, because that answer is meant to be parsed rather than read.
+- **Wide markdown tables** - the answer arrives as `document.body.innerText` or an accessibility
+  tree, and a five-column table flattens into fragments that cannot be reassembled. The constraint
+  is on the table, not on the length: rule out the wide table and leave the answer as long as it
+  needs to be.
+
+A terminal marker is worth asking for only when the answer streams and completion must be known.
+`cdp-read.mjs --stable 3` already polls `document.body.innerText` until it stops changing, which
+costs the model nothing; a marker asked on top of that costs it a line and buys nothing. Never sleep
+a fixed time in either case: a fixed sleep returns whatever the network happened to deliver, which
+is a partial answer that reads as a whole one.
 
 ## Mode and model are part of the question
 
@@ -177,15 +186,16 @@ searched for and the reason it found nothing.
 
 ## Claim → test
 
-| Claim                                       | Test                                                                         |
-| ------------------------------------------- | ---------------------------------------------------------------------------- |
-| A background tab can be opened and read     | `node .../cdp-open.mjs <url>` prints a `ws` handle and `chars > 0`           |
-| A composer send is verified, not assumed    | `node .../cdp-send.mjs <ws> "probe"` prints `sent: true` and exits 0         |
-| A leftover draft is replaced, not appended  | send twice with different text: the second read shows only the second text   |
-| A dead tab is a blocker, not a stack trace  | `node .../cdp-send.mjs ws://127.0.0.1:9/x "probe"` exits 2 with `blocker:`   |
-| The read waits for the answer to finish     | `node .../cdp-read.mjs <ws> --stable 3` returns once the text stops changing |
-| The mode and model are known before sending | the composer's `aria-pressed` mode and model label are read and reported     |
-| A control with no label is clickable        | `node .../cdp-click.mjs <ws> "css:<selector>"` prints `clicked` with a point |
+| Claim                                       | Test                                                                                                   |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| A background tab can be opened and read     | `node .../cdp-open.mjs <url>` prints a `ws` handle and `chars > 0`                                     |
+| A composer send is verified, not assumed    | `node .../cdp-send.mjs <ws> "probe"` prints `sent: true` and exits 0                                   |
+| A leftover draft is replaced, not appended  | send twice with different text: the second read shows only the second text                             |
+| A dead tab is a blocker, not a stack trace  | `node .../cdp-send.mjs ws://127.0.0.1:9/x "probe"` exits 2 with `blocker:`                             |
+| The prompt is the question, not a shape     | the prompt text names no line count and rules out only a wide table                                    |
+| The read waits for the answer to finish     | `node .../cdp-read.mjs <ws> --stable 3` returns once the text stops changing, with no marker asked for |
+| The mode and model are known before sending | the composer's `aria-pressed` mode and model label are read and reported                               |
+| A control with no label is clickable        | `node .../cdp-click.mjs <ws> "css:<selector>"` prints `clicked` with a point                           |
 
 ## References
 

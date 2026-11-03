@@ -1,4 +1,4 @@
-import { fail } from "../../CLI/Parser/Output/Failure.ts";
+import { fail, toFailure, type Failure } from "../../CLI/Parser/Output/Failure.ts";
 import type { Tab } from "../../Model/Tab/Tab.ts";
 import { connect, type CDPClient } from "../CDP/Client.ts";
 import { evaluate } from "../CDP/Command/Evaluate.ts";
@@ -16,13 +16,54 @@ export type Session = {
 	reload(): Promise<boolean>;
 	/** True when the page made no network request for `quiet` milliseconds. */
 	waitForIdle(options?: IdleOptions): Promise<boolean>;
-	/** Poll a boolean expression; true when it held before the deadline. */
+	/**
+	 * Poll a boolean expression; true when it held before the deadline, false
+	 * when it never did. A page that cannot be asked at all throws instead.
+	 */
 	waitFor(expression: string, options?: WaitOptions): Promise<boolean>;
 	close(): void;
 };
 
 const sleep = (milliseconds: number): Promise<void> =>
 	new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+/**
+ * The errors Chromium raises when a navigation replaces the execution context
+ * an expression was about to run in.
+ *
+ * This is the one case polling is right for: the frame moved on mid-call, the
+ * expression is still valid, and the next attempt runs in the new context. It
+ * is recognised by Chromium's own wording rather than by a code, because
+ * `Runtime.evaluate` reports it as an ordinary `-32000` error - the same code
+ * an invalid expression arrives with.
+ */
+const TRANSIENT = ["Execution context was destroyed", "Cannot find context with specified id"];
+
+/** True when `error` is the navigation window rather than a permanent failure. */
+function transient(error: unknown): boolean {
+	const text = error instanceof Error ? error.message : String(error);
+	return TRANSIENT.some((phrase) => text.includes(phrase));
+}
+
+/**
+ * The failure a caller gets when the readiness question itself failed.
+ *
+ * The original code is kept - `cdp-unreachable` for a dead socket, `cdp-error`
+ * for a page that threw - because those are different answers, and the detail
+ * says the page was never asked, so a reader cannot mistake this for a page
+ * that merely took too long.
+ */
+function unasked(error: unknown, expression: string): Failure {
+	const failure = toFailure(error);
+	return fail(
+		failure.code,
+		`the page could not be asked whether it was ready: ${failure.message}`,
+		{
+			...failure.extra,
+			expression,
+		},
+	);
+}
 
 /**
  * Attach to one tab.
@@ -49,6 +90,18 @@ export async function attach(tab: Tab, options: { timeout?: number } = {}): Prom
 		options.timeout === undefined ? {} : { timeout: options.timeout },
 	);
 
+	return bind(client, tab);
+}
+
+/**
+ * The session over an already-connected client.
+ *
+ * `attach` is the only production caller. A test binds a fake client, so the
+ * polling rules run against a scripted protocol instead of a live tab - the
+ * distinction between "not ready" and "could not ask" is exactly what a live
+ * tab will not reliably reproduce.
+ */
+export async function bind(client: CDPClient, tab: Tab): Promise<Session> {
 	/**
 	 * Load accounting, for `navigate` and `reload`. A navigation's URL is not
 	 * the signal that it finished: `/i/bookmarks` redirects to `/i/history`, so
@@ -141,8 +194,12 @@ export async function attach(tab: Tab, options: { timeout?: number } = {}): Prom
 				try {
 					if ((await evaluate<boolean>(client, `Boolean(${expression})`)) === true)
 						return true;
-				} catch {
-					// A navigation destroys the execution context for a moment; poll again.
+				} catch (error) {
+					// A navigation destroys the execution context for a moment and
+					// polling again is right. Anything else means the page cannot be
+					// asked at all, and reporting that as "not ready" would turn a
+					// permanent cause into fifteen seconds of silence and a timeout.
+					if (!transient(error)) throw unasked(error, expression);
 				}
 				await sleep(interval);
 			}
