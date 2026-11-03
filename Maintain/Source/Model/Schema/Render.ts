@@ -50,6 +50,9 @@ function tsType(field: Field): string {
 		case "number":
 			base = "number";
 			break;
+		case "bigint":
+			base = "bigint";
+			break;
 		case "boolean":
 			base = "boolean";
 			break;
@@ -103,6 +106,9 @@ function zodType(field: Field): string {
 			break;
 		case "number":
 			base = "z.number()";
+			break;
+		case "bigint":
+			base = "z.bigint()";
 			break;
 		case "boolean":
 			base = "z.boolean()";
@@ -162,7 +168,9 @@ function columnType(field: Field): string {
 				? "u32"
 				: field.kind === "number"
 					? "f32"
-					: "string");
+					: field.kind === "bigint"
+						? "u64"
+						: "string");
 	const base = `t.${column}()`;
 	// SpacetimeDB has one notion of "may be absent": the option type. A field
 	// the model calls nullable is exactly that here, so both markers collapse

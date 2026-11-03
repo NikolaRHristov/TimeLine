@@ -179,6 +179,110 @@ export type CuratedRecord = {
 	approvedBy: string;
 };
 
+/** A capability as the catalog declares it: its version, what it retains, and the contract it is held to. */
+export type CapabilityRecord = {
+	/** `<name>@<version>` - the identifier a manifest names. */
+	id: string;
+	/** The capability's stable name, without a version. */
+	name: string;
+	/** The version this declaration pins. */
+	version: string;
+	/** What the capability retains between runs, and therefore what may be pre-warmed. A caller that believes a warm context is anonymous when it carries an identity will reuse it for the wrong task, so the class is declared rather than inferred. */
+	stateClass: "stateless" | "holds-transport" | "holds-identity" | "holds-workspace";
+	/** A digest of the port's contract, never of its code: a rebuild of the same contract keeps the digest, and a contract that moved changes it. */
+	contractDigest: string;
+	/** `T_ingest` - when the module declared it, from the reducer context. A declaration is a deployment, so it has no `T_event` of its own and no ingestion lag to state. */
+	declaredAt: string;
+};
+
+/** A generation as the catalog keeps it: what was bound, when, and whether the policy moved. */
+export type GenerationRecord = {
+	/** The sequence number as a decimal string: `1`, `2`, ... Dense by construction, because `bind` computes a successor's id from its parent's. */
+	id: string;
+	/** `T_ingest` - when the bind reducer accepted it. The caller does not get to state this: a generation's birth is the module's own fact. */
+	boundAt: string;
+	/** The composition root's digest of the manifest it bound. */
+	manifestDigest: string;
+	/** Whether this generation's admission policy differs from its parent's. A manifest that re-bound the same policy is a new generation, not a new policy. */
+	policyChanged: boolean;
+};
+
+/** A grant: what it covers, who holds it, the fence it was issued under, and the deadline it is refused after. */
+export type LeaseRecord = {
+	/** This grant's identity, unique per claim. A release does not reuse it, so two grants over one resource stay tellable apart. */
+	id: string;
+	/** What it grants - a name the composition root chose, never a capability's. */
+	resource: string;
+	/** The sender that holds it, and the only sender a fenced write is accepted from. */
+	holder: string;
+	/** Monotonic per resource, never reused and never reset by a release. A write carrying an older fence is refused, which is what makes a takeover safe: the new holder's number is higher than the one the late worker still carries. */
+	fence: bigint;
+	/** `T_ingest` - when the claim that opened this grant was accepted, from the reducer context. */
+	acquiredAt: string;
+	/** The deadline, `acquiredAt` plus the granted ttl. A deadline rather than a reading: expiry is the reducer's clock compared to this column, never a state a caller sets. */
+	expiresAt: string;
+	/** Held until released. Expiry is not a state: an expired grant still reads `held` with a past `expiresAt`, because the honest answer to whether it is live is a comparison against the clock, not a column that would need a timer to stay true. */
+	state: "held" | "released";
+};
+
+/** A receipt for one disclosure - what was revealed, to whom, at which property version, and when. */
+export type ProbeRecord = {
+	/** `<capability>:<property>:<propertyVersion>:<audience>` - the reveal is its own receipt, so a second probe at the same version finds this row instead of appending a duplicate. */
+	id: string;
+	/** The capability whose property was probed. */
+	capability: string;
+	/** The property that was probed. */
+	property: string;
+	/** The property version the disclosure is pinned to. Seeing the current truth is a separate entitlement, so a version is part of the fact rather than an optimisation. */
+	propertyVersion: number;
+	/** Who was told - the identity the reducer authenticated, never an argument, because a caller-supplied audience is a caller-supplied identity. */
+	audience: string;
+	/** What was disclosed, as the audience would have read it. Never the private value it was computed from. */
+	value: string;
+	/** `T_event` - when the reading was taken, as the worker states it. A claim, so it travels with the provenance of the run that made it. */
+	at: string;
+	/** `T_ingest` - when the reducer accepted it. Paired with `at` on purpose: the two authorities never share a column, and their difference is the ingestion lag. */
+	ingestedAt: string;
+};
+
+/** One current inference per audience and capability, with the confidence the probes support it at. */
+export type BeliefRecord = {
+	/** `<audience>:<capability>` - one current belief per pair, which is what makes it replaceable. */
+	id: string;
+	/** The actor the belief belongs to, and the only actor it is about. */
+	audience: string;
+	/** The capability being inferred. */
+	capability: string;
+	/** The audience's own reading of its probes; never the private truth. */
+	value: string;
+	/** How strongly the probes support it, 0 to 1. */
+	confidence: number;
+	/** `T_ingest` - when the reducer derived it. An inference has no `T_event`: nothing happened in the world, a row was computed. */
+	at: string;
+};
+
+/** One trace line, in the same shape as an event: when it happened, what it was, what it was about, and what it carries. */
+export type TraceRecord = {
+	/** `<at>:<kind>:<subject>` - a replay at the same instant is the same fact, not a second one. */
+	id: string;
+	/** The generation the act happened under. A trace read without it cannot say which policy allowed the act. */
+	generation: string;
+	/** What happened. A closed set: a new kind is a schema change, not a string a caller may invent. */
+	kind: "capability.declared" | "generation.bound" | "admission.refused" | "lease.claimed" | "lease.renewed" | "lease.released" | "lease.refused" | "probe.recorded" | "belief.derived";
+	/** What it happened to - a resource, a generation, a capability, a property. */
+	subject: string;
+	/** Whatever the kind needs to say. Opaque, so a new payload shape needs no migration; never a private value. */
+	payload: Record<string, unknown>;
+	/** `T_event` - when it happened in the world, as the writer states it. */
+	at: string;
+	/** `T_ingest` - when the reducer accepted the row, from the reducer context. */
+	ingestedAt: string;
+	/** `T_scheduled` - when a scheduled run was due. Present only when the row was persisted as a one-shot, because an interval has no per-occurrence instant to store. */
+	scheduledAt?: string;
+	/** `T_run` - when the scheduled reducer actually ran, from the reducer context. Its difference from `scheduledAt` is the scheduler's lateness, and from `ingestedAt` the post-ingest delay. */
+	ranAt?: string;
+};
+
 /** The site's view of post: `Bookmark` in `Source/content.config.ts`. */
 export type SiteBookmark = {
 	/** X status id - the same key the file store uses, and the filename it becomes. */

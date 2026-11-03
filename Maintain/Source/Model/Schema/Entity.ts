@@ -22,8 +22,17 @@
  * so a target's field set is computed and can be checked, never transcribed.
  */
 
-/** The scalar kinds a field can have. */
-export type Scalar = "string" | "integer" | "number" | "boolean" | "timestamp" | "json" | "enum";
+/**
+ * The scalar kinds a field can have.
+ *
+ * `bigint` is a kind of its own rather than an integer with a `column` hint: a
+ * `u64` column takes a `bigint` at runtime, so a model that called the same
+ * field a `number` would type-check and then fail on the insert - and would
+ * silently round any value above 2^53, which is exactly the range a fence is
+ * asked to stay out of.
+ */
+export type Scalar =
+	"string" | "integer" | "number" | "bigint" | "boolean" | "timestamp" | "json" | "enum";
 
 /** A SpacetimeDB column type, when the default for the kind is wrong. */
 export type Column = "string" | "bool" | "u8" | "u32" | "u64" | "f32" | "f64";

@@ -217,6 +217,89 @@ test("every field naming an entity names one that exists", () => {
 });
 
 /**
+ * The catalog's names, and the one that was not free.
+ *
+ * The archive already spends `observation` on a channel showing a post, so the
+ * agentic layer's disclosure table is `probe` and the archive's table keeps its
+ * meaning and its columns. A rename in either direction would regenerate
+ * cleanly - the byte comparison would simply accept the new bytes - which is
+ * why the names are asserted here instead of left to the generator.
+ */
+test("the catalog tables are declared, and the archive keeps its own names", () => {
+	assert.deepEqual(
+		Entities.filter((entry) => entry.module !== undefined).map((entry) => entry.module?.table),
+		[
+			"post",
+			"author",
+			"media",
+			"observation",
+			"event",
+			"membership",
+			"capability",
+			"generation",
+			"lease",
+			"probe",
+			"belief",
+			"trace",
+		],
+		`${PATHS.module}: the table set moved`,
+	);
+
+	assert.deepEqual(
+		namesFor(entity("probe"), "module"),
+		[
+			"id",
+			"capability",
+			"property",
+			"propertyVersion",
+			"audience",
+			"value",
+			"at",
+			"ingestedAt",
+		],
+		"the disclosure table is `probe`, and it declares the columns the catalog names",
+	);
+
+	// The archive's observation is not the catalog's: same columns, same key, and
+	// no `probe` column creeping into it.
+	assert.deepEqual(
+		namesFor(entity("observation"), "module"),
+		["at", "source", "postId", "action", "id"],
+		"the archive's observation table must keep its own columns",
+	);
+});
+
+/**
+ * The fence is a `u64`, and the trace carries all four timestamps.
+ *
+ * Both are read out of the rendered module rather than the declaration: a
+ * `column` hint that stopped reaching the file, or an optional marker that was
+ * dropped, is invisible in the declaration and would only surface as a runtime
+ * type error at the first insert.
+ */
+test("the lease's fence is a u64 column and the trace carries four timestamps", () => {
+	const lines = moduleLines();
+	const column = (name: string) =>
+		lines.find((line) => line.startsWith(`		${name}: `))?.trim() ?? "";
+
+	assert.equal(
+		column("fence"),
+		"fence: t.u64(),",
+		"a fence that is not a u64 is a fence that can wrap",
+	);
+	assert.equal(column("policyChanged"), "policyChanged: t.bool(),");
+	assert.equal(column("scheduledAt"), "scheduledAt: t.string().optional(),");
+	assert.equal(column("ranAt"), "ranAt: t.string().optional(),");
+
+	for (const name of ["at", "ingestedAt", "scheduledAt", "ranAt"]) {
+		assert.ok(
+			namesFor(entity("trace"), "module").includes(name),
+			`trace must carry ${name}, one of the four timestamps`,
+		);
+	}
+});
+
+/**
  * The runtime vocabularies.
  *
  * A union type cannot be enumerated, so each closed set exists twice: once in

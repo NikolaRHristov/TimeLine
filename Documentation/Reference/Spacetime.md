@@ -77,6 +77,14 @@ with `failed to find database timeline-<suffix>`. Fix the file, not the command:
 
 Reducers: `observe`, `record`, `setVisibility`, `classify`, `attach`.
 
+Six catalog tables - `capability`, `generation`, `lease`, `probe`, `belief`, `trace` - are declared
+in the same source of truth and rendered into the same `Schema.ts`, and none of them has a reducer
+yet. They are private: a row naming a lease holder or a probe's audience is not the site's business,
+so a reader that needs one gets a view rather than a subscription to the table. `probe` is the
+agentic layer's disclosure record and is deliberately not called `observation` - that name belongs
+to the archive, and the two rows mean different things. The columns each one carries, and which
+clock authority produced each timestamp, are stated in `Spacetime-Time.md`.
+
 ## Ingest: the archive into the projection
 
 `pnpm maintain store push` is the bridge: it reads the shadow store and calls `observe` once per

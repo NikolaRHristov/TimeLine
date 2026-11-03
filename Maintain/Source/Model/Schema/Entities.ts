@@ -541,6 +541,340 @@ const Curated: Entity = {
 	},
 };
 
+/**
+ * One declared capability: a port's contract, pinned by a version.
+ *
+ * The digest is of the contract, not of the code. Two builds of one port agree,
+ * and a build that changed what the port promises does not - which is what lets
+ * a generation be compared against the capabilities it names.
+ *
+ * Keyed `<name>@<version>` rather than by name: a manifest keeps naming the
+ * version it was bound to after the port has moved on, so both versions have to
+ * be able to exist at once.
+ */
+const Capability: Entity = {
+	name: "capability",
+	doc: "One capability a manifest may name, and the contract it is held to.",
+	model: {
+		type: "CapabilityRecord",
+		doc: "A capability as the catalog declares it: its version, what it retains, and the contract it is held to.",
+		fields: {
+			id: {
+				kind: "string",
+				doc: "`<name>@<version>` - the identifier a manifest names.",
+			},
+			name: { kind: "string", doc: "The capability's stable name, without a version." },
+			version: { kind: "string", doc: "The version this declaration pins." },
+			stateClass: {
+				kind: "enum",
+				values: ["stateless", "holds-transport", "holds-identity", "holds-workspace"],
+				doc: "What the capability retains between runs, and therefore what may be pre-warmed. A caller that believes a warm context is anonymous when it carries an identity will reuse it for the wrong task, so the class is declared rather than inferred.",
+			},
+			contractDigest: {
+				kind: "string",
+				doc: "A digest of the port's contract, never of its code: a rebuild of the same contract keeps the digest, and a contract that moved changes it.",
+			},
+			declaredAt: {
+				kind: "timestamp",
+				doc: "`T_ingest` - when the module declared it, from the reducer context. A declaration is a deployment, so it has no `T_event` of its own and no ingestion lag to state.",
+			},
+		},
+	},
+	module: {
+		table: "capability",
+		key: "id",
+		index: ["name"],
+		public: false,
+		doc: "One row per declared capability version. Append-only: a new version is a new row, so a generation's manifest keeps naming what it named.",
+	},
+};
+
+/**
+ * One bound generation: the manifest a runtime was composed against.
+ *
+ * Append-only, and that is what makes the binding history auditable - a
+ * generation is superseded by the existence of its successor, never by a column
+ * someone rewrote.
+ *
+ * `policyChanged` is carried rather than derived by diffing two manifests: the
+ * successor is the only place that knows whether the admission policy moved,
+ * and a reader comparing digests would have to hold both manifests to ask.
+ */
+const Generation: Entity = {
+	name: "generation",
+	doc: "One generation that was bound, and whether it moved the policy.",
+	model: {
+		type: "GenerationRecord",
+		doc: "A generation as the catalog keeps it: what was bound, when, and whether the policy moved.",
+		fields: {
+			id: {
+				kind: "string",
+				doc: "The sequence number as a decimal string: `1`, `2`, ... Dense by construction, because `bind` computes a successor's id from its parent's.",
+			},
+			boundAt: {
+				kind: "timestamp",
+				doc: "`T_ingest` - when the bind reducer accepted it. The caller does not get to state this: a generation's birth is the module's own fact.",
+			},
+			manifestDigest: {
+				kind: "string",
+				doc: "The composition root's digest of the manifest it bound.",
+			},
+			policyChanged: {
+				kind: "boolean",
+				doc: "Whether this generation's admission policy differs from its parent's. A manifest that re-bound the same policy is a new generation, not a new policy.",
+			},
+		},
+	},
+	module: {
+		table: "generation",
+		key: "id",
+		public: false,
+		doc: "Append-only. One row per bound generation, never updated.",
+	},
+};
+
+/**
+ * One authority over one resource, granted for a bounded time.
+ *
+ * The row is never deleted. Deleting it would erase the fence, and a fence that
+ * restarts at one is a fence a late worker can still satisfy - so a release
+ * marks the row and the number stays spent.
+ */
+const Lease: Entity = {
+	name: "lease",
+	doc: "One authority over one resource, granted for a bounded time.",
+	model: {
+		type: "LeaseRecord",
+		doc: "A grant: what it covers, who holds it, the fence it was issued under, and the deadline it is refused after.",
+		fields: {
+			id: {
+				kind: "string",
+				doc: "This grant's identity, unique per claim. A release does not reuse it, so two grants over one resource stay tellable apart.",
+			},
+			resource: {
+				kind: "string",
+				doc: "What it grants - a name the composition root chose, never a capability's.",
+			},
+			holder: {
+				kind: "string",
+				doc: "The sender that holds it, and the only sender a fenced write is accepted from.",
+			},
+			fence: {
+				kind: "bigint",
+				doc: "Monotonic per resource, never reused and never reset by a release. A write carrying an older fence is refused, which is what makes a takeover safe: the new holder's number is higher than the one the late worker still carries.",
+			},
+			acquiredAt: {
+				kind: "timestamp",
+				doc: "`T_ingest` - when the claim that opened this grant was accepted, from the reducer context.",
+			},
+			expiresAt: {
+				kind: "timestamp",
+				doc: "The deadline, `acquiredAt` plus the granted ttl. A deadline rather than a reading: expiry is the reducer's clock compared to this column, never a state a caller sets.",
+			},
+			state: {
+				kind: "enum",
+				values: ["held", "released"],
+				doc: "Held until released. Expiry is not a state: an expired grant still reads `held` with a past `expiresAt`, because the honest answer to whether it is live is a comparison against the clock, not a column that would need a timer to stay true.",
+			},
+		},
+	},
+	module: {
+		table: "lease",
+		key: "id",
+		index: ["resource", "holder"],
+		public: false,
+		doc: "One row per grant. A claim inserts, a renew rewrites, a release marks it released; nothing deletes.",
+	},
+};
+
+/**
+ * What one audience was told about one property, at one version.
+ *
+ * Immutable, because a probe row is the receipt for a disclosure: rewriting one
+ * would destroy the only evidence of what was revealed. There is no column for
+ * the private value and no reducer is ever given it - a row states what was
+ * disclosed, never the thing it was computed from.
+ *
+ * The name is `probe`, not `observation`: the archive already spends
+ * `observation` on a channel showing a post, and that table's meaning is fixed.
+ * A second `observation` would be a schema collision, and renaming the archive's
+ * would rewrite the meaning of every row it holds.
+ */
+const Probe: Entity = {
+	name: "probe",
+	doc: "One disclosure: a capability's property, at a version, to an audience.",
+	model: {
+		type: "ProbeRecord",
+		doc: "A receipt for one disclosure - what was revealed, to whom, at which property version, and when.",
+		fields: {
+			id: {
+				kind: "string",
+				doc: "`<capability>:<property>:<propertyVersion>:<audience>` - the reveal is its own receipt, so a second probe at the same version finds this row instead of appending a duplicate.",
+			},
+			capability: { kind: "string", doc: "The capability whose property was probed." },
+			property: { kind: "string", doc: "The property that was probed." },
+			propertyVersion: {
+				kind: "integer",
+				column: "u32",
+				doc: "The property version the disclosure is pinned to. Seeing the current truth is a separate entitlement, so a version is part of the fact rather than an optimisation.",
+			},
+			audience: {
+				kind: "string",
+				doc: "Who was told - the identity the reducer authenticated, never an argument, because a caller-supplied audience is a caller-supplied identity.",
+			},
+			value: {
+				kind: "string",
+				doc: "What was disclosed, as the audience would have read it. Never the private value it was computed from.",
+			},
+			at: {
+				kind: "timestamp",
+				doc: "`T_event` - when the reading was taken, as the worker states it. A claim, so it travels with the provenance of the run that made it.",
+			},
+			ingestedAt: {
+				kind: "timestamp",
+				doc: "`T_ingest` - when the reducer accepted it. Paired with `at` on purpose: the two authorities never share a column, and their difference is the ingestion lag.",
+			},
+		},
+	},
+	module: {
+		table: "probe",
+		key: "id",
+		index: ["capability", "property", "audience"],
+		public: false,
+		doc: "Immutable. One row per disclosure, keyed by content so replaying a probe appends nothing.",
+	},
+};
+
+/**
+ * What an audience infers about a capability from the probes it holds.
+ *
+ * Derived and disposable: deleting a belief loses nothing that cannot be
+ * recomputed from the probe rows behind it, which is why the latest derivation
+ * replaces the row instead of appending a second one.
+ *
+ * A belief grants no access. It is the actor's own reading, which is why it may
+ * carry an interpretation at all while `probe` may not carry the truth.
+ */
+const Belief: Entity = {
+	name: "belief",
+	doc: "What an audience infers about a capability, from the probes it holds.",
+	model: {
+		type: "BeliefRecord",
+		doc: "One current inference per audience and capability, with the confidence the probes support it at.",
+		fields: {
+			id: {
+				kind: "string",
+				doc: "`<audience>:<capability>` - one current belief per pair, which is what makes it replaceable.",
+			},
+			audience: {
+				kind: "string",
+				doc: "The actor the belief belongs to, and the only actor it is about.",
+			},
+			capability: { kind: "string", doc: "The capability being inferred." },
+			value: {
+				kind: "string",
+				doc: "The audience's own reading of its probes; never the private truth.",
+			},
+			confidence: {
+				kind: "number",
+				doc: "How strongly the probes support it, 0 to 1.",
+			},
+			at: {
+				kind: "timestamp",
+				doc: "`T_ingest` - when the reducer derived it. An inference has no `T_event`: nothing happened in the world, a row was computed.",
+			},
+		},
+	},
+	module: {
+		table: "belief",
+		key: "id",
+		index: ["audience", "capability"],
+		public: false,
+		doc: "One row per `(audience, capability)`. Not append-only: a belief is derived, so the latest derivation replaces the row.",
+	},
+};
+
+/**
+ * One act of the agentic layer, with the generation it happened under.
+ *
+ * The shape is `event`'s on purpose - `at`, `kind`, `subject`, `payload`, keyed
+ * by content. A second event shape would be a second set of rules for one
+ * question, and the two would drift the way two lists always do.
+ *
+ * It is the one catalog table that carries all four timestamps. A trace can
+ * record a scheduled run, and only a row persisted as a one-shot has a
+ * `T_scheduled` to be late against: an interval stores the interval, so
+ * reconstructing `T_scheduled` as the previous run plus the interval would
+ * reproduce the drift the measurement exists to find.
+ */
+const Trace: Entity = {
+	name: "trace",
+	doc: "One recorded act of the agentic layer: what happened, to what, under which generation.",
+	model: {
+		type: "TraceRecord",
+		doc: "One trace line, in the same shape as an event: when it happened, what it was, what it was about, and what it carries.",
+		fields: {
+			id: {
+				kind: "string",
+				doc: "`<at>:<kind>:<subject>` - a replay at the same instant is the same fact, not a second one.",
+			},
+			generation: {
+				kind: "string",
+				doc: "The generation the act happened under. A trace read without it cannot say which policy allowed the act.",
+			},
+			kind: {
+				kind: "enum",
+				values: [
+					"capability.declared",
+					"generation.bound",
+					"admission.refused",
+					"lease.claimed",
+					"lease.renewed",
+					"lease.released",
+					"lease.refused",
+					"probe.recorded",
+					"belief.derived",
+				],
+				doc: "What happened. A closed set: a new kind is a schema change, not a string a caller may invent.",
+			},
+			subject: {
+				kind: "string",
+				doc: "What it happened to - a resource, a generation, a capability, a property.",
+			},
+			payload: {
+				kind: "json",
+				fallback: "{}",
+				doc: "Whatever the kind needs to say. Opaque, so a new payload shape needs no migration; never a private value.",
+			},
+			at: {
+				kind: "timestamp",
+				doc: "`T_event` - when it happened in the world, as the writer states it.",
+			},
+			ingestedAt: {
+				kind: "timestamp",
+				doc: "`T_ingest` - when the reducer accepted the row, from the reducer context.",
+			},
+			scheduledAt: {
+				kind: "timestamp",
+				optional: true,
+				doc: "`T_scheduled` - when a scheduled run was due. Present only when the row was persisted as a one-shot, because an interval has no per-occurrence instant to store.",
+			},
+			ranAt: {
+				kind: "timestamp",
+				optional: true,
+				doc: "`T_run` - when the scheduled reducer actually ran, from the reducer context. Its difference from `scheduledAt` is the scheduler's lateness, and from `ingestedAt` the post-ingest delay.",
+			},
+		},
+	},
+	module: {
+		table: "trace",
+		key: "id",
+		index: ["generation", "kind", "subject"],
+		public: false,
+		doc: "Append-only, keyed `<at>:<kind>:<subject>`. Evidence, not authority: a trace records a decision after it was taken, and is the one place a refused write still leaves a mark.",
+	},
+};
+
 /** Every entity, in declaration order. Order is what the rendered files follow. */
 export const Entities: readonly Entity[] = [
 	Post,
@@ -555,6 +889,12 @@ export const Entities: readonly Entity[] = [
 	Decision,
 	Voted,
 	Curated,
+	Capability,
+	Generation,
+	Lease,
+	Probe,
+	Belief,
+	Trace,
 ];
 
 /** The entities a target carries, by name. */
