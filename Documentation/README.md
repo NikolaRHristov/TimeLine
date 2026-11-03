@@ -47,6 +47,9 @@ what is intended, the RFCs state what was decided, and the skills state how to d
   engine's limits.
 - **`Reference/RFC-Classification.md`** - the audit of the RFC corpus's classification, the three
   axes that replace it, and the assignment of all seventy-six records.
+- **`Reference/Effects-And-State.md`** - what belongs in the database and what belongs in a process,
+  the two-transaction shape a scrape takes, and the rule that makes the reducer, not the caller, the
+  guarantee.
 
 ---
 

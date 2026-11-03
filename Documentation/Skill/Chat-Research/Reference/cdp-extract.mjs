@@ -35,7 +35,9 @@ const MinChars = Number(At("--min-chars", 200));
 const Expand = Args.includes("--expand");
 
 if (!WsUrl) {
-	console.error("usage: node cdp-extract.mjs <ws-url> [--selector <css>] [--out <file>] [--min-chars N]");
+	console.error(
+		"usage: node cdp-extract.mjs <ws-url> [--selector <css>] [--out <file>] [--min-chars N]",
+	);
 	process.exit(2);
 }
 
@@ -259,7 +261,10 @@ if (Expand) {
 	await new Promise((Done) => setTimeout(Done, 1500));
 }
 
-const Result = await Send("Runtime.evaluate", { expression: Extract, returnByValue: true });
+const Result = await Send("Runtime.evaluate", {
+	expression: Extract,
+	returnByValue: true,
+});
 if (Result.exceptionDetails) {
 	console.error(`blocker: ${Result.exceptionDetails.text}`);
 	process.exit(2);
@@ -281,7 +286,9 @@ if (Parsed.error) {
 const Summary = `container: ${Parsed.container}  chars: ${Parsed.chars}  formulas: ${Parsed.katex}  code: ${Parsed.code}  tables: ${Parsed.tables}  images: ${Parsed.images}`;
 
 if (Parsed.chars < MinChars) {
-	console.error(`blocker: the capture is ${Parsed.chars} characters, below --min-chars ${MinChars}; refusing a stub. ${Summary}`);
+	console.error(
+		`blocker: the capture is ${Parsed.chars} characters, below --min-chars ${MinChars}; refusing a stub. ${Summary}`,
+	);
 	process.exit(1);
 }
 
