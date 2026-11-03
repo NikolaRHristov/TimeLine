@@ -342,7 +342,9 @@ async function measure(Url) {
 	try {
 		Measured = JSON.parse(Value);
 	} catch {
-		throw new Error(`the probe returned something that is not JSON from ${Url}: ${Value.slice(0, 200)}`);
+		throw new Error(
+			`the probe returned something that is not JSON from ${Url}: ${Value.slice(0, 200)}`,
+		);
 	}
 
 	// A route that served no document is the observer's failure - a build mid-write,

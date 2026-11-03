@@ -142,16 +142,16 @@ proves the implementation agrees with itself.
 
 ## Claim → test
 
-| Claim                                   | Test                                                                                      |
-| --------------------------------------- | ----------------------------------------------------------------------------------------- |
-| The workspace matches the frame         | `node .../verify-composition.mjs` exits 0 and every line reads `PASS`                     |
+| Claim                                   | Test                                                                                          |
+| --------------------------------------- | --------------------------------------------------------------------------------------------- |
+| The workspace matches the frame         | `node .../verify-composition.mjs` exits 0 and every line reads `PASS`                         |
 | An absent element fails, and is named   | delete `class=bento` from a copy of the build: exit 1 and `ABSENT  .bento is not in the page` |
-| A snapshot refuses an unsettled tree    | run it against a tree that never stops being written: exit 2, and nothing is served       |
-| A probe reads a settled build           | run it while `pnpm run build` runs: exit 0, not "served no document"                      |
-| Every emitted route is probed           | `find Target -name index.html` lists only routes one of the three probes names            |
-| The seam states its state, not a title  | the workspace probe reports `locked/true` and the reason, not a record name               |
-| No record is drawn on a showcase page   | `verify-showcase.mjs` reports `no record is drawn on the page`                            |
-| A missing precondition is not a failure | with no browser on `CDP_URL`, the exit code is 2 and the fix is printed                   |
+| A snapshot refuses an unsettled tree    | run it against a tree that never stops being written: exit 2, and nothing is served           |
+| A probe reads a settled build           | run it while `pnpm run build` runs: exit 0, not "served no document"                          |
+| Every emitted route is probed           | `find Target -name index.html` lists only routes one of the three probes names                |
+| The seam states its state, not a title  | the workspace probe reports `locked/true` and the reason, not a record name                   |
+| No record is drawn on a showcase page   | `verify-showcase.mjs` reports `no record is drawn on the page`                                |
+| A missing precondition is not a failure | with no browser on `CDP_URL`, the exit code is 2 and the fix is printed                       |
 
 ## References
 
