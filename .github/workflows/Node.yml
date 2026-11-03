@@ -98,6 +98,14 @@ jobs:
       - run: pnpm run Check:Compatibility
         working-directory: .
 
+      # The whole repository gate - RFC frontmatter, skills, state, tokens,
+      # position, the Maintain package's check and the tests - not just the
+      # floor and the build. A green run otherwise says nothing about
+      # `pnpm run check` and reads as if it had passed. It repeats
+      # `Check:Compatibility` on purpose: the floor fails under its own name.
+      - run: pnpm run check
+        working-directory: .
+
       - run: pnpm run prepublishOnly
         working-directory: .
 

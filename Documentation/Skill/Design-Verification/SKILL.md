@@ -49,9 +49,13 @@ itself, probes `/Workspace/`, prints one line per invariant and exits 0 when eve
 
 The copy is the point: `astro build` empties the output directory before it writes, so a probe that
 serves the live tree while another agent's build runs sees zero routes and reports each as "the
-route served no document" - a total failure that is in the observer, not the page. The snapshot is
-taken after the newest mtime under `Target/` has been quiet for 1.5s, so a run that overlaps a build
-measures the finished build.
+route served no document" - a total failure that is in the observer, not the page. What the snapshot
+guarantees is narrower than coordination with the builder: it is a quiet-time heuristic. It waits
+until the newest mtime under `Target/` has been quiet for 1.5s, records that mtime, copies, and
+re-reads it; a tree that moved across the copy is thrown away and the wait starts again, and a tree
+still being written after 180s is a blocker rather than a snapshot of whatever was on disk. A build
+that starts in the instant between the quiet check and the copy is therefore still possible - the
+re-read catches it, so the run retries or blocks, but nothing prevented the overlap.
 
 | Argument or variable | Effect                                                  |
 | -------------------- | ------------------------------------------------------- |
@@ -59,9 +63,12 @@ measures the finished build.
 | `PORT`               | The port it serves on. Default `4411`.                  |
 | `CDP_URL`            | The browser endpoint. Default `http://127.0.0.1:9222`.  |
 
-Exit codes: `0` every invariant held, `1` at least one broke, `2` a precondition was missing - no
-build, or no browser. A `2` names the command that fixes it, because a missing browser is not the
-page's fault.
+Exit codes: `0` every invariant held; `1` at least one broke, or an element an invariant names is
+absent from the page; `2` only that the check could not run - no build, no browser, or a route that
+served no document. A `2` names the command that fixes it, because a missing browser is not the
+page's fault. An absent element is never a `2`: it prints as `ABSENT` with the selector that stopped
+matching, because a deleted component reported in the precondition class is a page defect filed
+where the reader is told not to look.
 
 ## The invariants
 
@@ -135,18 +142,21 @@ proves the implementation agrees with itself.
 
 ## Claim → test
 
-| Claim                                   | Test                                                                         |
-| --------------------------------------- | ---------------------------------------------------------------------------- |
-| The workspace matches the frame         | `node .../verify-composition.mjs` exits 0 and every line reads `PASS`        |
-| A probe reads a settled build           | run it while `pnpm run build` runs: exit 0, not "served no document"         |
-| Every emitted route is probed           | `find Target -name index.html` lists only routes one of the two probes names |
-| The seam states its state, not a title  | the workspace probe reports `locked/true` and the reason, not a record name  |
-| No record is drawn on a showcase page   | `verify-showcase.mjs` reports `no record is drawn on the page`               |
-| A missing precondition is not a failure | with no browser on `CDP_URL`, the exit code is 2 and the fix is printed      |
+| Claim                                   | Test                                                                                      |
+| --------------------------------------- | ----------------------------------------------------------------------------------------- |
+| The workspace matches the frame         | `node .../verify-composition.mjs` exits 0 and every line reads `PASS`                     |
+| An absent element fails, and is named   | delete `class=bento` from a copy of the build: exit 1 and `ABSENT  .bento is not in the page` |
+| A snapshot refuses an unsettled tree    | run it against a tree that never stops being written: exit 2, and nothing is served       |
+| A probe reads a settled build           | run it while `pnpm run build` runs: exit 0, not "served no document"                      |
+| Every emitted route is probed           | `find Target -name index.html` lists only routes one of the three probes names            |
+| The seam states its state, not a title  | the workspace probe reports `locked/true` and the reason, not a record name               |
+| No record is drawn on a showcase page   | `verify-showcase.mjs` reports `no record is drawn on the page`                            |
+| A missing precondition is not a failure | with no browser on `CDP_URL`, the exit code is 2 and the fix is printed                   |
 
 ## References
 
-| File                     | Covers                                                           |
-| ------------------------ | ---------------------------------------------------------------- |
-| `verify-composition.mjs` | Serve, probe and assert the built workspace against the spec     |
-| `verify-showcase.mjs`    | Serve, probe and assert the five showcase pages against RFC-0053 |
+| File                     | Covers                                                                 |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `verify-composition.mjs` | Serve, probe and assert the built workspace against the spec           |
+| `verify-showcase.mjs`    | Serve, probe and assert the five showcase pages against RFC-0053       |
+| `verify-spread.mjs`      | Serve, probe and assert `/Showcase` against the spread it demonstrates |

@@ -73,6 +73,8 @@ rules; a worked instance lives in `Reference/` behind a one-line pointer.
 - **`Skill/Timeline-Hermes-Maintenance/`** - the gateway, the board and the workers, when task work
   stalls.
 - **`Skill/Tool-Archive/`** - keeping a working script instead of rewriting it next session.
+- **`Skill/Skill-Authoring/`** - where a lesson lives, the naming and the anonymisation gate, and
+  the contract check that holds the tree to them.
 
 ---
 

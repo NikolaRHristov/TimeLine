@@ -36,8 +36,26 @@ const TARGETS: readonly { target: Target; label: string }[] = [
 	{ target: "site", label: "site" },
 ];
 
+/**
+ * Where one entity's rendered block sits in a file.
+ *
+ * `start` is only needed where the block does not open straight into its
+ * properties: `table(options, columns)` takes the table's options object first,
+ * and that object closes on its own line, which would end a scan that began at
+ * `open`. The other two artifacts have no such argument, so they keep the plain
+ * rule - the field list is the line after `open`.
+ */
+type Block = {
+	/** The line the block opens with. */
+	open: string;
+	/** The indent every property line of the block carries. */
+	body: string;
+	/** Where the field list begins, when it is not the line after `open`. */
+	start?: (line: string) => boolean;
+};
+
 /** The identifier a rendered block opens with, per artifact. */
-function blockOf(artifact: string, entry: Entity): { open: string; body: string } | null {
+function blockOf(artifact: string, entry: Entity): Block | null {
 	if (artifact === PATHS.types) {
 		return { open: `export type ${entry.model.type} = {`, body: "	" };
 	}
@@ -48,7 +66,14 @@ function blockOf(artifact: string, entry: Entity): { open: string; body: string 
 	}
 	const module = entry.module;
 	if (module === undefined) return null;
-	return { open: `const ${module.table} = table(`, body: "		" };
+	return {
+		open: `const ${module.table} = table(`,
+		body: "		",
+		// The columns are the second argument: the object that opens on a line of
+		// its own. The options object before it carries its contents inline, so
+		// the two are told apart by the line, not by counting braces.
+		start: (line) => line.trimEnd() === "	{",
+	};
 }
 
 /**
@@ -64,12 +89,21 @@ export function fieldsIn(content: string, artifact: string, entry: Entity): stri
 	if (block === null) return [];
 
 	const lines = content.split("\n");
-	const start = lines.findIndex((line) => line.startsWith(block.open));
-	if (start === -1) return [];
+	const open = lines.findIndex((line) => line.startsWith(block.open));
+	if (open === -1) return [];
+
+	// A block that names its own field-list opener is located by it; every other
+	// block opens on the `open` line itself, so its field list begins after it.
+	const locate = block.start;
+	const opening =
+		locate === undefined
+			? open
+			: lines.findIndex((line, index) => index > open && locate(line));
+	if (opening === -1) return [];
 
 	const property = new RegExp(`^${block.body}([A-Za-z_][A-Za-z0-9_]*)\\??:`);
 	const names: string[] = [];
-	for (const line of lines.slice(start + 1)) {
+	for (const line of lines.slice(opening + 1)) {
 		if (!line.startsWith(block.body)) break;
 		const match = property.exec(line);
 		if (match?.[1] !== undefined) names.push(match[1]);

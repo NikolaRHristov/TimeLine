@@ -9,18 +9,24 @@
  * tell a 360px rail from a 386px one.
  *
  * Preconditions are reported as blockers with exit 2, never as failures: a missing
- * build or a missing browser is not the page's fault.
+ * build, a missing browser or a route that served no document is not the page's
+ * fault. A page defect is not a precondition either: an element an invariant names
+ * that is absent from the page is a failed invariant (exit 1), printed as `ABSENT`
+ * with the selector that stopped matching. A probe that threw on a deleted node
+ * would report the deletion as a check that could not run (RFC-0072).
  *
  * The build is snapshotted before it is served. `astro build` empties `Target/`
  * before it writes, so serving the live directory while another build runs reports
  * every route as serving no document - a failure of the observer, not the page.
+ * The snapshot is a quiet-time heuristic: it refuses a copy taken while the tree
+ * moved, and refuses to copy at all after its deadline.
  *
  *   node verify-composition.mjs              # serve ./Target and probe it
  *   node verify-composition.mjs --url <u>    # probe a server already running
  *   CDP_URL=http://127.0.0.1:9223 node ...   # a browser on another port
  */
 import { spawn } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readdirSync, statSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -119,6 +125,18 @@ const Probe = `(() => {
 	const Bands = [...document.querySelectorAll(".provenance__band")];
 	const Lanes = [...document.querySelectorAll(".swimlane")].map((Lane) => Lane.getBoundingClientRect());
 	const Canvas = document.querySelector(".bento");
+	const Seam = document.querySelector(".publish");
+
+	// Every selector an invariant names. A selector that stopped matching is the
+	// page's defect, so the probe reports it rather than failing to answer: a throw
+	// inside Runtime.evaluate comes back as no value at all, which the caller cannot
+	// tell apart from a dead browser.
+	const Required = [
+		".provenance", ".drawer", ".publish", ".bento", ".rail", ".swimlanes",
+		".spectrometer", ".status", ".status__list", ".security", ".security__marks",
+		".publish__note", ".publish__control", ".swimlane", ".status__value",
+		".provenance__band",
+	];
 
 	// Measured from the unrounded rects: a band's height lands on a fraction of a
 	// pixel often enough that rounding both edges first turns a 20px gap into 21.
@@ -130,6 +148,10 @@ const Probe = `(() => {
 	};
 
 	return JSON.stringify({
+		// The main element is the shell's own landmark: a route that served no
+		// document has none, which is the observer's failure rather than the page's.
+		loaded: document.querySelector("main") !== null,
+		missing: Required.filter((Selector) => document.querySelector(Selector) === null),
 		provenance: Box(".provenance"),
 		drawer: Box(".drawer"),
 		publish: Box(".publish"),
@@ -149,9 +171,9 @@ const Probe = `(() => {
 		}),
 		gaps: [Gap(".bento", ".swimlanes"), Gap(".swimlanes", ".spectrometer"), Gap(".spectrometer", ".status")],
 		laneAir: Lanes.length < 2 ? -1 : Math.round(Lanes[1].y - Lanes[0].bottom),
-		canvasGap: Math.round(parseFloat(getComputedStyle(Canvas).rowGap)),
+		canvasGap: Canvas === null ? null : Math.round(parseFloat(getComputedStyle(Canvas).rowGap)),
 		statusWords: [...document.querySelectorAll(".status__value")].map((Value) => Value.textContent.trim()),
-		seamBackground: getComputedStyle(document.querySelector(".publish")).backgroundColor,
+		seamBackground: Seam === null ? null : getComputedStyle(Seam).backgroundColor,
 		seamNote: document.querySelector(".publish__note")?.textContent?.trim(),
 		seamState: document.querySelector(".publish__control")?.dataset.controlState,
 		seamDisabled: document.querySelector(".publish__control")?.getAttribute("aria-disabled"),
@@ -176,7 +198,15 @@ function newest(Directory) {
 
 	for (const Entry of readdirSync(Directory, { withFileTypes: true })) {
 		const Path = resolve(Directory, Entry.name);
-		Latest = Math.max(Latest, Entry.isDirectory() ? newest(Path) : statSync(Path).mtimeMs);
+
+		try {
+			Latest = Math.max(Latest, Entry.isDirectory() ? newest(Path) : statSync(Path).mtimeMs);
+		} catch {
+			// A build that is writing deletes entries between the read and the stat.
+			// That is the unsettled tree the caller is watching for, so the scan
+			// reports "moving" instead of dying on a vanished file.
+			return Date.now();
+		}
 	}
 
 	return Latest;
@@ -188,17 +218,40 @@ function newest(Directory) {
  * `astro build` empties the output directory before it writes, so a probe that
  * serves the live `Target/` while another build runs reports every route as
  * serving no document - a total failure that lives in the observer, not the
- * page. The snapshot is what makes a run that overlaps a build honest.
+ * page.
+ *
+ * A quiet mtime says the tree is not being written now, not that it stays quiet,
+ * so the copy is kept only when the newest write under the directory did not move
+ * across it. A tree that never settles is a blocker: copying it anyway would hand
+ * the assertions a half-built page and report the build's own progress as a page
+ * defect.
  */
 async function snapshot(Directory) {
 	const Deadline = Date.now() + 180_000;
 
-	while (Date.now() < Deadline && Date.now() - newest(Directory) < 1500) await sleep(500);
+	if (!existsSync(Directory)) {
+		throw new Error(`no built site at ${Directory}; run \`pnpm run build\` first`);
+	}
 
-	const Copy = mkdtempSync(resolve(tmpdir(), "verify-composition-"));
-	cpSync(Directory, Copy, { recursive: true });
+	for (;;) {
+		while (Date.now() < Deadline && Date.now() - newest(Directory) < 1500) await sleep(500);
 
-	return Copy;
+		if (Date.now() >= Deadline) {
+			throw new Error(
+				`the build under ${Directory} never settled: it was still being written after 180s - ` +
+					"wait for `pnpm run build` to finish, then probe again",
+			);
+		}
+
+		const Before = newest(Directory);
+		const Copy = mkdtempSync(resolve(tmpdir(), "verify-composition-"));
+		cpSync(Directory, Copy, { recursive: true });
+
+		if (newest(Directory) === Before) return Copy;
+
+		rmSync(Copy, { recursive: true, force: true });
+		await sleep(500);
+	}
 }
 
 /** One CDP round trip: open a background tab, read the frame, close it. */
@@ -270,7 +323,38 @@ async function measure(Url) {
 	Tab.close();
 	Browser.close();
 
-	return JSON.parse(Read.result.result.value);
+	// A probe that threw inside the page comes back with no value, and the exception
+	// text sits beside it. Reading the reply instead of trusting it is what keeps a
+	// browser fault in the blocker class and a page defect out of it.
+	const Value = Read?.result?.result?.value;
+
+	if (typeof Value !== "string") {
+		const Exception =
+			Read?.result?.exceptionDetails?.exception?.description ??
+			Read?.result?.result?.description ??
+			JSON.stringify(Read);
+
+		throw new Error(`the probe returned no JSON from ${Url}: ${Exception}`);
+	}
+
+	let Measured;
+
+	try {
+		Measured = JSON.parse(Value);
+	} catch {
+		throw new Error(`the probe returned something that is not JSON from ${Url}: ${Value.slice(0, 200)}`);
+	}
+
+	// A route that served no document is the observer's failure - a build mid-write,
+	// or a URL that names no page - never a page that lost a part.
+	if (Measured.loaded === false) {
+		throw new Error(
+			`the route served no document (${Url}): the build may still be writing - ` +
+				"wait for `pnpm run build`, then probe again",
+		);
+	}
+
+	return Measured;
 }
 
 const Args = process.argv.slice(2);
@@ -307,9 +391,35 @@ try {
 	const Box = await measure(Url);
 	let Failed = 0;
 
+	// An absent part is the page's defect, not a precondition, so it is named before
+	// the rows that read through it: a reader sees which component disappeared, not
+	// only that a number came back wrong.
+	for (const Selector of Box.missing ?? []) console.log(`ABSENT  ${Selector} is not in the page`);
+
 	for (const [Label, Read, Want, Test] of Frame) {
-		const Got = Read(Box);
-		const Expected = typeof Want === "function" ? Want(Box) : Want;
+		let Got;
+		let Expected;
+		let Absent = null;
+
+		try {
+			Got = Read(Box);
+			Expected = typeof Want === "function" ? Want(Box) : Want;
+
+			if (Got === undefined || Got === null || Expected === undefined || Expected === null) {
+				Absent = "the element it reads is not in the page";
+			}
+		} catch (Error) {
+			// A reader that dereferences a missing box throws here. That is a failed
+			// invariant, not a blocked run: the run happened, and the page was wrong.
+			Absent = Error.message;
+		}
+
+		if (Absent !== null) {
+			Failed++;
+			console.log(`ABSENT  ${Label.padEnd(42)} absent - ${Absent}`);
+			continue;
+		}
+
 		const Held = Test === undefined ? Got === Expected : Test(Got, Expected);
 
 		if (!Held) Failed++;
@@ -317,6 +427,10 @@ try {
 			`${Held ? "PASS" : "FAIL"}  ${Label.padEnd(42)} ${Got}${Held ? "" : ` (want ${Expected})`}`,
 		);
 	}
+
+	// A selector an invariant names that the probe could not find fails the run even
+	// if every row that reads through it somehow held.
+	if (Failed === 0 && (Box.missing ?? []).length > 0) Failed = 1;
 
 	console.log(
 		`\n${Failed === 0 ? "RESULT: the composition matches the spec" : `RESULT: ${Failed} invariant(s) broke`}`,

@@ -40,7 +40,9 @@ the same files rather than a copy. Git stores the link; a checkout with `core.sy
 a small text file whose content is `../Documentation/Skill`, and the long path still works.
 
 The repository root `AGENTS.md` carries the task → skill table. It is the index: a skill nobody is
-pointed at is not loaded.
+pointed at is not loaded. `Documentation/README.md` carries the reader-facing list of the same
+directories, and the contract checks both, because a skill the loader finds and the reader does not
+is a folder nobody opens.
 
 ## The naming
 
@@ -99,6 +101,7 @@ states where each one goes.
 | Every skill has a body and an index              | `node Documentation/Skill/Skill-Authoring/Reference/SkillContract.mjs` exits 0              |
 | The frontmatter name matches its directory       | the same command prints `name` for every skill                                              |
 | Every skill is cited from `AGENTS.md`            | the same command reports `cited: N/N`                                                       |
+| Every skill appears in `Documentation/README.md` | the same command reports `named: N/N`                                                       |
 | Every reference file is listed in its `Index.md` | the same command reports `listed: N/N`                                                      |
 | Every skill states a testable claim              | the same command reports `claims: N/N`                                                      |
 | The skill tree names no machine path             | `python3 Documentation/Skill/Tool-Archive/Reference/archive_tool.py --audit` prints `clean` |

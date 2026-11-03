@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { dirname, resolve } from "node:path";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { EventKind } from "../Model/Event/Event.ts";
@@ -31,6 +33,102 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 test("the rendered artifacts match the declaration", () => {
 	const report = compare(ROOT);
 	assert.equal(report.ok, true, `\n${explain(report)}\n`);
+});
+
+/**
+ * A temporary root holding the three rendered artifacts, so a case can break
+ * one of them without touching the tree the check runs against.
+ */
+function renderedRoot(): string {
+	const root = mkdtempSync(join(tmpdir(), "timeline-schema-"));
+	for (const artifact of render()) {
+		const path = join(root, artifact.path);
+		mkdirSync(dirname(path), { recursive: true });
+		writeFileSync(path, artifact.content, "utf8");
+	}
+	return root;
+}
+
+/** The module artifact's rendered lines. */
+function moduleLines(): string[] {
+	const artifact = render().find((entry) => entry.path === PATHS.module);
+	assert.ok(artifact !== undefined, `${PATHS.module} must be one of the rendered artifacts`);
+	return artifact.content.split("\n");
+}
+
+/**
+ * The diagnosis of a stale module artifact.
+ *
+ * `table(options, columns)` puts the options object between the declaration and
+ * the columns, so a field scan that stopped at the first dedent read every
+ * module table as declaring nothing - and a stale module file was reported as
+ * `stale` with no column named. A deleted column and an added one are the two
+ * halves of that: `missing` and `undeclared`.
+ */
+test("a stale module artifact names the column it lost", () => {
+	const root = renderedRoot();
+	try {
+		const lines = moduleLines();
+		const at = lines.findIndex((line) => line.startsWith("		visibility: "));
+		assert.notEqual(at, -1, `${PATHS.module} must declare the post's visibility column`);
+		writeFileSync(
+			join(root, PATHS.module),
+			[...lines.slice(0, at), ...lines.slice(at + 1)].join("\n"),
+			"utf8",
+		);
+
+		const report = compare(root);
+		assert.deepEqual(
+			report.drift.map((entry) => entry.path),
+			[PATHS.module],
+			`only the file that was edited may drift:\n${explain(report)}`,
+		);
+
+		const drift = report.drift[0];
+		assert.equal(drift?.state, "stale");
+		assert.deepEqual(
+			drift?.entities,
+			[{ name: "PostRecord", missing: ["visibility"], extra: [] }],
+			`the deleted column must be named:\n${explain(report)}`,
+		);
+		assert.match(
+			explain(report),
+			/PostRecord: missing visibility/,
+			"the failure message must name the column, not only the file",
+		);
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+});
+
+test("a stale module artifact names the column it gained", () => {
+	const root = renderedRoot();
+	try {
+		const lines = moduleLines();
+		const at = lines.findIndex((line) => line.startsWith("		visibility: "));
+		assert.notEqual(at, -1, `${PATHS.module} must declare the post's visibility column`);
+		writeFileSync(
+			join(root, PATHS.module),
+			[...lines.slice(0, at + 1), "		phantom: t.string(),", ...lines.slice(at + 1)].join("\n"),
+			"utf8",
+		);
+
+		const report = compare(root);
+		const drift = report.drift.find((entry) => entry.path === PATHS.module);
+		assert.equal(drift?.state, "stale");
+		assert.deepEqual(
+			drift?.entities,
+			[{ name: "PostRecord", missing: [], extra: ["phantom"] }],
+			`the added column must be named:\n${explain(report)}`,
+		);
+		assert.match(
+			explain(report),
+			/PostRecord: undeclared phantom/,
+			"the failure message must name the column, not only the file",
+		);
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
 });
 
 test("every artifact is produced, and each opens with the generated header", () => {

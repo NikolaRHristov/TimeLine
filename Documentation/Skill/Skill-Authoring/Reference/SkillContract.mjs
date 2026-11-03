@@ -4,7 +4,7 @@
  *
  *   node Documentation/Skill/Skill-Authoring/Reference/SkillContract.mjs
  *
- * A skill is a directory under `Documentation/Skill/`, and six facts about it are
+ * A skill is a directory under `Documentation/Skill/`, and seven facts about it are
  * mechanical enough to check, so none of them is left to review:
  *
  *   - it carries a `SKILL.md` and a `Reference/Index.md`, because a directory with
@@ -16,6 +16,10 @@
  *     two leaves a skill nothing can address;
  *   - the root `AGENTS.md` cites `Documentation/Skill/<Name>/SKILL.md`, because a
  *     skill nobody is pointed at is not loaded;
+ *   - the reader-facing index `Documentation/README.md` names `Skill/<Name>/`,
+ *     because the root table is the loader's index and this one is the reader's: a
+ *     skill cited there but missing here is a folder nobody browsing
+ *     `Documentation/` ever opens;
  *   - every file in `Reference/` is named in that directory's `Index.md`, because
  *     an index that omits a file is a reader's dead end;
  *   - the body carries a claim → test table (`## Claim → test`, or `## Verification`
@@ -29,7 +33,8 @@
  * whole tracked tree - and this tool points at them rather than duplicating them.
  *
  * Exit 0 every skill agrees, 1 at least one disagrees, 2 the inputs are wrong (no
- * `Documentation/Skill/`, no `AGENTS.md`, a block that will not parse).
+ * `Documentation/Skill/`, no `AGENTS.md`, no `Documentation/README.md`, a block that
+ * will not parse).
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -51,6 +56,10 @@ const Root = resolve(Here, "../../../..");
 
 const Corpus = "Documentation/Skill";
 const Index = "AGENTS.md";
+// The second index: the folder's own README, which is what a person browsing
+// `Documentation/` reads. `Index` answers "does a loader find this skill"; this one
+// answers "does a reader". They are separate files, so they drift separately.
+const ReaderIndex = "Documentation/README.md";
 
 const Fail = (message) => {
 	console.error(`skill-contract: ${message}`);
@@ -136,11 +145,17 @@ function main() {
 	const index = Read(Index);
 	if (index === null) Fail(`cannot read ${Index}; run this from inside the repository`);
 
+	const readerIndex = Read(ReaderIndex);
+	if (readerIndex === null) {
+		Fail(`cannot read ${ReaderIndex}; run this from inside the repository`);
+	}
+
 	const skills = Skills();
 	if (skills.length === 0) Fail(`${Corpus} holds no skill directory`);
 
 	const problems = [];
 	let cited = 0;
+	let named = 0;
 	let listed = 0;
 	let claimed = 0;
 	const rows = [];
@@ -190,6 +205,13 @@ function main() {
 		if (index.includes(relative)) cited += 1;
 		else problems.push(`${skill}: ${Index} does not cite ${relative}`);
 
+		// The README writes the path relative to `Documentation/` (`Skill/<Name>/`),
+		// so that is the token; it is also a substring of the root file's longer
+		// `Documentation/Skill/<Name>/SKILL.md`, so either form satisfies it.
+		const mention = `Skill/${skill}/`;
+		if (readerIndex.includes(mention)) named += 1;
+		else problems.push(`${skill}: ${ReaderIndex} does not name ${mention}`);
+
 		if (Claims(prose)) claimed += 1;
 		else problems.push(`${skill}: no ## Claim → test or ## Verification table`);
 
@@ -201,8 +223,8 @@ function main() {
 	console.log(`skills: ${skills.length}`);
 	for (const row of rows) console.log(`  ${row}`);
 	console.log(
-		`cited: ${cited}/${skills.length}   listed: ${listed}/${skills.length}   ` +
-			`claims: ${claimed}/${skills.length}`,
+		`cited: ${cited}/${skills.length}   named: ${named}/${skills.length}   ` +
+			`listed: ${listed}/${skills.length}   claims: ${claimed}/${skills.length}`,
 	);
 	console.log(
 		`${problems.length ? "refused" : "ok"}: ${skills.length} skill(s), ${problems.length} problem(s)`,
