@@ -1,11 +1,11 @@
 # RFC-0021 - Fleet coordination and observation provenance
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the observation log,
-the `observation` table, harvest assignments, `maintain fleet status` **Decision class:** policy
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0006 (the read-only posture
-this record attributes), RFC-0014 (a grant is how an assignment is expressed), RFC-0015 (a member
-exports what they observed), RFC-0004 (a job belongs to an identity); implementing card to be
-created: "Observation provenance column and the fleet status report"
+the `observation` table, harvest assignments, `maintain fleet status` **Kind:** policy **Subject:**
+identity **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
+RFC-0006 (the read-only posture this record attributes), RFC-0014 (a grant is how an assignment is
+expressed), RFC-0015 (a member exports what they observed), RFC-0004 (a job belongs to an identity);
+implementing card to be created: "Observation provenance column and the fleet status report"
 
 ## Decision
 

@@ -1,9 +1,9 @@
 # RFC-0007 - Privacy, encryption and the validation boundary
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module, the
-client, export, hosting **Decision class:** policy **Supersedes:** none **Superseded by:** none
-**Task dependencies:** RFC-0001, RFC-0005, RFC-0013 (the key hierarchy these records are signed
-under), RFC-0024 (the gateway that applies the split below)
+client, export, hosting **Kind:** policy **Subject:** data **Horizon:** next **Supersedes:** none
+**Superseded by:** none **Task dependencies:** RFC-0001, RFC-0005, RFC-0013 (the key hierarchy these
+records are signed under), RFC-0024 (the gateway that applies the split below)
 
 ## Decision
 

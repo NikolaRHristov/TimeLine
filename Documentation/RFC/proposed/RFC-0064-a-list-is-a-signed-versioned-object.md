@@ -1,12 +1,12 @@
 # RFC-0064 - A list is a signed, versioned object
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the list collection,
-the list command, the `List/[Slug]` page, the export format **Decision class:** product
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0027 §7 (curation is one
-mechanism with two scopes), RFC-0017 (the gallery is the existing pages), RFC-0012 (a list has an
-audience like any row), RFC-0015 (a list is a line type in the export), RFC-0060 (the signature a
-list carries), RFC-0059 §3 (a quoted entry is a reference); implementing card to be created: "List
-object, version history and the list command"
+the list command, the `List/[Slug]` page, the export format **Kind:** contract **Subject:** data
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0027 §7
+(curation is one mechanism with two scopes), RFC-0017 (the gallery is the existing pages), RFC-0012
+(a list has an audience like any row), RFC-0015 (a list is a line type in the export), RFC-0060 (the
+signature a list carries), RFC-0059 §3 (a quoted entry is a reference); implementing card to be
+created: "List object, version history and the list command"
 
 ## Decision
 

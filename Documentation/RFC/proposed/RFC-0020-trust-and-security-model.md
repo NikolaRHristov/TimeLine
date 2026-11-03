@@ -1,11 +1,12 @@
 # RFC-0020 - Trust and security model
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module, the host,
-the client keystore, module rollouts **Decision class:** policy **Supersedes:** none **Superseded
-by:** none **Task dependencies:** RFC-0007 (encryption and the validation boundary), RFC-0013 (keys,
-epochs and room authorities), RFC-0012 (audiences), RFC-0014 (grants and revocation), RFC-0016
-(rollout and what the host observes); t_1621cc5c (substrate research); implementing card to be
-created: "Reducer authorization: signature verification, nonce, rate and module pinning"
+the client keystore, module rollouts **Kind:** policy **Subject:** identity **Horizon:** next
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0007 (encryption and the
+validation boundary), RFC-0013 (keys, epochs and room authorities), RFC-0012 (audiences), RFC-0014
+(grants and revocation), RFC-0016 (rollout and what the host observes); t_1621cc5c (substrate
+research); implementing card to be created: "Reducer authorization: signature verification, nonce,
+rate and module pinning"
 
 ## Decision
 

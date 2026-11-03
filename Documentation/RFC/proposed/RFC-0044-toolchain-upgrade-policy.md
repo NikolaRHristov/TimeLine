@@ -2,8 +2,8 @@
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the root
 `package.json`, `Scripts/Compatibility.mjs`, `pnpm run check`, the Node workflow, every dependency
-the site builds with **Decision class:** methodology **Supersedes:** none **Superseded by:** none
-**Task dependencies:** RFC-0009 (build, release and toolchain), t_344b78d0
+the site builds with **Kind:** method **Subject:** operation **Horizon:** now **Supersedes:** none
+**Superseded by:** none **Task dependencies:** RFC-0009 (build, release and toolchain), t_344b78d0
 
 ## Decision
 

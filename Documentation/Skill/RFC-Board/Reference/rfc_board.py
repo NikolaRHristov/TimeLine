@@ -47,9 +47,22 @@ DEFAULT_PROJECT = 1
 DEFAULT_BRANCH = "Current"
 
 STATUS_OPTIONS = ("Proposed", "Implemented")
-CLASS_OPTIONS = ("architecture", "product", "policy", "governance", "methodology")
-AREA_OPTIONS = ("site", "network", "identity", "tooling", "governance")
-FIELDS = ("RFC", "Status", "Class", "Area", "Cards")
+
+# The three classification axes, each a closed vocabulary. No value appears on
+# two axes: `governance` was a class and an area at once, so a table sorted by
+# one and a board filtered by the other returned the same rows, and the second
+# axis taught a reader nothing.
+AXES = (
+    ("Kind", ("architecture", "contract", "policy", "specification", "method")),
+    (
+        "Subject",
+        ("data", "transport", "identity", "surface", "network", "operation", "economy", "text"),
+    ),
+    ("Horizon", ("now", "next", "later")),
+)
+AXIS_OPTIONS = dict(AXES)
+
+FIELDS = ("RFC", "Status", "Kind", "Subject", "Horizon", "Cards")
 
 # Records per mutation request. Each record contributes up to five aliases, so a
 # slice of four stays inside the twenty aliases GitHub answers reliably; a wider
@@ -81,7 +94,7 @@ LEAK = re.compile(
 )
 
 HEADER_FIELD = re.compile(
-    r"\*\*(Status|Date|Owner|Applies to|Decision class|Supersedes|Superseded by|"
+    r"\*\*(Status|Date|Owner|Applies to|Kind|Subject|Horizon|Supersedes|Superseded by|"
     r"Task dependencies):\*\*"
 )
 H1 = re.compile(r"^# (RFC-\d{4})[ \t]+[-\u2014][ \t]+(.+)$")
@@ -104,13 +117,16 @@ query($p: ID!, $after: String) {
             ... on ProjectV2ItemFieldNumberValue { number }
             ... on ProjectV2ItemFieldTextValue { text }
           }
-          class: fieldValueByName(name: "Class") {
+          kind: fieldValueByName(name: "Kind") {
             ... on ProjectV2ItemFieldSingleSelectValue { name }
           }
           status: fieldValueByName(name: "Status") {
             ... on ProjectV2ItemFieldSingleSelectValue { name }
           }
-          area: fieldValueByName(name: "Area") {
+          subject: fieldValueByName(name: "Subject") {
+            ... on ProjectV2ItemFieldSingleSelectValue { name }
+          }
+          horizon: fieldValueByName(name: "Horizon") {
             ... on ProjectV2ItemFieldSingleSelectValue { name }
           }
           cards: fieldValueByName(name: "Cards") { ... on ProjectV2ItemFieldTextValue { text } }
@@ -215,9 +231,9 @@ def parse_record(path: Path) -> dict:
         "path": path.as_posix(),
         "status": fields.get("Status", "").split()[0] if fields.get("Status") else "",
         "date": fields.get("Date", ""),
-        "decision_class": fields.get("Decision class", "").split()[0]
-        if fields.get("Decision class")
-        else "",
+        "kind": fields.get("Kind", "").split()[0] if fields.get("Kind") else "",
+        "subject": fields.get("Subject", "").split()[0] if fields.get("Subject") else "",
+        "horizon": fields.get("Horizon", "").split()[0] if fields.get("Horizon") else "",
         "task_dependencies": fields.get("Task dependencies", ""),
         "applies_to": fields.get("Applies to", ""),
         "supersedes": fields.get("Supersedes", ""),
@@ -257,28 +273,14 @@ def load(root: Path) -> tuple[list[dict], list[str], list[tuple[str, str]], list
             warnings.append(
                 f"{record['id']}: Status {record['status']!r} is not one of {STATUS_OPTIONS}"
             )
-        if record["decision_class"] not in CLASS_OPTIONS:
-            warnings.append(
-                f"{record['id']}: Decision class {record['decision_class']!r} "
-                f"is not one of {CLASS_OPTIONS}"
-            )
+        for axis, options in AXES:
+            value = record[axis.lower()]
+            if value not in options:
+                warnings.append(
+                    f"{record['id']}: {axis} {value!r} is not one of {options}"
+                )
     records.sort(key=lambda record: record["number"])
     return records, skipped, errors, warnings
-
-
-def areas_of(root: Path, work: Path) -> dict[str, str]:
-    """The record-to-Area map, read from the skill tree and then from the work dir."""
-    candidates = [
-        Path(__file__).resolve().parent / "area.json",
-        root / "Documentation" / "Skill" / "RFC-Board" / "Reference" / "area.json",
-        work / "area.json",
-    ]
-    for candidate in candidates:
-        if candidate.is_file():
-            return json.loads(candidate.read_text(encoding="utf-8"))
-    raise SystemExit(
-        f"no area.json beside the tool; looked in {[str(c) for c in candidates]}"
-    )
 
 
 def cards_of(record: dict) -> list[str]:
@@ -302,9 +304,9 @@ def report_load(
             print(f"  FAIL {name}: {reason}")
     for warning in warnings:
         print(f"  warn {warning}")
-    classes = collections.Counter(record["decision_class"] for record in records)
+    classes = collections.Counter(record["kind"] for record in records)
     statuses = collections.Counter(record["status"] for record in records)
-    print(f"classes: {json.dumps(dict(sorted(classes.items())))}")
+    print(f"kinds: {json.dumps(dict(sorted(classes.items())))}")
     print(f"statuses: {json.dumps(dict(sorted(statuses.items())))}")
 
 
@@ -313,7 +315,7 @@ def report_load(
 # --------------------------------------------------------------------------- #
 
 
-def render_body(record: dict, area: str, slug: str, branch: str, tool: str) -> str:
+def render_body(record: dict, slug: str, branch: str, tool: str) -> str:
     cards = cards_of(record)
     cards_line = ", ".join(f"`{card}`" for card in cards) if cards else "none named"
     source_url = f"https://github.com/{slug}/blob/{branch}/{record['path']}"
@@ -324,8 +326,9 @@ def render_body(record: dict, area: str, slug: str, branch: str, tool: str) -> s
         "",
         "---",
         "",
-        f"**Class:** {record['decision_class']}  ",
-        f"**Area:** {area}  ",
+        f"**Kind:** {record['kind']}  ",
+        f"**Subject:** {record['subject']}  ",
+        f"**Horizon:** {record['horizon']}  ",
         f"**Status:** {record['status']}  ",
         f"**Task dependencies:** {record['task_dependencies']}  ",
         f"**Implementing cards:** {cards_line}  ",
@@ -346,16 +349,16 @@ def render_body(record: dict, area: str, slug: str, branch: str, tool: str) -> s
 
 
 def bodies_for(
-    records, areas, slug, branch, tool
+    records, slug, branch, tool
 ) -> tuple[dict[str, str], list[tuple[str, str]], list[str]]:
     bodies: dict[str, str] = {}
     leaks: list[tuple[str, str]] = []
     unplaced: list[str] = []
     for record in records:
-        area = areas.get(record["id"], "")
-        if not area:
-            unplaced.append(record["id"])
-        body = render_body(record, area or "unplaced", slug, branch, tool)
+        missing = [axis for axis, _ in AXES if not record[axis.lower()]]
+        if missing:
+            unplaced.append(f"{record['id']} ({', '.join(missing)})")
+        body = render_body(record, slug, branch, tool)
         bodies[record["id"]] = body
         for match in LEAK.finditer(body):
             leaks.append((record["id"], match.group(0)))
@@ -545,9 +548,10 @@ def item_index(project: str) -> dict[str, dict]:
             items[content["title"]] = {
                 "id": node["id"],
                 "rfc": rfc_number(node.get("rfc")),
-                "class": (node.get("class") or {}).get("name"),
+                "kind": (node.get("kind") or {}).get("name"),
                 "status": (node.get("status") or {}).get("name"),
-                "area": (node.get("area") or {}).get("name"),
+                "subject": (node.get("subject") or {}).get("name"),
+                "horizon": (node.get("horizon") or {}).get("name"),
                 "cards": (node.get("cards") or {}).get("text"),
             }
         if not page["pageInfo"]["hasNextPage"]:
@@ -625,7 +629,7 @@ def sync_readme(
 
 
 def cmd_readme(args) -> int:
-    root, work, records, areas, slug = prepare(args)
+    root, work, records, slug = prepare(args)
     project = project_id(args.owner, args.project)
     status, failures = sync_readme(project, records, args.dry_run)
     print(f"project readme: {status}")
@@ -634,7 +638,7 @@ def cmd_readme(args) -> int:
     return 1 if failures else 0
 
 
-def prepare(args) -> tuple[Path, Path, list[dict], dict[str, str], str]:
+def prepare(args) -> tuple[Path, Path, list[dict], str]:
     root = repo_root()
     work = (
         Path(args.work).resolve()
@@ -648,17 +652,16 @@ def prepare(args) -> tuple[Path, Path, list[dict], dict[str, str], str]:
         raise SystemExit(
             f"{len(errors)} committed record(s) could not be read; nothing published"
         )
-    areas = areas_of(root, work)
     (work / "records.json").write_text(
         json.dumps(records, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
-    return root, work, records, areas, f"{args.owner}/{args.repo}"
+    return root, work, records, f"{args.owner}/{args.repo}"
 
 
 def cmd_render(args) -> int:
-    root, work, records, areas, slug = prepare(args)
+    root, work, records, slug = prepare(args)
     tool = relative_tool(root)
-    bodies, leaks, unplaced = bodies_for(records, areas, slug, args.branch, tool)
+    bodies, leaks, unplaced = bodies_for(records, slug, args.branch, tool)
     out = work / "bodies"
     out.mkdir(parents=True, exist_ok=True)
     for record in records:
@@ -669,7 +672,7 @@ def cmd_render(args) -> int:
     for record_id, hit in leaks:
         print(f"  LEAK {record_id}: {hit!r}")
     if unplaced:
-        print(f"records with no Area in area.json: {len(unplaced)} -> {unplaced}")
+        print(f"records missing an axis: {len(unplaced)} -> {unplaced}")
 
     broken = [
         record["id"]
@@ -691,9 +694,9 @@ def relative_tool(root: Path) -> str:
 
 
 def cmd_publish(args) -> int:
-    root, work, records, areas, slug = prepare(args)
+    root, work, records, slug = prepare(args)
     tool = relative_tool(root)
-    bodies, leaks, unplaced = bodies_for(records, areas, slug, args.branch, tool)
+    bodies, leaks, unplaced = bodies_for(records, slug, args.branch, tool)
     if leaks:
         for record_id, hit in leaks:
             print(f"  LEAK {record_id}: {hit!r}")
@@ -711,19 +714,12 @@ def cmd_publish(args) -> int:
     if missing_fields:
         print(f"  warn fields absent from the project: {missing_fields}")
     rfc_text = fields.get("RFC", {}).get("dataType") == "TEXT"
-    options = {
-        "Status": option_id(fields, "Status", "Proposed"),
-        "Class": {
-            name: option_id(fields, "Class", name)
-            for name in CLASS_OPTIONS
-            if name in [o["name"] for o in fields.get("Class", {}).get("options", [])]
-        },
-        "Area": {
-            name: option_id(fields, "Area", name)
-            for name in AREA_OPTIONS
-            if name in [o["name"] for o in fields.get("Area", {}).get("options", [])]
-        },
-    }
+    options: dict[str, object] = {"Status": option_id(fields, "Status", "Proposed")}
+    for axis, values in AXES:
+        present = [option["name"] for option in fields.get(axis, {}).get("options", [])]
+        options[axis] = {
+            name: option_id(fields, axis, name) for name in values if name in present
+        }
     ids = {name: fields[name]["id"] for name in FIELDS if name in fields}
 
     issues = issue_index(slug, args.limit, with_body=True)
@@ -827,9 +823,10 @@ def cmd_publish(args) -> int:
                     items[title] = {
                         "id": item_id,
                         "rfc": None,
-                        "class": None,
+                        "kind": None,
                         "status": None,
-                        "area": None,
+                        "subject": None,
+                        "horizon": None,
                         "cards": None,
                     }
                     attached += 1

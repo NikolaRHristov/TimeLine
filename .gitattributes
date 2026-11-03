@@ -1,4 +1,12 @@
-# Shell scripts keep LF. With `core.autocrlf=true` a checkout would otherwise
-# write CRLF, and the shebang reads as `env: bash\r`: the interpreter is not
-# found and the script refuses to run on macOS and Linux.
+# Text files keep LF in the working tree. `prettier.config.mjs` sets
+# `endOfLine: "lf"`, so a CRLF checkout fails `prettier --check` on every file at
+# once, and the editor's own `files.eol` cannot repair a file nobody opened. The
+# global `core.autocrlf=true` on this machine would otherwise do exactly that:
+# `.npmignore` and `.npmrc` sat in the working tree with CRLF while their
+# committed bytes were LF.
+* text=auto eol=lf
+
+# Called out separately because a shebang is unforgiving: with CRLF the
+# interpreter reads `env: bash\r`, is not found, and the script refuses to run on
+# macOS and Linux. `*.sh` keeps this rule even if the one above is narrowed.
 *.sh text eol=lf

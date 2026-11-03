@@ -1,8 +1,8 @@
 # RFC-0008 - Media handling
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the extractor, the
-shadow store, export, the site build **Decision class:** architecture **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0001
+shadow store, export, the site build **Kind:** architecture **Subject:** data **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001
 
 ## Decision
 

@@ -1,10 +1,11 @@
 # RFC-0039 - Billing and metering
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the meter, the room's
-bill, the cap, the invite price **Decision class:** product **Supersedes:** none **Superseded by:**
-none **Task dependencies:** RFC-0016 §1 (the unit model is published), RFC-0027 §6 (the paid product
-is hosting, never content), RFC-0032 §5 (exhaustion degrades), RFC-0005 (the tenancy unit is the
-database); implementing card to be created: "Meter rows and the room bill view"
+bill, the cap, the invite price **Kind:** policy **Subject:** economy **Horizon:** next
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0016 §1 (the unit model is
+published), RFC-0027 §6 (the paid product is hosting, never content), RFC-0032 §5 (exhaustion
+degrades), RFC-0005 (the tenancy unit is the database); implementing card to be created: "Meter rows
+and the room bill view"
 
 ## Decision
 

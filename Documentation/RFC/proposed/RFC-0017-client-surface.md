@@ -1,12 +1,12 @@
 # RFC-0017 - Client surface
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the Astro site, the
-service worker, the vote subsystem, the room client **Decision class:** product **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0001 (publication is the only layer the build
-reads), RFC-0003 (the transport seam), RFC-0012 (audiences), RFC-0018 (a queued write is a run),
-RFC-0007 (the client holds the keys); t_7936cc8e (transport seam), t_6e510f8e (content layer),
-t_406cc8ab (voted index); implementing card to be created: "Room client - live feed, ratings and
-comments over the static shell"
+service worker, the vote subsystem, the room client **Kind:** architecture **Subject:** surface
+**Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001
+(publication is the only layer the build reads), RFC-0003 (the transport seam), RFC-0012
+(audiences), RFC-0018 (a queued write is a run), RFC-0007 (the client holds the keys); t_7936cc8e
+(transport seam), t_6e510f8e (content layer), t_406cc8ab (voted index); implementing card to be
+created: "Room client - live feed, ratings and comments over the static shell"
 
 ## Decision
 

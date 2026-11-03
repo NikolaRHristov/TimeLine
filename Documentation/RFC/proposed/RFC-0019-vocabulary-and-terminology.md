@@ -1,12 +1,12 @@
 # RFC-0019 - Vocabulary and terminology
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every document, every
-identifier, every table and command name **Decision class:** governance **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0010 (documentation and template policy),
-RFC-0001 (the store's terms), RFC-0005 (room, federation), RFC-0012 (audience, propagation),
-RFC-0013 (identity, epoch, authority), RFC-0018 (run, span); t_23dc5d47 (account-agnostic naming),
-t_bceac9f5 (PascalCase convention); implementing card to be created: "Glossary as the naming
-authority, with the membership/curation rename"
+identifier, every table and command name **Kind:** specification **Subject:** text **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0010 (documentation and
+template policy), RFC-0001 (the store's terms), RFC-0005 (room, federation), RFC-0012 (audience,
+propagation), RFC-0013 (identity, epoch, authority), RFC-0018 (run, span); t_23dc5d47
+(account-agnostic naming), t_bceac9f5 (PascalCase convention); implementing card to be created:
+"Glossary as the naming authority, with the membership/curation rename"
 
 ## Decision
 

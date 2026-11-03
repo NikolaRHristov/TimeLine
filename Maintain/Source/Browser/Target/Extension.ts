@@ -1,6 +1,6 @@
+import type { RawTarget } from "../../Model/Tab/Tab.ts";
 import { connect } from "../CDP/Client.ts";
 import { evaluate } from "../CDP/Command/Evaluate.ts";
-import type { RawTarget } from "../../Model/Tab/Tab.ts";
 
 /**
  * What the browser's own extensions know about targets.
@@ -43,12 +43,15 @@ const PROBE = `(async () => {
 })()`;
 
 /** Extension workers are the only place `chrome.*` is callable. */
-function workers(rawTargets: readonly RawTarget[]): { id: string; url: string; webSocketDebuggerUrl: string }[] {
+function workers(
+	rawTargets: readonly RawTarget[],
+): { id: string; url: string; webSocketDebuggerUrl: string }[] {
 	const found: { id: string; url: string; webSocketDebuggerUrl: string }[] = [];
 	for (const target of rawTargets) {
 		const url = typeof target.url === "string" ? target.url : "";
 		const id = typeof target.id === "string" ? target.id : "";
-		const socket = typeof target.webSocketDebuggerUrl === "string" ? target.webSocketDebuggerUrl : "";
+		const socket =
+			typeof target.webSocketDebuggerUrl === "string" ? target.webSocketDebuggerUrl : "";
 		if (!url.startsWith("chrome-extension://")) continue;
 		if (target.type !== "service_worker" && target.type !== "background_page") continue;
 		if (id === "" || socket === "") continue;
@@ -78,7 +81,9 @@ export async function inspect(
 	for (const worker of workers(rawTargets)) {
 		let client: Awaited<ReturnType<typeof connect>> | null = null;
 		try {
-			client = await connect(worker.webSocketDebuggerUrl, { timeout: options.timeout ?? 3000 });
+			client = await connect(worker.webSocketDebuggerUrl, {
+				timeout: options.timeout ?? 3000,
+			});
 			const probe = await evaluate<Probe | null>(client, PROBE);
 			if (probe === null) continue;
 			answered += 1;
@@ -93,7 +98,9 @@ export async function inspect(
 	}
 
 	if (answered === 0 && failed > 0) {
-		process.stderr.write("maintain: no extension answered the target probe; assuming nothing is attached\n");
+		process.stderr.write(
+			"maintain: no extension answered the target probe; assuming nothing is attached\n",
+		);
 	}
 	if (activeTabId !== null) view.active = tabMap.get(activeTabId) ?? null;
 	return view;

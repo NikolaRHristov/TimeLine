@@ -1,11 +1,11 @@
 # RFC-0023 - Delegation of custody
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the delegation table,
-the client's custody screen, revocation, publication **Decision class:** product **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0012 (audience is who may read; this record
-is where a copy is held), RFC-0013 (revocation rotates an epoch), RFC-0014 (grants and membership),
-RFC-0016 (the host is a holder), RFC-0026 (a peer is a holder); implementing card to be created:
-"Delegation rows, revocation and the custody screen"
+the client's custody screen, revocation, publication **Kind:** contract **Subject:** identity
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0012
+(audience is who may read; this record is where a copy is held), RFC-0013 (revocation rotates an
+epoch), RFC-0014 (grants and membership), RFC-0016 (the host is a holder), RFC-0026 (a peer is a
+holder); implementing card to be created: "Delegation rows, revocation and the custody screen"
 
 ## Decision
 

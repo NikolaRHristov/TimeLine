@@ -1,12 +1,13 @@
 # RFC-0070 - A room starts from a template the module ships
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** room creation, the
-module's initial rows, the rule set, seeding **Decision class:** product **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0025 §1 (the module is a versioned artifact and
-the template is a row inside it), RFC-0014 (room creation is a publish), RFC-0031 §6 (a rule set
-exists at creation and is versioned), RFC-0012 (the audience defaults a template supplies), RFC-0062
-(seeding from an archive is an import), RFC-0045 (a template names no visual choice); implementing
-card to be created: "Room template row and the creation transaction"
+module's initial rows, the rule set, seeding **Kind:** architecture **Subject:** network
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0025 §1
+(the module is a versioned artifact and the template is a row inside it), RFC-0014 (room creation is
+a publish), RFC-0031 §6 (a rule set exists at creation and is versioned), RFC-0012 (the audience
+defaults a template supplies), RFC-0062 (seeding from an archive is an import), RFC-0045 (a template
+names no visual choice); implementing card to be created: "Room template row and the creation
+transaction"
 
 ## Decision
 

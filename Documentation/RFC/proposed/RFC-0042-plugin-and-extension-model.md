@@ -1,11 +1,11 @@
 # RFC-0042 - Plugin and extension model
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** module composition,
-the review record, revocation by republish **Decision class:** architecture **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0025 §3 (a module is composed from reviewed
-libraries), RFC-0022 (egress is declared and the database is the isolation unit), RFC-0024 §1 (one
-action entry point), RFC-0016 §2 (staged rollout); implementing card to be created: "Composition
-manifest and the library review record"
+the review record, revocation by republish **Kind:** policy **Subject:** network **Horizon:** next
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0025 §3 (a module is
+composed from reviewed libraries), RFC-0022 (egress is declared and the database is the isolation
+unit), RFC-0024 §1 (one action entry point), RFC-0016 §2 (staged rollout); implementing card to be
+created: "Composition manifest and the library review record"
 
 ## Decision
 

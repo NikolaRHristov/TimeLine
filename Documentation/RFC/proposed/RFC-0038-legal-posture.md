@@ -1,11 +1,11 @@
 # RFC-0038 - Legal posture
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the privacy notice,
-access and erasure requests, residency claims, lawful requests, hosting strangers **Decision
-class:** policy **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0016 §4
-(what the host observes), RFC-0015 (the export is the access answer), RFC-0028 §4 (erasure is per
-author), RFC-0013 (no server-side escrow by default), RFC-0031 §4 (the host's only lever);
-implementing card to be created: "Privacy notice and the takedown procedure"
+access and erasure requests, residency claims, lawful requests, hosting strangers **Kind:** policy
+**Subject:** operation **Horizon:** next **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0016 §4 (what the host observes), RFC-0015 (the export is the access answer),
+RFC-0028 §4 (erasure is per author), RFC-0013 (no server-side escrow by default), RFC-0031 §4 (the
+host's only lever); implementing card to be created: "Privacy notice and the takedown procedure"
 
 ## Decision
 

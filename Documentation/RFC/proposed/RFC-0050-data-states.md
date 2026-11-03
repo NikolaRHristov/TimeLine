@@ -1,9 +1,10 @@
 # RFC-0050 - The data states
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every surface that
-reads a collection, the empty and partial states, the failure vocabulary **Decision class:**
-architecture **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (offline
-as a first-class state), RFC-0049 (the component states), RFC-0038 (what the operator owes)
+reads a collection, the empty and partial states, the failure vocabulary **Kind:** specification
+**Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0017 (offline as a first-class state), RFC-0049 (the component states), RFC-0038
+(what the operator owes)
 
 ## Decision
 

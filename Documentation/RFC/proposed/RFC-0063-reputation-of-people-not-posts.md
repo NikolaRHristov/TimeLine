@@ -1,12 +1,12 @@
 # RFC-0063 - Reputation of people, never of posts
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** votes, member
-statements, standing, the cost of an identity **Decision class:** governance **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0027 §2 (a vote is a nomination and a rating is a
-vote record; this record keeps it about placement), RFC-0031 (removal cites a published rule and an
-appeal expires), RFC-0032 §3 and RFC-0039 §6 (the seat price that is the only sybil cost), RFC-0058
-(a room's public face says what its reputation set costs); implementing card to be created: "Member
-statement row and the standing view"
+statements, standing, the cost of an identity **Kind:** specification **Subject:** identity
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0027 §2 (a
+vote is a nomination and a rating is a vote record; this record keeps it about placement), RFC-0031
+(removal cites a published rule and an appeal expires), RFC-0032 §3 and RFC-0039 §6 (the seat price
+that is the only sybil cost), RFC-0058 (a room's public face says what its reputation set costs);
+implementing card to be created: "Member statement row and the standing view"
 
 ## Decision
 

@@ -1,12 +1,12 @@
 # RFC-0065 - A digest chain, and a drill that runs
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the shadow store's
-file format, `store verify`, the drill command, the archive's RPO and RTO **Decision class:**
-architecture **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001 (the store
-is the only complete history), RFC-0015 (the `rootHash` this record gives a producer and a
-consumer), RFC-0018 (a drill is a run), RFC-0011 (RPO and RTO are terms), RFC-0066 (where a member
-sees the last drill); implementing card to be created: "Store hash chain, digests and the restore
-drill"
+file format, `store verify`, the drill command, the archive's RPO and RTO **Kind:** architecture
+**Subject:** data **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0001 (the store is the only complete history), RFC-0015 (the `rootHash` this
+record gives a producer and a consumer), RFC-0018 (a drill is a run), RFC-0011 (RPO and RTO are
+terms), RFC-0066 (where a member sees the last drill); implementing card to be created: "Store hash
+chain, digests and the restore drill"
 
 This record covers two topics the wave named separately - archive integrity and disaster recovery
 drills - because a digest nobody restores proves the wrong thing and a restore nobody digests proves

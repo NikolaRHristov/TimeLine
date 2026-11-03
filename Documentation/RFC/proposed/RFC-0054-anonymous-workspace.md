@@ -1,10 +1,10 @@
 # RFC-0054 - The anonymous workspace
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `/Workspace`, the
-session slot, every control that requires an identity **Decision class:** product **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0017 (the live layer and offline), RFC-0043
-(the seam and the three roles), RFC-0048 (the status surfaces), RFC-0049 (`locked`), RFC-0050 (the
-data states), RFC-0053 (the showcase surface)
+session slot, every control that requires an identity **Kind:** architecture **Subject:** surface
+**Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (the
+live layer and offline), RFC-0043 (the seam and the three roles), RFC-0048 (the status surfaces),
+RFC-0049 (`locked`), RFC-0050 (the data states), RFC-0053 (the showcase surface)
 
 ## Decision
 

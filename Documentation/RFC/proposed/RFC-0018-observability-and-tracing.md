@@ -1,12 +1,12 @@
 # RFC-0018 - Observability and tracing
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every command in
-`Maintain/Source/Command/`, the transport seam, the module's event table **Decision class:**
-architecture **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001 (the
-shadow store is the authority and already holds events), RFC-0003 (the seam a span crosses),
-RFC-0004 (job orchestration), RFC-0016 (per-room health); t_7936cc8e (transport), t_92e48af0 (a
-failure that left no trace); implementing card to be created: "Runs and spans across the CLI, the
-transport and the module"
+`Maintain/Source/Command/`, the transport seam, the module's event table **Kind:** architecture
+**Subject:** operation **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0001 (the shadow store is the authority and already holds events), RFC-0003 (the
+seam a span crosses), RFC-0004 (job orchestration), RFC-0016 (per-room health); t_7936cc8e
+(transport), t_92e48af0 (a failure that left no trace); implementing card to be created: "Runs and
+spans across the CLI, the transport and the module"
 
 ## Decision
 

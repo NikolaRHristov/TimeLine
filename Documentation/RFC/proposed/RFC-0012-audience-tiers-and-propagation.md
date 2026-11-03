@@ -1,10 +1,11 @@
 # RFC-0012 - Audience tiers and propagation
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module, the
-envelope (RFC-0007), the static site's publication step, federation **Decision class:** product
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (rooms are databases),
-RFC-0007 (the envelope), RFC-0013 (widening needs a signature); t_1621cc5c (substrate research);
-implementing card to be created: "Audience tiers and the propagation record in the module"
+envelope (RFC-0007), the static site's publication step, federation **Kind:** contract **Subject:**
+data **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005
+(rooms are databases), RFC-0007 (the envelope), RFC-0013 (widening needs a signature); t_1621cc5c
+(substrate research); implementing card to be created: "Audience tiers and the propagation record in
+the module"
 
 ## Decision
 

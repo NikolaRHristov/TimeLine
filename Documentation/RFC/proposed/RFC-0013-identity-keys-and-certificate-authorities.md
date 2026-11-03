@@ -1,11 +1,11 @@
 # RFC-0013 - Identity, keys and certificate authorities
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the client keystore,
-the module's key tables, invitations, revocation **Decision class:** policy **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0007 (encryption and the envelope; this record
-closes its key-custody questions), RFC-0005 (membership is per room), RFC-0012 (widening needs a
-signature), RFC-0011 (key material is a configuration term); implementing card to be created:
-"Identity, key epochs and room authorities"
+the module's key tables, invitations, revocation **Kind:** policy **Subject:** identity **Horizon:**
+next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0007 (encryption and
+the envelope; this record closes its key-custody questions), RFC-0005 (membership is per room),
+RFC-0012 (widening needs a signature), RFC-0011 (key material is a configuration term); implementing
+card to be created: "Identity, key epochs and room authorities"
 
 ## Decision
 

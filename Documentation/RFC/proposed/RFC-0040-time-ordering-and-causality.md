@@ -1,11 +1,11 @@
 # RFC-0040 - Time, ordering and causality
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every row's timestamp,
-the replay window, observation reconciliation, the migration seam **Decision class:** architecture
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0022 §2 (a reducer reads no
-clock), RFC-0007 (the envelope's timestamp field), RFC-0021 §4 (reconciliation by `at`), RFC-0033 §6
-(cutover and two clocks); implementing card to be created: "Accepted time and claimed time on every
-row"
+the replay window, observation reconciliation, the migration seam **Kind:** architecture
+**Subject:** data **Horizon:** next **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0022 §2 (a reducer reads no clock), RFC-0007 (the envelope's timestamp field),
+RFC-0021 §4 (reconciliation by `at`), RFC-0033 §6 (cutover and two clocks); implementing card to be
+created: "Accepted time and claimed time on every row"
 
 ## Decision
 

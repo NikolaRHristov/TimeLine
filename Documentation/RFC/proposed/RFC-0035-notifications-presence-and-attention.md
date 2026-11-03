@@ -1,10 +1,11 @@
 # RFC-0035 - Notifications, presence and attention
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the client's attention
-layer, presence rows, digests **Decision class:** product **Supersedes:** none **Superseded by:**
-none **Task dependencies:** RFC-0025 §5 (live rows are a per-member view), RFC-0007 (the host cannot
-compose a message), RFC-0016 §4 (what the host observes), RFC-0011 (attention terms); implementing
-card to be created: "Attention budget and the derived digest"
+layer, presence rows, digests **Kind:** architecture **Subject:** transport **Horizon:** next
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0025 §5 (live rows are a
+per-member view), RFC-0007 (the host cannot compose a message), RFC-0016 §4 (what the host
+observes), RFC-0011 (attention terms); implementing card to be created: "Attention budget and the
+derived digest"
 
 ## Decision
 

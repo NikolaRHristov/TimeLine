@@ -1,10 +1,11 @@
 # RFC-0037 - Testing and simulation strategy
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the pure layer, the
-module, the client, the federation **Decision class:** methodology **Supersedes:** none **Superseded
-by:** none **Task dependencies:** RFC-0001 (the observation log is a recording), RFC-0002 (one
-schema to test), RFC-0003 (`view` is a transport), RFC-0020 (the engine does not authorize for the
-module); implementing card to be created: "Fixture rooms and the replay harness"
+module, the client, the federation **Kind:** method **Subject:** operation **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001 (the observation log is
+a recording), RFC-0002 (one schema to test), RFC-0003 (`view` is a transport), RFC-0020 (the engine
+does not authorize for the module); implementing card to be created: "Fixture rooms and the replay
+harness"
 
 ## Decision
 

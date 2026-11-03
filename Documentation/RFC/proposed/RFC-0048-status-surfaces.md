@@ -1,10 +1,11 @@
 # RFC-0048 - The status surfaces
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the footer band, the
-rail's security cluster, every surface that states liveness **Decision class:** product
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (the live layer and
-offline as a first-class state), RFC-0020 (the trust model), RFC-0026 (peer-carried transport),
-RFC-0045 (the material), RFC-0046 (the spectrometer), RFC-0047 (the swimlanes)
+rail's security cluster, every surface that states liveness **Kind:** specification **Subject:**
+surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:**
+RFC-0017 (the live layer and offline as a first-class state), RFC-0020 (the trust model), RFC-0026
+(peer-carried transport), RFC-0045 (the material), RFC-0046 (the spectrometer), RFC-0047 (the
+swimlanes)
 
 ## Decision
 

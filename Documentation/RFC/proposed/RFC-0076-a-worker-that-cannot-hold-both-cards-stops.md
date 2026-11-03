@@ -1,9 +1,9 @@
 # RFC-0076 - A worker that cannot hold both cards stops
 
 **Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:** every card worked on
-the shared board, and the coordinator that decomposes an epic **Decision class:** methodology
-**Supersedes:** none **Superseded by:** none **Task dependencies:** extends
-`Documentation/Skill/Parallel-Epic-Execution/SKILL.md:86-94` from a pitfall into a decision,
+the shared board, and the coordinator that decomposes an epic **Kind:** method **Subject:**
+operation **Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:**
+extends `Documentation/Skill/Parallel-Epic-Execution/SKILL.md:86-94` from a pitfall into a decision,
 RFC-0010 (documentation and template policy); implementing card to be created: "Make the block kind
 and the decision comment part of the card template"
 

@@ -1,8 +1,8 @@
 # RFC-0006 - Harvesting posture
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `store scrape`, the
-transport seam, the shadow store **Decision class:** policy **Supersedes:** none **Superseded by:**
-none **Task dependencies:** RFC-0003, RFC-0004
+transport seam, the shadow store **Kind:** policy **Subject:** operation **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0003, RFC-0004
 
 ## Decision
 

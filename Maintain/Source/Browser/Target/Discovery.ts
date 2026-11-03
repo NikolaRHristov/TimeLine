@@ -29,7 +29,10 @@ export async function getJson<T>(url: string, timeout = 5000, method = "GET"): P
 		});
 	}
 	if (!response.ok) {
-		throw fail("cdp-unreachable", `GET ${url} answered ${response.status}`, { url, status: response.status });
+		throw fail("cdp-unreachable", `GET ${url} answered ${response.status}`, {
+			url,
+			status: response.status,
+		});
 	}
 	try {
 		return (await response.json()) as T;

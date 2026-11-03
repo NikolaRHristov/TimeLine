@@ -1,10 +1,11 @@
 # RFC-0027 - Product surface and curation economics
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the curated index, the
-vote subsystem, the operator's powers, pricing **Decision class:** product **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0017 (the client surface the gallery is built
-from), RFC-0012 (what may be published at all), RFC-0016 (what is sold), RFC-0023 (publication is a
-delegation), RFC-0015 (exit is free); t_406cc8ab (owner-gated curation landed)
+vote subsystem, the operator's powers, pricing **Kind:** policy **Subject:** economy **Horizon:**
+now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (the client surface
+the gallery is built from), RFC-0012 (what may be published at all), RFC-0016 (what is sold),
+RFC-0023 (publication is a delegation), RFC-0015 (exit is free); t_406cc8ab (owner-gated curation
+landed)
 
 ## Decision
 

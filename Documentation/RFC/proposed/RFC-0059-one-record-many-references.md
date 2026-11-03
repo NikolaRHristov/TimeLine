@@ -1,12 +1,12 @@
 # RFC-0059 - One record, many references
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the post row, the
-envelope, the propagation record, the tombstone **Decision class:** architecture **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0021 §4 (reconciliation inside a room,
-extended here across rooms), RFC-0005 (a room is a database, so no shared table exists to
-canonicalise in), RFC-0028 §2 (the tombstone this record propagates), RFC-0012 and RFC-0023 §5 (a
-delivered copy cannot be recalled); implementing card to be created: "Post key, propagation row and
-the retraction reducer"
+envelope, the propagation record, the tombstone **Kind:** architecture **Subject:** data
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0021 §4
+(reconciliation inside a room, extended here across rooms), RFC-0005 (a room is a database, so no
+shared table exists to canonicalise in), RFC-0028 §2 (the tombstone this record propagates),
+RFC-0012 and RFC-0023 §5 (a delivered copy cannot be recalled); implementing card to be created:
+"Post key, propagation row and the retraction reducer"
 
 ## Decision
 

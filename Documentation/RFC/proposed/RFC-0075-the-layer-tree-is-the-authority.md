@@ -2,11 +2,11 @@
 
 **Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:** design intake from a
 design file into `Documentation/Reference/`, and the tools under
-`Documentation/Skill/Figma-MCP/Reference/` **Decision class:** methodology **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0017 (client surface), RFC-0045 (the material,
-the tokens and the component contract), RFC-0072 (a verifier asserts the spec - the record this one
-feeds numbers into); implementing card to be created: "Carry a node id from the metadata reply into
-the spec's invariant table"
+`Documentation/Skill/Figma-MCP/Reference/` **Kind:** method **Subject:** operation **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (client surface),
+RFC-0045 (the material, the tokens and the component contract), RFC-0072 (a verifier asserts the
+spec - the record this one feeds numbers into); implementing card to be created: "Carry a node id
+from the metadata reply into the spec's invariant table"
 
 ## Decision
 

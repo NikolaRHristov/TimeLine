@@ -1,10 +1,11 @@
 # RFC-0041 - Analytics without reading content
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the countable set, the
-published aggregate, the suppression floor **Decision class:** policy **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0007 (the module reads the envelope), RFC-0016 §4
-(the host's enumeration is not analytics), RFC-0021 §5 (completeness per identity), RFC-0035 §7 (no
-read receipts); implementing card to be created: "Room metrics view and the cohort floor"
+published aggregate, the suppression floor **Kind:** policy **Subject:** operation **Horizon:** next
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0007 (the module reads the
+envelope), RFC-0016 §4 (the host's enumeration is not analytics), RFC-0021 §5 (completeness per
+identity), RFC-0035 §7 (no read receipts); implementing card to be created: "Room metrics view and
+the cohort floor"
 
 ## Decision
 

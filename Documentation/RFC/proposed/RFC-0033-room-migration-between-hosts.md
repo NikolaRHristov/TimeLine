@@ -1,11 +1,11 @@
 # RFC-0033 - Room migration between hosts
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** export, the new host's
-database, epoch rotation at cutover, the old host's deletion **Decision class:** architecture
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0015 (the export is the only
-complete copy), RFC-0025 §1 (the artifact is content-addressed), RFC-0013 (epochs travel wrapped),
-RFC-0014 (archive is the default close), RFC-0016 §5 (a provider stopping is planned); implementing
-card to be created: "Migration record and cutover"
+database, epoch rotation at cutover, the old host's deletion **Kind:** architecture **Subject:**
+network **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
+RFC-0015 (the export is the only complete copy), RFC-0025 §1 (the artifact is content-addressed),
+RFC-0013 (epochs travel wrapped), RFC-0014 (archive is the default close), RFC-0016 §5 (a provider
+stopping is planned); implementing card to be created: "Migration record and cutover"
 
 ## Decision
 

@@ -1,11 +1,12 @@
 # RFC-0022 - Room isolation on a host
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the host, the module's
-egress surface, federation calls, per-room failure domains **Decision class:** policy
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (the room is the
-database), RFC-0007 (ciphertext is the boundary that holds against the host), RFC-0016 (the host
-contract this record extends), RFC-0020 (the threat model this record serves); t_1621cc5c (substrate
-research); implementing card to be created: "Module egress gate and the federation allowlist"
+egress surface, federation calls, per-room failure domains **Kind:** policy **Subject:** network
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (the
+room is the database), RFC-0007 (ciphertext is the boundary that holds against the host), RFC-0016
+(the host contract this record extends), RFC-0020 (the threat model this record serves); t_1621cc5c
+(substrate research); implementing card to be created: "Module egress gate and the federation
+allowlist"
 
 ## Decision
 

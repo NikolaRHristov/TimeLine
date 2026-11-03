@@ -1,10 +1,10 @@
 # RFC-0049 - The component state model
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every component in
-`Source/Component/`, the state vocabulary, the material's state rules **Decision class:**
-architecture **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0045 (the
-material and the token set), RFC-0019 (vocabulary), RFC-0050 (the data states), RFC-0051 (the token
-lifecycle)
+`Source/Component/`, the state vocabulary, the material's state rules **Kind:** specification
+**Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0045 (the material and the token set), RFC-0019 (vocabulary), RFC-0050 (the data
+states), RFC-0051 (the token lifecycle)
 
 ## Decision
 

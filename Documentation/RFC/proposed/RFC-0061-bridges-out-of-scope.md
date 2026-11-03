@@ -1,12 +1,12 @@
 # RFC-0061 - Bridges are out of scope; the export is the interface
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** federation scope, the
-export format, versioning **Decision class:** product **Supersedes:** none **Superseded by:** none
-**Task dependencies:** RFC-0015 (the export that is the whole interop story), RFC-0023 §3
-(publication is a delegation out of the room, which is what a bridge would be), RFC-0034 (the format
-version a bridge would depend on), RFC-0007 (the host cannot read, which is why a bridge cannot
-carry an audience); implementing card to be created: none - this record decides that no card is
-created
+export format, versioning **Kind:** policy **Subject:** network **Horizon:** later **Supersedes:**
+none **Superseded by:** none **Task dependencies:** RFC-0015 (the export that is the whole interop
+story), RFC-0023 §3 (publication is a delegation out of the room, which is what a bridge would be),
+RFC-0034 (the format version a bridge would depend on), RFC-0007 (the host cannot read, which is why
+a bridge cannot carry an audience); implementing card to be created: none - this record decides that
+no card is created
 
 ## Decision
 

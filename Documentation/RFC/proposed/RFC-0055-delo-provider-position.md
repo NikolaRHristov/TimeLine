@@ -1,10 +1,11 @@
 # RFC-0055 - DELO and the provider position
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the brand, the
-vocabulary of an action, the promise the showcase pages make, the footer attribution **Decision
-class:** product **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0013
-(identity and keys), RFC-0019 (vocabulary), RFC-0020 (the trust model), RFC-0026 (peer-carried
-transport), RFC-0038 (what the operator owes), RFC-0047 (the swimlanes), RFC-0053 (the showcase)
+vocabulary of an action, the promise the showcase pages make, the footer attribution **Kind:**
+policy **Subject:** economy **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0013 (identity and keys), RFC-0019 (vocabulary), RFC-0020 (the trust model),
+RFC-0026 (peer-carried transport), RFC-0038 (what the operator owes), RFC-0047 (the swimlanes),
+RFC-0053 (the showcase)
 
 ## Decision
 

@@ -2,12 +2,12 @@
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the member's views,
 the store's read surface, the publication and propagation records, the grant and epoch lists
-**Decision class:** product **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0018 (the operational half - runs and spans - which this record does not restate), RFC-0021 §2
-(an observation names its observer), RFC-0023 §3 (publication is a delegation), RFC-0014 (grants),
-RFC-0013 (the wraps this record makes readable), RFC-0050 (the vocabulary for an empty state),
-RFC-0041 (the aggregate, content-blind analytics this record is not); implementing card to be
-created: "The four member views"
+**Kind:** contract **Subject:** data **Horizon:** next **Supersedes:** none **Superseded by:** none
+**Task dependencies:** RFC-0018 (the operational half - runs and spans - which this record does not
+restate), RFC-0021 §2 (an observation names its observer), RFC-0023 §3 (publication is a
+delegation), RFC-0014 (grants), RFC-0013 (the wraps this record makes readable), RFC-0050 (the
+vocabulary for an empty state), RFC-0041 (the aggregate, content-blind analytics this record is
+not); implementing card to be created: "The four member views"
 
 ## Decision
 

@@ -1,10 +1,10 @@
 # RFC-0053 - The showcase surface
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every public page that
-is not the workspace, the uncontained bento, the copy layer **Decision class:** product
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0045 (the material),
-RFC-0047 (the swimlanes), RFC-0048 (the status surfaces), RFC-0050 (the data states), RFC-0055 (DELO
-and the provider position)
+is not the workspace, the uncontained bento, the copy layer **Kind:** architecture **Subject:**
+surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:**
+RFC-0045 (the material), RFC-0047 (the swimlanes), RFC-0048 (the status surfaces), RFC-0050 (the
+data states), RFC-0055 (DELO and the provider position)
 
 ## Decision
 

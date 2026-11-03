@@ -1,11 +1,12 @@
 # RFC-0074 - A green gate is not a green tree
 
 **Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:** `pnpm run check`, the
-six scripts it chains, and CI **Decision class:** methodology **Supersedes:** none **Superseded
-by:** none **Task dependencies:** RFC-0009 (build, release and toolchain), RFC-0044 (toolchain
-upgrade policy - the record that defers a major), RFC-0045 (the component contract), RFC-0049 (the
-component state model), RFC-0050 (the data states), RFC-0055 (the provider position); implementing
-card to be created: "Derive the gate's check inventory from the checks themselves"
+six scripts it chains, and CI **Kind:** method **Subject:** operation **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0009 (build, release and
+toolchain), RFC-0044 (toolchain upgrade policy - the record that defers a major), RFC-0045 (the
+component contract), RFC-0049 (the component state model), RFC-0050 (the data states), RFC-0055 (the
+provider position); implementing card to be created: "Derive the gate's check inventory from the
+checks themselves"
 
 ## Decision
 

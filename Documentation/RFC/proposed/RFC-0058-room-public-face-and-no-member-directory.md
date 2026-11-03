@@ -1,11 +1,12 @@
 # RFC-0058 - A room's public face, and no member directory
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the room's metadata
-row, the published site, the curated index, invitations **Decision class:** product **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0014 (join-without-seeing and the invitation
-this record shortens the path to), RFC-0036 §5 (no name resolution and no global directory),
-RFC-0027 §2 (a face is nominated and selected like a card), RFC-0012 (the audience types a face may
-declare); implementing card to be created: "Room face document and the discoverability setting"
+row, the published site, the curated index, invitations **Kind:** contract **Subject:** network
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0014
+(join-without-seeing and the invitation this record shortens the path to), RFC-0036 §5 (no name
+resolution and no global directory), RFC-0027 §2 (a face is nominated and selected like a card),
+RFC-0012 (the audience types a face may declare); implementing card to be created: "Room face
+document and the discoverability setting"
 
 ## Decision
 

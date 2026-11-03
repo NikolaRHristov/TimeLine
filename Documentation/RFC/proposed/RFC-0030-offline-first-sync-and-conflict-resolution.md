@@ -1,11 +1,11 @@
 # RFC-0030 - Offline-first sync and conflict resolution
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the offline queue,
-ratings, comments, curation, member preferences **Decision class:** architecture **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0017 (a queued write is signed at authoring
-time), RFC-0024 §5 (actions are idempotent by id), RFC-0027 §2 (votes rank, the authority selects),
-RFC-0040 (a client timestamp is a claim); implementing card to be created: "Offline queue replay and
-stale-write refusal"
+ratings, comments, curation, member preferences **Kind:** architecture **Subject:** transport
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (a
+queued write is signed at authoring time), RFC-0024 §5 (actions are idempotent by id), RFC-0027 §2
+(votes rank, the authority selects), RFC-0040 (a client timestamp is a claim); implementing card to
+be created: "Offline queue replay and stale-write refusal"
 
 ## Decision
 

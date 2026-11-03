@@ -2,11 +2,11 @@
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the band beneath the
 canvas, the peer table, the capability vocabulary, every surface that states what the network runs
-**Decision class:** product **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0013 (identity and keys), RFC-0017 (the client surface and its live layer), RFC-0019
-(vocabulary), RFC-0020 (the trust model), RFC-0023 (delegation), RFC-0024 §5 (an action is
-idempotent by id), RFC-0026 (peer-carried transport), RFC-0043 (the workspace seam), RFC-0045 (the
-material and the token set); t_ab85d9de (the session and network layer)
+**Kind:** specification **Subject:** surface **Horizon:** now **Supersedes:** none **Superseded
+by:** none **Task dependencies:** RFC-0013 (identity and keys), RFC-0017 (the client surface and its
+live layer), RFC-0019 (vocabulary), RFC-0020 (the trust model), RFC-0023 (delegation), RFC-0024 §5
+(an action is idempotent by id), RFC-0026 (peer-carried transport), RFC-0043 (the workspace seam),
+RFC-0045 (the material and the token set); t_ab85d9de (the session and network layer)
 
 ## Decision
 

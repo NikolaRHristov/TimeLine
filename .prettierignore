@@ -1,11 +1,23 @@
-# Generated, vendored or machine-local - never format these.
+# Generated, vendored or data-shaped - never format these. Every entry is bytes
+# a tool owns or bytes whose exact text is the value: a formatter that rewrites
+# either turns a current artifact into a stale one, and `pnpm run check` compares
+# the schema artifacts byte for byte.
 
-# Build output
-Target/
+# Build output. The two `Target` entries are anchored on purpose: an unanchored
+# `Target/` also matched the source directory `Maintain/Source/Browser/Target/`,
+# which hid four TypeScript files from the formatter for as long as it was loose.
+/Target/
 Maintain/Target/
 Maintain/Spacetime/spacetimedb/dist/
+# Unanchored on purpose: `Maintain/Spacetime/spacetimedb/` has its own install.
 node_modules/
 .astro/
+.turbo/
+
+# Written by `astro.config.ts` on every config load, from `Content/**`. The next
+# build overwrites whatever a format pass wrote, so a formatted copy never
+# survives and the following `prettier --check` fails on it again.
+Source/Generated/
 
 # Generated from Maintain/Source/Model/Schema/Entities.ts. The generator owns
 # these bytes and `pnpm run check` compares them exactly, so a format pass that
@@ -14,10 +26,22 @@ Maintain/Source/Model/Generated/
 Maintain/Spacetime/spacetimedb/src/Schema.ts
 Source/content.config.ts
 
+# `pnpm Build` emits this from `Configuration/ESBuild.ts` before every build, so
+# it is the toolchain's file, not a source file that happens to be JavaScript.
+Maintain/Configuration/ESBuild.js
+
 # Content is copy, not code. A content file's bytes are its value - the build
 # bakes the text in verbatim - so rewrapping a paragraph to fit a column would
-# change the string every page prints.
-Content/
+# change the string every page prints. Both trees are anchored: an unanchored
+# `Content/` also matched `Maintain/Source/Content/`, where `Text.ts` is source.
+/Content/
+Source/Content/
+
+# `_redirects` is written by `Maintain/Script/GenerateRedirects.ts` with column
+# widths computed from the widest value, so its alignment is part of its
+# byte-for-byte output. `_headers`, `robots.txt` and `Manifest.json` beside it
+# stay formattable: nothing writes them.
+/Public/_redirects
 
 # Local-only data and identifiers
 Maintain/Storage/
@@ -29,5 +53,6 @@ Maintain/Configuration/Local/
 pnpm-lock.yaml
 package-lock.json
 
-# Vendored
+# Vendored trees, if one is ever added: reformatting someone else's code turns a
+# reviewable diff into an unreadable one.
 docs/

@@ -1,11 +1,11 @@
 # RFC-0025 - Room distribution: the module as artifact, the room as a stream
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** module publishing, the
-room's version record, client-side WebAssembly, live rows **Decision class:** architecture
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (a room is a database),
-RFC-0016 (a room records the module it runs), RFC-0013 (keys never travel in the artifact), RFC-0022
-(the artifact declares its egress), RFC-0017 (the client surface a live room feeds); implementing
-card to be created: "Module artifact manifest and the live-row view"
+room's version record, client-side WebAssembly, live rows **Kind:** architecture **Subject:**
+network **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
+RFC-0005 (a room is a database), RFC-0016 (a room records the module it runs), RFC-0013 (keys never
+travel in the artifact), RFC-0022 (the artifact declares its egress), RFC-0017 (the client surface a
+live room feeds); implementing card to be created: "Module artifact manifest and the live-row view"
 
 ## Decision
 

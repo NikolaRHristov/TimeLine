@@ -1,11 +1,12 @@
 # RFC-0036 - Naming, handles and namespace
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** display names,
-certificates, published attribution, room names **Decision class:** governance **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0013 (an identity is a keypair plus a display
-name, and a certificate carries the name), RFC-0019 (the glossary is the naming authority), RFC-0017
-(published cards), RFC-0023 §3 (publication is a delegation out of the room); implementing card to
-be created: "Certificate display fields and the disambiguator"
+certificates, published attribution, room names **Kind:** specification **Subject:** identity
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0013 (an
+identity is a keypair plus a display name, and a certificate carries the name), RFC-0019 (the
+glossary is the naming authority), RFC-0017 (published cards), RFC-0023 §3 (publication is a
+delegation out of the room); implementing card to be created: "Certificate display fields and the
+disambiguator"
 
 ## Decision
 

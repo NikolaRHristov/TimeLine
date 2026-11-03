@@ -1,8 +1,9 @@
 # RFC-0004 - Ingress and job orchestration
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the SpacetimeDB
-module, the scraping worker, `store scrape` **Decision class:** architecture **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0001 (storage), RFC-0003 (transport)
+module, the scraping worker, `store scrape` **Kind:** architecture **Subject:** operation
+**Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001
+(storage), RFC-0003 (transport)
 
 ## Decision
 

@@ -1,11 +1,11 @@
 # RFC-0016 - Hosting and tenancy
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the host, module
-rollouts, per-room health, the shutdown path **Decision class:** product **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0005 (a room is a database), RFC-0009 (build and
-release), RFC-0015 (the exit format), RFC-0020 (what the host may observe); t_17031e18 (build),
-t_1621cc5c (substrate research); implementing card to be created: "Room rollout, per-room health and
-the cost model"
+rollouts, per-room health, the shutdown path **Kind:** policy **Subject:** operation **Horizon:**
+next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (a room is a
+database), RFC-0009 (build and release), RFC-0015 (the exit format), RFC-0020 (what the host may
+observe); t_17031e18 (build), t_1621cc5c (substrate research); implementing card to be created:
+"Room rollout, per-room health and the cost model"
 
 ## Decision
 

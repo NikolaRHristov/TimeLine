@@ -1,11 +1,12 @@
 # RFC-0047 - The trust swimlanes
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the band between the
-canvas and the spectrometer, the lane vocabulary, every surface that draws who trusts whom
-**Decision class:** product **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0012 (audiences), RFC-0013 (identity, keys and certificate authorities), RFC-0019 (vocabulary),
-RFC-0020 (the trust model), RFC-0021 (observation provenance), RFC-0022 (room isolation), RFC-0023
-(delegation), RFC-0046 (the capability spectrometer), RFC-0048 (the status surfaces)
+canvas and the spectrometer, the lane vocabulary, every surface that draws who trusts whom **Kind:**
+specification **Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none
+**Task dependencies:** RFC-0012 (audiences), RFC-0013 (identity, keys and certificate authorities),
+RFC-0019 (vocabulary), RFC-0020 (the trust model), RFC-0021 (observation provenance), RFC-0022 (room
+isolation), RFC-0023 (delegation), RFC-0046 (the capability spectrometer), RFC-0048 (the status
+surfaces)
 
 ## Decision
 

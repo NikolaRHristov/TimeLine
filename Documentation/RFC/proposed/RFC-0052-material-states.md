@@ -1,10 +1,10 @@
 # RFC-0052 - The material states
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every component that
-can appear on more than one surface, the material context, the seam **Decision class:** architecture
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0045 (the material and the
-token set), RFC-0043 (the workspace seam), RFC-0049 (the component states), RFC-0051 (the token
-lifecycle)
+can appear on more than one surface, the material context, the seam **Kind:** specification
+**Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0045 (the material and the token set), RFC-0043 (the workspace seam), RFC-0049
+(the component states), RFC-0051 (the token lifecycle)
 
 ## Decision
 

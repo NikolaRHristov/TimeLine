@@ -1,11 +1,11 @@
 # RFC-0056 - Identity carried by others
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the identity model,
-attestations, guardianship, recovery, cross-network sign-in **Decision class:** policy
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0013 (identity, keys and
-certificate authorities), RFC-0019 (vocabulary), RFC-0020 (the trust model), RFC-0023 (delegation of
-custody), RFC-0026 (peer-carried transport), RFC-0038 (what the operator owes), RFC-0047 (the
-swimlanes), RFC-0055 (the provider position)
+attestations, guardianship, recovery, cross-network sign-in **Kind:** policy **Subject:** identity
+**Horizon:** later **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0013
+(identity, keys and certificate authorities), RFC-0019 (vocabulary), RFC-0020 (the trust model),
+RFC-0023 (delegation of custody), RFC-0026 (peer-carried transport), RFC-0038 (what the operator
+owes), RFC-0047 (the swimlanes), RFC-0055 (the provider position)
 
 ## Decision
 

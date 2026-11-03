@@ -13,7 +13,13 @@ export type SelectOptions = {
 
 /** What an error reports about a tab it could not use. */
 export function summarize(tab: Tab): Record<string, unknown> {
-	return { id: tab.id, url: tab.url, title: tab.title, active: tab.active, attached: tab.attached };
+	return {
+		id: tab.id,
+		url: tab.url,
+		title: tab.title,
+		active: tab.active,
+		attached: tab.attached,
+	};
 }
 
 /**
@@ -35,7 +41,9 @@ export function select(tabs: readonly Tab[], criteria: Criteria, options: Select
 		const attached = tabs.find((tab) => tab.id === criteria.id);
 		throw fail(
 			"no-tab",
-			attached !== undefined ? "that tab is attached by a browser extension" : "no tab has that id",
+			attached !== undefined
+				? "that tab is attached by a browser extension"
+				: "no tab has that id",
 			{ id: criteria.id, candidates: seen },
 		);
 	}
@@ -50,7 +58,7 @@ export function select(tabs: readonly Tab[], criteria: Criteria, options: Select
 				return candidate.startsWith(key) || key.startsWith(candidate);
 			});
 			const only = prefixed[0];
-				if (prefixed.length === 1 && only !== undefined) return only;
+			if (prefixed.length === 1 && only !== undefined) return only;
 			if (prefixed.length > 1) {
 				throw fail("no-tab", "the url prefix matched more than one tab", {
 					url: criteria.url,
@@ -62,7 +70,9 @@ export function select(tabs: readonly Tab[], criteria: Criteria, options: Select
 		const attached = tabs.find((tab) => TabModel.key(tab.url) === key);
 		throw fail(
 			"no-tab",
-			attached !== undefined ? "the matching tab is attached by a browser extension" : "no tab matched the url",
+			attached !== undefined
+				? "the matching tab is attached by a browser extension"
+				: "no tab matched the url",
 			{ url: criteria.url, candidates: seen },
 		);
 	}
@@ -71,17 +81,26 @@ export function select(tabs: readonly Tab[], criteria: Criteria, options: Select
 		const needle = criteria.title.toLowerCase();
 		const match = eligible.find((tab) => tab.title.toLowerCase().includes(needle));
 		if (match !== undefined) return match;
-		throw fail("no-tab", "no tab matched the title", { title: criteria.title, candidates: seen });
+		throw fail("no-tab", "no tab matched the title", {
+			title: criteria.title,
+			candidates: seen,
+		});
 	}
 
 	throw fail("no-tab", "no selection criteria given", { candidates: seen });
 }
 
 /** `--tab` takes a target id from `tab list`, or a zero-based index into it. */
-export function selectHandle(tabs: readonly Tab[], handle: string, options: SelectOptions = {}): Tab {
+export function selectHandle(
+	tabs: readonly Tab[],
+	handle: string,
+	options: SelectOptions = {},
+): Tab {
 	if (/^\d+$/.test(handle)) {
 		const eligible =
-			options.includeAttached === true ? [...tabs] : tabs.filter((tab) => tab.attached === false);
+			options.includeAttached === true
+				? [...tabs]
+				: tabs.filter((tab) => tab.attached === false);
 		const index = Number(handle);
 		const match = eligible[index];
 		if (match === undefined) {

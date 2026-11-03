@@ -59,6 +59,8 @@ what is intended, the RFCs state what was decided, and the skills state how to d
 - **`Skill/Design-Verification/`** - proving a built page matches the design, not just that it
   compiles.
 - **`Skill/Tool-Archive/`** - keeping a working script instead of rewriting it next session.
+- **`Skill/RFC-Board/`** - assembling the public RFC project from the committed records: the file is
+  authoritative, the issue follows it, the project item follows the issue.
 - **`Skill/Progressive-Enhancement/`** - the first paint is the server's; the no-script audit that
   proves it.
 

@@ -1,11 +1,12 @@
 # RFC-0057 - Recovery restores the name, not the archive
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the client keystore,
-the epoch wrap, the recovery secret, the guardianship ceremony **Decision class:** policy
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0013 (the recovery secret
-and the escrow holder; this record extends its recovery clause), RFC-0056 §4 (guardianship over
-rotations, not restated here), RFC-0028 §4 (the copies erasure cannot reach), RFC-0038 (what the
-operator owes); implementing card to be created: "Recovery ceremony and the archive wrap"
+the epoch wrap, the recovery secret, the guardianship ceremony **Kind:** policy **Subject:**
+identity **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
+RFC-0013 (the recovery secret and the escrow holder; this record extends its recovery clause),
+RFC-0056 §4 (guardianship over rotations, not restated here), RFC-0028 §4 (the copies erasure cannot
+reach), RFC-0038 (what the operator owes); implementing card to be created: "Recovery ceremony and
+the archive wrap"
 
 ## Decision
 

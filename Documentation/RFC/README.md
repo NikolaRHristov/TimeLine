@@ -12,17 +12,24 @@ The records are also published as issues on a public project linked to this repo
 [project 1 on TimeLine-DELO](https://github.com/orgs/TimeLine-DELO/projects/1).
 
 - **One issue per record.** The title repeats the number and the title. The body carries the
-  record's Decision section verbatim, its decision class, its task dependencies, a link back to the
+  record's Decision section verbatim, its classification, its task dependencies, a link back to the
   file, and the verification table. An issue is never a summary of its record.
-- **Five fields.** `RFC` is the number. `Class` is the record's own `Decision class:`. `Status` is
-  `Proposed` until the verification table passes against shipped code, then `Implemented`. `Area` is
-  the record's dominant subject, one of site, network, identity, tooling or governance. `Cards`
-  holds the implementing card ids a record names, and is empty for the records that name none.
-- **Three views over one item set.** A table by class, a board by status and a roadmap by class.
-  Each view's grouping is set once in the interface: the API accepts a view's name, layout, filter
-  and visible fields, and no group-by on any input object.
+- **Six fields.** `RFC` is the number. `Kind`, `Subject` and `Horizon` are the record's own header
+  lines, each a closed vocabulary defined below; the board copies them and never infers one.
+  `Status` is `Proposed` until the verification table passes against shipped code, then
+  `Implemented`. `Cards` holds the card ids a record names, and is empty for the records that name
+  none.
+- **Three views over one item set.** A table by kind, a board by status and a roadmap by kind. Each
+  view's grouping is set once in the interface: the API accepts a view's name, layout, filter and
+  visible fields, and no group-by on any input object.
 - **A template.** The project is marked as a template, and its own README carries the field scheme
   and the command that copies it to another owner.
+
+`Class` and `Area` are retired. Each was five values with no written definition, `governance` was a
+value on both, and the audit in `Documentation/Reference/RFC-Classification.md` measured what that
+produced: of seventy-one records, twenty-seven carried a label that contradicted their own Decision
+on at least one axis, and the two largest values were where a record landed when it fitted nowhere
+else. The board now carries the three axes below and no other taxonomy.
 
 The project is generated from `proposed/` and the files remain the authority. An issue with no
 record, or a record with no issue, is a defect of the same kind as an unlisted file.
@@ -41,6 +48,84 @@ delta lands. The procedure states the one step no API can take, which is each vi
 
 ---
 
+## Classification
+
+Three axes, each a closed vocabulary. No value appears on two axes, and every value is one word, so
+a value names one question and cannot be read as the answer to another.
+
+### Kind - what the record decides
+
+- **architecture** - how the parts fit: which component owns a thing, and what flows between two of
+  them.
+- **contract** - an interface another party may build against, including the rule that keeps it
+  stable across a change.
+- **policy** - a permission, a refusal or an obligation that binds an actor, independent of any
+  interface's shape.
+- **specification** - a definition: a term, a name, a closed vocabulary, or a fixed set of values.
+- **method** - how the work of building and verifying is done, from a command a person runs to a
+  rule a worker follows.
+
+### Subject - what the record is about
+
+- **data** - what is stored: its shape, its authority, its integrity, its retention and its
+  projection.
+- **transport** - how bytes move between a client and the authority that serves it.
+- **identity** - keys, names, custody, attribution, reputation and recovery.
+- **surface** - what a reader sees and operates: pages, components, states, copy and accessibility.
+- **network** - how actors relate: a room and its members, two rooms, a host and a room, a person
+  and another network.
+- **operation** - running the thing: build, release, configuration, observation, test and gate.
+- **economy** - money: what is metered, what a bill states, what the provider sells.
+- **text** - the project's own words and names: tracked prose, terminology and identifiers.
+
+### Horizon - what the record presupposes
+
+- **now** - the Decision presupposes something that already exists in the tree, so the code that
+  ships today must conform to it.
+- **next** - the Decision presupposes a room, a key or a host that does not exist yet, and binds
+  before the first of them does.
+- **later** - the Decision presupposes a second network or a third party outside this one, so
+  nothing here is owed.
+
+### The rules that make a record assignable
+
+1. **Kind before Subject.** Decide what the record does to the reader before deciding what it is
+   about. A record that fixes a shape and also forbids something is `policy` when the prohibition is
+   the point (RFC-0022, isolation by egress allowlist) and `contract` when the shape is.
+2. **The subject is the noun the rules operate on, not the file they land in.** This is the rule
+   that makes the storage record `data` and the workspace record `surface`, although both are built
+   by the tool layer.
+3. **A contract is what a change must not break for someone who is not making the change.** A
+   command author, an importer, a third-party client. Architecture is the arrangement itself, and
+   nobody outside it is broken by changing it.
+4. **Transport is one connection between a client and the authority that serves it; network is a
+   relation between two authorities.** A peer relay is transport. A room migration is network.
+5. **Operation is a thing that runs; data is a thing that is stored.** A meter is operation; a
+   retention window is data.
+6. **Economy only when money, price or a bill appears in the Decision.** Hosting without a price is
+   operation.
+7. **Horizon reads the presupposition, not the card.** A record that names a card is not thereby
+   `now`, and a record with no card is not thereby `later`.
+
+A record states its three values in its header block, beside its status.
+`Scripts/Classification.mjs` writes them from the assignment table in the audit and checks them:
+
+```sh
+node Scripts/Classification.mjs          # check every record states its three axes
+node Scripts/Classification.mjs --write  # write the axes from the audit's assignment table
+```
+
+The check exits non-zero when a record is missing an axis, carries a value outside a vocabulary, or
+disagrees with the assignment, and it runs inside `pnpm run check`. A classification nothing checks
+is a classification that ships empty: the check is what makes "every record carries a value on every
+axis" a fact about the tree rather than a hope about the board.
+
+The audit that produced the taxonomy - the reading of each record's previous labels, the three
+values it changed after testing them against all seventy-six records, and the argument for there
+being no fourth axis - is `Documentation/Reference/RFC-Classification.md`.
+
+---
+
 ## Conventions
 
 - **Filename** - `RFC-NNNN-kebab-case-title.md`.
@@ -48,6 +133,9 @@ delta lands. The procedure states the one step no API can take, which is each vi
 - **Numbering** - assigned on creation, never reused. `0077` is the next free number.
 - **Supersession** - a new record marks the old one `Superseded by`, and both stay.
 - **Cards** - every record names the cards that implement it, by id.
+- **Classification** - `Kind`, `Subject` and `Horizon` on every record, from the vocabularies above.
+  A new record chooses its three values before it is written, and the check refuses one that does
+  not.
 
 ---
 
@@ -56,101 +144,139 @@ delta lands. The procedure states the one step no API can take, which is each vi
 Seventy-six are written; none is implemented. A record moves to `implemented/` only when its
 verification table passes against the shipped code.
 
-Every file in `proposed/` appears below, and the count above is the number of files there. A record
-absent from the list, or an entry with no file, is a defect: the change that writes a record adds
-its entry.
+Every file in `proposed/` appears below once under its `Kind`, and again in the two short indexes
+that follow, which list every record by `Subject` and by `Horizon`. A record absent from any of the
+three is a defect, as is an entry with no file: the change that writes a record adds its entry.
 
-### Architecture
+Grouped by `Kind`, the axis that answers what a record decides:
 
-- **RFC-0001** - Storage and projection model. _Cards: `t_fe20eeee`._
+### Architecture (23)
+
+- **RFC-0001** - Storage and projection model. _Cards: `t_e1a18798`, `t_fe20eeee`._
 - **RFC-0002** - Single schema source of truth. _Cards: `t_fe20eeee`._
-- **RFC-0003** - Transport seam. _Cards: `t_7936cc8e`._
 - **RFC-0004** - Ingress and job orchestration.
+- **RFC-0005** - Network substrate. _Cards: `t_1621cc5c`._
 - **RFC-0008** - Media handling.
-- **RFC-0011** - Configuration schema and extensibility.
-- **RFC-0015** - Portability and import.
-- **RFC-0018** - Observability and tracing.
-- **RFC-0024** - Action ingress gateway.
+- **RFC-0011** - Configuration schema and extensibility. _Cards: `t_5ca276be`, `t_c65afc0c`._
+- **RFC-0014** - Room lifecycle and invitations. _Cards: `t_1621cc5c`._
+- **RFC-0017** - Client surface. _Cards: `t_406cc8ab`, `t_6e510f8e`, `t_7936cc8e`._
+- **RFC-0018** - Observability and tracing. _Cards: `t_7936cc8e`, `t_92e48af0`._
 - **RFC-0025** - Room distribution: the module as artifact, the room as a stream.
 - **RFC-0026** - Peer-carried transport.
 - **RFC-0029** - Search and indexing under encryption.
 - **RFC-0030** - Offline-first sync and conflict resolution.
 - **RFC-0033** - Room migration between hosts.
-- **RFC-0034** - Versioning and protocol compatibility.
+- **RFC-0035** - Notifications, presence and attention.
 - **RFC-0040** - Time, ordering and causality.
-- **RFC-0042** - Plugin and extension model.
-- **RFC-0049** - The component state model.
-- **RFC-0050** - The data states.
-- **RFC-0052** - The material states.
+- **RFC-0043** - Local-first workspace: identity, network and publishing. _Cards: `t_1621cc5c`,
+  `t_ab85d9de`._
+- **RFC-0053** - The showcase surface.
+- **RFC-0054** - The anonymous workspace.
 - **RFC-0059** - One record, many references.
 - **RFC-0062** - An import is an archive, not an account.
 - **RFC-0065** - A digest chain, and a drill that runs.
-
-### Product
-
-- **RFC-0005** - Network substrate. _Cards: `t_1621cc5c`._
-- **RFC-0012** - Audience tiers and propagation.
-- **RFC-0014** - Room lifecycle and invitations.
-- **RFC-0016** - Hosting and tenancy.
-- **RFC-0017** - Client surface.
-- **RFC-0023** - Delegation of custody.
-- **RFC-0027** - Product surface and curation economics. _Cards: `t_406cc8ab`._
-- **RFC-0035** - Notifications, presence and attention.
-- **RFC-0039** - Billing and metering.
-- **RFC-0043** - Local-first workspace: identity, network and publishing. _Cards: `t_ab85d9de`._
-- **RFC-0046** - The capability spectrometer.
-- **RFC-0047** - The trust swimlanes.
-- **RFC-0048** - The status surfaces.
-- **RFC-0053** - The showcase surface.
-- **RFC-0054** - The anonymous workspace.
-- **RFC-0055** - DELO and the provider position.
-- **RFC-0058** - A room's public face, and no member directory.
-- **RFC-0061** - Bridges are out of scope; the export is the interface.
-- **RFC-0064** - A list is a signed, versioned object.
-- **RFC-0066** - What a person can see about their own data.
-- **RFC-0069** - The read surface a developer may build against.
 - **RFC-0070** - A room starts from a template the module ships.
 
-### Policy
+### Contract (13)
+
+- **RFC-0003** - Transport seam. _Cards: `t_7936cc8e`._
+- **RFC-0012** - Audience tiers and propagation. _Cards: `t_1621cc5c`._
+- **RFC-0015** - Portability and import. _Cards: `t_b9e11f0c`, `t_fe20eeee`._
+- **RFC-0023** - Delegation of custody.
+- **RFC-0024** - Action ingress gateway.
+- **RFC-0034** - Versioning and protocol compatibility.
+- **RFC-0045** - The material, the tokens and the component contract. _Cards: `t_15d5d8fd`,
+  `t_30030978`, `t_52a99949`, `t_6b11bda7`, `t_bd4c07b0`, `t_e2a377d0`._
+- **RFC-0058** - A room's public face, and no member directory.
+- **RFC-0060** - Attribution survives re-encryption because it signs plaintext.
+- **RFC-0064** - A list is a signed, versioned object.
+- **RFC-0066** - What a person can see about their own data.
+- **RFC-0068** - Language is content; accessibility is a contract.
+- **RFC-0069** - The read surface a developer may build against.
+
+### Policy (23)
 
 - **RFC-0006** - Harvesting posture.
-- **RFC-0007** - Privacy, encryption and validation.
+- **RFC-0007** - Privacy, encryption and the validation boundary.
+- **RFC-0010** - Documentation and template policy. _Cards: `t_34ee3d19`, `t_bceac9f5`._
 - **RFC-0013** - Identity, keys and certificate authorities.
-- **RFC-0020** - Trust and security model.
+- **RFC-0016** - Hosting and tenancy. _Cards: `t_1621cc5c`, `t_17031e18`._
+- **RFC-0020** - Trust and security model. _Cards: `t_1621cc5c`._
 - **RFC-0021** - Fleet coordination and observation provenance.
 - **RFC-0022** - Room isolation on a host. _Cards: `t_1621cc5c`._
+- **RFC-0027** - Product surface and curation economics. _Cards: `t_406cc8ab`._
 - **RFC-0028** - Data lifecycle and retention.
+- **RFC-0031** - Moderation and community governance.
 - **RFC-0032** - Rate limiting and abuse resistance.
 - **RFC-0038** - Legal posture.
-- **RFC-0056** - Identity carried by others.
+- **RFC-0039** - Billing and metering.
 - **RFC-0041** - Analytics without reading content.
+- **RFC-0042** - Plugin and extension model.
+- **RFC-0051** - The token lifecycle.
+- **RFC-0055** - DELO and the provider position.
+- **RFC-0056** - Identity carried by others.
 - **RFC-0057** - Recovery restores the name, not the archive.
-- **RFC-0060** - Attribution survives re-encryption because it signs plaintext.
+- **RFC-0061** - Bridges are out of scope; the export is the interface.
 - **RFC-0067** - Keep everything, compress, and name the cost.
-- **RFC-0068** - Language is content; accessibility is a contract.
-
-### Governance
-
-- **RFC-0010** - Documentation and template policy. _Cards: `t_34ee3d19`, `t_bceac9f5`._
-- **RFC-0019** - Vocabulary and terminology.
-- **RFC-0031** - Moderation and community governance.
-- **RFC-0036** - Naming, handles and namespace.
-- **RFC-0063** - Reputation of people, never of posts.
 - **RFC-0071** - Who may publish a library, and what revocation can reach.
 
-### Methodology
+### Specification (9)
+
+- **RFC-0019** - Vocabulary and terminology. _Cards: `t_23dc5d47`, `t_bceac9f5`._
+- **RFC-0036** - Naming, handles and namespace.
+- **RFC-0046** - The capability spectrometer. _Cards: `t_ab85d9de`._
+- **RFC-0047** - The trust swimlanes.
+- **RFC-0048** - The status surfaces.
+- **RFC-0049** - The component state model.
+- **RFC-0050** - The data states.
+- **RFC-0052** - The material states.
+- **RFC-0063** - Reputation of people, never of posts.
+
+### Method (8)
 
 - **RFC-0009** - Build, release and toolchain. _Cards: `t_17031e18`, `t_6e510f8e`._
 - **RFC-0037** - Testing and simulation strategy.
 - **RFC-0044** - Toolchain upgrade policy. _Cards: `t_344b78d0`._
-- **RFC-0045** - The material, the tokens and the component contract. _Cards: `t_15d5d8fd`,
-  `t_30030978`, `t_6b11bda7`, `t_bd4c07b0`, `t_e2a377d0`, `t_52a99949`._
-- **RFC-0051** - The token lifecycle.
 - **RFC-0072** - A verifier asserts the spec, not the implementation.
 - **RFC-0073** - A tool that ran belongs to a skill.
 - **RFC-0074** - A green gate is not a green tree.
 - **RFC-0075** - The layer tree is the authority, the picture is a likeness.
 - **RFC-0076** - A worker that cannot hold both cards stops.
+
+### By subject
+
+- **data - 15.** RFC-0001, RFC-0002, RFC-0007, RFC-0008, RFC-0012, RFC-0015, RFC-0028, RFC-0029,
+  RFC-0040, RFC-0059, RFC-0062, RFC-0064, RFC-0065, RFC-0066, RFC-0067
+- **transport - 7.** RFC-0003, RFC-0024, RFC-0026, RFC-0030, RFC-0032, RFC-0034, RFC-0035
+- **identity - 9.** RFC-0013, RFC-0020, RFC-0021, RFC-0023, RFC-0036, RFC-0056, RFC-0057, RFC-0060,
+  RFC-0063
+- **surface - 13.** RFC-0017, RFC-0043, RFC-0045, RFC-0046, RFC-0047, RFC-0048, RFC-0049, RFC-0050,
+  RFC-0051, RFC-0052, RFC-0053, RFC-0054, RFC-0068
+- **network - 12.** RFC-0005, RFC-0014, RFC-0022, RFC-0025, RFC-0031, RFC-0033, RFC-0042, RFC-0058,
+  RFC-0061, RFC-0069, RFC-0070, RFC-0071
+- **operation - 15.** RFC-0004, RFC-0006, RFC-0009, RFC-0011, RFC-0016, RFC-0018, RFC-0037,
+  RFC-0038, RFC-0041, RFC-0044, RFC-0072, RFC-0073, RFC-0074, RFC-0075, RFC-0076
+- **economy - 3.** RFC-0027, RFC-0039, RFC-0055
+- **text - 2.** RFC-0010, RFC-0019
+
+### By horizon
+
+- **now - 35.** RFC-0001, RFC-0002, RFC-0003, RFC-0004, RFC-0006, RFC-0008, RFC-0009, RFC-0010,
+  RFC-0011, RFC-0017, RFC-0018, RFC-0019, RFC-0027, RFC-0037, RFC-0043, RFC-0044, RFC-0045,
+  RFC-0046, RFC-0047, RFC-0048, RFC-0049, RFC-0050, RFC-0051, RFC-0052, RFC-0053, RFC-0054,
+  RFC-0055, RFC-0065, RFC-0067, RFC-0068, RFC-0072, RFC-0073, RFC-0074, RFC-0075, RFC-0076
+- **next - 39.** RFC-0005, RFC-0007, RFC-0012, RFC-0013, RFC-0014, RFC-0015, RFC-0016, RFC-0020,
+  RFC-0021, RFC-0022, RFC-0023, RFC-0024, RFC-0025, RFC-0026, RFC-0028, RFC-0029, RFC-0030,
+  RFC-0031, RFC-0032, RFC-0033, RFC-0034, RFC-0035, RFC-0036, RFC-0038, RFC-0039, RFC-0040,
+  RFC-0041, RFC-0042, RFC-0057, RFC-0058, RFC-0059, RFC-0060, RFC-0062, RFC-0063, RFC-0064,
+  RFC-0066, RFC-0069, RFC-0070, RFC-0071
+- **later - 2.** RFC-0056, RFC-0061
+
+The horizon split is the measurement, not a fault in the axis. Thirty-five records presuppose
+something that exists today, thirty-nine presuppose a room, a key or a host that does not exist yet,
+and two presuppose a party outside this network. Crossed against the card ids above, twenty-one of
+the thirty-five bind the tree that ships today and name no card - that is the backlog, and it is a
+different set from the fifty-five records that name no card at all.
 
 ---
 

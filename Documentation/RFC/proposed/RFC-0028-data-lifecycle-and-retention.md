@@ -1,11 +1,11 @@
 # RFC-0028 - Data lifecycle and retention
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the shadow store, the
-module's payload rows, the observation log, erasure **Decision class:** policy **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0001 (the store is the only complete history),
-RFC-0021 (an observation names its observer), RFC-0014 (delete is gated on export), RFC-0018 (runs
-and spans already expire), RFC-0012 and RFC-0023 (a delivered copy cannot be recalled); implementing
-card to be created: "Retention terms and the tombstone row"
+module's payload rows, the observation log, erasure **Kind:** policy **Subject:** data **Horizon:**
+next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001 (the store is the
+only complete history), RFC-0021 (an observation names its observer), RFC-0014 (delete is gated on
+export), RFC-0018 (runs and spans already expire), RFC-0012 and RFC-0023 (a delivered copy cannot be
+recalled); implementing card to be created: "Retention terms and the tombstone row"
 
 ## Decision
 

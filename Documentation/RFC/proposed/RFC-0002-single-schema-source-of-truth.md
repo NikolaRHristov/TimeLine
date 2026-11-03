@@ -1,9 +1,9 @@
 # RFC-0002 - Single schema source of truth
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:**
-`Maintain/Source/Model/`, `Source/content.config.ts`, the SpacetimeDB module **Decision class:**
-architecture **Supersedes:** none **Superseded by:** none **Task dependencies:** t_fe20eeee
-(implements)
+`Maintain/Source/Model/`, `Source/content.config.ts`, the SpacetimeDB module **Kind:** architecture
+**Subject:** data **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** t_fe20eeee (implements)
 
 ## Decision
 

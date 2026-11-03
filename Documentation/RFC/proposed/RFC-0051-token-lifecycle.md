@@ -1,10 +1,10 @@
 # RFC-0051 - The token lifecycle
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `Global.css`, the
-material mixins, every component's public props, the token contract check **Decision class:**
-methodology **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0045 (the token
-set and the material), RFC-0044 (the toolchain floor and its upgrade policy), RFC-0049 (the
-component states)
+material mixins, every component's public props, the token contract check **Kind:** policy
+**Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0045 (the token set and the material), RFC-0044 (the toolchain floor and its
+upgrade policy), RFC-0049 (the component states)
 
 ## Decision
 

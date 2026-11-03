@@ -1,11 +1,11 @@
 # RFC-0024 - Action ingress gateway
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module's reducer
-surface, the worker, agent turns, the inbound HTTP router **Decision class:** architecture
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0004 (jobs are one class of
-action), RFC-0006 (which classes a job may submit), RFC-0003 (the transport's `mutable` flag),
-RFC-0020 (the envelope checks this record routes through); implementing card to be created: "Action
-gateway reducer and the action-class table"
+surface, the worker, agent turns, the inbound HTTP router **Kind:** contract **Subject:** transport
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0004 (jobs
+are one class of action), RFC-0006 (which classes a job may submit), RFC-0003 (the transport's
+`mutable` flag), RFC-0020 (the envelope checks this record routes through); implementing card to be
+created: "Action gateway reducer and the action-class table"
 
 ## Decision
 

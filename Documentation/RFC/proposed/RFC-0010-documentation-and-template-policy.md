@@ -1,8 +1,9 @@
 # RFC-0010 - Documentation and template policy
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `Documentation/`,
-`AGENTS.md`, `README.md`, every tracked file **Decision class:** governance **Supersedes:** none
-**Superseded by:** none **Task dependencies:** t_34ee3d19 (docs repair, done), t_bceac9f5 (naming)
+`AGENTS.md`, `README.md`, every tracked file **Kind:** policy **Subject:** text **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** t_34ee3d19 (docs repair, done),
+t_bceac9f5 (naming)
 
 ## Decision
 

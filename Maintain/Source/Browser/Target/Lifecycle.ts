@@ -25,7 +25,9 @@ export async function open(url: string, options: DiscoveryOptions = {}): Promise
 
 	const version = await getJson<BrowserVersion>(`${base}/json/version`, timeout);
 	if (typeof version.webSocketDebuggerUrl !== "string") {
-		throw fail("cdp-unreachable", "the browser did not expose a browser websocket", { url: base });
+		throw fail("cdp-unreachable", "the browser did not expose a browser websocket", {
+			url: base,
+		});
 	}
 
 	const client = await connect(version.webSocketDebuggerUrl, { timeout });
@@ -58,7 +60,9 @@ export async function open(url: string, options: DiscoveryOptions = {}): Promise
 export async function close(id: string, options: DiscoveryOptions = {}): Promise<void> {
 	const base = endpoint(options);
 	try {
-		await fetch(`${base}/json/close/${id}`, { signal: AbortSignal.timeout(options.timeout ?? 5000) });
+		await fetch(`${base}/json/close/${id}`, {
+			signal: AbortSignal.timeout(options.timeout ?? 5000),
+		});
 	} catch (error) {
 		throw fail("cdp-unreachable", "could not close the target", {
 			id,
@@ -77,7 +81,9 @@ export async function activate(id: string, options: DiscoveryOptions = {}): Prom
 	const base = endpoint(options);
 	let response: Response;
 	try {
-		response = await fetch(`${base}/json/activate/${id}`, { signal: AbortSignal.timeout(options.timeout ?? 5000) });
+		response = await fetch(`${base}/json/activate/${id}`, {
+			signal: AbortSignal.timeout(options.timeout ?? 5000),
+		});
 	} catch (error) {
 		throw fail("cdp-unreachable", "could not focus the target", {
 			id,
@@ -85,7 +91,10 @@ export async function activate(id: string, options: DiscoveryOptions = {}): Prom
 		});
 	}
 	if (!response.ok) {
-		throw fail("no-tab", "the browser refused to focus that target", { id, status: response.status });
+		throw fail("no-tab", "the browser refused to focus that target", {
+			id,
+			status: response.status,
+		});
 	}
 }
 

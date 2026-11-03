@@ -1,11 +1,11 @@
 # RFC-0026 - Peer-carried transport
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the transport seam,
-relays, replicas, the wire protocol **Decision class:** architecture **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0003 (the seam a third transport joins), RFC-0005
-(one authority per room), RFC-0007 (a carrier sees ciphertext), RFC-0022 (a replica is a host),
-RFC-0023 (a peer is a holder), RFC-0025 (a replica runs the artifact); implementing card to be
-created: "Peer transport: relay mode, and the replica decision gate"
+relays, replicas, the wire protocol **Kind:** architecture **Subject:** transport **Horizon:** next
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0003 (the seam a third
+transport joins), RFC-0005 (one authority per room), RFC-0007 (a carrier sees ciphertext), RFC-0022
+(a replica is a host), RFC-0023 (a peer is a holder), RFC-0025 (a replica runs the artifact);
+implementing card to be created: "Peer transport: relay mode, and the replica decision gate"
 
 ## Decision
 

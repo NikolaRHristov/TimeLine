@@ -1,12 +1,13 @@
 # RFC-0071 - Who may publish a library, and what revocation can reach
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** library publication,
-the review record, revocation, a host's refusal to publish **Decision class:** governance
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0042 (admission by review
-record and revocation by republish; this record decides who does either), RFC-0025 §3 (a module is
-composed from reviewed libraries), RFC-0022 §1 and §2 (the publish path and declared egress),
-RFC-0016 §2 (staged rollout), RFC-0058 (a room's face names the artifact a reader can check);
-implementing card to be created: "Review record, revocation advisory and the publish check"
+the review record, revocation, a host's refusal to publish **Kind:** policy **Subject:** network
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0042
+(admission by review record and revocation by republish; this record decides who does either),
+RFC-0025 §3 (a module is composed from reviewed libraries), RFC-0022 §1 and §2 (the publish path and
+declared egress), RFC-0016 §2 (staged rollout), RFC-0058 (a room's face names the artifact a reader
+can check); implementing card to be created: "Review record, revocation advisory and the publish
+check"
 
 ## Decision
 

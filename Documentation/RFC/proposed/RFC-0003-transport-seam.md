@@ -1,8 +1,9 @@
 # RFC-0003 - Transport seam
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every command under
-`Maintain/Source/Command/` **Decision class:** architecture **Supersedes:** none **Superseded by:**
-none **Task dependencies:** t_7936cc8e (implements), `Documentation/Reference/Transport.md` (spec)
+`Maintain/Source/Command/` **Kind:** contract **Subject:** transport **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** t_7936cc8e (implements),
+`Documentation/Reference/Transport.md` (spec)
 
 ## Decision
 

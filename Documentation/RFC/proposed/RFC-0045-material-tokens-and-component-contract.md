@@ -2,11 +2,12 @@
 
 **Status:** Proposed **Owner:** operator **Applies to:** every sheet under `Source/Stylesheet/`,
 every component under `Source/Component/`, every page under `Source/pages/`, and
-`Source/Layout/Base.astro` **Decision class:** methodology **Supersedes:** none **Superseded by:**
-none **Task dependencies:** RFC-0009 (the build that compiles a sheet), RFC-0010 (documentation
-voice), RFC-0017 (the client surface this material dresses), RFC-0019 (vocabulary); `t_15d5d8fd`
-(the token set promoted to the whole site), `t_30030978` (the token contract tests), `t_6b11bda7`
-(the fidelity pass), `t_bd4c07b0`, `t_e2a377d0`, `t_52a99949` (the surfaces that adopt the material)
+`Source/Layout/Base.astro` **Kind:** contract **Subject:** surface **Horizon:** now **Supersedes:**
+none **Superseded by:** none **Task dependencies:** RFC-0009 (the build that compiles a sheet),
+RFC-0010 (documentation voice), RFC-0017 (the client surface this material dresses), RFC-0019
+(vocabulary); `t_15d5d8fd` (the token set promoted to the whole site), `t_30030978` (the token
+contract tests), `t_6b11bda7` (the fidelity pass), `t_bd4c07b0`, `t_e2a377d0`, `t_52a99949` (the
+surfaces that adopt the material)
 
 ## Decision
 

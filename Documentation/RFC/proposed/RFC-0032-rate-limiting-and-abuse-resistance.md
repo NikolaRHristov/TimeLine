@@ -1,11 +1,11 @@
 # RFC-0032 - Rate limiting and abuse resistance
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the action gateway's
-envelope checks, ingestion backpressure, invitation cost **Decision class:** policy **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0024 §4 (the gateway validates rate and
-quota), RFC-0020 (rate is the only content-adjacent check a blind host has), RFC-0004 (ingestion is
-scheduled work), RFC-0014 (an invitation expires and has a use bound); implementing card to be
-created: "Quota and invite-ledger rows"
+envelope checks, ingestion backpressure, invitation cost **Kind:** policy **Subject:** transport
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0024 §4
+(the gateway validates rate and quota), RFC-0020 (rate is the only content-adjacent check a blind
+host has), RFC-0004 (ingestion is scheduled work), RFC-0014 (an invitation expires and has a use
+bound); implementing card to be created: "Quota and invite-ledger rows"
 
 ## Decision
 

@@ -1,11 +1,11 @@
 # RFC-0014 - Room lifecycle and invitations
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module's room
-tables, invitations, grants, archival and deletion **Decision class:** product **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0005 (a room is a database), RFC-0012 (audiences
-and propagation), RFC-0013 (an invitation carries wrapped key epochs), RFC-0015 (deletion is gated
-on export); t_1621cc5c (substrate research); implementing card to be created: "Room lifecycle,
-invitations and grants"
+tables, invitations, grants, archival and deletion **Kind:** architecture **Subject:** network
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (a
+room is a database), RFC-0012 (audiences and propagation), RFC-0013 (an invitation carries wrapped
+key epochs), RFC-0015 (deletion is gated on export); t_1621cc5c (substrate research); implementing
+card to be created: "Room lifecycle, invitations and grants"
 
 ## Decision
 

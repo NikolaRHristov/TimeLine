@@ -1,12 +1,12 @@
 # RFC-0062 - An import is an archive, not an account
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the adapter, the
-ingest seam, the five-file format's foreign case **Decision class:** architecture **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0015 (the adapter and the five files; this
-record extends it and does not restate the format), RFC-0006 (the harvesting posture an import stays
-outside of), RFC-0040 (ordering applies to rows this system accepted), RFC-0028 §3 (a gone source is
-a mark, not a delete), RFC-0060 §4 (`signature: null` as a chain with no head); implementing card to
-be created: "Archive adapter and the fidelity manifest"
+ingest seam, the five-file format's foreign case **Kind:** architecture **Subject:** data
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0015 (the
+adapter and the five files; this record extends it and does not restate the format), RFC-0006 (the
+harvesting posture an import stays outside of), RFC-0040 (ordering applies to rows this system
+accepted), RFC-0028 §3 (a gone source is a mark, not a delete), RFC-0060 §4 (`signature: null` as a
+chain with no head); implementing card to be created: "Archive adapter and the fidelity manifest"
 
 ## Decision
 

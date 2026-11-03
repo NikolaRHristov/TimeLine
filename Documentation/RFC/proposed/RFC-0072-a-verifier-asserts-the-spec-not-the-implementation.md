@@ -1,11 +1,11 @@
 # RFC-0072 - A verifier asserts the spec, not the implementation
 
 **Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:** every verifier under
-`Documentation/Skill/*/Reference/` and `Scripts/` **Decision class:** methodology **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0037 (what can be proven before a second
-host exists), RFC-0045 (the component contract), RFC-0049 and RFC-0048 (the state and the status
-words the composition asserts), RFC-0053 (the showcase surface); implementing card to be created: "A
-spec-to-verifier link that fails when the spec moves"
+`Documentation/Skill/*/Reference/` and `Scripts/` **Kind:** method **Subject:** operation
+**Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0037 (what
+can be proven before a second host exists), RFC-0045 (the component contract), RFC-0049 and RFC-0048
+(the state and the status words the composition asserts), RFC-0053 (the showcase surface);
+implementing card to be created: "A spec-to-verifier link that fails when the spec moves"
 
 ## Decision
 

@@ -1,12 +1,13 @@
 # RFC-0060 - Attribution survives re-encryption because it signs plaintext
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the envelope, the
-signature chain, the propagation record, published attribution **Decision class:** policy
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0013 §Authorship (the
-signature this record gives a canonical form), RFC-0013 (the `additionalData` rule it distinguishes
-itself from), RFC-0021 (observation provenance, which is about who saw rather than who wrote),
-RFC-0015 (`signature: null`, the degenerate chain), RFC-0059 (a copy and a retraction); implementing
-card to be created: "Canonical post form and the signature chain"
+signature chain, the propagation record, published attribution **Kind:** contract **Subject:**
+identity **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
+RFC-0013 §Authorship (the signature this record gives a canonical form), RFC-0013 (the
+`additionalData` rule it distinguishes itself from), RFC-0021 (observation provenance, which is
+about who saw rather than who wrote), RFC-0015 (`signature: null`, the degenerate chain), RFC-0059
+(a copy and a retraction); implementing card to be created: "Canonical post form and the signature
+chain"
 
 ## Decision
 

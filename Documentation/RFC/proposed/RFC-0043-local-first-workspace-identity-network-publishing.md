@@ -1,14 +1,14 @@
 # RFC-0043 - Local-first workspace: identity, network and publishing
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the workspace page,
-the session layer, the permission model, the network surface, the transport contract **Decision
-class:** product **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001 (the
-shadow store and publication), RFC-0003 (the transport seam), RFC-0005 (a room is a database),
-RFC-0007 (the envelope), RFC-0012 (audiences), RFC-0013 (identity, keys and authority), RFC-0017
-(the client surface), RFC-0019 (vocabulary, `circle`), RFC-0024 §5 (an action is idempotent by id),
-RFC-0027 (votes rank, the authority selects), RFC-0030 (the sync rules), RFC-0040 (a client
-timestamp is a claim); t_1621cc5c (substrate research); t_ab85d9de (the workspace session and
-network layer)
+the session layer, the permission model, the network surface, the transport contract **Kind:**
+architecture **Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none
+**Task dependencies:** RFC-0001 (the shadow store and publication), RFC-0003 (the transport seam),
+RFC-0005 (a room is a database), RFC-0007 (the envelope), RFC-0012 (audiences), RFC-0013 (identity,
+keys and authority), RFC-0017 (the client surface), RFC-0019 (vocabulary, `circle`), RFC-0024 §5 (an
+action is idempotent by id), RFC-0027 (votes rank, the authority selects), RFC-0030 (the sync
+rules), RFC-0040 (a client timestamp is a claim); t_1621cc5c (substrate research); t_ab85d9de (the
+workspace session and network layer)
 
 ## Decision
 

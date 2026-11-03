@@ -2,9 +2,10 @@
 
 **Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:**
 `Documentation/Skill/**/Reference/`, the archive script that writes it, and the audit that reads it
-**Decision class:** methodology **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0009 (build, release and toolchain), RFC-0010 (documentation and template policy); implementing
-card to be created: "Make the archiver validate its own path inputs and index rows"
+**Kind:** method **Subject:** operation **Horizon:** now **Supersedes:** none **Superseded by:**
+none **Task dependencies:** RFC-0009 (build, release and toolchain), RFC-0010 (documentation and
+template policy); implementing card to be created: "Make the archiver validate its own path inputs
+and index rows"
 
 ## Decision
 

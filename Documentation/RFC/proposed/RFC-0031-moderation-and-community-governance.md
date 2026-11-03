@@ -1,11 +1,11 @@
 # RFC-0031 - Moderation and community governance
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** redaction, member
-removal, appeals, the host's response to an abuse report **Decision class:** governance
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0014 (removal and the
-`suspended` state), RFC-0027 §3-4 (the operator's powers and non-powers), RFC-0007 (a blind module),
-RFC-0028 §2 (redaction writes a tombstone); implementing card to be created: "Report, redaction and
-appeal rows"
+removal, appeals, the host's response to an abuse report **Kind:** policy **Subject:** network
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0014
+(removal and the `suspended` state), RFC-0027 §3-4 (the operator's powers and non-powers), RFC-0007
+(a blind module), RFC-0028 §2 (redaction writes a tombstone); implementing card to be created:
+"Report, redaction and appeal rows"
 
 ## Decision
 

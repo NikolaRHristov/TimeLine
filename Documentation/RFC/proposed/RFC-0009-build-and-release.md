@@ -1,9 +1,9 @@
 # RFC-0009 - Build, release and toolchain
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the workspace, turbo,
-`@playform/build`, the Cloudflare Pages build **Decision class:** methodology **Supersedes:** none
-**Superseded by:** none **Task dependencies:** t_17031e18 (workspace, done), t_6e510f8e (content
-layer)
+`@playform/build`, the Cloudflare Pages build **Kind:** method **Subject:** operation **Horizon:**
+now **Supersedes:** none **Superseded by:** none **Task dependencies:** t_17031e18 (workspace,
+done), t_6e510f8e (content layer)
 
 ## Decision
 

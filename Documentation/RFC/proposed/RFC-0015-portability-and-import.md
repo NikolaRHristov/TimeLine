@@ -1,11 +1,12 @@
 # RFC-0015 - Portability and import
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the export command,
-the import command, the module's read surface, the shadow store **Decision class:** architecture
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (the exit guarantee),
-RFC-0007 (an export without keys is void), RFC-0013 (key epochs), RFC-0014 (deletion is gated on
-export), RFC-0001 (the shadow store's own round trip); t_b9e11f0c (ingest), t_fe20eeee (storage);
-implementing card to be created: "Export and import format, with a round-trip verifier"
+the import command, the module's read surface, the shadow store **Kind:** contract **Subject:** data
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (the
+exit guarantee), RFC-0007 (an export without keys is void), RFC-0013 (key epochs), RFC-0014
+(deletion is gated on export), RFC-0001 (the shadow store's own round trip); t_b9e11f0c (ingest),
+t_fe20eeee (storage); implementing card to be created: "Export and import format, with a round-trip
+verifier"
 
 ## Decision
 

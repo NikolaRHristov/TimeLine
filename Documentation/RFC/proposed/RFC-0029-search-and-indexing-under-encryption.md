@@ -1,11 +1,11 @@
 # RFC-0029 - Search and indexing under encryption
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the client index, the
-module's envelope indexes, the static site's search **Decision class:** architecture **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0007 (the module reads shape, not content),
-RFC-0001 (the store is client-side), RFC-0014 (join-without-seeing starts an index empty), RFC-0025
-§5 (rows arrive by subscription); implementing card to be created: "Client index over the shadow
-store"
+module's envelope indexes, the static site's search **Kind:** architecture **Subject:** data
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0007 (the
+module reads shape, not content), RFC-0001 (the store is client-side), RFC-0014 (join-without-seeing
+starts an index empty), RFC-0025 §5 (rows arrive by subscription); implementing card to be created:
+"Client index over the shadow store"
 
 ## Decision
 

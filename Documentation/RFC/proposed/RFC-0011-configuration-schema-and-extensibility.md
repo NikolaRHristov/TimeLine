@@ -2,10 +2,11 @@
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:**
 `Maintain/Source/Configuration/`, the module, the client, `Documentation/Reference/Configure.md`
-**Decision class:** architecture **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0002 (one schema, one authority), RFC-0007 (key material is configuration); t_5ca276be and
-t_c65afc0c landed the map and the configuration-driven list taxonomy; implementing card to be
-created: "Configuration schema v2 - versioned terms, defaults, validation, unknown-key preservation"
+**Kind:** architecture **Subject:** operation **Horizon:** now **Supersedes:** none **Superseded
+by:** none **Task dependencies:** RFC-0002 (one schema, one authority), RFC-0007 (key material is
+configuration); t_5ca276be and t_c65afc0c landed the map and the configuration-driven list taxonomy;
+implementing card to be created: "Configuration schema v2 - versioned terms, defaults, validation,
+unknown-key preservation"
 
 ## Decision
 

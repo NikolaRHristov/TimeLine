@@ -15,7 +15,8 @@
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 	"[markdown]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"files.trimTrailingWhitespace": false
 	},
 	"[typescript]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -53,14 +54,27 @@
 	},
 	"files.insertFinalNewline": true,
 	"files.trimTrailingWhitespace": true,
+	"files.watcherExclude": {
+		"**/node_modules/**": true,
+		".astro/**": true,
+		".hermes/**": true,
+		".turbo/**": true,
+		"Maintain/Configuration/Local/**": true,
+		"Maintain/Storage/**": true,
+		"Maintain/Target/**": true,
+		"Target/**": true
+	},
 	"search.exclude": {
-		"**/.astro": true,
-		"**/Maintain/Storage": true,
-		"**/Maintain/Target": true,
-		"**/Target": true,
-		"**/node_modules": true,
+		"**/node_modules/**": true,
 		"**/pnpm-lock.yaml": true,
-		"**/tmp": true
+		"**/tmp": true,
+		".astro/**": true,
+		".hermes/**": true,
+		".turbo/**": true,
+		"Maintain/Configuration/Local/**": true,
+		"Maintain/Storage/**": true,
+		"Maintain/Target/**": true,
+		"Target/**": true
 	},
 	"typescript.enablePromptUseWorkspaceTsdk": true,
 	"typescript.tsdk": "node_modules/typescript/lib"

@@ -1,8 +1,9 @@
 # RFC-0005 - Network substrate
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the SpacetimeDB
-module, room lifecycle, identity, federation **Decision class:** product **Supersedes:** none
-**Superseded by:** none **Task dependencies:** t_1621cc5c (research), RFC-0001, RFC-0004
+module, room lifecycle, identity, federation **Kind:** architecture **Subject:** network
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** t_1621cc5c
+(research), RFC-0001, RFC-0004
 
 ## Decision
 

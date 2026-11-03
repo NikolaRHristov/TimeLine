@@ -1,12 +1,13 @@
 # RFC-0069 - The read surface a developer may build against
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module's views and
-routes, the export format, the CLI's JSON output, every third-party client **Decision class:**
-product **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 §Open questions
-(the per-member view this record makes the read path), RFC-0007 (no surface reaches plaintext),
-RFC-0015 and RFC-0034 (the export as the stable contract), RFC-0022 §2 (a room's declared egress),
-RFC-0039 §1 and RFC-0032 §6 (a third party's load lands on the room's bill and cap); implementing
-card to be created: "The documented read surface and the CLI JSON schemas"
+routes, the export format, the CLI's JSON output, every third-party client **Kind:** contract
+**Subject:** network **Horizon:** next **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0005 §Open questions (the per-member view this record makes the read path),
+RFC-0007 (no surface reaches plaintext), RFC-0015 and RFC-0034 (the export as the stable contract),
+RFC-0022 §2 (a room's declared egress), RFC-0039 §1 and RFC-0032 §6 (a third party's load lands on
+the room's bill and cap); implementing card to be created: "The documented read surface and the CLI
+JSON schemas"
 
 ## Decision
 

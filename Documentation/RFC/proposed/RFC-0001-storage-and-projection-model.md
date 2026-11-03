@@ -1,9 +1,9 @@
 # RFC-0001 - Storage and projection model
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `Maintain/Storage/`,
-the SpacetimeDB module, `Source/Content/` **Decision class:** architecture **Supersedes:** none
-**Superseded by:** none **Task dependencies:** t_fe20eeee (implements), t_e1a18798 (push bridge,
-done)
+the SpacetimeDB module, `Source/Content/` **Kind:** architecture **Subject:** data **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** t_fe20eeee (implements),
+t_e1a18798 (push bridge, done)
 
 ## Decision
 

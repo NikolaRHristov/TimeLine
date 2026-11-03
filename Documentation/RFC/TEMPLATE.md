@@ -1,9 +1,14 @@
 # RFC-NNNN - Title
 
 **Status:** Proposed **Date:** YYYY-MM-DD **Owner:** operator **Applies to:** the components this
-decision binds **Decision class:** architecture | product | policy | methodology | governance
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-XXXX (short reason), card
-ids
+decision binds **Kind:** architecture | contract | policy | specification | method **Subject:** data
+| transport | identity | surface | network | operation | economy | text **Horizon:** now | next |
+later **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-XXXX (short reason),
+card ids
+
+The three classification fields are closed vocabularies, defined in `README.md`;
+`Scripts/Classification.mjs` refuses a value outside them. `Decision class:` is retired - `Kind` is
+the same question with a vocabulary that has a home for every record.
 
 ## Decision
 

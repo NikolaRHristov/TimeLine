@@ -1,11 +1,11 @@
 # RFC-0034 - Versioning and protocol compatibility
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the schema, the client
-protocol, the artifact, the compatibility window **Decision class:** architecture **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0011 (`schemaVersion` and the term
-lifecycle), RFC-0002 (derivation from one schema), RFC-0025 §1 (the artifact is content-addressed),
-RFC-0016 §2 (staged rollout and a window); implementing card to be created: "Version triple in the
-health view"
+protocol, the artifact, the compatibility window **Kind:** contract **Subject:** transport
+**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0011
+(`schemaVersion` and the term lifecycle), RFC-0002 (derivation from one schema), RFC-0025 §1 (the
+artifact is content-addressed), RFC-0016 §2 (staged rollout and a window); implementing card to be
+created: "Version triple in the health view"
 
 ## Decision
 

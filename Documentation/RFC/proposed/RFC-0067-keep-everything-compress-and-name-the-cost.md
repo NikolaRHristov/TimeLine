@@ -1,12 +1,13 @@
 # RFC-0067 - Keep everything, compress, and name the cost
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the shadow store's
-layout, the compression codec, payload deduplication, the cost statement **Decision class:** policy
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001 (the store is the
-authority and never loses history), RFC-0028 (the room's retention, which this record does not
-touch), RFC-0039 (what a room pays, kept separate from what a member pays), RFC-0059 (the duplicates
-that make deduplication worth doing), RFC-0015 (the export, which stays uncompressed); implementing
-card to be created: "Store codec, payload area and the cost view"
+layout, the compression codec, payload deduplication, the cost statement **Kind:** policy
+**Subject:** data **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
+dependencies:** RFC-0001 (the store is the authority and never loses history), RFC-0028 (the room's
+retention, which this record does not touch), RFC-0039 (what a room pays, kept separate from what a
+member pays), RFC-0059 (the duplicates that make deduplication worth doing), RFC-0015 (the export,
+which stays uncompressed); implementing card to be created: "Store codec, payload area and the cost
+view"
 
 ## Decision
 

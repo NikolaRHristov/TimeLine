@@ -1,11 +1,12 @@
 # RFC-0068 - Language is content; accessibility is a contract
 
 **Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the site shell, every
-component, the content schema, every client **Decision class:** policy **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0017 (the client surface and its empty states),
-RFC-0015 (the export gains a language field), RFC-0034 (a format change), RFC-0060 §7 (a translation
-is a copy, not an edit), RFC-0045 (the tokens an accessible contrast is measured in); implementing
-card to be created: "Language in the content schema and the accessibility audit"
+component, the content schema, every client **Kind:** contract **Subject:** surface **Horizon:** now
+**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (the client surface and
+its empty states), RFC-0015 (the export gains a language field), RFC-0034 (a format change),
+RFC-0060 §7 (a translation is a copy, not an edit), RFC-0045 (the tokens an accessible contrast is
+measured in); implementing card to be created: "Language in the content schema and the accessibility
+audit"
 
 ## Decision
 
