@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import {
 	fileName,
-	subjectSuffix,
+	subjectTokens,
 	type EventKind,
 	type EventRecord,
 } from "../../Model/Event/Event.ts";
@@ -244,15 +244,29 @@ export function open(directory: string): ShadowStore {
 		},
 
 		events(subject?: string): ShadowEvent[] {
-			const suffix = subject === undefined ? ".json" : subjectSuffix(subject);
+			// The name is a pre-filter only: it is cheap, and it narrows the
+			// directory to a handful of files before anything is parsed. It is
+			// not the answer - `a/b` and `a?b` flatten to one slug, and files
+			// written before the digest existed carry no digest at all - so
+			// every candidate's own `subject` is compared below.
+			const tokens = subject === undefined ? null : subjectTokens(subject);
 			const found: ShadowEvent[] = [];
-			for (const name of entries(eventDirectory(), suffix)) {
-				const value = record(readJson(join(eventDirectory(), name)));
-				if (value === null || typeof value["at"] !== "string") continue;
-				found.push({
-					file: join(eventDirectory(), name),
-					record: value as unknown as EventRecord,
-				});
+			for (const name of entries(eventDirectory(), ".json")) {
+				if (tokens !== null && !tokens.some((token) => name.includes(token))) continue;
+				const path = join(eventDirectory(), name);
+				const value = record(readJson(path));
+				if (value === null || typeof value["at"] !== "string") {
+					// A named warning, not a throw: one unreadable file must
+					// not hide the rest of the trail from the person reading
+					// it.
+					process.stderr.write(`maintain: skipping unreadable event Event/${name}\n`);
+					continue;
+				}
+				// The record's own subject is the proof of identity. A file
+				// named for `a/b` may hold `a?b`, and a caller asking about one
+				// post must never receive another post's trail.
+				if (subject !== undefined && value["subject"] !== subject) continue;
+				found.push({ file: path, record: value as unknown as EventRecord });
 			}
 			return found.sort((left, right) => left.record.at.localeCompare(right.record.at));
 		},

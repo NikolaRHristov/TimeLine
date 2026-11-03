@@ -12,7 +12,7 @@
 		"Prepare": "esbuild Configuration/ESBuild.ts --format=esm --platform=node --target=esnext --outfile=Configuration/ESBuild.js",
 		"Watch": "pnpm run Prepare && Build 'Source/**/*.ts' --Watch --ESBuild Configuration/ESBuild.ts",
 		"Schema": "node Script/GenerateSchema.ts --write",
-		"check": "tsc --noEmit -p tsconfig.json && node --test Source/Test/Schema.test.ts",
+		"check": "tsc --noEmit -p tsconfig.json && node Script/Test.ts",
 		"test": "node --test Target/Test/*.test.js",
 		"tool": "node Target/Index.js"
 	},

@@ -38,9 +38,15 @@ The procedure that builds and re-syncs the board is `Documentation/Skill/RFC-Boa
 the tool it wraps is `Documentation/Skill/RFC-Board/Reference/rfc_board.py`:
 
 ```sh
-pnpm run RFC:Board         # create, refresh, attach, set fields, sync the project README
-pnpm run RFC:Board:Verify  # read the project back and exit non-zero on a disagreement
+pnpm run RFC:Board                        # read: compare the committed records with the board, write nothing
+pnpm run RFC:Board:Verify                 # read: the project back, non-zero on the first disagreement
+pnpm run RFC:Board:Sync --reason "<why>"  # write: create, refresh, attach, set fields, update the README
 ```
+
+The first two read and the third writes. `sync` refuses a board that already holds items unless
+`--reason` names why the write is justified, so a habit cannot rewrite what other people see; an
+empty board is the initial sync and needs no reason, because there is nothing of anyone else's to
+lose.
 
 Only committed records are published. A record still untracked is somebody's work in progress, so it
 is reported as skipped and never published half-written; commit it, run the command again, and the

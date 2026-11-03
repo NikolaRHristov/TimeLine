@@ -1,6 +1,6 @@
 ---
 name: rfc-board
-description: "Use when the RFC board must be built or re-synced."
+description: "Use when the RFC board must be read, compared or synced."
 version: 1.0.0
 author: Hermes Agent
 license: MIT
@@ -17,7 +17,8 @@ The project at `TimeLine-DELO` project 1 is a projection of the record files in
 authoritative, the issue follows the record, the project item follows the issue. Nothing in this
 procedure writes back into a record.
 
-The tool that does the work is `Reference/rfc_board.py`, a single command with four subcommands.
+The tool that does the work is `Reference/rfc_board.py`: five subcommands, four of which read the
+board and one of which writes it.
 
 ---
 
@@ -29,53 +30,96 @@ The tool that does the work is `Reference/rfc_board.py`, a single command with f
   repository.
 - Someone asks whether the published board still matches the tree.
 
-Do not use it to publish a record that is not committed. See "What May Be Published".
+Do not sync a record that is not committed. See "What May Be Published".
 
 ---
 
 ## The Commands
 
 ```sh
+python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py plan
 python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py render
-python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py publish --dry-run
-python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py publish
 python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py verify
 python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py readme
+python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py sync --reason "<why>"
 ```
 
-The root scripts are the same calls: `pnpm run RFC:Board` is `publish`, `pnpm run RFC:Board:Verify`
-is `verify`.
+`plan` is the default, so a bare run is `plan`.
 
-- **`render`** reads every committed record, writes one issue body per record into the work
-  directory, leak-scans the bodies and proves each `## Decision` section survived the round trip
-  byte for byte. It touches nothing remote, so it is the safe first look.
-- **`publish`** creates the issues that are missing, refreshes the bodies that drifted, adds the
-  issues to the project, writes the field values that disagree with the record and syncs the project
-  README. It is idempotent: a second run creates nothing, rewrites nothing and leaves an agreeing
-  field alone. `--dry-run` prints the plan and writes nothing.
-- **`verify`** reads the published project independently of `publish` and exits non-zero on the
-  first disagreement. Its checks are the table at the end of this file.
-- **`readme`** uploads `Reference/project-README.md` alone, for the runs where only the prose moved.
-  `publish` calls the same code, so the two cannot disagree.
+The root scripts are the same calls: `pnpm run RFC:Board` is `plan`,
+`pnpm run RFC:Board:Sync --reason "<why>"` is `sync`, and `pnpm run RFC:Board:Verify` is `verify`;
+`pnpm run Check:RFC-Board` runs the tests in `Reference/`. The plain name is the read path on
+purpose, so running it out of habit writes nothing.
+
+- **`plan`** compares the committed records with the board and reports what it would create, what it
+  would update and what already agrees, one line per change. It exits `0` when the board agrees and
+  `1` when it does not, and it makes no write call on any path.
+- **`render`** writes one issue body per record into the work directory, leak-scans the bodies and
+  proves each `## Decision` section survived the round trip byte for byte. It touches nothing
+  remote, so it is the safe first look.
+- **`verify`** reads the published project independently of the plan and exits non-zero on the first
+  disagreement. Its checks are the table at the end of this file.
+- **`readme`** reports whether the project's README is the rendered `Reference/project-README.md`.
+- **`sync`** is the only writer. It performs what `plan` reports - creates the missing issues,
+  updates the drifted bodies, adds the missing items, sets the field values that disagree and
+  updates the README - printing one line per mutation. It refuses to run on a board that holds items
+  unless `--reason` names why the write is justified; an empty board is the initial sync and needs
+  no reason. It never creates a field: a project missing one of the six is refused, because a copied
+  project carries its fields and a field created by a guess would carry the wrong data type.
+
+`publish` is gone: it was the old name for a command that wrote without being asked. Running it now
+prints one sentence and exits `2`.
 
 The work directory is `Maintain/Storage/RFC-Board/` by default (gitignored, `--work` overrides it).
 It holds `records.json` and one rendered body per record; it is a build product and nothing reads it
-back as input.
+back as input. `plan` writes the bodies there so the text it reports can be read before `sync` sends
+it.
+
+---
+
+## The Board Is Shared, So a Run Reads
+
+The GitHub project is shared state. Anyone with repository permission can edit an item, move it or
+change a field, and none of that is in this repository. A local script that rewrote items and fields
+on its normal path would discard those edits silently: the next run would look like maintenance and
+be a revert.
+
+The split is therefore by direction, not by convenience:
+
+- **Reading is free.** Enumerating issues, reading items, reading field values and rendering bodies
+  are inference over state someone else owns. Any command may do it at any time, and a person can
+  run `plan` as often as they like.
+- **Writing is a ceremony.** Creating an issue, adding a project item, setting a field value or
+  uploading the README changes what other people see. It happens only in `sync`, only after the plan
+  has been printed, and only once the precondition is met.
+- **Boilerplate is the exception, and the only one.** The initial sync - the first items on an empty
+  board - has nothing of anyone else's to lose, so it needs no reason. Every write after it does.
+
+The rule is enforced in the code rather than by convention. Every write passes through one seam -
+`gh` for the CLI, `graphql` for the API - and that seam refuses a mutating verb or a `mutation`
+document unless `sync` has declared itself first. A write added later is refused by default instead
+of by review, which is the only kind of guarantee that survives the next edit.
 
 ---
 
 ## What May Be Published
 
-`git ls-files Documentation/RFC/proposed` is the list. A record that is still untracked is
-somebody's work in progress: it is printed as
+`git ls-tree -r --name-only <HEAD> -- Documentation/RFC/proposed` is the list, and each record's
+text is read with `git show <HEAD>:<path>`. The corpus is one commit's snapshot, not a state: a
+record that is staged and never committed is not in the list at all, and a record edited after its
+commit publishes the bytes the commit holds. Both are reported rather than left to be guessed, as
+`warn <path>: staged but not in <commit>, so it is not published (commit it)` and
+`warn <path>: edited since <commit>, so its committed bytes are what publishes`. A record that is
+still untracked is somebody's work in progress: it is printed as
 `skip <path> (untracked: not committed, so not published)` and it is never published half-written.
 The count `verify` asserts is the number of committed records, so a half-finished record cannot make
 the board look incomplete.
 
 The consequence is deliberate and worth stating plainly: a record becomes visible on the board one
-step after it becomes part of the tree. Commit the record, run `publish` again, and the delta lands.
-An unreadable committed record is refused rather than skipped: `publish` exits non-zero and
-publishes nothing, because a corpus that cannot be parsed is a corpus whose board would be a guess.
+step after it becomes part of the tree. Commit the record, run `plan` to see the delta, and `sync`
+to land it. An unreadable committed record is refused rather than skipped: both commands exit
+non-zero and compare nothing, because a corpus that cannot be parsed is a corpus whose board would
+be a guess.
 
 ---
 
@@ -85,9 +129,9 @@ publishes nothing, because a corpus that cannot be parsed is a corpus whose boar
   `## Verification` table verbatim, the three classification axes, the status, the `depends` entries
   joined with commas, the implementing card ids and a link to the file. It is never a summary, so it
   cannot drift from the record in a way a reader could not detect.
-- **A body that differs from its record is rewritten.** `publish` compares the published body with
-  the freshly rendered one and edits the issue when they differ, so editing a record and re-running
-  is the whole update procedure.
+- **A body that differs from its record is reported, and only `sync` rewrites it.** `plan` compares
+  the published body with the freshly rendered one and prints one line per body that would change;
+  `sync` performs it. Editing a record and re-running the pair is the whole update procedure.
 - **The classification is read from the frontmatter, never from a side table.** `category` states
   `Kind` and `Subject` together and `horizon` states the third; `verify` compares every item's three
   values against its record's, so a board that disagrees with the corpus fails rather than reporting
@@ -139,7 +183,7 @@ option ids come from the project's own field list over GraphQL, in one request. 
 so the same tool drives a copy of the project on another owner without an edit:
 
 ```sh
-python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py publish \
+python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py plan \
   --owner <owner> --repo <repository> --project <number> --branch <branch>
 ```
 
@@ -212,46 +256,52 @@ axis rather than publishing a guess.
 2. Choose `category` and `horizon` from the vocabularies in `Documentation/RFC/README.md`, then run
    `node Scripts/RFC-Frontmatter.mjs` and add the record to the audit's assignment table if it is
    new there. A value outside a vocabulary fails the check.
-3. Commit the record. `publish` reads committed records only.
-4. Run `publish`, then `verify`. A non-zero exit from `verify` names the item and the field that
-   disagree.
+3. Commit the record. Both `plan` and `sync` read committed records only.
+4. Run `plan` to see what it adds, then `sync --reason "<why>"` to write it, then `verify`. A
+   non-zero exit from `verify` names the item and the field that disagree.
 5. Open the three views once and set each group-by, if the project is new.
 
 ---
 
 ## Exit Codes
 
-| Exit | Meaning                                                                   |
-| ---- | ------------------------------------------------------------------------- |
-| `0`  | the command did what it reports; `verify` means every check passed        |
-| `1`  | `render`: a leak hit or a mangled Decision section                        |
-| `1`  | `publish`: a leak hit, or any create, refresh, add or field write failed  |
-| `1`  | `verify`: at least one check failed; the failing check is printed as FAIL |
-| `2`  | the inputs are wrong: no corpus above the tool, no `area.json`, no `gh`   |
+| Exit | Meaning                                                                                        |
+| ---- | ---------------------------------------------------------------------------------------------- |
+| `0`  | the command did what it reports; `plan` means the board agrees; `verify` passed                |
+| `1`  | `plan`: the board disagrees with the records, one line per change                              |
+| `1`  | `render`: a leak hit or a mangled Decision section                                             |
+| `1`  | `sync`: a leak hit, or any create, refresh, add or field write failed                          |
+| `1`  | `verify`: at least one check failed; the failing check is printed as FAIL                      |
+| `2`  | the inputs are wrong: no corpus above the tool, no `gh`, `sync` without a reason, or `publish` |
 
 ---
 
 ## Files
 
-| File                          | What it is                                                                          |
-| ----------------------------- | ----------------------------------------------------------------------------------- |
-| `SKILL.md`                    | this procedure                                                                      |
-| `Reference/rfc_board.py`      | the tool: `render`, `publish`, `verify`, `readme`                                   |
-| `Reference/project-README.md` | the project's own README, ASCII, with `@@DASH@@` and `@@COUNT@@` resolved at upload |
-| `Reference/Index.md`          | the archive index for this directory                                                |
+| File                                   | What it is                                                                                |
+| -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `SKILL.md`                             | this procedure                                                                            |
+| `Reference/rfc_board.py`               | the tool: `plan`, `render`, `verify`, `readme` read; `sync` writes                        |
+| `Reference/project-README.md`          | the project's own README, ASCII, with `@@DASH@@` and `@@COUNT@@` resolved at upload       |
+| `Reference/test_committed_snapshot.py` | the snapshot test: a staged record is absent, an edited one publishes its committed bytes |
+| `Reference/test_read_only.py`          | the split test: a write is refused at the seam, the plan's exit codes, the sync's gate    |
+| `Reference/Index.md`                   | the archive index for this directory                                                      |
 
 ---
 
 ## Verification
 
-| Claim                             | Test                                                                                                                                              |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The tool runs from the tree       | `python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py render` exits 0 and prints `decision text intact: N/N`                              |
-| Only committed records publish    | `git ls-files Documentation/RFC/proposed \| wc -l` and the `committed records:` line of `render` agree                                            |
-| The board count is the corpus     | `python3 .../rfc_board.py verify` prints `committed records: N   board items: N` and exits 0                                                      |
-| Every item has RFC and every axis | the `[2]` block of `verify` prints `without RFC: 0`, `without Kind: 0`, `without Subject: 0` and `without Horizon: 0`                             |
-| The board agrees with the files   | the `[2]` block prints `items whose axes disagree with their record: 0`, and the per-axis counts equal `node Scripts/RFC-Frontmatter.mjs`         |
-| Publishing is idempotent          | a second `publish` prints `created=0 bodies_refreshed=0 items_added=0 fields_written=0`                                                           |
-| The group-by gap is real          | `gh api graphql -f query='query{__type(name:"UpdateProjectV2ViewInput"){inputFields{name}}}'` prints six fields and none is `groupBy` or `sortBy` |
-| The tool carries no machine path  | `python3 Documentation/Skill/Tool-Archive/Reference/archive_tool.py --audit` prints `clean: no home paths`                                        |
-| The separator is a real em dash   | `gh api repos/TimeLine-DELO/TimeLine/issues/6 --jq .title \| od -An -tx1 \| head -1` shows `e2 80 94` between the id and the title                |
+| Claim                             | Test                                                                                                                                                                                                                                                                         |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The tool runs from the tree       | `python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py render` exits 0 and prints `decision text intact: N/N`                                                                                                                                                         |
+| Only committed records publish    | `pnpm run Check:RFC-Board` exits 0: a record staged and never committed is absent from the enumeration, and a record edited after its commit renders its committed bytes                                                                                                     |
+| The board count is the corpus     | `python3 .../rfc_board.py verify` prints `committed records: N   board items: N` and exits 0                                                                                                                                                                                 |
+| Every item has RFC and every axis | the `[2]` block of `verify` prints `without RFC: 0`, `without Kind: 0`, `without Subject: 0` and `without Horizon: 0`                                                                                                                                                        |
+| The board agrees with the files   | the `[2]` block prints `items whose axes disagree with their record: 0`, and the per-axis counts equal `node Scripts/RFC-Frontmatter.mjs`                                                                                                                                    |
+| A plain run writes nothing        | `grep -n "item-add\|item-edit\|issue create\|issue edit\|issue close" Reference/rfc_board.py` hits only inside `execute`, and `gh`/`graphql` refuse a mutation unless `sync` declared itself: `pnpm run Check:RFC-Board` fails the two seam tests when that check is removed |
+| The plain name is the read path   | `node -e "console.log(require('./package.json').scripts['RFC:Board'])"` prints a command ending in `plan`, and `pnpm run RFC:Board:Sync` is the only script that names `sync`, so the plain name cannot write, and the plain run exits `0` or `1` on the board and never `2` |
+| The plan is what sync performs    | `python3 .../rfc_board.py plan` exits `0` on a board that agrees and `1` on one that does not, and `sync` executes the list `plan_board` returned, not a second computation                                                                                                  |
+| A populated board needs a reason  | `python3 .../rfc_board.py sync` on a board holding items exits `2` with one line and no write; an empty board runs as the initial sync                                                                                                                                       |
+| The group-by gap is real          | `gh api graphql -f query='query{__type(name:"UpdateProjectV2ViewInput"){inputFields{name}}}'` prints six fields and none is `groupBy` or `sortBy`                                                                                                                            |
+| The tool carries no machine path  | `python3 Documentation/Skill/Tool-Archive/Reference/archive_tool.py --audit` prints `clean: no home paths`                                                                                                                                                                   |
+| The separator is a real em dash   | `gh api repos/TimeLine-DELO/TimeLine/issues/6 --jq .title \| od -An -tx1 \| head -1` shows `e2 80 94` between the id and the title                                                                                                                                           |

@@ -127,11 +127,16 @@ tree is ignored, so the code that reads and writes it lives next door in `Mainta
 a file dropped under `Storage/` would never be committed.
 
 ```
-Post/<statusId>.json              one record per post, merged across sources
-Observation.jsonl                 append-only {at,source,statusId,action}
-Index.json                        statusId -> file
-Event/<ISO>-<kind>-<subject>.json
+Post/<statusId>.json                       one record per post, merged across sources
+Observation.jsonl                          append-only {at,source,statusId,action}
+Index.json                                 statusId -> file
+Event/<ISO>-<kind>-<slug>-<digest8>.json   scrape + publish + hide events
 ```
+
+The slug is the readable half of an event name and the digest is the identifying half: eight hex
+characters of the subject's SHA-256, because `a/b` and `a?b` both flatten to `a-b` and would
+otherwise name one file. Files written before the digest existed (`<ISO>-<kind>-<slug>.json`) are
+still read.
 
 `store publish` and `store hide` are the only commands that write to `Source/Content/`, and both are
 idempotent: publishing a published post rewrites the same bytes, hiding a hidden post changes
@@ -466,6 +471,16 @@ The parser, the target selector and both stores run without a browser:
 ```bash
 pnpm --filter timeline-maintain test
 # node --test "Maintain/Target/Test/*.test.js", after `pnpm run Build`
+```
+
+`check` is the gate, and it runs the same suite with no build behind it: `node Script/Test.ts` reads
+the `Configuration/Content.ts` the build reads and hands those values to the test process, so every
+file under `Maintain/Source/Test` runs on a fresh clone. The command above stays the post-build run,
+which is what proves the bundle behaves the same.
+
+```bash
+pnpm --filter timeline-maintain run check
+# tsc --noEmit -p tsconfig.json && node Script/Test.ts
 ```
 
 Everything else is verified against the live endpoint - the claim-to-test table in

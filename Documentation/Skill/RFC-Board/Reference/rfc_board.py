@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Archived tool: rfc_board.py
 #
-# What it does: Assemble the RFC project board from the committed record files: render one body per record, create and refresh the issues, add them to the project, write each item's field values and verify the result.
+# What it does: Compare the RFC project board with the committed record files and report the difference; render one body per record; verify the published board. It writes to GitHub only when its `sync` command is named, and then only what the report it printed says.
 # Kept here so a later session reuses it instead of rewriting it.
 # Run it from the repository root; it reads the paths it names and nothing else.
 # Archived: 2026-11-03 by Documentation/Skill/Tool-Archive/Reference/archive_tool.py
@@ -10,20 +10,39 @@
 One direction of flow: the record file is authoritative, the issue follows it, the
 project item follows the issue. Nothing here writes back into a record.
 
+The board is shared state: anyone with repository permission can edit it, so a run
+that rewrote items and fields would silently discard their edits. This tool therefore
+reads by default and writes only when told to.
+
+  plan     the default, and what a bare run does. Compare the committed records
+           with the board and report what it would create, what it would update and
+           what already agrees. No write call on this path: exit 0 when the board
+           agrees, 1 when it does not.
   render   read every committed record, write one issue body per record into the
            work directory, leak-scan the bodies and prove each Decision section
            survived the round trip byte for byte. Touches nothing remote.
-  publish  create the issues that are missing, refresh the bodies that drifted,
-           add the issues to the project and write each item's field values.
-           Idempotent: a second run creates nothing and rewrites nothing.
   verify   an independent read of the published project - counts, field values,
            views, one file-to-board trace, every item's axes against its record,
-           a leak sweep - and an exit code.
+           a leak sweep - and an exit code. Reads only.
+  readme   report whether the project's README matches `Reference/project-README.md`.
+           Reads only.
+  sync     the only writer. Perform what `plan` reports, printing one line per
+           mutation. It refuses to run on a board that holds items unless `--reason`
+           names why the write is justified; on an empty board the run is the
+           initial sync and needs no reason.
 
-Only committed records are published. `git ls-files Documentation/RFC/proposed` is
-the list; a record still untracked is somebody's work in progress, so it is
-reported as skipped and never published half-written. Commit the record, run
-`publish` again, and the delta lands.
+Every write passes through one seam, `gh` or `graphql`, and that seam refuses a
+mutation unless `sync` has declared itself first. A write added later is refused by
+default rather than by review.
+
+Only committed records are published, and "committed" means one commit's snapshot:
+`HEAD` is resolved once, `git ls-tree -r` names the records inside that commit, and
+every record's text comes from `git show <commit>:<path>`. The index is never the
+list and the working tree is never the source, so a record that was staged and
+never committed is absent from the run, and a record edited after its commit
+renders the bytes that commit holds. A record on disk but not in the commit is
+reported as skipped. Commit the record, run `plan` to see the delta, and `sync` to
+land it.
 
 The procedure that wraps this tool is `Documentation/Skill/RFC-Board/SKILL.md`.
 """
@@ -194,13 +213,73 @@ def git(root: Path, *args: str) -> str:
     return proc.stdout
 
 
-def committed_files(root: Path) -> list[str]:
-    out = git(root, "ls-files", "-z", "--", PROPOSED)
-    return sorted(name for name in out.split("\0") if name.endswith(".md"))
+def head_commit(root: Path) -> str:
+    """The one commit every record is read from, resolved once per run.
+
+    A run reads a snapshot, not a state. The index and the working tree are
+    whatever a person happens to be doing at the moment; `HEAD` is the agreement,
+    so it is the only thing a published board may be derived from.
+    """
+    proc = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--verify", "HEAD"],
+        capture_output=True,
+        text=True,
+    )
+    commit = proc.stdout.strip()
+    if proc.returncode != 0 or not commit:
+        raise SystemExit(
+            f"no commit to read in {root}: "
+            f"{proc.stderr.strip() or 'git rev-parse HEAD answered nothing'}"
+        )
+    return commit
+
+
+def committed_files(root: Path, commit: str) -> list[str]:
+    """The records inside `commit` - never the ones the index lists.
+
+    `git ls-files` answers with the index, which carries a file that was staged
+    and never committed. `git ls-tree` answers with one tree, so a record joins
+    the corpus by being committed and by no other means.
+    """
+    out = git(root, "ls-tree", "-r", "--name-only", "-z", commit, "--", PROPOSED)
+    names = sorted(name for name in out.split("\0") if name.endswith(".md"))
+    if not names:
+        raise SystemExit(
+            f"no committed record under {PROPOSED} at {commit[:12]}; "
+            "nothing to publish (commit a record first)"
+        )
+    return names
+
+
+def committed_text(root: Path, commit: str, name: str) -> str:
+    """One record's bytes as `commit` holds them - never as the disk holds them.
+
+    Read as bytes and decoded here rather than through `text=True`, so a blob
+    that is not UTF-8 is a message naming the record instead of a traceback out
+    of the subprocess decoder.
+    """
+    proc = subprocess.run(
+        ["git", "-C", str(root), "show", f"{commit}:{name}"], capture_output=True
+    )
+    if proc.returncode != 0:
+        detail = proc.stderr.decode("utf-8", "replace").strip()
+        raise SystemExit(
+            f"cannot read {name} at {commit[:12]}: {detail or 'git show failed'}"
+        )
+    try:
+        return proc.stdout.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise SystemExit(f"{name} at {commit[:12]} is not UTF-8 text: {error}")
 
 
 def untracked_files(root: Path) -> list[str]:
     out = git(root, "ls-files", "--others", "--exclude-standard", "-z", "--", PROPOSED)
+    return sorted(name for name in out.split("\0") if name.endswith(".md"))
+
+
+def changed_files(root: Path) -> list[str]:
+    """Every record whose index or working-tree text differs from `HEAD`."""
+    out = git(root, "diff", "--name-only", "-z", "HEAD", "--", PROPOSED)
     return sorted(name for name in out.split("\0") if name.endswith(".md"))
 
 
@@ -331,8 +410,13 @@ def section(body: str, name: str, required: bool = True) -> str:
     return (rest if end == -1 else rest[:end]).strip("\n")
 
 
-def parse_record(path: Path) -> dict:
-    text = path.read_text(encoding="utf-8")
+def parse_record(name: str, text: str) -> dict:
+    """One record, parsed from the text one commit holds for `name`.
+
+    The text is passed in rather than read from `name`, so the parser has no way
+    to open the working tree: the only bytes it can see are the ones the caller
+    took out of the commit.
+    """
     fields, body = split_frontmatter(text)
 
     required = ("title", "rfc", "category", "kind", "status", "horizon", "depends")
@@ -374,7 +458,7 @@ def parse_record(path: Path) -> dict:
         "number": number,
         "id": f"RFC-{number:04d}",
         "title": str(fields["title"]),
-        "path": path.as_posix(),
+        "path": name,
         "status": status,
         "date": str(fields.get("date", "")),
         "kind": kind,
@@ -391,20 +475,39 @@ def parse_record(path: Path) -> dict:
 
 
 def load(root: Path) -> tuple[list[dict], list[str], list[tuple[str, str]], list[str]]:
-    """Every committed record, plus what was skipped and what could not be read."""
+    """Every committed record, plus what was skipped and what could not be read.
+
+    One commit is resolved here and everything below reads that commit: the
+    enumeration, the bytes of each record and the report of what the tree holds
+    that the commit does not.
+    """
+    commit = head_commit(root)
+    committed = committed_files(root, commit)
+    in_commit = set(committed)
     skipped = untracked_files(root)
     records: list[dict] = []
     errors: list[tuple[str, str]] = []
-    for name in committed_files(root):
+    for name in committed:
         try:
-            record = parse_record(root / name)
+            record = parse_record(name, committed_text(root, commit, name))
         except RecordError as error:
             errors.append((name, str(error)))
             continue
-        record["path"] = name
         records.append(record)
 
     warnings: list[str] = []
+    # Two states a reader has to be told about, because the board is silent about
+    # both: a record staged and never committed is not in the snapshot at all, and
+    # a record edited after its commit publishes the bytes the commit holds.
+    for name in changed_files(root):
+        if name in in_commit:
+            warnings.append(
+                f"{name}: edited since {commit[:12]}, so its committed bytes are what publishes"
+            )
+        elif name not in skipped:
+            warnings.append(
+                f"{name}: staged but not in {commit[:12]}, so it is not published (commit it)"
+            )
     counts = collections.Counter(record["number"] for record in records)
     for number, count in sorted(counts.items()):
         if count > 1:
@@ -486,9 +589,10 @@ def render_body(record: dict, slug: str, branch: str, tool: str) -> str:
         "",
         "---",
         "",
-        f"<sub>Assembled from the record by `{tool}`, which creates the issue, adds it "
-        "to the project and writes its fields; the decision text above is the record's "
-        "own section, copied verbatim. The issue is rebuilt from the file whenever the "
+        f"<sub>Assembled from the record by `{tool}`, which reads the records and "
+        "renders this text; the board itself is written only by that tool's `sync` "
+        "command, run deliberately. The decision text above is the record's own "
+        "section, copied verbatim. The issue is rebuilt from the file whenever the "
         "file changes, and never carries a summary.</sub>",
     ]
     return "\n".join(parts).rstrip() + "\n"
@@ -516,7 +620,86 @@ def bodies_for(
 # --------------------------------------------------------------------------- #
 
 
-def gh(*args: str, stdin: str | None = None) -> subprocess.CompletedProcess:
+# The CLI's mutating verbs, as `gh <noun> <verb>` spells them. A call whose verb is
+# here changes state other people own, so it is refused unless this run has declared
+# itself the sync. The check lives in the seam rather than at each call site: a write
+# added later is refused by default instead of by review.
+MUTATING_VERBS = frozenset(
+    {
+        "add",
+        "archive",
+        "close",
+        "comment",
+        "create",
+        "delete",
+        "edit",
+        "field-create",
+        "field-delete",
+        "item-add",
+        "item-archive",
+        "item-delete",
+        "item-edit",
+        "link",
+        "merge",
+        "remove",
+        "reopen",
+        "set",
+        "transfer",
+        "unlink",
+        "update",
+    }
+)
+
+# Empty until `sync` sets it, after its precondition has been met. A module global
+# rather than a parameter because the seam is shared by every call site, and the
+# point is that no call site can opt itself in.
+WRITES: dict[str, str] = {"reason": ""}
+
+
+def allow_writes(reason: str) -> None:
+    """Declare this run the sync, with the reason a write is justified."""
+    WRITES["reason"] = reason
+
+
+def require_write(what: str) -> None:
+    """Refuse a mutation unless this run is the sync.
+
+    One line and a non-zero exit, never a traceback: a refusal is an answer about the
+    command, not a fault in it.
+    """
+    if WRITES["reason"]:
+        return
+    raise SystemExit(
+        f"refusing to {what}: this command reads the board and never writes it; "
+        "the only writer is `sync`"
+    )
+
+
+def refuse(message: str) -> None:
+    """The inputs, not the board, are wrong: one line on stderr and exit 2."""
+    print(message, file=sys.stderr)
+    raise SystemExit(2)
+
+
+def parse_json(text: str, what: str) -> dict:
+    """The JSON a command answered with, or a message naming what answered instead."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as error:
+        first = (text.strip().splitlines() or [""])[0][:200]
+        raise SystemExit(f"{what} answered with something that is not JSON: {error}: {first}")
+
+
+def gh(
+    *args: str, stdin: str | None = None, write: str = ""
+) -> subprocess.CompletedProcess:
+    """The one CLI seam. A mutating verb is refused unless `sync` enabled writes.
+
+    `gh api` is excluded because it is a read or a write depending on its payload;
+    every GraphQL call goes through `graphql` below, which makes that distinction.
+    """
+    if len(args) > 1 and args[0] != "api" and args[1] in MUTATING_VERBS:
+        require_write(write or f"run `gh {' '.join(args[:2])}`")
     try:
         return subprocess.run(
             ["gh", *args], input=stdin, capture_output=True, text=True
@@ -537,7 +720,7 @@ def gh_json(*args: str, attempts: int = 3) -> dict:
     for attempt in range(attempts):
         proc = gh(*args)
         if proc.returncode == 0:
-            return json.loads(proc.stdout)
+            return parse_json(proc.stdout, f"gh {' '.join(args[:2])}")
         last = proc.stderr.strip()
         # `unknown owner type` is the CLI's reading of a throttled owner lookup: it
         # asks which kind of owner the login is, gets nothing back, and reports the
@@ -550,6 +733,9 @@ def gh_json(*args: str, attempts: int = 3) -> dict:
 
 
 def graphql(query: str, variables: dict | None = None) -> dict:
+    """One GraphQL document. A `mutation` is refused unless this run is the sync."""
+    if query.lstrip().startswith("mutation"):
+        require_write("send a GraphQL mutation")
     proc = gh(
         "api",
         "graphql",
@@ -559,10 +745,13 @@ def graphql(query: str, variables: dict | None = None) -> dict:
     )
     if proc.returncode != 0:
         raise SystemExit(f"gh api graphql failed: {proc.stderr.strip()}")
-    payload = json.loads(proc.stdout)
+    payload = parse_json(proc.stdout, "gh api graphql")
     if payload.get("errors"):
         raise SystemExit(f"graphql errors: {json.dumps(payload['errors'])[:800]}")
-    return payload["data"]
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        raise SystemExit("gh api graphql answered with no data")
+    return data
 
 
 def project_id(owner: str, number: int) -> str:
@@ -629,7 +818,12 @@ def project_fields(project: str) -> dict[str, dict]:
     matching shape. This project's `RFC` field holds the zero-padded text `0001`,
     so `{number: 1}` would be refused while `{text: "0001"}` is accepted.
     """
-    nodes = graphql(FIELDS_QUERY, {"p": project})["node"]["fields"]["nodes"]
+    data = graphql(FIELDS_QUERY, {"p": project})
+    nodes = ((data.get("node") or {}).get("fields") or {}).get("nodes")
+    if not nodes:
+        raise SystemExit(
+            f"project {project} answered no fields; check --owner and --project"
+        )
     return {node["name"]: node for node in nodes}
 
 
@@ -676,6 +870,17 @@ def issue_index(slug: str, limit: int, with_body: bool = False) -> dict[str, dic
         page += 1
 
 
+def items_page(project: str, cursor: str | None) -> dict:
+    """One page of the project's items, or a message naming what answered instead."""
+    data = graphql(ITEMS_QUERY, {"p": project, "after": cursor})
+    page = (data.get("node") or {}).get("items")
+    if not isinstance(page, dict):
+        raise SystemExit(
+            f"project {project} answered no items; check --owner and --project"
+        )
+    return page
+
+
 def item_index(project: str) -> dict[str, dict]:
     """Title -> the item's id and the field values it already carries.
 
@@ -686,7 +891,7 @@ def item_index(project: str) -> dict[str, dict]:
     items: dict[str, dict] = {}
     cursor = None
     while True:
-        page = graphql(ITEMS_QUERY, {"p": project, "after": cursor})["node"]["items"]
+        page = items_page(project, cursor)
         for node in page["nodes"]:
             content = node.get("content") or {}
             if not content.get("title"):
@@ -748,23 +953,29 @@ def stored_readme(project: str) -> str:
     return (data.get("node") or {}).get("readme") or ""
 
 
-def sync_readme(
-    project: str, records: list[dict], dry_run: bool
-) -> tuple[str, list[str]]:
-    """Make the project's README the rendered source, or leave it alone."""
+def readme_state(project: str, records: list[dict]) -> tuple[str, str]:
+    """The README against its source: a status word and the rendered text.
+
+    `unchanged` and `differs` are the two answers a reader needs; `no source file`
+    is the third and it is not an error, because a project may carry its README
+    alone. Nothing is written here - the state is a read, and `sync` acts on it.
+    """
     rendered = rendered_readme(records)
     if rendered is None:
-        return "no source file", []
+        return "no source file", ""
     if stored_readme(project).rstrip("\n") == rendered.rstrip("\n"):
-        return "unchanged", []
-    if dry_run:
-        return f"would update ({len(rendered)} chars)", []
+        return "unchanged", rendered
+    return "differs", rendered
+
+
+def update_readme(project: str, rendered: str) -> tuple[str, list[str]]:
+    """Write the rendered README, then prove the stored text is what was sent."""
     data = graphql(
         "mutation($p: ID!, $r: String!){updateProjectV2(input:{projectId: $p, readme: $r})"
         "{projectV2{readme}}}",
         {"p": project, "r": rendered},
     )
-    stored = (data.get("updateProjectV2") or {}).get("projectV2", {}).get(
+    stored = ((data.get("updateProjectV2") or {}).get("projectV2") or {}).get(
         "readme"
     ) or ""
     if stored.rstrip("\n") != rendered.rstrip("\n"):
@@ -775,13 +986,18 @@ def sync_readme(
 
 
 def cmd_readme(args) -> int:
+    """Report the README against its source. Reads only."""
     root, work, records, slug = prepare(args)
     project = project_id(args.owner, args.project)
-    status, failures = sync_readme(project, records, args.dry_run)
+    status, rendered = readme_state(project, records)
     print(f"project readme: {status}")
-    for failure in failures:
-        print(f"FAIL {failure}")
-    return 1 if failures else 0
+    if status == "differs":
+        print(
+            f"  the stored README is not the rendered source ({len(rendered)} chars); "
+            "`sync` writes it"
+        )
+        return 1
+    return 0
 
 
 def prepare(args) -> tuple[Path, Path, list[dict], str]:
@@ -796,7 +1012,8 @@ def prepare(args) -> tuple[Path, Path, list[dict], str]:
     report_load(root, records, skipped, errors, warnings)
     if errors:
         raise SystemExit(
-            f"{len(errors)} committed record(s) could not be read; nothing published"
+            f"{len(errors)} committed record(s) could not be read; "
+            "the board cannot be compared against a corpus that does not parse"
         )
     (work / "records.json").write_text(
         json.dumps(records, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
@@ -805,13 +1022,11 @@ def prepare(args) -> tuple[Path, Path, list[dict], str]:
 
 
 def cmd_render(args) -> int:
+    """The bodies on their own, in the work directory. Touches nothing remote."""
     root, work, records, slug = prepare(args)
     tool = relative_tool(root)
     bodies, leaks, unplaced = bodies_for(records, slug, args.branch, tool)
-    out = work / "bodies"
-    out.mkdir(parents=True, exist_ok=True)
-    for record in records:
-        (out / f"{record['id']}.md").write_text(bodies[record["id"]], encoding="utf-8")
+    out = write_bodies(work, records, bodies)
 
     print(f"\nbodies written: {len(bodies)} -> {out}")
     print(f"leak hits: {len(leaks)}")
@@ -839,27 +1054,71 @@ def relative_tool(root: Path) -> str:
         return "Documentation/Skill/RFC-Board/Reference/rfc_board.py"
 
 
-def cmd_publish(args) -> int:
-    root, work, records, slug = prepare(args)
-    tool = relative_tool(root)
-    bodies, leaks, unplaced = bodies_for(records, slug, args.branch, tool)
-    if leaks:
-        for record_id, hit in leaks:
-            print(f"  LEAK {record_id}: {hit!r}")
-        print(f"\nrefusing to publish: {len(leaks)} leak hit(s) in the rendered bodies")
-        return 1
+# --------------------------------------------------------------------------- #
+# The plan: one computation, two readers
+# --------------------------------------------------------------------------- #
 
-    out = work / "bodies"
-    out.mkdir(parents=True, exist_ok=True)
-    for record in records:
-        (out / f"{record['id']}.md").write_text(bodies[record["id"]], encoding="utf-8")
 
-    project = project_id(args.owner, args.project)
-    fields = project_fields(project)
-    missing_fields = [name for name in FIELDS if name not in fields]
-    if missing_fields:
-        print(f"  warn fields absent from the project: {missing_fields}")
-    rfc_text = fields.get("RFC", {}).get("dataType") == "TEXT"
+class Change:
+    """One mutation the board would need in order to agree with the records.
+
+    A change is data, not an action: `plan` prints the list and exits, `sync`
+    executes the same list. There is one computation and two readers of it, so the
+    report a person reads cannot differ from the writes that follow it.
+    """
+
+    __slots__ = ("phase", "record", "field", "value", "line")
+
+    def __init__(
+        self,
+        phase: str,
+        record: str,
+        field: str = "",
+        value: object = None,
+        line: str = "",
+    ) -> None:
+        self.phase = phase
+        self.record = record
+        self.field = field
+        self.value = value
+        self.line = line
+
+    def __repr__(self) -> str:
+        return f"Change({self.phase!r}, {self.record!r}, {self.field!r})"
+
+
+# The order a sync has to perform the phases in: an item needs the issue that a
+# create produces, and a field value needs the item that an add produces.
+PHASES = ("issue", "body", "item", "field", "readme")
+
+
+class Board:
+    """The project as one run read it: schema, issues and items, resolved once."""
+
+    __slots__ = ("project", "fields", "options", "ids", "rfc_text", "issues", "items")
+
+    def __init__(
+        self,
+        project: str,
+        fields: dict[str, dict],
+        issues: dict[str, dict],
+        items: dict[str, dict],
+    ) -> None:
+        self.project = project
+        self.fields = fields
+        self.options, self.ids, self.rfc_text = resolve_options(fields)
+        self.issues = issues
+        self.items = items
+
+
+def resolve_options(
+    fields: dict[str, dict],
+) -> tuple[dict[str, dict[str, str]], dict[str, str], bool]:
+    """The option ids and field ids the schema holds, and whether `RFC` is text.
+
+    Resolved from the project's own field list on every run: a field's id changes
+    when its data type does, so a remembered id is a stale id.
+    """
     options: dict[str, dict[str, str]] = {}
     for field, values in (("Status", STATUS_OPTIONS), *AXES):
         present = [
@@ -869,85 +1128,363 @@ def cmd_publish(args) -> int:
             name: option_id(fields, field, name) for name in values if name in present
         }
     ids = {name: fields[name]["id"] for name in FIELDS if name in fields}
+    return options, ids, fields.get("RFC", {}).get("dataType") == "TEXT"
 
+
+def read_board(args, slug: str) -> Board:
+    """Every read a plan needs, in one place, so no command compares half a board."""
+    project = project_id(args.owner, args.project)
+    fields = project_fields(project)
     issues = issue_index(slug, args.limit, with_body=True)
-    print(f"issues on {slug}: {len(issues)}")
+    items = item_index(project)
+    return Board(project, fields, issues, items)
 
-    created = refreshed = attached = 0
-    failures: list[str] = []
+
+def desired_values(
+    record: dict, fields: dict[str, dict], options: dict[str, dict[str, str]]
+) -> dict[str, object]:
+    """The field values the record states, restricted to what the project holds."""
+    desired: dict[str, object] = {
+        "RFC": record["number"],
+        "Status": record["status"] or "Proposed",
+    }
+    for axis, _ in AXES:
+        value = record[axis.lower()]
+        if value in options.get(axis, {}):
+            desired[axis] = value
+    cards = cards_of(record)
+    if cards and "Cards" in fields:
+        desired["Cards"] = ", ".join(cards)
+    return desired
+
+
+def plan_board(
+    board: Board, records: list[dict], bodies: dict[str, str], readme: str
+) -> tuple[list[Change], dict[str, int], list[str]]:
+    """What the board would change, what already agrees, and what cannot be written.
+
+    Pure: it is given the board and the records and returns the work. A body that
+    matches, an item that is present and a field that already holds the record's
+    value are all counted as agreeing, so the report can say what is right and not
+    only what is wrong.
+    """
+    changes: list[Change] = []
+    agree: dict[str, int] = collections.Counter()
+    warnings: list[str] = []
     for record in records:
         title = f"{record['id']} {SEP} {record['title']}"
-        issue = issues.get(title)
-        body_file = out / f"{record['id']}.md"
+        body = bodies[record["id"]]
+        desired = desired_values(record, board.fields, board.options)
+        issue = board.issues.get(title)
         if issue is None:
-            if args.dry_run:
-                print(f"  would create {title}")
-                created += 1
-                continue
-            proc = gh(
-                "issue",
-                "create",
-                "--repo",
-                slug,
-                "--title",
-                title,
-                "--body-file",
-                str(body_file),
+            # A missing issue means a missing item carrying no values: the record is
+            # new to the board, so every field it states is written.
+            changes.append(Change("issue", record["id"], line=f"create issue {title}"))
+            changes.append(
+                Change("item", record["id"], line=f"add item {record['id']}")
             )
-            if proc.returncode != 0:
-                failures.append(f"create {title}: {proc.stderr.strip()[:200]}")
-                print(f"  FAIL create {title}")
-                continue
-            # gh 2.102.1 has no --json on `issue create`; it prints the issue URL.
-            url = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
-            match = re.search(r"/issues/(\d+)$", url)
-            if not match:
-                failures.append(f"create {title}: unparsable output {proc.stdout!r}")
-                continue
-            issue = {
-                "number": int(match.group(1)),
-                "title": title,
-                "body": bodies[record["id"]],
-            }
-            issues[title] = issue
-            created += 1
-            print(f"  create #{issue['number']} {title}")
-            time.sleep(1.0)
-            continue
-        if (issue.get("body") or "").rstrip("\n") != bodies[record["id"]].rstrip("\n"):
-            if args.dry_run:
-                print(f"  would refresh body of #{issue['number']} {title}")
-                refreshed += 1
-                continue
-            proc = gh(
-                "issue",
-                "edit",
-                str(issue["number"]),
-                "--repo",
-                slug,
-                "--body-file",
-                str(body_file),
-            )
-            if proc.returncode != 0:
-                failures.append(
-                    f"refresh #{issue['number']}: {proc.stderr.strip()[:200]}"
+            for field, value in desired.items():
+                changes.append(
+                    Change(
+                        "field",
+                        record["id"],
+                        field,
+                        value,
+                        f"set {record['id']} {field}={value}",
+                    )
                 )
-                print(f"  FAIL refresh #{issue['number']}")
+            continue
+        if (issue.get("body") or "").rstrip("\n") != body.rstrip("\n"):
+            changes.append(
+                Change(
+                    "body",
+                    record["id"],
+                    line=f"update body of #{issue['number']} {title}",
+                )
+            )
+        else:
+            agree["body"] += 1
+        item = board.items.get(title)
+        if item is None:
+            changes.append(
+                Change("item", record["id"], line=f"add item {record['id']}")
+            )
+            for field, value in desired.items():
+                changes.append(
+                    Change(
+                        "field",
+                        record["id"],
+                        field,
+                        value,
+                        f"set {record['id']} {field}={value}",
+                    )
+                )
+            continue
+        agree["item"] += 1
+        for field, value in desired.items():
+            if item[field.lower()] == value:
+                agree["field"] += 1
                 continue
-            refreshed += 1
-            print(f"  refresh body of #{issue['number']} {title}")
+            if field != "Cards" and value not in board.options.get(field, {}):
+                # The record carries a value the project has no option for. Writing
+                # another option would be a claim; leaving it is a gap. Reported.
+                warnings.append(
+                    f"{record['id']}: {field} {value!r} has no option on the project"
+                )
+                continue
+            changes.append(
+                Change(
+                    "field",
+                    record["id"],
+                    field,
+                    value,
+                    f"set {record['id']} {field}={value}",
+                )
+            )
+    if readme == "differs":
+        changes.append(
+            Change(
+                "readme",
+                "",
+                line="update the project README from Reference/project-README.md",
+            )
+        )
+    elif readme == "unchanged":
+        agree["readme"] += 1
+    return changes, agree, warnings
 
-    items = item_index(project)
-    print(f"items on the project: {len(items)}")
-    todo = [(record, f"{record['id']} {SEP} {record['title']}") for record in records]
-    pending = [(record, title) for record, title in todo if title not in items]
-    print(f"issues needing an item: {len(pending)}")
 
-    def add(entry: tuple[dict, str]) -> tuple[str, str]:
-        record, title = entry
-        number = issues.get(title, {}).get("number")
+def report_plan(
+    records: list[dict],
+    changes: list[Change],
+    agree: dict[str, int],
+    warnings: list[str],
+    board: Board,
+    readme: str,
+) -> None:
+    """The plan as a person reads it: what agrees, then one line per change."""
+    total = len(records)
+    print(f"\nissues on the repository: {len(board.issues)}")
+    print(f"items on the project: {len(board.items)}")
+    print(f"project readme: {readme}")
+    for warning in warnings:
+        print(f"  warn {warning}")
+    print(
+        f"already agrees: bodies {agree['body']}/{total}, "
+        f"items {agree['item']}/{total}, fields {agree['field']}"
+    )
+    if not changes:
+        print("\nplan: the board already agrees with the records; nothing to do")
+        return
+    counts = collections.Counter(change.phase for change in changes)
+    summary = ", ".join(f"{phase} {counts[phase]}" for phase in PHASES if counts[phase])
+    print(f"\nplan: {len(changes)} change(s) -> {summary}")
+    for change in changes:
+        print(f"  {change.phase:<6} {change.line}")
+
+
+def write_bodies(work: Path, records: list[dict], bodies: dict[str, str]) -> Path:
+    """The rendered bodies in the work directory: local, gitignored, not the board."""
+    out = work / "bodies"
+    out.mkdir(parents=True, exist_ok=True)
+    for record in records:
+        (out / f"{record['id']}.md").write_text(bodies[record["id"]], encoding="utf-8")
+    return out
+
+
+def cmd_plan(args) -> int:
+    """Report what the board would have to change. No write call on this path."""
+    root, work, records, slug = prepare(args)
+    tool = relative_tool(root)
+    bodies, leaks, unplaced = bodies_for(records, slug, args.branch, tool)
+    if leaks:
+        for record_id, hit in leaks:
+            print(f"  LEAK {record_id}: {hit!r}")
+        print(f"\nrefusing to plan: {len(leaks)} leak hit(s) in the rendered bodies")
+        return 1
+    if unplaced:
+        print(f"records missing an axis: {len(unplaced)} -> {unplaced}")
+    write_bodies(work, records, bodies)
+
+    board = read_board(args, slug)
+    absent = [name for name in FIELDS if name not in board.fields]
+    if absent:
+        print(f"  warn fields absent from the project: {absent}")
+    readme, _rendered = readme_state(board.project, records)
+    changes, agree, warnings = plan_board(board, records, bodies, readme)
+    report_plan(records, changes, agree, warnings, board, readme)
+    print("\nno write: this command reads the board, and `sync` is the only writer")
+    return 1 if changes else 0
+
+
+def cmd_sync(args) -> int:
+    """The only writer: perform what `plan` reports, one printed line per mutation."""
+    root, work, records, slug = prepare(args)
+    tool = relative_tool(root)
+    bodies, leaks, unplaced = bodies_for(records, slug, args.branch, tool)
+    if leaks:
+        for record_id, hit in leaks:
+            print(f"  LEAK {record_id}: {hit!r}")
+        print(f"\nrefusing to sync: {len(leaks)} leak hit(s) in the rendered bodies")
+        return 1
+    if unplaced:
+        print(f"records missing an axis: {len(unplaced)} -> {unplaced}")
+
+    board = read_board(args, slug)
+    absent = [name for name in FIELDS if name not in board.fields]
+    if absent:
+        refuse(
+            f"refusing to sync: the project is missing the field(s) {absent}; a copied "
+            "project carries them, and this tool does not create fields"
+        )
+    readme, rendered = readme_state(board.project, records)
+    changes, _agree, warnings = plan_board(board, records, bodies, readme)
+    for warning in warnings:
+        print(f"  warn {warning}")
+
+    if not changes:
+        print("the board already agrees with the records: nothing to sync")
+        return 0
+
+    # The gate. A board that holds items belongs to whoever put them there, so the
+    # write is refused unless the caller names why it is justified. An empty board
+    # is the initial sync: there is nothing of anyone else's to lose.
+    if board.items and not args.reason:
+        refuse(
+            f"refusing to sync: the project holds {len(board.items)} item(s), so these "
+            'writes would overwrite state other people own; pass --reason "<why>" if '
+            "that is intended"
+        )
+    reason = args.reason or "the board is empty: this is the initial sync"
+    allow_writes(reason)
+
+    print(f"\nsync reason: {reason}")
+    print(f"syncing {len(changes)} change(s)")
+    out = write_bodies(work, records, bodies)
+    return execute(board, changes, records, bodies, out, rendered, slug, args)
+
+
+def field_literal(change: Change, record: dict, board: Board) -> str:
+    """GraphQL input objects take unquoted keys, so each value is a literal."""
+    if change.field == "RFC":
+        if board.rfc_text:
+            padded = f"{record['number']:04d}"
+            return f"{{text: {json.dumps(padded)}}}"
+        return f"{{number: {record['number']}}}"
+    if change.field == "Cards":
+        return f"{{text: {json.dumps(str(change.value))}}}"
+    return "{singleSelectOptionId: " + json.dumps(
+        board.options[change.field][str(change.value)]
+    ) + "}"
+
+
+def send_field_slice(aliases: list[str], start: int, failures: list[str]) -> bool:
+    """One aliased mutation for a slice of records, retried while GitHub is flaky.
+
+    A slice is four records because each contributes up to five aliases and about
+    twenty is the ceiling before GitHub answers 502.
+    """
+    query = "mutation{" + " ".join(aliases) + "}"
+    for attempt in range(4):
+        try:
+            graphql(query)
+            return True
+        except SystemExit as error:
+            if attempt == 3:
+                failures.append(f"field slice at {start}: {error}")
+                print(f"  FAIL field slice at {start}: {error}")
+                return False
+            time.sleep(2 * (attempt + 1))
+    return False
+
+
+def execute(
+    board: Board,
+    changes: list[Change],
+    records: list[dict],
+    bodies: dict[str, str],
+    out: Path,
+    rendered: str,
+    slug: str,
+    args,
+) -> int:
+    """Perform the plan, printing one line per mutation it makes."""
+    by_id = {record["id"]: record for record in records}
+    phase: dict[str, list[Change]] = collections.defaultdict(list)
+    for change in changes:
+        phase[change.phase].append(change)
+    failures: list[str] = []
+    made: dict[str, int] = collections.Counter()
+
+    # 1 - issues. A create comes first, because the item needs the issue's number.
+    for change in phase["issue"]:
+        record = by_id[change.record]
+        title = f"{record['id']} {SEP} {record['title']}"
+        proc = gh(
+            "issue",
+            "create",
+            "--repo",
+            slug,
+            "--title",
+            title,
+            "--body-file",
+            str(out / f"{record['id']}.md"),
+            write=f"create issue {title}",
+        )
+        if proc.returncode != 0:
+            failures.append(f"create {title}: {proc.stderr.strip()[:200]}")
+            print(f"  FAIL create {title}")
+            continue
+        # gh 2.102.1 has no --json on `issue create`; it prints the issue URL.
+        url = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
+        match = re.search(r"/issues/(\d+)$", url)
+        if not match:
+            failures.append(f"create {title}: unparsable output {proc.stdout!r}")
+            print(f"  FAIL create {title}: unparsable output")
+            continue
+        board.issues[title] = {
+            "number": int(match.group(1)),
+            "title": title,
+            "body": bodies[record["id"]],
+        }
+        made["issue"] += 1
+        print(f"  create #{board.issues[title]['number']} {title}")
+        time.sleep(1.0)
+
+    # 2 - the bodies that drifted from their record.
+    for change in phase["body"]:
+        record = by_id[change.record]
+        title = f"{record['id']} {SEP} {record['title']}"
+        issue = board.issues.get(title)
+        if issue is None:
+            failures.append(f"no issue for {title}")
+            print(f"  FAIL refresh {title}: no issue")
+            continue
+        proc = gh(
+            "issue",
+            "edit",
+            str(issue["number"]),
+            "--repo",
+            slug,
+            "--body-file",
+            str(out / f"{record['id']}.md"),
+            write=f"edit issue #{issue['number']}",
+        )
+        if proc.returncode != 0:
+            failures.append(f"refresh #{issue['number']}: {proc.stderr.strip()[:200]}")
+            print(f"  FAIL refresh #{issue['number']} {title}")
+            continue
+        made["body"] += 1
+        print(f"  body   #{issue['number']} {title}")
+
+    # 3 - items. One process per item, so the adds run in a small pool; `map` yields
+    # in the plan's order, which is the order the lines are printed in.
+    def add(change: Change) -> tuple[Change, str, str]:
+        record = by_id[change.record]
+        title = f"{record['id']} {SEP} {record['title']}"
+        number = board.issues.get(title, {}).get("number")
         if number is None:
-            return title, ""
+            return change, "", "no issue to add"
         proc = gh(
             "project",
             "item-add",
@@ -958,128 +1495,89 @@ def cmd_publish(args) -> int:
             f"https://github.com/{slug}/issues/{number}",
             "--format",
             "json",
+            write=f"add item for {title}",
         )
         if proc.returncode != 0:
-            return title, ""
-        return title, json.loads(proc.stdout)["id"]
+            return change, "", proc.stderr.strip()[:200]
+        try:
+            return change, parse_json(proc.stdout, "gh project item-add")["id"], ""
+        except (SystemExit, KeyError) as error:
+            return change, "", str(error)
 
-    if pending and not args.dry_run:
+    if phase["item"]:
         with ThreadPoolExecutor(max_workers=ADD_WORKERS) as pool:
-            for title, item_id in pool.map(add, pending):
-                if item_id:
-                    # A new item carries no values yet, so every field is written.
-                    items[title] = {
-                        "id": item_id,
-                        "rfc": None,
-                        "kind": None,
-                        "status": None,
-                        "subject": None,
-                        "horizon": None,
-                        "cards": None,
-                    }
-                    attached += 1
-                else:
-                    failures.append(f"add {title}")
+            for change, item_id, failure in pool.map(add, phase["item"]):
+                record = by_id[change.record]
+                title = f"{record['id']} {SEP} {record['title']}"
+                if not item_id:
+                    failures.append(f"add {title}: {failure}")
                     print(f"  FAIL add {title}")
-    elif pending:
-        for _, title in pending:
-            print(f"  would add {title}")
-        attached = len(pending)
+                    continue
+                # A new item carries no values yet, so every field is written.
+                board.items[title] = {
+                    "id": item_id,
+                    "rfc": None,
+                    "kind": None,
+                    "status": None,
+                    "subject": None,
+                    "horizon": None,
+                    "cards": None,
+                }
+                made["item"] += 1
+                print(f"  item   {record['id']} -> {item_id}")
 
-    def value_of(field: str, record: dict, value: str) -> str:
-        """GraphQL input objects take unquoted keys, so each value is a literal."""
-        if field == "RFC":
-            if rfc_text:
-                padded = f"{record['number']:04d}"
-                return f"{{text: {json.dumps(padded)}}}"
-            return f"{{number: {record['number']}}}"
-        return f"{{singleSelectOptionId: {json.dumps(options[field][value])}}}"
-
-    slices = 0
-    written = 0
-    unchanged = 0
-    for start in range(0, len(todo), SLICE):
-        chunk = todo[start : start + SLICE]
+    # 4 - field values. The requests are aliased four records to a slice; the report
+    # is one line per value, because a value is what a person approved.
+    grouped: dict[str, list[Change]] = {}
+    for change in phase["field"]:
+        grouped.setdefault(change.record, []).append(change)
+    order = [record["id"] for record in records if record["id"] in grouped]
+    for start in range(0, len(order), SLICE):
+        chunk = order[start : start + SLICE]
         aliases: list[str] = []
-        for position, (record, title) in enumerate(chunk):
-            current = items.get(title)
-            if current is None:
+        lines: list[str] = []
+        for position, record_id in enumerate(chunk):
+            record = by_id[record_id]
+            title = f"{record['id']} {SEP} {record['title']}"
+            item = board.items.get(title)
+            if item is None:
                 failures.append(f"no project item for {title}")
+                print(f"  FAIL no project item for {title}")
                 continue
-            item_id = current["id"]
-            desired: dict[str, object] = {
-                "RFC": record["number"],
-                "Status": record["status"] or "Proposed",
-            }
-            for axis, _ in AXES:
-                value = record[axis.lower()]
-                if value in options[axis]:
-                    desired[axis] = value
-            cards = cards_of(record)
-            if cards and "Cards" in ids:
-                desired["Cards"] = ", ".join(cards)
-            for field, value in desired.items():
-                if current[field.lower()] == value:
-                    unchanged += 1
-                    continue
-                if field != "Cards" and value not in options.get(field, {}):
-                    # The record carries a value the project has no option for, so
-                    # the field is left as it stands rather than written as another
-                    # state: a wrong option is a claim, an absent one is a gap.
-                    print(
-                        f"  warn {record['id']}: {field} {value!r} has no option on the project"
-                    )
-                    continue
-                if field == "Cards":
-                    literal = f"{{text: {json.dumps(value)}}}"
-                else:
-                    literal = value_of(field, record, str(value))
+            for change in grouped[record_id]:
                 aliases.append(
-                    f"f{position}_{field}: updateProjectV2ItemFieldValue(input:{{"
-                    f"projectId: {json.dumps(project)}, itemId: {json.dumps(item_id)}, "
-                    f"fieldId: {json.dumps(ids[field])}, value: {literal}}})"
+                    f"f{position}_{change.field}: updateProjectV2ItemFieldValue(input:{{"
+                    f"projectId: {json.dumps(board.project)}, "
+                    f"itemId: {json.dumps(item['id'])}, "
+                    f"fieldId: {json.dumps(board.ids[change.field])}, "
+                    f"value: {field_literal(change, record, board)}}})"
                     "{projectV2Item{id}}"
                 )
-                written += 1
+                lines.append(change.line)
         if not aliases:
             continue
-        if args.dry_run:
-            print(
-                f"  would set {len(aliases)} field value(s) for records "
-                f"{start + 1}-{start + len(chunk)}"
-            )
-            slices += 1
-            continue
-        query = "mutation{" + " ".join(aliases) + "}"
-        for attempt in range(4):
-            try:
-                graphql(query)
-                slices += 1
-                print(
-                    f"  fields set for records {start + 1}-{start + len(chunk)}"
-                    + (f" (attempt {attempt + 1})" if attempt else "")
-                )
-                break
-            except SystemExit as error:
-                if attempt == 3:
-                    failures.append(f"field slice at {start}: {error}")
-                    print(f"  FAIL field slice at {start}: {error}")
-                else:
-                    time.sleep(2 * (attempt + 1))
+        if send_field_slice(aliases, start, failures):
+            for line in lines:
+                print(f"  field  {line}")
+            made["field"] += len(lines)
 
-    readme_status, readme_failures = sync_readme(project, records, args.dry_run)
-    failures.extend(readme_failures)
+    # 5 - the project README, when it is not the rendered source.
+    readme_status = "unchanged"
+    if phase["readme"]:
+        readme_status, readme_failures = update_readme(board.project, rendered)
+        failures.extend(readme_failures)
+        print(f"  readme {readme_status}")
 
     print(
-        f"\ncreated={created} bodies_refreshed={refreshed} items_added={attached} "
-        f"fields_written={written} fields_unchanged={unchanged} field_slices={slices} "
+        f"\ncreated={made['issue']} bodies_refreshed={made['body']} "
+        f"items_added={made['item']} fields_written={made['field']} "
         f"readme={readme_status} failures={len(failures)} records={len(records)}"
-        + ("  (dry run: nothing written)" if args.dry_run else "")
     )
     return 1 if failures else 0
 
 
 def cmd_verify(args) -> int:
+    """An independent read of the published board. Writes nothing."""
     root, work, records, slug = prepare(args)
     tool = relative_tool(root)
     failures: list[str] = []
@@ -1096,7 +1594,7 @@ def cmd_verify(args) -> int:
         "--format",
         "json",
     )
-    board_count = len(listing["items"])
+    board_count = len(listing.get("items") or [])
     print(f"\n[1] committed records: {len(records)}   board items: {board_count}")
     if board_count != len(records):
         failures.append(
@@ -1108,7 +1606,7 @@ def cmd_verify(args) -> int:
     items: list[dict] = []
     cursor = None
     while True:
-        page = graphql(ITEMS_QUERY, {"p": project, "after": cursor})["node"]["items"]
+        page = items_page(project, cursor)
         items.extend(page["nodes"])
         if not page["pageInfo"]["hasNextPage"]:
             break
@@ -1286,41 +1784,132 @@ def cmd_verify(args) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The command surface: the read commands and the one writer, listed apart."""
     parser = argparse.ArgumentParser(
-        description="Assemble and verify the RFC project board from the record files."
+        prog="rfc_board.py",
+        description=(
+            "Compare the RFC project board with the committed record files. The board is "
+            "shared state, so a run reads and reports; only `sync` writes it."
+        ),
+        epilog=(
+            "read commands - no write call on any of them:\n"
+            "  plan    (the default) what the board would create, update, or already agrees with\n"
+            "  render  the issue bodies, into the work directory\n"
+            "  verify  the published board, read independently\n"
+            "  readme  whether the project README matches its source\n"
+            "\n"
+            "the one writer:\n"
+            "  sync    perform what plan reports; refuses on a board that holds items unless\n"
+            "          --reason names why the write is justified\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("command", choices=("render", "publish", "verify", "readme"))
-    parser.add_argument(
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument(
         "--owner", default=DEFAULT_OWNER, help="project and repository owner"
     )
-    parser.add_argument("--repo", default=DEFAULT_REPO, help="repository name")
-    parser.add_argument(
+    common.add_argument("--repo", default=DEFAULT_REPO, help="repository name")
+    common.add_argument(
         "--project", type=int, default=DEFAULT_PROJECT, help="project number"
     )
-    parser.add_argument(
+    common.add_argument(
         "--branch", default=DEFAULT_BRANCH, help="branch the source link points at"
     )
-    parser.add_argument(
+    common.add_argument(
         "--work",
         default=None,
         help="work directory (default Maintain/Storage/RFC-Board)",
     )
-    parser.add_argument(
+    common.add_argument(
         "--limit",
         type=int,
         default=500,
         help="issue and item page cap (default 500; raise it when the corpus outgrows it)",
     )
-    parser.add_argument(
-        "--dry-run", action="store_true", help="publish: report, write nothing"
+
+    commands = parser.add_subparsers(dest="command", metavar="command")
+    commands.add_parser(
+        "plan",
+        parents=[common],
+        help="report what the board would change (the default)",
+        description=(
+            "Compare the committed records with the board and report what it would create, "
+            "what it would update and what already agrees. No write call on this path: exit 0 "
+            "when the board agrees, 1 when it does not."
+        ),
     )
-    args = parser.parse_args(argv)
+    commands.add_parser(
+        "render",
+        parents=[common],
+        help="write one issue body per record into the work directory",
+        description=(
+            "Render every committed record's issue body into the work directory, leak-scan it "
+            "and prove each Decision section survived the round trip. Touches nothing remote."
+        ),
+    )
+    commands.add_parser(
+        "verify",
+        parents=[common],
+        help="read the published board back and exit non-zero on a disagreement",
+        description=(
+            "Read the published project independently of the plan and exit non-zero on the "
+            "first disagreement. Reads only."
+        ),
+    )
+    commands.add_parser(
+        "readme",
+        parents=[common],
+        help="report whether the project README matches its source",
+        description=(
+            "Report whether the project's README is the rendered "
+            "`Reference/project-README.md`. Reads only."
+        ),
+    )
+    sync = commands.add_parser(
+        "sync",
+        parents=[common],
+        help="write the board: perform what plan reports",
+        description=(
+            "The only writer. Perform what `plan` reports - create the missing issues, update "
+            "the drifted bodies, add the missing items, set the field values that disagree and "
+            "update the README - printing one line per mutation."
+        ),
+        epilog=(
+            "Precondition: this refuses to run when the project holds items unless --reason "
+            "names why the write is justified. An empty board is the initial sync and needs no "
+            "reason, because there is nothing of anyone else's to lose. Fields are never "
+            "created here: a copied project carries them."
+        ),
+    )
+    sync.add_argument(
+        "--reason",
+        default="",
+        help="why writing over a populated board is justified",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # The old name gets one sentence rather than a screen of usage text, and it is
+    # not in the command list: a name that cannot write has no place there.
+    if argv and argv[0] == "publish":
+        refuse(
+            "publish is gone: this tool reads the board by default, so `plan` reports and "
+            '`sync --reason "<why>"` writes; nothing was written'
+        )
+    # A bare run, or flags with no command, is the read path. Help is not: it has to
+    # reach the top-level parser or the command list is unreachable.
+    if not argv or (argv[0].startswith("--") and argv[0] not in ("-h", "--help")):
+        argv.insert(0, "plan")
+    args = build_parser().parse_args(argv)
     command = {
+        "plan": cmd_plan,
         "render": cmd_render,
-        "publish": cmd_publish,
         "verify": cmd_verify,
         "readme": cmd_readme,
+        "sync": cmd_sync,
     }[args.command]
     return command(args)
 

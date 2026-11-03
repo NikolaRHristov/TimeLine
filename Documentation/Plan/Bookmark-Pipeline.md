@@ -208,7 +208,9 @@ Bookmarks is the account menu's saved-posts route; lists resolve slug → id fro
 `{cdp:{host,port},profile,lists:[{slug,name,id}],routes,content,storage}`; missing file →
 `{error:"no-config", expected:"<path>", copy:"<copy command>", next:"maintain config init"}` and
 exit 2, never a crash. `config init` writes it atomically from the example; `config show` masks ids
-unless `--reveal`. Events are `Source/Content/Event/<ISO>-<kind>-<subject>.json`.
+unless `--reveal`. Events are `Source/Content/Event/<ISO>-<kind>-<slug>-<digest8>.json`, the digest
+being eight hex characters of the subject's SHA-256 so two subjects that flatten to one slug stay
+two files.
 
 ---
 

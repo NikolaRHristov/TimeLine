@@ -1,12 +1,13 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { join, relative } from "node:path";
 import { option } from "../../../CLI/Parser/Argument/Option.ts";
 import { fail } from "../../../CLI/Parser/Output/Failure.ts";
 import type { CommandDefinition } from "../../../CLI/Parser/Parser.ts";
-import { load, root } from "../../../Configuration/Load/Load.ts";
+import { root } from "../../../Configuration/Load/Load.ts";
 import * as Text from "../../../Content/Text.ts";
-import { EventKind } from "../../../Model/Event/Event.ts";
+import { EventKind, fileName } from "../../../Model/Event/Event.ts";
 import { stringify } from "../../../Output/JSON/JSON.ts";
+import { contentDirectory } from "../../../Store/Path/Path.ts";
 import type { CommandContext } from "../../Context/Context.ts";
 
 /** The event kinds the site's Event collection accepts. */
@@ -26,17 +27,20 @@ export const Definition: CommandDefinition = {
 		option("payload", "json", Text.OptionEventAppendPayload, { default: {} }),
 	],
 	async run(context: CommandContext): Promise<unknown> {
-		const configuration = load();
 		const at = new Date().toISOString();
 		const kind = String(context.values["kind"]);
 		const subject = String(context.values["subject"]);
 		const payload = context.values["payload"] ?? {};
 
-		const directory = join(root(), configuration.content.root, "Event");
-		const name = `${at.replace(/[:.]/g, "-")}-${kind}-${subject.replace(/[^A-Za-z0-9_-]+/g, "-")}.json`;
-		const path = join(directory, name);
+		// Both halves come from one place each: `contentDirectory()` says where
+		// the collection is, `fileName()` says what the file is called. A name
+		// built here instead would be a second copy of the flattening rule, and
+		// this command writes into the directory the site reads - `a/b` and
+		// `a?b` would share one file again, one overwriting the other.
+		const directory = join(contentDirectory(), "Event");
+		const path = join(directory, fileName(at, kind, subject));
 		try {
-			mkdirSync(dirname(path), { recursive: true });
+			mkdirSync(directory, { recursive: true });
 			writeFileSync(path, `${stringify({ at, kind, subject, payload })}\n`, "utf8");
 		} catch (error) {
 			throw fail("io-error", "could not write the event file", {

@@ -93,6 +93,12 @@ states where each one goes.
   check compares them, because a rename that misses one leaves a skill nothing can address.
 - **A formatter rewrites prose.** Prettier reflows these files at 100 columns with tabs. Run it on
   the files you touched, never across the tree, and never on a generated artifact.
+- **A `Reference/` test that no root script runs never gates.** `Test` is
+  `node --test "Source/Test/*.test.ts"`, so a test written beside a tool in another language is
+  hand-run only and a regression in that tool passes `pnpm run check`. Give it a `Check:<Name>`
+  script and put that script in the `check` chain, then name the script in the skill's claim table
+  rather than the raw invocation; run it with `python3 -B` so the gate writes no `__pycache__`
+  beside the tool.
 
 ## Claim → test
 

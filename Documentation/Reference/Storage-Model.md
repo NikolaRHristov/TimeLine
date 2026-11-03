@@ -12,15 +12,20 @@ accidental build cannot leak a like, and "hide this one" is a state, not a delet
 ## Layout
 
 ```
-Maintain/Storage/Shadow/            # gitignored, never built
-  Post/<statusId>.json              # one record per post, merged across sources
-  Observation.jsonl                 # append-only: {at, source, statusId, action}
-  Index.json                        # statusId -> file, for cheap lookups
-  Event/<ISO>-<kind>-<subject>.json # scrape + publish + hide events
-Source/Content/                     # tracked, rendered by Astro
-  Bookmark/<statusId>.json          # published posts only
-  Event/<ISO>-<kind>-<subject>.json # published events only
+Maintain/Storage/Shadow/                      # gitignored, never built
+  Post/<statusId>.json                        # one record per post, merged across sources
+  Observation.jsonl                           # append-only: {at, source, statusId, action}
+  Index.json                                  # statusId -> file, for cheap lookups
+  Event/<ISO>-<kind>-<slug>-<digest8>.json    # scrape + publish + hide events
+Source/Content/                               # tracked, rendered by Astro
+  Bookmark/<statusId>.json                    # published posts only
+  Event/<ISO>-<kind>-<slug>-<digest8>.json    # published events only
 ```
+
+An event's name carries both halves of the question: the slug says what the event is about and the
+eight hex characters of the subject's SHA-256 say which subject it is. The digest is there because
+the slug alone is not an identity - `a/b` and `a?b` both flatten to `a-b`, and one would overwrite
+the other. Files written before the digest existed (`<ISO>-<kind>-<slug>.json`) are still read.
 
 `Post/<statusId>.json`:
 
