@@ -1,19 +1,17 @@
 # Chat-Research reference
 
-Ten tools that carry one research question to a web chat product and bring the answer back as
-text: six for the conversation itself and four for the parts of a capture that are not the
-answer's prose. Each opens with a header stating what it does and what it exits with; nothing
-here names a machine, an account or an absolute path, and the endpoint comes from `CDP` (default
-`http://127.0.0.1:9222`).
+Ten tools that carry one research question to a web chat product and bring the answer back as text:
+six for the conversation itself and four for the parts of a capture that are not the answer's prose.
+Each opens with a header stating what it does and what it exits with; nothing here names a machine,
+an account or an absolute path, and the endpoint comes from `CDP` (default `http://127.0.0.1:9222`).
 
 They are drivers, not a test suite, and they are the whole workflow: `cdp-open.mjs` creates the
 background target and reports its handle, `cdp-send.mjs` puts the question in the composer and
-verifies the send, `cdp-read.mjs` waits for the answer to stop streaming, `cdp-extract.mjs`
-captures the answer as Markdown with its maths and code intact, `cdp-trace.mjs` keeps the step
-tree that reached it, and `cdp-click.mjs` reaches a control that no label match can find. Exit `2`
-with one `blocker:` line means the run could not proceed; exit `1` means it ran and its claim did
-not hold. No script installs a dependency: the global `WebSocket` and `fetch` of Node 22 are the
-transport.
+verifies the send, `cdp-read.mjs` waits for the answer to stop streaming, `cdp-extract.mjs` captures
+the answer as Markdown with its maths and code intact, `cdp-trace.mjs` keeps the step tree that
+reached it, and `cdp-click.mjs` reaches a control that no label match can find. Exit `2` with one
+`blocker:` line means the run could not proceed; exit `1` means it ran and its claim did not hold.
+No script installs a dependency: the global `WebSocket` and `fetch` of Node 22 are the transport.
 
 `research.mjs` is the command a worker runs, and it is the whole capture in one step: a thread id
 in, a Markdown file out. A worker has no person to copy a `ws` handle out of `/json/list` for it, so
@@ -104,14 +102,14 @@ two different directories.
 
 `attach.mjs` sets the files on the input with `DOM.setFileInputFiles`. A click cannot do it: the
 input is hidden and the page's handler is a React `onChange`, so only the protocol call sets the
-files *and* lets the page react to them. It reads the input's `multiple` and `accept` first and
+files _and_ lets the page react to them. It reads the input's `multiple` and `accept` first and
 stops on a `blocker:` when the files cannot be taken, then checks the composer for each name - the
 page can refuse a file silently, so what the composer shows is the only proof.
 
 `observe.mjs` is the optional half. After a send it installs a MutationObserver, samples the
 character count, the composer, the submit control, the mode toggle and the attachment markers, and
 prints a line only when one of them changed. It exits `0` once the page has been quiet for `--idle`
-samples *and* the composer is empty, and `1` when `--timeout` fired first. A page that has not
+samples _and_ the composer is empty, and `1` when `--timeout` fired first. A page that has not
 changed since the watch began is a page whose answer has not started, never a page that has settled.
 
 `research.mjs` captures what is rendered at the moment it runs, so a thread that is still streaming

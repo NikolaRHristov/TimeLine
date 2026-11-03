@@ -161,6 +161,28 @@ because a missing browser is not the site's fault. It never reports a defect in 
 page did not commit, and it is never a silent no-op: a click that found nothing prints the label it
 searched for and the reason it found nothing.
 
+## Beyond the answer text
+
+Two things a capture needs that are not the answer's prose.
+
+**The trace.** An answer renders its work as nested collapsible steps, and that nesting is how the
+answer was reached - it is not in the text, so a capture that keeps only the prose loses the
+argument. `cdp-trace.mjs` reads the nesting the DOM states and writes one JSON line per step with
+`id` and `parent`, plus one line per source; depth is a consequence of nesting, never an input to
+it. A collapsed step has no rendered children, so `--expand` clicks the closed headers and repeats
+until a pass opens nothing - a click is not an opening, and the count of headers still shut is the
+only progress signal. `--selftest` parses the page-side scripts without a browser, and
+`--fixture <file.json>` feeds the shape the page returns through the serialiser, which is how the
+tree is tested off-page.
+
+**The feed.** A question about a body of code is answered better with the code attached than pasted,
+and the composer takes files through an `<input type="file" multiple>` that is usually hidden.
+`bundle.mjs` turns a directory into deterministic batches with a manifest, `attach.mjs` sets them on
+the input with `DOM.setFileInputFiles` - a click cannot, because the input is hidden and the page's
+handler is a React `onChange` - and `observe.mjs` reports what changed afterwards, so the run knows
+the page settled instead of sleeping a fixed time. Each one reports what the page actually took:
+attaching fewer files than were named is exit `1`, not a success.
+
 ## Pitfalls
 
 - **Never click a suggestion chip that carries a mode badge.** Under an answer a product offers
@@ -196,6 +218,10 @@ searched for and the reason it found nothing.
 | The read waits for the answer to finish     | `node .../cdp-read.mjs <ws> --stable 3` returns once the text stops changing, with no marker asked for |
 | The mode and model are known before sending | the composer's `aria-pressed` mode and model label are read and reported                               |
 | A control with no label is clickable        | `node .../cdp-click.mjs <ws> "css:<selector>"` prints `clicked` with a point                           |
+| TeX survives the capture                    | `node .../cdp-extract.mjs <ws>` on a page with maths prints `formulas: N` and `$…$` in the body        |
+| A stub is refused, not returned             | `node .../cdp-extract.mjs <ws> --min-chars 5000` exits 1 with `refusing a stub`                        |
+| The trace keeps the tree, not a depth       | `node .../cdp-trace.mjs --fixture <file>` prints `id`/`parent` on every line, exit 0                   |
+| A batch is deterministic                    | `node .../bundle.mjs <root> --out <dir>` twice leaves `batch-NN.txt` byte-identical                    |
 
 ## References
 
@@ -207,3 +233,7 @@ searched for and the reason it found nothing.
 | `cdp-read.mjs`    | Poll `innerText` until it stops changing, then print a tail          |
 | `cdp-extract.mjs` | Serialise the rendered answer to Markdown, TeX and code intact       |
 | `research.mjs`    | Resolve a thread id to its page target, then capture it              |
+| `cdp-trace.mjs`   | Read the step tree as JSON lines with `id`/`parent`                  |
+| `observe.mjs`     | Watch the page after a send and print each change                    |
+| `bundle.mjs`      | Turn a directory into deterministic batches a composer takes         |
+| `attach.mjs`      | Set files on the composer hidden input and verify                    |

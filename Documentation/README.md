@@ -13,6 +13,8 @@ what is intended, the RFCs state what was decided, and the skills state how to d
   distribution.
 - **`Reference/`** - the facts. One file per subject, each claim carrying the command that proves
   it.
+- **`Reference/Diagram/`** - four storyboards - `Site.md`, `Archive.md`, `Board.md`, `Gates.md` -
+  each page one diagram under a shared legend, and the last page of each the states nothing models.
 - **`RFC/`** - the decisions. Numbered records, one per question, in the house format.
 - **`Skill/`** - the procedures. One directory per skill, each with a `SKILL.md` an agent loads
   before the task rather than after it fails.

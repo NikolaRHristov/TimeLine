@@ -180,6 +180,6 @@ the write are separated by exactly the interval the check was meant to cover.
 | `observe` is the only post writer       | `grep -n "ctx\.db\.post" Maintain/Spacetime/spacetimedb/src/index.ts` → three hits, all inside `observe` |
 | Every caller uses that one reducer      | `grep -rln '"observe"' Maintain/Source` → four commands, one reducer                                     |
 | Reducers cannot reach the outside world | `grep -nE "fetch\|node:fs\|node:http" Maintain/Spacetime/spacetimedb/src/index.ts` → no hits             |
-| Observation ids are content-derived     | `grep -n "observationId" Maintain/Spacetime/spacetimedb/src/index.ts` → one template literal             |
+| Observation ids are content-derived     | `grep -n "observationId" Maintain/Spacetime/spacetimedb/src/index.ts` → three hits, one template literal |
 | The lease table is declared, unwritten  | `grep -n "ctx\.db\.lease" Maintain/Spacetime/spacetimedb/src/index.ts` → no hits                         |
 | Publish is a projection, not a writer   | `grep -n "client.call" Maintain/Source/Command/Store/Publish/Publish.ts` → one call, to `observe`        |
