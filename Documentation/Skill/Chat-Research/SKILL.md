@@ -199,9 +199,11 @@ searched for and the reason it found nothing.
 
 ## References
 
-| File            | Covers                                                               |
-| --------------- | -------------------------------------------------------------------- |
-| `cdp-open.mjs`  | Create a background target, navigate, report handle, title and text  |
-| `cdp-send.mjs`  | Click the visible composer, replace its text, submit, verify emptied |
-| `cdp-click.mjs` | Click by accessible label or `css:` selector with pointer events     |
-| `cdp-read.mjs`  | Poll `innerText` until it stops changing, then print a tail          |
+| File              | Covers                                                               |
+| ----------------- | -------------------------------------------------------------------- |
+| `cdp-open.mjs`    | Create a background target, navigate, report handle, title and text  |
+| `cdp-send.mjs`    | Click the visible composer, replace its text, submit, verify emptied |
+| `cdp-click.mjs`   | Click by accessible label or `css:` selector with pointer events     |
+| `cdp-read.mjs`    | Poll `innerText` until it stops changing, then print a tail          |
+| `cdp-extract.mjs` | Serialise the rendered answer to Markdown, TeX and code intact       |
+| `research.mjs`    | Resolve a thread id to its page target, then capture it              |

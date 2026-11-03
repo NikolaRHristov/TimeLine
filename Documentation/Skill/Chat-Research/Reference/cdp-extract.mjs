@@ -7,7 +7,19 @@
  * inside `<annotation encoding="application/x-tex">`, and that is what this
  * reads.
  *
- *   node cdp-extract.mjs <ws-url> [--selector "main"] [--out <file>]
+ * Everything here is defensive, because the page is a moving target:
+ *
+ *   - the container is found by trying a chain of selectors, then the largest
+ *     text block, and the choice is reported;
+ *   - UI chrome inside the container (buttons, svg, the composer, suggestion
+ *     rows) is skipped rather than rendered as prose;
+ *   - a capture that is suspiciously small is a failure, not an answer;
+ *   - a collapsed answer is reported, because its text is not in the DOM.
+ *
+ *   node cdp-extract.mjs <ws-url> [--selector <css>] [--out <file>] [--min-chars N]
+ *
+ * Exit 0 with Markdown on stdout, 1 when the capture is too small to trust,
+ * 2 when it could not run.
  */
 import { writeFileSync } from "node:fs";
 
@@ -17,11 +29,12 @@ const At = (Name, Fallback) => {
 	const Index = Args.indexOf(Name);
 	return Index === -1 ? Fallback : Args[Index + 1];
 };
-const Selector = At("--selector", "main");
+const Selector = At("--selector", null);
 const Out = At("--out", null);
+const MinChars = Number(At("--min-chars", 200));
 
 if (!WsUrl) {
-	console.error("usage: node cdp-extract.mjs <ws-url> [--selector main] [--out file]");
+	console.error("usage: node cdp-extract.mjs <ws-url> [--selector <css>] [--out <file>] [--min-chars N]");
 	process.exit(2);
 }
 
@@ -31,12 +44,49 @@ process.on("unhandledRejection", (Error) => {
 });
 
 const Extract = `(() => {
-	const Root = document.querySelector(${JSON.stringify(Selector)});
-	if (Root === null) return JSON.stringify({ error: "no element for the selector" });
+	const Chain = ${Selector === null ? '["main", "[role=main]", "article"]' : JSON.stringify([Selector])};
+	const Wanted = ${Selector === null ? "null" : JSON.stringify(Selector)};
+	let Root = null;
+	let Chosen = null;
+	for (const Candidate of Chain) {
+		const Found = document.querySelector(Candidate);
+		if (Found === null) continue;
+		// An explicitly named container is honoured even when it is short: the
+		// caller asked for that element, and a short one is a finding, not a
+		// reason to widen the search behind their back.
+		if (Wanted !== null || (Found.innerText || "").trim().length > 200) {
+			Root = Found;
+			Chosen = Candidate;
+			break;
+		}
+	}
+	// A named selector that does not exist is an error, not an invitation to
+	// capture something else: the caller was specific, so silence would be a lie.
+	if (Root === null && Wanted !== null) return JSON.stringify({ error: "no element for selector " + Wanted });
+	if (Root === null) {
+		const All = [...document.querySelectorAll("div, section, article, main")]
+			.filter((Element) => Element.children.length > 0)
+			.sort((Left, Right) => (Right.innerText || "").length - (Left.innerText || "").length);
+		Root = All[0] ?? document.body;
+		Chosen = "largest text block";
+	}
+	if (Root === null) return JSON.stringify({ error: "no container and no body" });
 
-	const Tex = (Element) => {
+	const Skip = new Set(["BUTTON", "SVG", "NAV", "FORM", "INPUT", "TEXTAREA", "SELECT", "STYLE", "SCRIPT", "NOSCRIPT", "TEMPLATE"]);
+	const SkipClass = /(^|\\s)(composer|suggestion|toolbar|sidebar|prose-actions)(\\s|$)/i;
+	const SkipLabel = /^(copy|copy code|share|helpful|not helpful|read more|read less|show more|show less|add|model|dictation|submit|wrap lines|search|computer)$/i;
+
+	const TeX = (Element) => {
 		const Annotation = Element.querySelector('annotation[encoding="application/x-tex"]');
 		return (Annotation ? Annotation.textContent : Element.textContent).trim();
+	};
+
+	const shouldSkip = (Element) => {
+		if (Skip.has(Element.tagName)) return true;
+		const Label = (Element.getAttribute("aria-label") || "").trim();
+		if (Label.length > 0 && SkipLabel.test(Label)) return true;
+		const Class = typeof Element.className === "string" ? Element.className : "";
+		return SkipClass.test(Class);
 	};
 
 	const Inline = (Element) => {
@@ -47,10 +97,11 @@ const Extract = `(() => {
 				continue;
 			}
 			if (Node.nodeType !== 1) continue;
+			if (shouldSkip(Node)) continue;
 			const Tag = Node.tagName.toLowerCase();
-			if (Node.classList.contains("katex") || Node.querySelector(".katex")) {
+			if (Node.classList.contains("katex") || Node.querySelector(":scope > .katex")) {
 				const Display = Node.classList.contains("katex-display");
-				Text += (Display ? "$$" : "$") + Tex(Node) + (Display ? "$$" : "$");
+				Text += (Display ? "$$" : "$") + TeX(Node) + (Display ? "$$" : "$");
 			} else if (Tag === "code") {
 				Text += "\\u0060" + Node.textContent + "\\u0060";
 			} else if (Tag === "strong" || Tag === "b") {
@@ -61,6 +112,10 @@ const Extract = `(() => {
 				const Href = Node.getAttribute("href") || "";
 				const Label = Inline(Node).trim();
 				Text += Href.startsWith("http") && Label.length > 0 ? "[" + Label + "](" + Href + ")" : Label;
+			} else if (Tag === "img") {
+				const Src = Node.getAttribute("src") || "";
+				const Alt = (Node.getAttribute("alt") || "").trim();
+				if (Src.startsWith("http")) Text += "![" + Alt + "](" + Src + ")";
 			} else if (Tag === "br") {
 				Text += "\\n";
 			} else {
@@ -70,29 +125,34 @@ const Extract = `(() => {
 		return Text;
 	};
 
-	const Blocks = (Element, Depth) => {
+	const Blocks = (Element) => {
 		let Out = "";
 		for (const Node of Element.children) {
+			if (shouldSkip(Node)) continue;
 			const Tag = Node.tagName.toLowerCase();
-			const Class = Node.className && typeof Node.className === "string" ? Node.className : "";
+			const Class = typeof Node.className === "string" ? Node.className : "";
 
 			if (Class.includes("katex-display")) {
-				Out += "\\n\\n$$" + Tex(Node) + "$$\\n\\n";
-			} else if (Tag === "h1" || Tag === "h2" || Tag === "h3" || Tag === "h4" || Tag === "h5" || Tag === "h6") {
+				Out += "\\n\\n$$" + TeX(Node) + "$$\\n\\n";
+			} else if (/^h[1-6]$/.test(Tag)) {
 				Out += "\\n\\n" + "#".repeat(Number(Tag[1])) + " " + Inline(Node).trim() + "\\n\\n";
 			} else if (Tag === "p") {
 				const Text = Inline(Node).trim();
 				if (Text.length > 0) Out += "\\n\\n" + Text + "\\n\\n";
 			} else if (Tag === "ul" || Tag === "ol") {
-				let Index = 0;
 				Out += "\\n";
+				let Index = 0;
 				for (const Item of Node.querySelectorAll(":scope > li")) {
 					Index++;
-					const Marker = Tag === "ol" ? Index + ". " : "- ";
-					const Body = Inline(Item).trim().replace(/\\n+/g, " ");
-					Out += Marker + Body + "\\n";
+					Out += (Tag === "ol" ? Index + ". " : "- ") + Inline(Item).trim().replace(/\\n+/g, " ") + "\\n";
 					const Nested = Item.querySelector(":scope > ul, :scope > ol");
-					if (Nested !== null) Out += Blocks(Item, Depth + 1).split("\\n").filter(Boolean).map((Line) => "  " + Line).join("\\n") + "\\n";
+					if (Nested !== null) {
+						Out += Blocks(Nested)
+							.split("\\n")
+							.filter((Line) => Line.trim().length > 0)
+							.map((Line) => "  " + Line)
+							.join("\\n") + "\\n";
+					}
 				}
 				Out += "\\n";
 			} else if (Tag === "pre") {
@@ -107,13 +167,16 @@ const Extract = `(() => {
 				const Rows = [...Node.querySelectorAll("tr")].map((Row) =>
 					[...Row.querySelectorAll("th, td")].map((Cell) => Inline(Cell).trim().replace(/\\|/g, "\\\\|")),
 				);
-				if (Rows.length > 0) {
+				if (Rows.length > 0 && Rows[0].length > 0) {
 					Out += "\\n\\n| " + Rows[0].join(" | ") + " |\\n|" + Rows[0].map(() => " --- ").join("|") + "|\\n";
 					for (const Row of Rows.slice(1)) Out += "| " + Row.join(" | ") + " |\\n";
 					Out += "\\n";
 				}
+			} else if (Tag === "img") {
+				const Src = Node.getAttribute("src") || "";
+				if (Src.startsWith("http")) Out += "\\n\\n![" + (Node.getAttribute("alt") || "").trim() + "](" + Src + ")\\n\\n";
 			} else if (Node.children.length > 0) {
-				Out += Blocks(Node, Depth + 1);
+				Out += Blocks(Node);
 			} else {
 				const Text = Inline(Node).trim();
 				if (Text.length > 0) Out += Text + "\\n";
@@ -122,15 +185,19 @@ const Extract = `(() => {
 		return Out;
 	};
 
-	const Markdown = Blocks(Root, 0)
+	const Markdown = Blocks(Root)
 		.replace(/\\n{3,}/g, "\\n\\n")
 		.replace(/[ \\t]+\\n/g, "\\n")
 		.trim();
 
 	return JSON.stringify({
+		container: Chosen,
 		chars: Markdown.length,
 		katex: Root.querySelectorAll(".katex").length,
 		code: Root.querySelectorAll("pre").length,
+		tables: Root.querySelectorAll("table").length,
+		images: Root.querySelectorAll("img").length,
+		collapsed: /^(read more|show more)$/im.test(Root.innerText || ""),
 		markdown: Markdown,
 	});
 })()`;
@@ -171,16 +238,31 @@ if (Result.exceptionDetails) {
 	process.exit(2);
 }
 
-const Parsed = JSON.parse(Result.result.value);
+let Parsed;
+try {
+	Parsed = JSON.parse(Result.result.value);
+} catch {
+	console.error("blocker: the page returned no measurement");
+	process.exit(2);
+}
+
 if (Parsed.error) {
 	console.error(`blocker: ${Parsed.error}`);
 	process.exit(2);
 }
 
+const Summary = `container: ${Parsed.container}  chars: ${Parsed.chars}  formulas: ${Parsed.katex}  code: ${Parsed.code}  tables: ${Parsed.tables}  images: ${Parsed.images}${Parsed.collapsed ? "  COLLAPSED" : ""}`;
+
+if (Parsed.chars < MinChars) {
+	console.error(`blocker: the capture is ${Parsed.chars} characters, below --min-chars ${MinChars}; refusing a stub. ${Summary}`);
+	process.exit(1);
+}
+
 if (Out !== null) {
 	writeFileSync(Out, Parsed.markdown + "\n");
-	console.error(`wrote ${Out}: ${Parsed.chars} chars, ${Parsed.katex} formula(s), ${Parsed.code} code block(s)`);
+	console.error(`wrote ${Out}  ${Summary}`);
 } else {
+	process.stderr.write(Summary + "\n");
 	process.stdout.write(Parsed.markdown + "\n");
 }
 Socket.close();
