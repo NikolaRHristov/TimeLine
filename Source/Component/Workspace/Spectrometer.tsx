@@ -1,6 +1,6 @@
-import "@Stylesheet/Component/Spectrometer.scss";
 import type { Peer } from "@Library/Band.ts";
 import { Protocol, Steps } from "@Library/Capability.ts";
+import "@Stylesheet/Component/Spectrometer.scss";
 import { For } from "solid-js";
 
 /**

@@ -44,11 +44,5 @@ firebase-debug.log
 .firebase/logs/vsce-debug.log
 
 !AGENTS.md
-.hermes-tmp-measure.mjs
-.hermes-probe-export/Event/*.added-*.json
-.hermes-probe-export/Event/*-scrape.finished-bookmark.json
-.hermes-probe-export/Post/*.json
-.hermes-probe-export/Event/*-scrape.started-bookmark.json
-.hermes-probe-export/Event/*-scrape.started-history.json
-.hermes-probe-export/Event/*-scrape.finished-history.json
-.hermes-tmp/export/Event/2026-11-01T22-44-59-658Z-bookmark.added-2116959959581655196.json
+
+__pycache__

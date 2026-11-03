@@ -1,5 +1,5 @@
-import "@Stylesheet/Component/Workspace.scss";
 import type { ProtocolMark } from "@Library/Capability.ts";
+import "@Stylesheet/Component/Workspace.scss";
 import { type Stage } from "./Provenance.tsx";
 import ProvenanceRail from "./ProvenanceRail.tsx";
 import SecurityCluster from "./SecurityCluster.tsx";

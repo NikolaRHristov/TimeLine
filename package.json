@@ -24,6 +24,8 @@
 		"Format": "prettier --write .",
 		"Format:Check": "prettier --check .",
 		"maintain": "node Maintain/Target/Index.js",
+		"RFC:Board": "python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py publish",
+		"RFC:Board:Verify": "python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py verify",
 		"Deploy:Rules": "firebase deploy --only firestore:rules,firestore:indexes,storage",
 		"Emulators": "firebase emulators:start",
 		"prepublishOnly": "pnpm run build",

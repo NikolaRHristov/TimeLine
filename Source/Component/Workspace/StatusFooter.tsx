@@ -1,5 +1,5 @@
-import "@Stylesheet/Component/StatusFooter.scss";
 import type { StatusItem } from "@Library/Band.ts";
+import "@Stylesheet/Component/StatusFooter.scss";
 import { For } from "solid-js";
 
 /**

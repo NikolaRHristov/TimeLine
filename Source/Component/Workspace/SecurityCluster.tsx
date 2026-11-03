@@ -1,5 +1,5 @@
-import "@Stylesheet/Component/SecurityCluster.scss";
 import type { ProtocolMark } from "@Library/Capability.ts";
+import "@Stylesheet/Component/SecurityCluster.scss";
 import { For } from "solid-js";
 
 /**

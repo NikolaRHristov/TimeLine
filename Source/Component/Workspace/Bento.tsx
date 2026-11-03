@@ -1,5 +1,5 @@
-import "@Stylesheet/Component/Bento.scss";
 import { Occupy, Seats, type Tile } from "@Script/Workspace/Seat.ts";
+import "@Stylesheet/Component/Bento.scss";
 import { For, Show } from "solid-js";
 
 /**

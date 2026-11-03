@@ -1,9 +1,9 @@
-import "@Stylesheet/Component/Workspace.scss";
 import type { Band } from "@Library/Band.ts";
 import { OwnKey, type Context } from "@Script/Session/Context.ts";
 import { CrossTheSeam } from "@Script/Session/Seam.ts";
 import { Anonymous, Enter, type Slot } from "@Script/Session/Session.ts";
 import { store } from "@Script/Workspace/Store.ts";
+import "@Stylesheet/Component/Workspace.scss";
 import { onMount } from "solid-js";
 import Bento, { type Tile } from "./Bento.tsx";
 import ContextSwitch from "./ContextSwitch.tsx";

@@ -18,8 +18,7 @@ and never **content**.
 
 The envelope carries the audience decision, the author identity, a content hash and the ciphertext.
 Encryption is AES-GCM with a per-message random IV and key material imported as a JWK, following the
-pattern already implemented in
-`~/Developer/Application/NowPlayingCard/Common/Source/Function/Encrypt.ts`.
+pattern already implemented in the `NowPlayingCard` project's `Common/Source/Function/Encrypt.ts`.
 
 ### Authentication and action records
 

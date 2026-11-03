@@ -1,52 +1,83 @@
 // generated - do not edit. Source: Content/**/*.md, resolved by Scripts/Content.ts.
 export const Strings: Readonly<Record<string, string>> = {
-	"CONTENT_DOCUMENT_EMPTYBOOKMARKS": "Scrape your own into the shadow store, then publish what you want to show:",
-	"CONTENT_INSTRUCTION_CLASSIFY": "You file X (Twitter) accounts into the lists of one person's bookmark collection.\n\nJudge each account by its body of work, not by a single post. A mixed timeline is\nnormal: what matters is the subject the account keeps returning to.\n\nThe lists are: {{lists}}.\n\nReply with JSON only. No prose, no markdown fence, no commentary outside the JSON.\nShape: {\"decisions\":[{\"handle\":\"<handle>\",\"list\":\"<list>\",\"score\":<number>,\"gap\":<number>,\"reason\":\"<one line>\"}]}\n\n- One entry for every handle in the list above, and for no other handle.\n- `list` is one of the list names above, or null when the account belongs in none of them.\n- `score` and `gap` are optional numbers of your own; they are recorded, not checked.\n- `reason` is one line of plain English naming the evidence that decided it.",
+	"CONTENT_DOCUMENT_EMPTYBOOKMARKS":
+		"Scrape your own into the shadow store, then publish what you want to show:",
+	"CONTENT_INSTRUCTION_CLASSIFY":
+		'You file X (Twitter) accounts into the lists of one person\'s bookmark collection.\n\nJudge each account by its body of work, not by a single post. A mixed timeline is\nnormal: what matters is the subject the account keeps returning to.\n\nThe lists are: {{lists}}.\n\nReply with JSON only. No prose, no markdown fence, no commentary outside the JSON.\nShape: {"decisions":[{"handle":"<handle>","list":"<list>","score":<number>,"gap":<number>,"reason":"<one line>"}]}\n\n- One entry for every handle in the list above, and for no other handle.\n- `list` is one of the list names above, or null when the account belongs in none of them.\n- `score` and `gap` are optional numbers of your own; they are recorded, not checked.\n- `reason` is one line of plain English naming the evidence that decided it.',
 	"CONTENT_STRING_BRAND_ATTRIBUTION": "Carried by DELO",
-	"CONTENT_STRING_BRAND_DESCRIPTION": "A network that carries motions between peers, sealed with AES-GCM-256 under keys only the participants hold.",
+	"CONTENT_STRING_BRAND_DESCRIPTION":
+		"A network that carries motions between peers, sealed with AES-GCM-256 under keys only the participants hold.",
 	"CONTENT_STRING_BRAND_FALLBACK": "https://timeline.example",
-	"CONTENT_STRING_BRAND_LEDE": "Motions are raised by a participant, carried by the network and settled when their outcome is recorded - over a transport the operator routes and cannot read.",
+	"CONTENT_STRING_BRAND_LEDE":
+		"Motions are raised by a participant, carried by the network and settled when their outcome is recorded - over a transport the operator routes and cannot read.",
 	"CONTENT_STRING_BRAND_LICENCE": "MIT",
 	"CONTENT_STRING_BRAND_SHORT": "TimeLine",
 	"CONTENT_STRING_BRAND_TITLE": "TimeLine",
 	"CONTENT_STRING_CLI_COMMANDS": "Commands:",
-	"CONTENT_STRING_CLI_CONTRACT": "Every command prints one JSON object; failures exit 2 with an `error` code.",
+	"CONTENT_STRING_CLI_CONTRACT":
+		"Every command prints one JSON object; failures exit 2 with an `error` code.",
 	"CONTENT_STRING_CLI_HEADING_COMMAND": "maintain {{path}} - {{summary}}",
 	"CONTENT_STRING_CLI_OPTIONS": "Options:",
 	"CONTENT_STRING_CLI_TITLE": "maintain - a clap-shaped CLI over the Chrome DevTools Protocol.",
 	"CONTENT_STRING_CLI_USAGE_COMMAND": "Usage: {{usage}}",
-	"CONTENT_STRING_CLI_USAGE_LIST": "Usage: pnpm maintain <group> <command> [options] [--json] [--schema] [--help]",
-	"CONTENT_STRING_COMMAND_AUTHOR_CLASSIFY_INFER_SUMMARY": "Ask the model about the authors the rules left ambiguous; cache every answer.",
-	"CONTENT_STRING_COMMAND_AUTHOR_CLASSIFY_RULES_SUMMARY": "Place authors into lists with weighted rules; leave the ambiguous ones unassigned.",
-	"CONTENT_STRING_COMMAND_AUTHOR_DISTRIBUTE_APPLY_SUMMARY": "Write the resolved decisions, then add their memberships when --apply is passed.",
-	"CONTENT_STRING_COMMAND_AUTHOR_EVIDENCE_BUILD_SUMMARY": "Build one compact evidence record per bookmarked author. No model call.",
-	"CONTENT_STRING_COMMAND_CONFIG_INIT_SUMMARY": "Write the local identifier map from the tracked example; every value is a flag.",
-	"CONTENT_STRING_COMMAND_CONFIG_SHOW_SUMMARY": "Print the resolved identifier map; list ids are masked unless --reveal.",
-	"CONTENT_STRING_COMMAND_EVENT_APPEND_SUMMARY": "Write one event file into the content directory.",
-	"CONTENT_STRING_COMMAND_EVENT_TAIL_SUMMARY": "Print the event log as JSON lines; --follow keeps printing new ones.",
-	"CONTENT_STRING_COMMAND_PAGE_BOOKMARKS_OPEN_SUMMARY": "Show the saved-posts page and report how many posts it has.",
-	"CONTENT_STRING_COMMAND_PAGE_BOOKMARKS_SCRAPE_COMMAND_SUMMARY": "Walk the saved-posts page and write every post into the shadow store.",
-	"CONTENT_STRING_COMMAND_PAGE_LIST_MEMBER_ADD_SUMMARY": "Add one handle to one curated list; a dry run unless --apply.",
-	"CONTENT_STRING_COMMAND_PAGE_LIST_OPEN_SUMMARY": "Show one configured list; the id comes from the identifier map, never argv.",
-	"CONTENT_STRING_COMMAND_POST_BOOKMARK_ADD_SUMMARY": "Bookmark a post, unless it is already bookmarked.",
-	"CONTENT_STRING_COMMAND_POST_BOOKMARK_REMOVE_SUMMARY": "Remove a bookmark, unless the post is not bookmarked.",
-	"CONTENT_STRING_COMMAND_POST_EXTRACT_SUMMARY": "Read one post, from the live page or from the shadow archive.",
-	"CONTENT_STRING_COMMAND_POST_LIKE_REMOVE_SUMMARY": "Remove a like, unless the post is not liked.",
+	"CONTENT_STRING_CLI_USAGE_LIST":
+		"Usage: pnpm maintain <group> <command> [options] [--json] [--schema] [--help]",
+	"CONTENT_STRING_COMMAND_AUTHOR_CLASSIFY_INFER_SUMMARY":
+		"Ask the model about the authors the rules left ambiguous; cache every answer.",
+	"CONTENT_STRING_COMMAND_AUTHOR_CLASSIFY_RULES_SUMMARY":
+		"Place authors into lists with weighted rules; leave the ambiguous ones unassigned.",
+	"CONTENT_STRING_COMMAND_AUTHOR_DISTRIBUTE_APPLY_SUMMARY":
+		"Write the resolved decisions, then add their memberships when --apply is passed.",
+	"CONTENT_STRING_COMMAND_AUTHOR_EVIDENCE_BUILD_SUMMARY":
+		"Build one compact evidence record per bookmarked author. No model call.",
+	"CONTENT_STRING_COMMAND_CONFIG_INIT_SUMMARY":
+		"Write the local identifier map from the tracked example; every value is a flag.",
+	"CONTENT_STRING_COMMAND_CONFIG_SHOW_SUMMARY":
+		"Print the resolved identifier map; list ids are masked unless --reveal.",
+	"CONTENT_STRING_COMMAND_EVENT_APPEND_SUMMARY":
+		"Write one event file into the content directory.",
+	"CONTENT_STRING_COMMAND_EVENT_TAIL_SUMMARY":
+		"Print the event log as JSON lines; --follow keeps printing new ones.",
+	"CONTENT_STRING_COMMAND_PAGE_BOOKMARKS_OPEN_SUMMARY":
+		"Show the saved-posts page and report how many posts it has.",
+	"CONTENT_STRING_COMMAND_PAGE_BOOKMARKS_SCRAPE_COMMAND_SUMMARY":
+		"Walk the saved-posts page and write every post into the shadow store.",
+	"CONTENT_STRING_COMMAND_PAGE_LIST_MEMBER_ADD_SUMMARY":
+		"Add one handle to one curated list; a dry run unless --apply.",
+	"CONTENT_STRING_COMMAND_PAGE_LIST_OPEN_SUMMARY":
+		"Show one configured list; the id comes from the identifier map, never argv.",
+	"CONTENT_STRING_COMMAND_POST_BOOKMARK_ADD_SUMMARY":
+		"Bookmark a post, unless it is already bookmarked.",
+	"CONTENT_STRING_COMMAND_POST_BOOKMARK_REMOVE_SUMMARY":
+		"Remove a bookmark, unless the post is not bookmarked.",
+	"CONTENT_STRING_COMMAND_POST_EXTRACT_SUMMARY":
+		"Read one post, from the live page or from the shadow archive.",
+	"CONTENT_STRING_COMMAND_POST_LIKE_REMOVE_SUMMARY":
+		"Remove a like, unless the post is not liked.",
 	"CONTENT_STRING_COMMAND_POST_LIKE_SUMMARY": "Like a post, unless it is already liked.",
-	"CONTENT_STRING_COMMAND_STORE_EXPORT_SUMMARY": "Write every record the SpacetimeDB database holds into the archive's JSON layout.",
+	"CONTENT_STRING_COMMAND_STORE_EXPORT_SUMMARY":
+		"Write every record the SpacetimeDB database holds into the archive's JSON layout.",
 	"CONTENT_STRING_COMMAND_STORE_HIDE_SUMMARY": "Withhold one post and delete its published file.",
-	"CONTENT_STRING_COMMAND_STORE_PUBLISH_SUMMARY": "Copy shadow records into the site's Bookmark collection.",
-	"CONTENT_STRING_COMMAND_STORE_PUSH_SUMMARY": "Write every record the file layout holds into the SpacetimeDB database.",
-	"CONTENT_STRING_COMMAND_STORE_SCRAPE_SUMMARY": "Walk one source and write every post it shows into the shadow store.",
-	"CONTENT_STRING_COMMAND_STORE_STATUS_SUMMARY": "Count what the shadow store and the site's collection hold.",
+	"CONTENT_STRING_COMMAND_STORE_PUBLISH_SUMMARY":
+		"Copy shadow records into the site's Bookmark collection.",
+	"CONTENT_STRING_COMMAND_STORE_PUSH_SUMMARY":
+		"Write every record the file layout holds into the SpacetimeDB database.",
+	"CONTENT_STRING_COMMAND_STORE_SCRAPE_SUMMARY":
+		"Walk one source and write every post it shows into the shadow store.",
+	"CONTENT_STRING_COMMAND_STORE_STATUS_SUMMARY":
+		"Count what the shadow store and the site's collection hold.",
 	"CONTENT_STRING_COMMAND_TAB_FOCUS_SUMMARY": "Bring one tab to the front.",
 	"CONTENT_STRING_COMMAND_TAB_LIST_SUMMARY": "List the page targets the CLI may drive.",
 	"CONTENT_STRING_COMMAND_VOTE_APPROVE_SUMMARY": "Move a candidate into the Curated index.",
-	"CONTENT_STRING_COMMAND_VOTE_NOMINATE_SUMMARY": "Add a post or URL to the Voted index as a candidate.",
-	"CONTENT_STRING_COMMAND_VOTE_QUEUE_SUMMARY": "Every candidate, sorted by votes, with age and list.",
+	"CONTENT_STRING_COMMAND_VOTE_NOMINATE_SUMMARY":
+		"Add a post or URL to the Voted index as a candidate.",
+	"CONTENT_STRING_COMMAND_VOTE_QUEUE_SUMMARY":
+		"Every candidate, sorted by votes, with age and list.",
 	"CONTENT_STRING_COMMAND_VOTE_RANK_SUMMARY": "Move a curated entry to a new position.",
-	"CONTENT_STRING_COMMAND_VOTE_REJECT_SUMMARY": "Tombstone a candidate so it can never be nominated again.",
-	"CONTENT_STRING_COMMAND_VOTE_SYNC_SUMMARY": "Pull current vote counts from the transport into the local store.",
+	"CONTENT_STRING_COMMAND_VOTE_REJECT_SUMMARY":
+		"Tombstone a candidate so it can never be nominated again.",
+	"CONTENT_STRING_COMMAND_VOTE_SYNC_SUMMARY":
+		"Pull current vote counts from the transport into the local store.",
 	"CONTENT_STRING_EMPTY_ACTIVITY": "Nothing recorded yet",
 	"CONTENT_STRING_EMPTY_BOOKMARKS": "No bookmarks yet",
 	"CONTENT_STRING_EMPTY_LIST": "Nothing filed here yet",
@@ -60,54 +91,73 @@ export const Strings: Readonly<Record<string, string>> = {
 	"CONTENT_STRING_EXAMPLE_PUBLISH": "maintain store publish --all",
 	"CONTENT_STRING_EXAMPLE_QUEUE": "maintain vote queue",
 	"CONTENT_STRING_EXAMPLE_SCRAPE": "maintain store scrape --source bookmark",
-	"CONTENT_STRING_HINT_VOTE_ABSENT": "see {{reference}} - or leave voting off; the Curated index does not need it",
+	"CONTENT_STRING_HINT_VOTE_ABSENT":
+		"see {{reference}} - or leave voting off; the Curated index does not need it",
 	"CONTENT_STRING_HINT_VOTE_INCOMPLETE": "see {{reference}}",
 	"CONTENT_STRING_HINT_VOTE_SYNC": "see {{reference}}, or leave voting off",
-	"CONTENT_STRING_OPTION_AUTHOR_CLASSIFY_INFER_DRYRUN": "Report what would be asked and spend nothing.",
-	"CONTENT_STRING_OPTION_AUTHOR_CLASSIFY_INFER_LIMIT": "Ask about at most this many authors this run.",
+	"CONTENT_STRING_OPTION_AUTHOR_CLASSIFY_INFER_DRYRUN":
+		"Report what would be asked and spend nothing.",
+	"CONTENT_STRING_OPTION_AUTHOR_CLASSIFY_INFER_LIMIT":
+		"Ask about at most this many authors this run.",
 	"CONTENT_STRING_OPTION_CONFIG_INIT_CDPPORT": "Port of the browser's debugging endpoint.",
-	"CONTENT_STRING_OPTION_CONFIG_INIT_FORCE": "Replace an existing map, keeping its values as the base.",
-	"CONTENT_STRING_OPTION_CONFIG_INIT_LIST": "One configured list, as <slug>=<id>. Repeat for more.",
+	"CONTENT_STRING_OPTION_CONFIG_INIT_FORCE":
+		"Replace an existing map, keeping its values as the base.",
+	"CONTENT_STRING_OPTION_CONFIG_INIT_LIST":
+		"One configured list, as <slug>=<id>. Repeat for more.",
 	"CONTENT_STRING_OPTION_CONFIG_INIT_PROFILE": "The handle whose bookmarks are being archived.",
 	"CONTENT_STRING_OPTION_CONFIG_SHOW_LIST": "Show only the configured list with this slug.",
 	"CONTENT_STRING_OPTION_CONFIG_SHOW_REVEAL": "Print list ids instead of masking them.",
 	"CONTENT_STRING_OPTION_EVENT_APPEND_KIND": "What happened.",
 	"CONTENT_STRING_OPTION_EVENT_APPEND_PAYLOAD": "Extra event data.",
-	"CONTENT_STRING_OPTION_EVENT_APPEND_SUBJECT": "What it happened to - a post id or an author handle.",
+	"CONTENT_STRING_OPTION_EVENT_APPEND_SUBJECT":
+		"What it happened to - a post id or an author handle.",
 	"CONTENT_STRING_OPTION_EVENT_TAIL_DIR": "Which event log to read.",
 	"CONTENT_STRING_OPTION_EVENT_TAIL_FOLLOW": "Keep polling and print events as they land.",
 	"CONTENT_STRING_OPTION_EVENT_TAIL_INTERVAL": "Polling interval in milliseconds.",
 	"CONTENT_STRING_OPTION_EVENT_TAIL_SINCE": "Only print events at or after this timestamp.",
 	"CONTENT_STRING_OPTION_PAGE_BOOKMARKS_OPEN_TAB": "CDP target id from `tab list`, or its index.",
 	"CONTENT_STRING_OPTION_PAGE_BOOKMARKS_SCRAPE_COMMAND_LIMIT": "Stop after this many posts.",
-	"CONTENT_STRING_OPTION_PAGE_BOOKMARKS_SCRAPE_COMMAND_MAXIDLE": "Stop after this many scrolls that produced nothing new.",
-	"CONTENT_STRING_OPTION_PAGE_BOOKMARKS_SCRAPE_COMMAND_TAB": "CDP target id from `tab list`, or its index.",
-	"CONTENT_STRING_OPTION_PAGE_LIST_MEMBER_ADD_HANDLE": "Handle to add, with or without the leading @.",
-	"CONTENT_STRING_OPTION_PAGE_LIST_MEMBER_ADD_NAME": "Slug of a list declared in the identifier map.",
+	"CONTENT_STRING_OPTION_PAGE_BOOKMARKS_SCRAPE_COMMAND_MAXIDLE":
+		"Stop after this many scrolls that produced nothing new.",
+	"CONTENT_STRING_OPTION_PAGE_BOOKMARKS_SCRAPE_COMMAND_TAB":
+		"CDP target id from `tab list`, or its index.",
+	"CONTENT_STRING_OPTION_PAGE_LIST_MEMBER_ADD_HANDLE":
+		"Handle to add, with or without the leading @.",
+	"CONTENT_STRING_OPTION_PAGE_LIST_MEMBER_ADD_NAME":
+		"Slug of a list declared in the identifier map.",
 	"CONTENT_STRING_OPTION_PAGE_LIST_OPEN_NAME": "Slug of a list declared in the identifier map.",
 	"CONTENT_STRING_OPTION_POST_TARGET_ID": "Status id of the post, as it appears in a permalink.",
 	"CONTENT_STRING_OPTION_POST_TARGET_INDEX": "Zero-based article index on the page.",
 	"CONTENT_STRING_OPTION_POST_TARGET_TAB": "CDP target id from `tab list`, or its index.",
 	"CONTENT_STRING_OPTION_POST_TARGET_URL": "Permalink of the post to drive.",
-	"CONTENT_STRING_OPTION_STORE_EXPORT_DRYRUN": "Count what would be written; contact nothing, write nothing.",
-	"CONTENT_STRING_OPTION_STORE_EXPORT_TO": "Directory to export into (default: the configured shadow store).",
-	"CONTENT_STRING_OPTION_STORE_EXPORT_URL": "SpacetimeDB server URL (default: the identifier map's).",
+	"CONTENT_STRING_OPTION_STORE_EXPORT_DRYRUN":
+		"Count what would be written; contact nothing, write nothing.",
+	"CONTENT_STRING_OPTION_STORE_EXPORT_TO":
+		"Directory to export into (default: the configured shadow store).",
+	"CONTENT_STRING_OPTION_STORE_EXPORT_URL":
+		"SpacetimeDB server URL (default: the identifier map's).",
 	"CONTENT_STRING_OPTION_STORE_HIDE_ID": "Status id of the post to withhold.",
 	"CONTENT_STRING_OPTION_STORE_PUBLISH_ALL": "Publish every post that is not hidden.",
 	"CONTENT_STRING_OPTION_STORE_PUBLISH_ID": "Publish one post by status id.",
-	"CONTENT_STRING_OPTION_STORE_PUBLISH_SINCE": "Publish every post first seen at or after this date.",
-	"CONTENT_STRING_OPTION_STORE_PUBLISH_SOURCE": "Publish every post first seen through this source.",
-	"CONTENT_STRING_OPTION_STORE_PUSH_DRYRUN": "Count what would be pushed; contact nothing, write nothing.",
+	"CONTENT_STRING_OPTION_STORE_PUBLISH_SINCE":
+		"Publish every post first seen at or after this date.",
+	"CONTENT_STRING_OPTION_STORE_PUBLISH_SOURCE":
+		"Publish every post first seen through this source.",
+	"CONTENT_STRING_OPTION_STORE_PUSH_DRYRUN":
+		"Count what would be pushed; contact nothing, write nothing.",
 	"CONTENT_STRING_OPTION_STORE_PUSH_LIMIT": "Push at most this many posts.",
 	"CONTENT_STRING_OPTION_STORE_PUSH_SOURCE": "Push only posts observed through this source.",
-	"CONTENT_STRING_OPTION_STORE_PUSH_URL": "SpacetimeDB server URL (default: the identifier map's).",
+	"CONTENT_STRING_OPTION_STORE_PUSH_URL":
+		"SpacetimeDB server URL (default: the identifier map's).",
 	"CONTENT_STRING_OPTION_STORE_SCRAPE_LIMIT": "Stop after this many posts.",
-	"CONTENT_STRING_OPTION_STORE_SCRAPE_MAXIDLE": "Stop after this many scrolls that produced nothing new.",
+	"CONTENT_STRING_OPTION_STORE_SCRAPE_MAXIDLE":
+		"Stop after this many scrolls that produced nothing new.",
 	"CONTENT_STRING_OPTION_STORE_SCRAPE_SOURCE": "Which channel to read.",
 	"CONTENT_STRING_OPTION_STORE_SCRAPE_TAB": "CDP target id from `tab list`, or its index.",
 	"CONTENT_STRING_OPTION_TAB_FOCUS_ID": "CDP target id from `tab list`.",
 	"CONTENT_STRING_OPTION_VOTE_APPROVE_ID": "Status id of the candidate to approve.",
-	"CONTENT_STRING_OPTION_VOTE_APPROVE_RANK": "Position in the Curated index; appended by default.",
+	"CONTENT_STRING_OPTION_VOTE_APPROVE_RANK":
+		"Position in the Curated index; appended by default.",
 	"CONTENT_STRING_OPTION_VOTE_NOMINATE_ID": "Status id of a post in the shadow store.",
 	"CONTENT_STRING_OPTION_VOTE_NOMINATE_LIST": "File the entry under this configured list.",
 	"CONTENT_STRING_OPTION_VOTE_NOMINATE_NOTE": "Why it was nominated.",
@@ -118,24 +168,32 @@ export const Strings: Readonly<Record<string, string>> = {
 	"CONTENT_STRING_OPTION_VOTE_RANK_RANK": "New position, 1 is the top.",
 	"CONTENT_STRING_OPTION_VOTE_REJECT_ID": "Status id of the candidate to reject.",
 	"CONTENT_STRING_OPTION_VOTE_REJECT_REASON": "Why it was rejected; kept on the event.",
-	"CONTENT_STRING_PAGE_ACTIVITY_DESCRIPTION": "The pipeline's own log, written one record per motion as it happens.",
-	"CONTENT_STRING_PAGE_ACTIVITY_EMPTYBODY": "Events appear here once a post is published. The log is a directory of files, not a database, so it can be read while the pipeline is running.",
+	"CONTENT_STRING_PAGE_ACTIVITY_DESCRIPTION":
+		"The pipeline's own log, written one record per motion as it happens.",
+	"CONTENT_STRING_PAGE_ACTIVITY_EMPTYBODY":
+		"Events appear here once a post is published. The log is a directory of files, not a database, so it can be read while the pipeline is running.",
 	"CONTENT_STRING_PAGE_ACTIVITY_EYEBROW": "Activity",
-	"CONTENT_STRING_PAGE_ACTIVITY_LEDE": "The pipeline writes what it did as it does it: a capture, a filing, a publication. This log is the same record the rail counts, read in full.",
+	"CONTENT_STRING_PAGE_ACTIVITY_LEDE":
+		"The pipeline writes what it did as it does it: a capture, a filing, a publication. This log is the same record the rail counts, read in full.",
 	"CONTENT_STRING_PAGE_ACTIVITY_POSTCOUNT": "{{count}} posts",
-	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_BODY": "Each motion is written once, with its kind, the subject it touched and the moment it happened. Nothing is rewritten in place, so the log is a history rather than a state.",
+	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_BODY":
+		"Each motion is written once, with its kind, the subject it touched and the moment it happened. Nothing is rewritten in place, so the log is a history rather than a state.",
 	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_EYEBROW": "Record",
 	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_RECORD_TITLE": "One record per motion.",
-	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_BODY": "The page is a build-time read of the log; the tool that writes it can also follow it live, so the archive's history and its live view cannot disagree.",
+	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_BODY":
+		"The page is a build-time read of the log; the tool that writes it can also follow it live, so the archive's history and its live view cannot disagree.",
 	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_EYEBROW": "Replay",
 	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_REPLAY_TITLE": "The same log, two ways.",
-	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_BODY": "A motion names the record it touched, so a post can show the trail that produced it and the log can say which changes a reader is able to see.",
+	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_BODY":
+		"A motion names the record it touched, so a post can show the trail that produced it and the log can say which changes a reader is able to see.",
 	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_EYEBROW": "Subject",
 	"CONTENT_STRING_PAGE_ACTIVITY_SECTION_SUBJECT_TITLE": "A subject you can follow.",
 	"CONTENT_STRING_PAGE_ACTIVITY_TITLE": "Every change is a file.",
-	"CONTENT_STRING_PAGE_BOOKMARK_DESCRIPTION": "What a saved post is: a captured record, private until it is published.",
+	"CONTENT_STRING_PAGE_BOOKMARK_DESCRIPTION":
+		"What a saved post is: a captured record, private until it is published.",
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_BACK": "← Bookmarks",
-	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_CURATED": "Curated · rank {{rank}} · {{count}} {{voteNoun}}",
+	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_CURATED":
+		"Curated · rank {{rank}} · {{count}} {{voteNoun}}",
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_LASTREAD": "Last read {{day}}.",
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_METRIC_LIKES": "likes",
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_METRIC_REPLIES": "replies",
@@ -145,106 +203,150 @@ export const Strings: Readonly<Record<string, string>> = {
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_PERMALINK": "Permalink",
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_POSTED": "posted {{day}}",
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_RAIL_NOTE": "Events recorded for this post",
-	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_SAVED": "Saved at or after {{day}} - the first time this archive saw the post. The interface does not expose the moment it was saved.",
+	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_SAVED":
+		"Saved at or after {{day}} - the first time this archive saw the post. The interface does not expose the moment it was saved.",
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_TITLE": "{{name}} on X",
 	"CONTENT_STRING_PAGE_BOOKMARK_DETAIL_VERIFIED": "Verified account",
 	"CONTENT_STRING_PAGE_BOOKMARK_EYEBROW": "Bookmarks",
-	"CONTENT_STRING_PAGE_BOOKMARK_LEDE": "A bookmark is a captured record: its text, its author, its media and the lists it was filed under, held privately until the owner publishes it.",
-	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_BODY": "A capture keeps the post as it was observed, so a record opened a year later still shows what was there rather than what the page says now.",
+	"CONTENT_STRING_PAGE_BOOKMARK_LEDE":
+		"A bookmark is a captured record: its text, its author, its media and the lists it was filed under, held privately until the owner publishes it.",
+	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_BODY":
+		"A capture keeps the post as it was observed, so a record opened a year later still shows what was there rather than what the page says now.",
 	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_EYEBROW": "Capture",
 	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_CAPTURE_TITLE": "Captured, not copied.",
-	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_BODY": "Lists are the owner's own nouns, not a taxonomy the product ships. A post no list has claimed sits in the unsorted bucket instead of disappearing.",
+	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_BODY":
+		"Lists are the owner's own nouns, not a taxonomy the product ships. A post no list has claimed sits in the unsorted bucket instead of disappearing.",
 	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_EYEBROW": "Filed",
 	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_FILED_TITLE": "Filed under a list you name.",
-	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_BODY": "The store belongs to whoever captured it. A record reaches a canvas only when a publish motion names it, and withdrawing it is the same motion in reverse.",
+	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_BODY":
+		"The store belongs to whoever captured it. A record reaches a canvas only when a publish motion names it, and withdrawing it is the same motion in reverse.",
 	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_EYEBROW": "Private",
 	"CONTENT_STRING_PAGE_BOOKMARK_SECTION_PRIVATE_TITLE": "Private until published.",
 	"CONTENT_STRING_PAGE_BOOKMARK_TITLE": "What a saved post is here.",
 	"CONTENT_STRING_PAGE_INDEX_ALL": "All bookmarks →",
-	"CONTENT_STRING_PAGE_INDEX_DESCRIPTION": "The public surface of an archive that keeps where every record came from.",
-	"CONTENT_STRING_PAGE_INDEX_EMPTYBODY": "Nothing has been published into this archive. Scrape your own bookmarks into the shadow store, then publish what you want to show:",
-	"CONTENT_STRING_PAGE_INDEX_EMPTYHINT": "The commands need a browser exposing the DevTools Protocol and a configured identifier map - see",
+	"CONTENT_STRING_PAGE_INDEX_DESCRIPTION":
+		"The public surface of an archive that keeps where every record came from.",
+	"CONTENT_STRING_PAGE_INDEX_EMPTYBODY":
+		"Nothing has been published into this archive. Scrape your own bookmarks into the shadow store, then publish what you want to show:",
+	"CONTENT_STRING_PAGE_INDEX_EMPTYHINT":
+		"The commands need a browser exposing the DevTools Protocol and a configured identifier map - see",
 	"CONTENT_STRING_PAGE_INDEX_EYEBROW": "The public surface",
 	"CONTENT_STRING_PAGE_INDEX_LATEST": "Latest",
-	"CONTENT_STRING_PAGE_INDEX_LEDE": "Every record on a canvas arrived the same way: observed, processed, reviewed, published. What follows is the system that does it, stated once per step.",
+	"CONTENT_STRING_PAGE_INDEX_LEDE":
+		"Every record on a canvas arrived the same way: observed, processed, reviewed, published. What follows is the system that does it, stated once per step.",
 	"CONTENT_STRING_PAGE_INDEX_PICKS": "Picks",
-	"CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_BODY": "A record waits in the private store until a publish motion moves it across the seam. Filing, voting and ranking choose among what is already public; none of them publishes.",
+	"CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_BODY":
+		"A record waits in the private store until a publish motion moves it across the seam. Filing, voting and ranking choose among what is already public; none of them publishes.",
 	"CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_EYEBROW": "Processing",
 	"CONTENT_STRING_PAGE_INDEX_SECTION_PROCESSING_TITLE": "Nothing is published by accident.",
-	"CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_BODY": "The owner ranks the picks by hand, and that rank decides which one is the hero. A vote count is evidence for the decision, never the decision.",
+	"CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_BODY":
+		"The owner ranks the picks by hand, and that rank decides which one is the hero. A vote count is evidence for the decision, never the decision.",
 	"CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_EYEBROW": "Review",
 	"CONTENT_STRING_PAGE_INDEX_SECTION_REVIEW_TITLE": "The order is a decision, not a score.",
-	"CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_BODY": "Each capture is filed with the account it came from, the moment the pipeline first saw it, and the list it was assigned to - so nothing on a canvas is a claim without a date.",
+	"CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_BODY":
+		"Each capture is filed with the account it came from, the moment the pipeline first saw it, and the list it was assigned to - so nothing on a canvas is a claim without a date.",
 	"CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_EYEBROW": "Source",
 	"CONTENT_STRING_PAGE_INDEX_SECTION_SOURCE_TITLE": "A record keeps where it came from.",
 	"CONTENT_STRING_PAGE_INDEX_TITLE": "The archive shows its work.",
-	"CONTENT_STRING_PAGE_LIST_DESCRIPTION": "Lists are the owner's names for sets of records, and each one narrows the same canvas.",
+	"CONTENT_STRING_PAGE_LIST_DESCRIPTION":
+		"Lists are the owner's names for sets of records, and each one narrows the same canvas.",
 	"CONTENT_STRING_PAGE_LIST_DETAIL_ALLLISTS": "All lists",
-	"CONTENT_STRING_PAGE_LIST_DETAIL_DESCRIPTION": "{{count}} {{saved}} {{postNoun}} filed under {{slug}}.",
-	"CONTENT_STRING_PAGE_LIST_DETAIL_EMPTYBODY": "This list has no published posts. The page exists because the slug does - an empty list is a state, not an error.",
+	"CONTENT_STRING_PAGE_LIST_DETAIL_DESCRIPTION":
+		"{{count}} {{saved}} {{postNoun}} filed under {{slug}}.",
+	"CONTENT_STRING_PAGE_LIST_DETAIL_EMPTYBODY":
+		"This list has no published posts. The page exists because the slug does - an empty list is a state, not an error.",
 	"CONTENT_STRING_PAGE_LIST_DETAIL_LEDE": "{{count}} {{saved}} {{postNoun}}, newest first.",
-	"CONTENT_STRING_PAGE_LIST_EMPTYBODY": "A list exists once a published post carries its slug. Scrape and publish a post that has one, or leave it - the archive reads the same either way.",
+	"CONTENT_STRING_PAGE_LIST_EMPTYBODY":
+		"A list exists once a published post carries its slug. Scrape and publish a post that has one, or leave it - the archive reads the same either way.",
 	"CONTENT_STRING_PAGE_LIST_EYEBROW": "Lists",
-	"CONTENT_STRING_PAGE_LIST_LEDE": "A list is a name the owner gives a set of records. One record can sit under two lists, and a name that no published record carries has no page at all.",
-	"CONTENT_STRING_PAGE_LIST_SECTION_FILTER_BODY": "Opening a list draws the same canvas as the front page, narrowed to that list, so a list reads as a home that has been filtered rather than as a second kind of page.",
+	"CONTENT_STRING_PAGE_LIST_LEDE":
+		"A list is a name the owner gives a set of records. One record can sit under two lists, and a name that no published record carries has no page at all.",
+	"CONTENT_STRING_PAGE_LIST_SECTION_FILTER_BODY":
+		"Opening a list draws the same canvas as the front page, narrowed to that list, so a list reads as a home that has been filtered rather than as a second kind of page.",
 	"CONTENT_STRING_PAGE_LIST_SECTION_FILTER_EYEBROW": "Filter",
 	"CONTENT_STRING_PAGE_LIST_SECTION_FILTER_TITLE": "One list, one canvas.",
-	"CONTENT_STRING_PAGE_LIST_SECTION_NAME_BODY": "There is no fixed taxonomy. The set of lists is read back out of the published records, so the index describes the archive that exists rather than the one it was configured for.",
+	"CONTENT_STRING_PAGE_LIST_SECTION_NAME_BODY":
+		"There is no fixed taxonomy. The set of lists is read back out of the published records, so the index describes the archive that exists rather than the one it was configured for.",
 	"CONTENT_STRING_PAGE_LIST_SECTION_NAME_EYEBROW": "Name",
 	"CONTENT_STRING_PAGE_LIST_SECTION_NAME_TITLE": "You name the lists.",
-	"CONTENT_STRING_PAGE_LIST_SECTION_SLUG_BODY": "The route is derived from the published records, never from a configuration file, so a name that resolves to nothing cannot become a page.",
+	"CONTENT_STRING_PAGE_LIST_SECTION_SLUG_BODY":
+		"The route is derived from the published records, never from a configuration file, so a name that resolves to nothing cannot become a page.",
 	"CONTENT_STRING_PAGE_LIST_SECTION_SLUG_EYEBROW": "Slug",
 	"CONTENT_STRING_PAGE_LIST_SECTION_SLUG_TITLE": "A slug exists while a record carries it.",
 	"CONTENT_STRING_PAGE_LIST_TITLE": "A list is a filter, not a folder.",
-	"CONTENT_STRING_PAGE_SHOWCASE_CARD_CANVAS_BODY": "A tile carries the column and row it starts at and the tracks it spans, so a thin archive composes as a page instead of leaving holes where a record would have been (RFC-0045).",
+	"CONTENT_STRING_PAGE_SHOWCASE_CARD_CANVAS_BODY":
+		"A tile carries the column and row it starts at and the tracks it spans, so a thin archive composes as a page instead of leaving holes where a record would have been (RFC-0045).",
 	"CONTENT_STRING_PAGE_SHOWCASE_CARD_CANVAS_TITLE": "Placement is data, not layout.",
-	"CONTENT_STRING_PAGE_SHOWCASE_CARD_DRAWER_BODY": "Everything you have not published lives in the local store, and nothing reaches a canvas until a publish record moves it there; withdrawing a record is the same gesture in reverse, so a hidden post is dropped from the collection rather than filtered at render time (RFC-0043).",
+	"CONTENT_STRING_PAGE_SHOWCASE_CARD_DRAWER_BODY":
+		"Everything you have not published lives in the local store, and nothing reaches a canvas until a publish record moves it there; withdrawing a record is the same gesture in reverse, so a hidden post is dropped from the collection rather than filtered at render time (RFC-0043).",
 	"CONTENT_STRING_PAGE_SHOWCASE_CARD_DRAWER_TITLE": "The private side stays private.",
-	"CONTENT_STRING_PAGE_SHOWCASE_CARD_MOTION_BODY": "A motion is raised by a participant, carried by the network and settled when its outcome is recorded; it carries an author, an audience and an id that makes it idempotent, and a change of intent is a second motion (RFC-0024, RFC-0026).",
+	"CONTENT_STRING_PAGE_SHOWCASE_CARD_MOTION_BODY":
+		"A motion is raised by a participant, carried by the network and settled when its outcome is recorded; it carries an author, an audience and an id that makes it idempotent, and a change of intent is a second motion (RFC-0024, RFC-0026).",
 	"CONTENT_STRING_PAGE_SHOWCASE_CARD_MOTION_TITLE": "A motion travels, then settles.",
-	"CONTENT_STRING_PAGE_SHOWCASE_CARD_NETWORK_BODY": "The network moves what you send between peers over the peer-carried transport: sealed with AES-GCM-256, keys wrapped to each device with X25519, and no key held anywhere the operator can reach - so it cannot read, index, rank or moderate what it carries (RFC-0026, RFC-0013, RFC-0031).",
+	"CONTENT_STRING_PAGE_SHOWCASE_CARD_NETWORK_BODY":
+		"The network moves what you send between peers over the peer-carried transport: sealed with AES-GCM-256, keys wrapped to each device with X25519, and no key held anywhere the operator can reach - so it cannot read, index, rank or moderate what it carries (RFC-0026, RFC-0013, RFC-0031).",
 	"CONTENT_STRING_PAGE_SHOWCASE_CARD_NETWORK_TITLE": "Carried, never read.",
-	"CONTENT_STRING_PAGE_SHOWCASE_CARD_PROVENANCE_BODY": "The rail reads the pipeline as depth: one band per collection, Bookmark at source, Event at ingestion, Voted at processing, Curated at review, so the rail and the archive cannot disagree about how much work sits at each step (RFC-0001).",
-	"CONTENT_STRING_PAGE_SHOWCASE_CARD_PROVENANCE_TITLE": "You can see where every record came from.",
-	"CONTENT_STRING_PAGE_SHOWCASE_CARD_SEAM_BODY": "Publishing is the only verb that moves a record from the drawer to a canvas; curation, voting and commenting select among what is already public and never publish (RFC-0043).",
+	"CONTENT_STRING_PAGE_SHOWCASE_CARD_PROVENANCE_BODY":
+		"The rail reads the pipeline as depth: one band per collection, Bookmark at source, Event at ingestion, Voted at processing, Curated at review, so the rail and the archive cannot disagree about how much work sits at each step (RFC-0001).",
+	"CONTENT_STRING_PAGE_SHOWCASE_CARD_PROVENANCE_TITLE":
+		"You can see where every record came from.",
+	"CONTENT_STRING_PAGE_SHOWCASE_CARD_SEAM_BODY":
+		"Publishing is the only verb that moves a record from the drawer to a canvas; curation, voting and commenting select among what is already public and never publish (RFC-0043).",
 	"CONTENT_STRING_PAGE_SHOWCASE_CARD_SEAM_TITLE": "One verb crosses.",
 	"CONTENT_STRING_PAGE_SHOWCASE_EYEBROW": "The system, not the archive",
-	"CONTENT_STRING_PAGE_SHOWCASE_LEDE": "What you publish is composed from your own records, carried as AES-GCM-256 ciphertext between peers, and shown to exactly the identities the grant set names (RFC-0013, RFC-0047).",
+	"CONTENT_STRING_PAGE_SHOWCASE_LEDE":
+		"What you publish is composed from your own records, carried as AES-GCM-256 ciphertext between peers, and shown to exactly the identities the grant set names (RFC-0013, RFC-0047).",
 	"CONTENT_STRING_PAGE_SHOWCASE_LINK": "See it in the workspace",
 	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHENTICATED_NAME": "Authenticated",
-	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHENTICATED_NOTE": "The provider verifies the network's identity and the network verifies the provider's, with the credential exchange as the seam between the two halves (RFC-0047, RFC-0013).",
+	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHENTICATED_NOTE":
+		"The provider verifies the network's identity and the network verifies the provider's, with the credential exchange as the seam between the two halves (RFC-0047, RFC-0013).",
 	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHORISED_NAME": "Authorised",
-	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHORISED_NOTE": "The see step is the first permission in the flow, and every grant after it is named, scoped and revocable by the identity that gave it (RFC-0047).",
+	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_AUTHORISED_NOTE":
+		"The see step is the first permission in the flow, and every grant after it is named, scoped and revocable by the identity that gave it (RFC-0047).",
 	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_ENCRYPTED_NAME": "Encrypted",
-	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_ENCRYPTED_NOTE": "AES-GCM-256 under a message key derived by HKDF-SHA256, with the content key wrapped to each device by X25519 - the suite is named rather than summarised (RFC-0013).",
+	"CONTENT_STRING_PAGE_SHOWCASE_PILLAR_ENCRYPTED_NOTE":
+		"AES-GCM-256 under a message key derived by HKDF-SHA256, with the content key wrapped to each device by X25519 - the suite is named rather than summarised (RFC-0013).",
 	"CONTENT_STRING_PAGE_SHOWCASE_TITLE": "Your archive, your drawer, your canvas.",
 	"CONTENT_STRING_PAGE_VOTED_BUTTON": "Vote",
-	"CONTENT_STRING_PAGE_VOTED_DESCRIPTION": "A public queue of candidates, ordered by votes and settled by the owner.",
-	"CONTENT_STRING_PAGE_VOTED_EMPTYBODY": "The candidate index is filled by the owner, one post at a time:",
+	"CONTENT_STRING_PAGE_VOTED_DESCRIPTION":
+		"A public queue of candidates, ordered by votes and settled by the owner.",
+	"CONTENT_STRING_PAGE_VOTED_EMPTYBODY":
+		"The candidate index is filled by the owner, one post at a time:",
 	"CONTENT_STRING_PAGE_VOTED_EMPTYHINTAFTER": "for the whole flow.",
-	"CONTENT_STRING_PAGE_VOTED_EMPTYHINTBEFORE": "Approval is what puts an entry on the homepage. See",
+	"CONTENT_STRING_PAGE_VOTED_EMPTYHINTBEFORE":
+		"Approval is what puts an entry on the homepage. See",
 	"CONTENT_STRING_PAGE_VOTED_EYEBROW": "Voted",
-	"CONTENT_STRING_PAGE_VOTED_LEDE": "A candidate is a post that has been suggested but not yet approved. Candidates are public here and nowhere else, and a vote is evidence the owner can weigh rather than a tally that publishes.",
+	"CONTENT_STRING_PAGE_VOTED_LEDE":
+		"A candidate is a post that has been suggested but not yet approved. Candidates are public here and nowhere else, and a vote is evidence the owner can weigh rather than a tally that publishes.",
 	"CONTENT_STRING_PAGE_VOTED_NOMINATED": "nominated {{day}}",
-	"CONTENT_STRING_PAGE_VOTED_NOTCONFIGUREDAFTER": "to add a vote store, or keep reading: the Curated index works without one.",
-	"CONTENT_STRING_PAGE_VOTED_NOTCONFIGUREDBEFORE": "Voting is not configured for this build - the counts below are the ones on file. See",
-	"CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_BODY": "A nomination carries the post's address, the lists it belongs to and an optional note saying why. Nominating a record does not publish it.",
+	"CONTENT_STRING_PAGE_VOTED_NOTCONFIGUREDAFTER":
+		"to add a vote store, or keep reading: the Curated index works without one.",
+	"CONTENT_STRING_PAGE_VOTED_NOTCONFIGUREDBEFORE":
+		"Voting is not configured for this build - the counts below are the ones on file. See",
+	"CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_BODY":
+		"A nomination carries the post's address, the lists it belongs to and an optional note saying why. Nominating a record does not publish it.",
 	"CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_EYEBROW": "Nominate",
 	"CONTENT_STRING_PAGE_VOTED_SECTION_NOMINATE_TITLE": "Anyone can nominate.",
-	"CONTENT_STRING_PAGE_VOTED_SECTION_RANK_BODY": "The count decides the order a reader sees and nothing else. A rejected candidate stays visible as a tombstone, because a rejection is a state rather than a deletion.",
+	"CONTENT_STRING_PAGE_VOTED_SECTION_RANK_BODY":
+		"The count decides the order a reader sees and nothing else. A rejected candidate stays visible as a tombstone, because a rejection is a state rather than a deletion.",
 	"CONTENT_STRING_PAGE_VOTED_SECTION_RANK_EYEBROW": "Rank",
 	"CONTENT_STRING_PAGE_VOTED_SECTION_RANK_TITLE": "Votes order the queue.",
-	"CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_BODY": "Approving a candidate is a command the owner runs. The approval records the rank and the count at that moment, so a canvas keeps the decision even when the votes move later.",
+	"CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_BODY":
+		"Approving a candidate is a command the owner runs. The approval records the rank and the count at that moment, so a canvas keeps the decision even when the votes move later.",
 	"CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_EYEBROW": "Settle",
 	"CONTENT_STRING_PAGE_VOTED_SECTION_SETTLE_TITLE": "Approval is a command, not a click.",
 	"CONTENT_STRING_PAGE_VOTED_TITLE": "A queue for what comes next.",
 	"CONTENT_STRING_PAGE_VOTED_UNKNOWNAUTHOR": "unknown author",
-	"CONTENT_STRING_PAGE_WORKSPACE_DESCRIPTION": "Your own drawer, the seam that publishes and the canvas that receives it - empty, and marked where a session would fill it.",
-	"CONTENT_STRING_PAGE_WORKSPACE_EMPTYBODY": "Nothing here is a sample and nothing here belongs to anyone else. A drawer holds what you saved yourself, so it stays empty until you save something:",
-	"CONTENT_STRING_PAGE_WORKSPACE_EMPTYHINT": "The command needs a browser exposing the DevTools Protocol and a configured identifier map - see",
+	"CONTENT_STRING_PAGE_WORKSPACE_DESCRIPTION":
+		"Your own drawer, the seam that publishes and the canvas that receives it - empty, and marked where a session would fill it.",
+	"CONTENT_STRING_PAGE_WORKSPACE_EMPTYBODY":
+		"Nothing here is a sample and nothing here belongs to anyone else. A drawer holds what you saved yourself, so it stays empty until you save something:",
+	"CONTENT_STRING_PAGE_WORKSPACE_EMPTYHINT":
+		"The command needs a browser exposing the DevTools Protocol and a configured identifier map - see",
 	"CONTENT_STRING_PAGE_WORKSPACE_EMPTYTITLE": "Your drawer is empty",
 	"CONTENT_STRING_PAGE_WORKSPACE_HINT": "Private workspace - publishing needs an identity",
-	"CONTENT_STRING_PAGE_WORKSPACE_LOCKREASON": "Publishing needs an identity - a published record carries an author",
+	"CONTENT_STRING_PAGE_WORKSPACE_LOCKREASON":
+		"Publishing needs an identity - a published record carries an author",
 	"CONTENT_STRING_PROVENANCE_EYEBROW": "Provenance",
 	"CONTENT_STRING_PROVENANCE_TITLE": "Ingestion timeline",
 	"CONTENT_STRING_REFERENCE_CONFIGURE": "Documentation/Reference/Configure.md",

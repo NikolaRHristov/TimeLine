@@ -20,9 +20,9 @@ retiring the identity, and a retired subkey cannot sign a new write.
 `MK = HKDF-SHA256(CK_e, postId, nonce)`. Content is AES-GCM-256 with a random 96-bit IV and
 `additionalData` set to the canonical envelope header - room, author, audience, content hash,
 epoch - so a ciphertext cannot be re-labelled to another audience or another author without failing
-to decrypt. This is the WebCrypto shape already implemented in
-`~/Developer/Application/NowPlayingCard/Common/Source/Function/Encrypt.ts`: a JWK imported with
-`subtle.importKey`, AES-GCM, a fresh IV per message.
+to decrypt. This is the WebCrypto shape already implemented in the `NowPlayingCard` project's
+`Common/Source/Function/Encrypt.ts`: a JWK imported with `subtle.importKey`, AES-GCM, a fresh IV per
+message.
 
 `CK_e` reaches a member wrapped to that member's public key. The wrap is X25519 + HKDF-SHA256 +
 AES-GCM, and it is the one place a second primitive enters the system.

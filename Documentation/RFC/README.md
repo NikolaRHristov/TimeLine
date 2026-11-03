@@ -6,11 +6,46 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 ---
 
+## The board
+
+The records are also published as issues on a public project linked to this repository:
+[project 1 on TimeLine-DELO](https://github.com/orgs/TimeLine-DELO/projects/1).
+
+- **One issue per record.** The title repeats the number and the title. The body carries the
+  record's Decision section verbatim, its decision class, its task dependencies, a link back to the
+  file, and the verification table. An issue is never a summary of its record.
+- **Five fields.** `RFC` is the number. `Class` is the record's own `Decision class:`. `Status` is
+  `Proposed` until the verification table passes against shipped code, then `Implemented`. `Area` is
+  the record's dominant subject, one of site, network, identity, tooling or governance. `Cards`
+  holds the implementing card ids a record names, and is empty for the records that name none.
+- **Three views over one item set.** A table by class, a board by status and a roadmap by class.
+  Each view's grouping is set once in the interface: the API accepts a view's name, layout, filter
+  and visible fields, and no group-by on any input object.
+- **A template.** The project is marked as a template, and its own README carries the field scheme
+  and the command that copies it to another owner.
+
+The project is generated from `proposed/` and the files remain the authority. An issue with no
+record, or a record with no issue, is a defect of the same kind as an unlisted file.
+
+The procedure that builds and re-syncs the board is `Documentation/Skill/RFC-Board/SKILL.md`, and
+the tool it wraps is `Documentation/Skill/RFC-Board/Reference/rfc_board.py`:
+
+```sh
+pnpm run RFC:Board         # create, refresh, attach, set fields, sync the project README
+pnpm run RFC:Board:Verify  # read the project back and exit non-zero on a disagreement
+```
+
+Only committed records are published. A record still untracked is somebody's work in progress, so it
+is reported as skipped and never published half-written; commit it, run the command again, and the
+delta lands. The procedure states the one step no API can take, which is each view's grouping.
+
+---
+
 ## Conventions
 
 - **Filename** - `RFC-NNNN-kebab-case-title.md`.
 - **Location** - `proposed/` while open, `implemented/` once shipped.
-- **Numbering** - assigned on creation, never reused. `0072` is the next free number.
+- **Numbering** - assigned on creation, never reused. `0077` is the next free number.
 - **Supersession** - a new record marks the old one `Superseded by`, and both stay.
 - **Cards** - every record names the cards that implement it, by id.
 
@@ -18,7 +53,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 
 ## The records
 
-Seventy-one are written; none is implemented. A record moves to `implemented/` only when its
+Seventy-six are written; none is implemented. A record moves to `implemented/` only when its
 verification table passes against the shipped code.
 
 Every file in `proposed/` appears below, and the count above is the number of files there. A record
@@ -111,6 +146,11 @@ its entry.
 - **RFC-0045** - The material, the tokens and the component contract. _Cards: `t_15d5d8fd`,
   `t_30030978`, `t_6b11bda7`, `t_bd4c07b0`, `t_e2a377d0`, `t_52a99949`._
 - **RFC-0051** - The token lifecycle.
+- **RFC-0072** - A verifier asserts the spec, not the implementation.
+- **RFC-0073** - A tool that ran belongs to a skill.
+- **RFC-0074** - A green gate is not a green tree.
+- **RFC-0075** - The layer tree is the authority, the picture is a likeness.
+- **RFC-0076** - A worker that cannot hold both cards stops.
 
 ---
 
@@ -124,8 +164,10 @@ retention, search, sync, moderation, rate, migration, versions, attention, namin
 billing, time, analytics and extension. Records 0043 to 0056 are the surface records the site work
 added - workspace, toolchain, tokens, components, states, showcase, anonymous workspace, provider
 position and identity carried by others. Records 0057 to 0071 are wave four: the long tail of
-recovery, discovery, provenance, interop and governance. Records beyond 0071 extend the set and
-state their own dependencies.
+recovery, discovery, provenance, interop and governance. Records 0072 to 0076 are wave five: the
+method itself - how a claim is verified, how a tool is kept, what the gate does and does not prove,
+where a design's numbers come from, and what a worker does when two cards cannot both hold. Records
+beyond 0076 extend the set and state their own dependencies.
 
 A card id above records what the record names. Those may be research cards or implementing cards -
 each record's own `Task dependencies` line says which - and an entry with no card means the record
@@ -232,6 +274,29 @@ twelve would otherwise hedge in every paragraph it touches.
 None of the fifteen names a card id. Each names its implementing card by title marked "to be
 created", so its entry above stays bare until that card exists on the board - the convention stated
 below.
+
+### Wave five, 0072 to 0076
+
+The other four waves decide what the system is. This one decides how it is built, and it exists
+because the tree already contained the practice: four verifiers, an archive with an audit, a
+six-step gate and an intake path were all running before anything wrote down what they promise. Each
+of the five states a contract, the command that proves it, and the boundary - what the tool cannot
+see.
+
+```
+0075 design intake --> the spec's numbers --> 0072 the verifier that asserts them
+0073 the tool that ran --> belongs to a skill --> the verifier's home
+0074 the gate --> runs the contracts, never the verifier and never the build
+0076 the worker --> stops when two cards claim one surface, and records the decision
+```
+
+Two of the five correct a count that was circulating. `verify-composition.mjs` holds twenty-two
+invariants and `TokenContract.mjs` runs eight checks; eighteen and five were both in circulation,
+and both records cite the command that settles it rather than the number that was repeated. That is
+the rule RFC-0072 exists to state, applied to the record that states it.
+
+None of the five names a card id either. Each names its implementing card by title marked "to be
+created", so the entries above stay bare until those cards exist.
 
 ---
 

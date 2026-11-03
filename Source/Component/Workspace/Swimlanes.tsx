@@ -1,6 +1,6 @@
-import "@Stylesheet/Component/Swimlanes.scss";
 import type { Lane } from "@Library/Band.ts";
 import { Steps } from "@Library/Capability.ts";
+import "@Stylesheet/Component/Swimlanes.scss";
 import { For } from "solid-js";
 
 /**
