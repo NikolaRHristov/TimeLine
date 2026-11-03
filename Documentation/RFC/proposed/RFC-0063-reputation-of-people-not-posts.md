@@ -1,12 +1,50 @@
-# RFC-0063 - Reputation of people, never of posts
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** votes, member
-statements, standing, the cost of an identity **Kind:** specification **Subject:** identity
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0027 §2 (a
-vote is a nomination and a rating is a vote record; this record keeps it about placement), RFC-0031
-(removal cites a published rule and an appeal expires), RFC-0032 §3 and RFC-0039 §6 (the seat price
-that is the only sybil cost), RFC-0058 (a room's public face says what its reputation set costs);
-implementing card to be created: "Member statement row and the standing view"
+---
+title: Reputation of people, never of posts
+rfc: 0063
+category: Specification/Identity
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: votes, member statements, standing, the cost of an identity
+supersedes: none
+superseded_by: none
+depends:
+    - |-
+        RFC-0027 §2 (a vote is a nomination and a rating is a vote record; this record keeps it about placement)
+    - RFC-0031 (removal cites a published rule and an appeal expires)
+    - "RFC-0032 §3 and RFC-0039 §6 (the seat price that is the only sybil cost)"
+    - |-
+        RFC-0058 (a room's public face says what its reputation set costs); implementing card to be created: "Member statement row and the standing view"
+statuses:
+    - name: Content has no score
+      state: open
+      evidence: the rule names no file or command
+    - name: Reputation is a set of statements, not a number
+      state: open
+      evidence: the rule names no file or command
+    - name: The unit is conduct in a room, and it does not travel
+      state: open
+      evidence: the rule names no file or command
+    - name: A pseudonymous rater's statement is worth its issuer's standing and nothing else
+      state: open
+      evidence: the rule names no file or command
+    - name: Sybil resistance is a price, not a filter
+      state: open
+      evidence: the rule names no file or command
+    - name: A negative statement needs the procedure a removal needs
+      state: open
+      evidence: the rule names no file or command
+    - name: Standing is computed by the reader, published by nobody
+      state: open
+      evidence: the rule names no file or command
+    - name: A member sees every statement about them, and can contest it
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

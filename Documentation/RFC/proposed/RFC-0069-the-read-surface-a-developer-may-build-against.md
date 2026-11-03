@@ -1,13 +1,51 @@
-# RFC-0069 - The read surface a developer may build against
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module's views and
-routes, the export format, the CLI's JSON output, every third-party client **Kind:** contract
-**Subject:** network **Horizon:** next **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0005 §Open questions (the per-member view this record makes the read path),
-RFC-0007 (no surface reaches plaintext), RFC-0015 and RFC-0034 (the export as the stable contract),
-RFC-0022 §2 (a room's declared egress), RFC-0039 §1 and RFC-0032 §6 (a third party's load lands on
-the room's bill and cap); implementing card to be created: "The documented read surface and the CLI
-JSON schemas"
+---
+title: The read surface a developer may build against
+rfc: 0069
+category: Contract/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the module's views and routes, the export format, the CLI's JSON output, every third-party client
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0005 §Open questions (the per-member view this record makes the read path)"
+    - RFC-0007 (no surface reaches plaintext)
+    - RFC-0015 and RFC-0034 (the export as the stable contract)
+    - "RFC-0022 §2 (a room's declared egress)"
+    - |-
+        RFC-0039 §1 and RFC-0032 §6 (a third party's load lands on the room's bill and cap); implementing card to be created: "The documented read surface and the CLI JSON schemas"
+statuses:
+    - name: The room's read surface is its views, and a view is per-user
+      state: open
+      evidence: the rule names no file or command
+    - name: A room may expose an inbound route, and that is the room's decision
+      state: open
+      evidence: the rule names no file or command
+    - name: There is no operator API
+      state: open
+      evidence: the rule names no file or command
+    - name: The export format is the stable contract
+      state: open
+      evidence: the rule names no file or command
+    - name: "The CLI's `--json` output is a contract too, and a narrower one"
+      state: open
+      evidence: the rule names no file or command
+    - name: What stays private by default
+      state: open
+      evidence: the rule names no file or command
+    - name: Rate and cost belong to the room, not to the developer
+      state: open
+      evidence: the rule names no file or command
+    - name: An SDK is a client, and it is the member's
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

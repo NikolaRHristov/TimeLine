@@ -1,12 +1,46 @@
-# RFC-0017 - Client surface
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the Astro site, the
-service worker, the vote subsystem, the room client **Kind:** architecture **Subject:** surface
-**Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001
-(publication is the only layer the build reads), RFC-0003 (the transport seam), RFC-0012
-(audiences), RFC-0018 (a queued write is a run), RFC-0007 (the client holds the keys); t_7936cc8e
-(transport seam), t_6e510f8e (content layer), t_406cc8ab (voted index); implementing card to be
-created: "Room client - live feed, ratings and comments over the static shell"
+---
+title: Client surface
+rfc: 0017
+category: Architecture/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the Astro site, the service worker, the vote subsystem, the room client
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001 (publication is the only layer the build reads)
+    - RFC-0003 (the transport seam)
+    - RFC-0012 (audiences)
+    - RFC-0018 (a queued write is a run)
+    - "RFC-0007 (the client holds the keys); t_7936cc8e (transport seam)"
+    - t_6e510f8e (content layer)
+    - |-
+        t_406cc8ab (voted index); implementing card to be created: "Room client - live feed, ratings and comments over the static shell"
+statuses:
+    - name: Static, always
+      state: open
+      evidence: the rule names no file or command
+    - name: Live, only when a room is joined
+      state: open
+      evidence: the rule names no file or command
+    - name: The feature gallery is the existing pages
+      state: open
+      evidence: the rule names no file or command
+    - name: A rating is a vote record
+      state: open
+      evidence: the rule names no file or command
+    - name: "A comment is a post with `replyTo`, addressed to `typed` (RFC-0012)"
+      state: open
+      evidence: the rule names no file or command
+    - name: Offline is a first-class state
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

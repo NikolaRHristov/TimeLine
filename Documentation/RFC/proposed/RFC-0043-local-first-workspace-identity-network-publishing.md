@@ -1,14 +1,64 @@
-# RFC-0043 - Local-first workspace: identity, network and publishing
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the workspace page,
-the session layer, the permission model, the network surface, the transport contract **Kind:**
-architecture **Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none
-**Task dependencies:** RFC-0001 (the shadow store and publication), RFC-0003 (the transport seam),
-RFC-0005 (a room is a database), RFC-0007 (the envelope), RFC-0012 (audiences), RFC-0013 (identity,
-keys and authority), RFC-0017 (the client surface), RFC-0019 (vocabulary, `circle`), RFC-0024 §5 (an
-action is idempotent by id), RFC-0027 (votes rank, the authority selects), RFC-0030 (the sync
-rules), RFC-0040 (a client timestamp is a claim); t_1621cc5c (substrate research); t_ab85d9de (the
-workspace session and network layer)
+---
+title: "Local-first workspace: identity, network and publishing"
+rfc: 0043
+category: Architecture/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the workspace page, the session layer, the permission model, the network surface, the transport contract
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001 (the shadow store and publication)
+    - RFC-0003 (the transport seam)
+    - RFC-0005 (a room is a database)
+    - RFC-0007 (the envelope)
+    - RFC-0012 (audiences)
+    - RFC-0013 (identity, keys and authority)
+    - RFC-0017 (the client surface)
+    - "RFC-0019 (vocabulary, `circle`)"
+    - "RFC-0024 §5 (an action is idempotent by id)"
+    - RFC-0027 (votes rank, the authority selects)
+    - RFC-0030 (the sync rules)
+    - |-
+        RFC-0040 (a client timestamp is a claim); t_1621cc5c (substrate research); t_ab85d9de (the workspace session and network layer)
+statuses:
+    - name: One drawer per person, one canvas per context
+      state: open
+      evidence: the rule names no file or command
+    - name: Publishing is the only verb that crosses the seam
+      state: open
+      evidence: the rule names no file or command
+    - name: One record, one owning store
+      state: open
+      evidence: the rule names no file or command
+    - name: Three roles, and they are not global
+      state: open
+      evidence: the rule names no file or command
+    - name: "`Decision.by` answers how; `Decision.actor` answers who"
+      state: open
+      evidence: the rule names no file or command
+    - name: The User Network
+      state: open
+      evidence: the rule names no file or command
+    - name: Four states, and a failed fetch is the third
+      state: open
+      evidence: the rule names no file or command
+    - name: Offline behaviour, surface by surface
+      state: open
+      evidence: the rule names no file or command
+    - name: The substrate's requirements
+      state: open
+      evidence: the rule names no file or command
+    - name: No client-side secret
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

@@ -1,9 +1,31 @@
-# RFC-0009 - Build, release and toolchain
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the workspace, turbo,
-`@playform/build`, the Cloudflare Pages build **Kind:** method **Subject:** operation **Horizon:**
-now **Supersedes:** none **Superseded by:** none **Task dependencies:** t_17031e18 (workspace,
-done), t_6e510f8e (content layer)
+---
+title: Build, release and toolchain
+rfc: 0009
+category: Method/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "the workspace, turbo, `@playform/build`, the Cloudflare Pages build"
+supersedes: none
+superseded_by: none
+depends:
+    - t_17031e18 (workspace, done)
+    - t_6e510f8e (content layer)
+statuses:
+    - name: "The site builds with `astro build` and deploys from a push"
+      state: open
+      evidence: the rule names no file or command
+    - name: "The tool layer compiles with `@playform/build` from `Maintain/Source/` into..."
+      state: open
+      evidence: the rule names no file or command
+    - name: "Turbo runs both, but the site's graph has no edge to `Maintain`, so a CI job..."
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

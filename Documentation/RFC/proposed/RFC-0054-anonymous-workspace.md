@@ -1,10 +1,38 @@
-# RFC-0054 - The anonymous workspace
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `/Workspace`, the
-session slot, every control that requires an identity **Kind:** architecture **Subject:** surface
-**Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (the
-live layer and offline), RFC-0043 (the seam and the three roles), RFC-0048 (the status surfaces),
-RFC-0049 (`locked`), RFC-0050 (the data states), RFC-0053 (the showcase surface)
+---
+title: The anonymous workspace
+rfc: 0054
+category: Architecture/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "`/Workspace`, the session slot, every control that requires an identity"
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0017 (the live layer and offline)
+    - RFC-0043 (the seam and the three roles)
+    - RFC-0048 (the status surfaces)
+    - "RFC-0049 (`locked`)"
+    - RFC-0050 (the data states)
+    - RFC-0053 (the showcase surface)
+statuses:
+    - name: The server renders the anonymous workspace
+      state: open
+      evidence: the rule names no file or command
+    - name: The drawer is the reader's own, always
+      state: open
+      evidence: the rule names no file or command
+    - name: "Publishing is `locked`, not hidden"
+      state: open
+      evidence: the rule names no file or command
+    - name: "The status surfaces say `static`"
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

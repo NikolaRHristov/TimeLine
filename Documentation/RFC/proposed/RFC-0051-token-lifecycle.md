@@ -1,10 +1,39 @@
-# RFC-0051 - The token lifecycle
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `Global.css`, the
-material mixins, every component's public props, the token contract check **Kind:** policy
-**Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0045 (the token set and the material), RFC-0044 (the toolchain floor and its
-upgrade policy), RFC-0049 (the component states)
+---
+title: The token lifecycle
+rfc: 0051
+category: Policy/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    `Global.css`, the material mixins, every component's public props, the token contract check
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0045 (the token set and the material)
+    - RFC-0044 (the toolchain floor and its upgrade policy)
+    - RFC-0049 (the component states)
+statuses:
+    - name: A token arrives with a reader
+      state: open
+      evidence: the rule names no file or command
+    - name: A rename is an alias, not a rewrite
+      state: open
+      evidence: the rule names no file or command
+    - name: A removal is proved, never assumed
+      state: open
+      evidence: the rule names no file or command
+    - name: A component's public surface is its props
+      state: open
+      evidence: the rule names no file or command
+    - name: Deprecation is visible at build time
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

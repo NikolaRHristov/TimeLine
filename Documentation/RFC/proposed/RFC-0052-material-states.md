@@ -1,10 +1,36 @@
-# RFC-0052 - The material states
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every component that
-can appear on more than one surface, the material context, the seam **Kind:** specification
-**Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0045 (the material and the token set), RFC-0043 (the workspace seam), RFC-0049
-(the component states), RFC-0051 (the token lifecycle)
+---
+title: The material states
+rfc: 0052
+category: Specification/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: every component that can appear on more than one surface, the material context, the seam
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0045 (the material and the token set)
+    - RFC-0043 (the workspace seam)
+    - RFC-0049 (the component states)
+    - RFC-0051 (the token lifecycle)
+statuses:
+    - name: "A component declares its material; it never detects it"
+      state: open
+      evidence: the rule names no file or command
+    - name: One component, two materials, four names
+      state: open
+      evidence: Card.tsx
+    - name: The seam is a boundary, not a blend
+      state: open
+      evidence: the rule names no file or command
+    - name: A wrong material fails review, not the build
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

@@ -1,11 +1,46 @@
-# RFC-0030 - Offline-first sync and conflict resolution
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the offline queue,
-ratings, comments, curation, member preferences **Kind:** architecture **Subject:** transport
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (a
-queued write is signed at authoring time), RFC-0024 §5 (actions are idempotent by id), RFC-0027 §2
-(votes rank, the authority selects), RFC-0040 (a client timestamp is a claim); implementing card to
-be created: "Offline queue replay and stale-write refusal"
+---
+title: Offline-first sync and conflict resolution
+rfc: 0030
+category: Architecture/Transport
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the offline queue, ratings, comments, curation, member preferences
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0017 (a queued write is signed at authoring time)
+    - "RFC-0024 §5 (actions are idempotent by id)"
+    - "RFC-0027 §2 (votes rank, the authority selects)"
+    - |-
+        RFC-0040 (a client timestamp is a claim); implementing card to be created: "Offline queue replay and stale-write refusal"
+statuses:
+    - name: Append-only rows never conflict, so they get no rule
+      state: open
+      evidence: the rule names no file or command
+    - name: A single-holder field is last-write-wins by the authority, not by the clock
+      state: open
+      evidence: the rule names no file or command
+    - name: Per-field merge applies to exactly one record
+      state: open
+      evidence: the rule names no file or command
+    - name: A CRDT is refused
+      state: open
+      evidence: the rule names no file or command
+    - name: A queued action keeps its authoring signature and its authoring time
+      state: open
+      evidence: the rule names no file or command
+    - name: The queue is ordered within an identity and unordered across identities
+      state: open
+      evidence: the rule names no file or command
+    - name: What breaks under each alternative, named
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

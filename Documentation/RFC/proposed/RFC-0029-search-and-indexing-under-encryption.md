@@ -1,11 +1,46 @@
-# RFC-0029 - Search and indexing under encryption
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the client index, the
-module's envelope indexes, the static site's search **Kind:** architecture **Subject:** data
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0007 (the
-module reads shape, not content), RFC-0001 (the store is client-side), RFC-0014 (join-without-seeing
-starts an index empty), RFC-0025 §5 (rows arrive by subscription); implementing card to be created:
-"Client index over the shadow store"
+---
+title: Search and indexing under encryption
+rfc: 0029
+category: Architecture/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the client index, the module's envelope indexes, the static site's search
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0007 (the module reads shape, not content)
+    - RFC-0001 (the store is client-side)
+    - RFC-0014 (join-without-seeing starts an index empty)
+    - |-
+        RFC-0025 §5 (rows arrive by subscription); implementing card to be created: "Client index over the shadow store"
+statuses:
+    - name: The index is a client artifact
+      state: open
+      evidence: the rule names no file or command
+    - name: What the module may index is the envelope
+      state: open
+      evidence: the rule names no file or command
+    - name: What the module may never index is a token from the payload
+      state: open
+      evidence: the rule names no file or command
+    - name: There is no server-side plaintext projection
+      state: open
+      evidence: the rule names no file or command
+    - name: Published content is the one place content search exists
+      state: open
+      evidence: the rule names no file or command
+    - name: A new member indexes nothing until they hold something
+      state: open
+      evidence: the rule names no file or command
+    - name: A local index is a plaintext derivative and the client protects it
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

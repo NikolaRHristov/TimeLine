@@ -1,11 +1,44 @@
-# RFC-0021 - Fleet coordination and observation provenance
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the observation log,
-the `observation` table, harvest assignments, `maintain fleet status` **Kind:** policy **Subject:**
-identity **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0006 (the read-only posture this record attributes), RFC-0014 (a grant is how an assignment is
-expressed), RFC-0015 (a member exports what they observed), RFC-0004 (a job belongs to an identity);
-implementing card to be created: "Observation provenance column and the fleet status report"
+---
+title: Fleet coordination and observation provenance
+rfc: 0021
+category: Policy/Identity
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the observation log, the `observation` table, harvest assignments, `maintain fleet status`
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0006 (the read-only posture this record attributes)
+    - RFC-0014 (a grant is how an assignment is expressed)
+    - RFC-0015 (a member exports what they observed)
+    - |-
+        RFC-0004 (a job belongs to an identity); implementing card to be created: "Observation provenance column and the fleet status report"
+statuses:
+    - name: One identity per harvester
+      state: open
+      evidence: the rule names no file or command
+    - name: Provenance is a column, not a convention
+      state: open
+      evidence: the rule names no file or command
+    - name: An assignment is a grant
+      state: open
+      evidence: the rule names no file or command
+    - name: Reconciliation is per observation and never last-writer-wins
+      state: open
+      evidence: the rule names no file or command
+    - name: Completeness is a number per identity
+      state: open
+      evidence: the rule names no file or command
+    - name: A member keeps what they observed
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

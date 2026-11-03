@@ -44,8 +44,14 @@ result describes the page that used to exist.
 node Documentation/Skill/Design-Verification/Reference/verify-composition.mjs
 ```
 
-With no arguments it serves `Target/` on port 4411 itself, probes `/Workspace/`, prints one line per
-invariant and exits 0 when every one holds.
+With no arguments it waits for the build to stop writing, serves a copy of `Target/` on port 4411
+itself, probes `/Workspace/`, prints one line per invariant and exits 0 when every one holds.
+
+The copy is the point: `astro build` empties the output directory before it writes, so a probe that
+serves the live tree while another agent's build runs sees zero routes and reports each as "the
+route served no document" - a total failure that is in the observer, not the page. The snapshot is
+taken after the newest mtime under `Target/` has been quiet for 1.5s, so a run that overlaps a build
+measures the finished build.
 
 | Argument or variable | Effect                                                  |
 | -------------------- | ------------------------------------------------------- |
@@ -81,7 +87,8 @@ which is why the state is asserted beside the frame.
 
 ## The showcase pages
 
-The five pages that are not the workspace are showcases (RFC-0053), and they have their own script:
+Five pages that are not the workspace are the showcase surfaces (RFC-0053), and they have their own
+script:
 
 ```sh
 node Documentation/Skill/Design-Verification/Reference/verify-showcase.mjs
@@ -98,6 +105,24 @@ drawer, no seam.
 The last one is the point of the whole check. A showcase page that grew a tile would still look
 right, and would have become a data surface - the state RFC-0053 exists to keep it out of.
 
+**`/Showcase` is the sixth page that is not the workspace, and it has its own probe.** It
+demonstrates the layout primitive with six dispersed boxes rather than three, so the three-box,
+three-grey invariants describe a surface it is not:
+
+```sh
+node Documentation/Skill/Design-Verification/Reference/verify-spread.mjs
+```
+
+That script asserts what the spread claims: consecutive boxes sit at different horizontal offsets,
+the vertical gap exceeds the canvas's own 20px rhythm, and the page ends on a three-column pillar
+band. A spread whose boxes lined up would still pass a "no record is drawn" check and would have
+lost the only thing it demonstrates.
+
+The route inventory is the tree's own: `find Target -name index.html` lists every page the build
+emitted, and a route that appears there and in none of the three probes is unverified rather than
+passing. A count written into this file is a claim about the route set and goes stale the moment a
+page is added.
+
 ## Extending it
 
 An invariant is one line in the `Frame` table: a label, a reader over the measured box, and either a
@@ -107,6 +132,17 @@ assertion compared against `None` and reported a failure the page had not commit
 
 A new invariant must be a fact from the design file. An invariant invented from the implementation
 proves the implementation agrees with itself.
+
+## Claim → test
+
+| Claim                                   | Test                                                                         |
+| --------------------------------------- | ---------------------------------------------------------------------------- |
+| The workspace matches the frame         | `node .../verify-composition.mjs` exits 0 and every line reads `PASS`        |
+| A probe reads a settled build           | run it while `pnpm run build` runs: exit 0, not "served no document"         |
+| Every emitted route is probed           | `find Target -name index.html` lists only routes one of the two probes names |
+| The seam states its state, not a title  | the workspace probe reports `locked/true` and the reason, not a record name  |
+| No record is drawn on a showcase page   | `verify-showcase.mjs` reports `no record is drawn on the page`               |
+| A missing precondition is not a failure | with no browser on `CDP_URL`, the exit code is 2 and the fix is printed      |
 
 ## References
 

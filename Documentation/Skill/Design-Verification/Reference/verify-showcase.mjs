@@ -3,9 +3,13 @@
  * Verify the built showcase pages against `Documentation/RFC/proposed/RFC-0053`.
  *
  * `verify-composition.mjs` proves the workspace is the composition. This proves
- * the other half of the same design: the five pages that are not the workspace
- * are showcases, and a showcase is a shape rather than a view - no record, no
- * count, a rail that is a table of contents, and boxes that leave the page.
+ * the other half of the same design: the five showcase surfaces that are not the
+ * workspace are a shape rather than a view - no record, no count, a rail that is a
+ * table of contents, and boxes that leave the page.
+ *
+ * `/Showcase` is the sixth page that is not the workspace and is deliberately not
+ * probed here: it demonstrates the layout primitive with six boxes, so the
+ * three-box invariants below describe a surface it is not.
  *
  * The distinction is not decorative. A page that renders a record is a data
  * surface (RFC-0050) and has to be checked as one; a page that renders nothing

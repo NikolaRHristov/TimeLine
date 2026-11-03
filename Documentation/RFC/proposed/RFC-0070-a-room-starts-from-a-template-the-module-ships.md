@@ -1,13 +1,51 @@
-# RFC-0070 - A room starts from a template the module ships
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** room creation, the
-module's initial rows, the rule set, seeding **Kind:** architecture **Subject:** network
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0025 §1
-(the module is a versioned artifact and the template is a row inside it), RFC-0014 (room creation is
-a publish), RFC-0031 §6 (a rule set exists at creation and is versioned), RFC-0012 (the audience
-defaults a template supplies), RFC-0062 (seeding from an archive is an import), RFC-0045 (a template
-names no visual choice); implementing card to be created: "Room template row and the creation
-transaction"
+---
+title: A room starts from a template the module ships
+rfc: 0070
+category: Architecture/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: room creation, the module's initial rows, the rule set, seeding
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0025 §1 (the module is a versioned artifact and the template is a row inside it)"
+    - RFC-0014 (room creation is a publish)
+    - "RFC-0031 §6 (a rule set exists at creation and is versioned)"
+    - RFC-0012 (the audience defaults a template supplies)
+    - RFC-0062 (seeding from an archive is an import)
+    - |-
+        RFC-0045 (a template names no visual choice); implementing card to be created: "Room template row and the creation transaction"
+statuses:
+    - name: A template is a named set of initial rows, versioned with the module
+      state: open
+      evidence: the rule names no file or command
+    - name: The host authors the template, the module carries it, the room's authority...
+      state: open
+      evidence: the rule names no file or command
+    - name: A template ships no content
+      state: open
+      evidence: the rule names no file or command
+    - name: A template may ship empty structure that looks like content
+      state: open
+      evidence: the rule names no file or command
+    - name: The template's rule set is a default, not a law
+      state: open
+      evidence: the rule names no file or command
+    - name: Seeding from a person's archive is an import, not a template
+      state: open
+      evidence: the rule names no file or command
+    - name: A template is small enough to read
+      state: open
+      evidence: the rule names no file or command
+    - name: A template is not a theme
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

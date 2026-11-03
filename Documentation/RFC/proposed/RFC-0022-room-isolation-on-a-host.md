@@ -1,12 +1,43 @@
-# RFC-0022 - Room isolation on a host
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the host, the module's
-egress surface, federation calls, per-room failure domains **Kind:** policy **Subject:** network
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (the
-room is the database), RFC-0007 (ciphertext is the boundary that holds against the host), RFC-0016
-(the host contract this record extends), RFC-0020 (the threat model this record serves); t_1621cc5c
-(substrate research); implementing card to be created: "Module egress gate and the federation
-allowlist"
+---
+title: Room isolation on a host
+rfc: 0022
+category: Policy/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the host, the module's egress surface, federation calls, per-room failure domains
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0005 (the room is the database)
+    - RFC-0007 (ciphertext is the boundary that holds against the host)
+    - RFC-0016 (the host contract this record extends)
+    - |-
+        RFC-0020 (the threat model this record serves); t_1621cc5c (substrate research); implementing card to be created: "Module egress gate and the federation allowlist"
+statuses:
+    - name: The isolation unit is the database
+      state: open
+      evidence: the rule names no file or command
+    - name: Egress is off by default
+      state: open
+      evidence: the rule names no file or command
+    - name: Cross-room calls pass an allowlist on both sides
+      state: open
+      evidence: the rule names no file or command
+    - name: Private tables do not hide anything from the host
+      state: open
+      evidence: the rule names no file or command
+    - name: Timing is the channel a per-room boundary leaves open
+      state: open
+      evidence: the rule names no file or command
+    - name: A compromised room reaches
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

@@ -1,13 +1,53 @@
-# RFC-0066 - What a person can see about their own data
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the member's views,
-the store's read surface, the publication and propagation records, the grant and epoch lists
-**Kind:** contract **Subject:** data **Horizon:** next **Supersedes:** none **Superseded by:** none
-**Task dependencies:** RFC-0018 (the operational half - runs and spans - which this record does not
-restate), RFC-0021 §2 (an observation names its observer), RFC-0023 §3 (publication is a
-delegation), RFC-0014 (grants), RFC-0013 (the wraps this record makes readable), RFC-0050 (the
-vocabulary for an empty state), RFC-0041 (the aggregate, content-blind analytics this record is
-not); implementing card to be created: "The four member views"
+---
+title: What a person can see about their own data
+rfc: 0066
+category: Contract/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the member's views, the store's read surface, the publication and propagation records, the grant and epoch lists
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0018 (the operational half - runs and spans - which this record does not restate)
+    - "RFC-0021 §2 (an observation names its observer)"
+    - "RFC-0023 §3 (publication is a delegation)"
+    - RFC-0014 (grants)
+    - RFC-0013 (the wraps this record makes readable)
+    - RFC-0050 (the vocabulary for an empty state)
+    - |-
+        RFC-0041 (the aggregate, content-blind analytics this record is not); implementing card to be created: "The four member views"
+statuses:
+    - name: Four questions, four views
+      state: open
+      evidence: the rule names no file or command
+    - name: Every view is a log, not a dashboard
+      state: open
+      evidence: the rule names no file or command
+    - name: 'The "with whom" view is the one that matters and the one nobody else can build'
+      state: open
+      evidence: the rule names no file or command
+    - name: Absence is shown as absence
+      state: open
+      evidence: the rule names no file or command
+    - name: The views are local-first and complete offline
+      state: open
+      evidence: the rule names no file or command
+    - name: The operator has no version of these views
+      state: open
+      evidence: the rule names no file or command
+    - name: Every row in a view links to its evidence
+      state: open
+      evidence: the rule names no file or command
+    - name: A deletion is visible here first
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

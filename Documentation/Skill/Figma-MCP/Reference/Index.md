@@ -10,4 +10,3 @@ with a header stating what it does; nothing here names a machine, an account or 
 | `cdp-figma-find.js`  | Scan a Figma page for design/file links whose slug or label matches a name.                                              | see the file's header |
 | `cdp-figma-tree.js`  | Expand the Figma layers panel and dump node ids, names and depths.                                                       | see the file's header |
 | `cdp-page.js`        | Open a URL in a background CDP tab and dump its anchors and visible text.                                                | see the file's header |
-| `mcp_call.py`        | Call a remote MCP tool directly and write the result to a file; endpoint and token come from MCP_URL and MCP_TOKEN_FILE. | see the file's header |

@@ -1,11 +1,46 @@
-# RFC-0041 - Analytics without reading content
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the countable set, the
-published aggregate, the suppression floor **Kind:** policy **Subject:** operation **Horizon:** next
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0007 (the module reads the
-envelope), RFC-0016 §4 (the host's enumeration is not analytics), RFC-0021 §5 (completeness per
-identity), RFC-0035 §7 (no read receipts); implementing card to be created: "Room metrics view and
-the cohort floor"
+---
+title: Analytics without reading content
+rfc: 0041
+category: Policy/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the countable set, the published aggregate, the suppression floor
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0007 (the module reads the envelope)
+    - "RFC-0016 §4 (the host's enumeration is not analytics)"
+    - "RFC-0021 §5 (completeness per identity)"
+    - |-
+        RFC-0035 §7 (no read receipts); implementing card to be created: "Room metrics view and the cohort floor"
+statuses:
+    - name: The countable set is envelope columns
+      state: open
+      evidence: the rule names no file or command
+    - name: What is deliberately not measured
+      state: open
+      evidence: the rule names no file or command
+    - name: An aggregate is computed where the key is
+      state: open
+      evidence: the rule names no file or command
+    - name: The aggregate belongs to the room and is published in it
+      state: open
+      evidence: the rule names no file or command
+    - name: A metric that would identify a person is not published
+      state: open
+      evidence: the rule names no file or command
+    - name: Engagement is counted as acts, not as attention
+      state: open
+      evidence: the rule names no file or command
+    - name: "Every published metric names its predicate, by the same rule RFC-0039 §7..."
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

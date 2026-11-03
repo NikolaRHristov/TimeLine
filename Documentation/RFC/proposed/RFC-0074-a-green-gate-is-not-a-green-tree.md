@@ -1,12 +1,57 @@
-# RFC-0074 - A green gate is not a green tree
-
-**Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:** `pnpm run check`, the
-six scripts it chains, and CI **Kind:** method **Subject:** operation **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0009 (build, release and
-toolchain), RFC-0044 (toolchain upgrade policy - the record that defers a major), RFC-0045 (the
-component contract), RFC-0049 (the component state model), RFC-0050 (the data states), RFC-0055 (the
-provider position); implementing card to be created: "Derive the gate's check inventory from the
-checks themselves"
+---
+title: A green gate is not a green tree
+rfc: 0074
+category: Method/Operation
+kind: rfc
+date: 2026-11-03
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "`pnpm run check`, the six scripts it chains, and CI"
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0009 (build, release and toolchain)
+    - RFC-0044 (toolchain upgrade policy - the record that defers a major)
+    - RFC-0045 (the component contract)
+    - RFC-0049 (the component state model)
+    - RFC-0050 (the data states)
+    - |-
+        RFC-0055 (the provider position); implementing card to be created: "Derive the gate's check inventory from the checks themselves"
+statuses:
+    - name: The chain is ordered so the most fundamental failure speaks first
+      state: current
+      evidence: "package.json:15"
+    - name: The floor is recorded once and read from the record
+      state: current
+      evidence: "Scripts/Compatibility.mjs:104-126"
+    - name: "A report degrades; a contract does not"
+      state: current
+      evidence: "TokenContract.mjs:621-637"
+    - name: One contract owns one vocabulary
+      state: current
+      evidence: TokenContract.mjs
+    - name: The gate does not build
+      state: current
+      evidence: pnpm run check
+    - name: The gate does not type-check the site
+      state: current
+      evidence: tsconfig.json
+    - name: The gate does not look at the rendered page
+      state: current
+      evidence: "package.json:21-23"
+    - name: A green gate is a claim about contracts, not about the tree
+      state: open
+      evidence: the rule names no file or command
+    - name: A red gate is not a red tree either
+      state: current
+      evidence: "Compatibility.mjs:154-172"
+    - name: The gate's inventory of checks is the checks themselves, not a summary beside...
+      state: current
+      evidence: "TokenContract.mjs:86-95"
+---
 
 ## Decision
 

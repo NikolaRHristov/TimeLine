@@ -1,11 +1,31 @@
-# RFC-0013 - Identity, keys and certificate authorities
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the client keystore,
-the module's key tables, invitations, revocation **Kind:** policy **Subject:** identity **Horizon:**
-next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0007 (encryption and
-the envelope; this record closes its key-custody questions), RFC-0005 (membership is per room),
-RFC-0012 (widening needs a signature), RFC-0011 (key material is a configuration term); implementing
-card to be created: "Identity, key epochs and room authorities"
+---
+title: Identity, keys and certificate authorities
+rfc: 0013
+category: Policy/Identity
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the client keystore, the module's key tables, invitations, revocation
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0007 (encryption and the envelope; this record closes its key-custody questions)"
+    - RFC-0005 (membership is per room)
+    - RFC-0012 (widening needs a signature)
+    - |-
+        RFC-0011 (key material is a configuration term); implementing card to be created: "Identity, key epochs and room authorities"
+statuses:
+    - name: An identity is a keypair plus a display name
+      state: open
+      evidence: the rule names no file or command
+    - name: "`CK_e` reaches a member wrapped to that member's public key"
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

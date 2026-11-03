@@ -12,7 +12,8 @@
 		"Build": "pnpm --filter @nikolarhristov/timeline-maintain run Build",
 		"Run": "astro dev --host",
 		"build": "astro build",
-		"check": "pnpm run Check:Compatibility && pnpm --filter @nikolarhristov/timeline-maintain run check && pnpm run Check:State && pnpm run Check:Tokens && pnpm run Check:Position && pnpm run Test",
+		"check": "pnpm run Check:RFC && pnpm run Check:Compatibility && pnpm --filter @nikolarhristov/timeline-maintain run check && pnpm run Check:State && pnpm run Check:Tokens && pnpm run Check:Position && pnpm run Test",
+		"Check:RFC": "node Scripts/RFC-Frontmatter.mjs",
 		"Check:Compatibility": "node Scripts/Compatibility.mjs",
 		"Check:Position": "node Scripts/Position.mjs",
 		"Check:State": "node Scripts/StateContract.mjs",
@@ -67,7 +68,8 @@
 		"prettier-plugin-astro": "1.1.2",
 		"sass": "1.107.1",
 		"turbo": "2.11.10",
-		"vite": "8.3.5"
+		"vite": "8.3.5",
+		"yaml": "2.9.1"
 	},
 	"packageManager": "pnpm@11.18.0",
 	"engines": {

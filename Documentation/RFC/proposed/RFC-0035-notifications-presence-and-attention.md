@@ -1,11 +1,46 @@
-# RFC-0035 - Notifications, presence and attention
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the client's attention
-layer, presence rows, digests **Kind:** architecture **Subject:** transport **Horizon:** next
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0025 §5 (live rows are a
-per-member view), RFC-0007 (the host cannot compose a message), RFC-0016 §4 (what the host
-observes), RFC-0011 (attention terms); implementing card to be created: "Attention budget and the
-derived digest"
+---
+title: Notifications, presence and attention
+rfc: 0035
+category: Architecture/Transport
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the client's attention layer, presence rows, digests
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0025 §5 (live rows are a per-member view)"
+    - RFC-0007 (the host cannot compose a message)
+    - "RFC-0016 §4 (what the host observes)"
+    - |-
+        RFC-0011 (attention terms); implementing card to be created: "Attention budget and the derived digest"
+statuses:
+    - name: Presence is a permission
+      state: open
+      evidence: the rule names no file or command
+    - name: A notification is derived, never pushed
+      state: open
+      evidence: the rule names no file or command
+    - name: Notification classes are envelope facts
+      state: open
+      evidence: the rule names no file or command
+    - name: A small room has a budget, not a stream
+      state: open
+      evidence: the rule names no file or command
+    - name: A digest is a count and a list of envelope lines
+      state: open
+      evidence: the rule names no file or command
+    - name: Silence is a state that is shown
+      state: open
+      evidence: the rule names no file or command
+    - name: Three things are deliberately not built
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

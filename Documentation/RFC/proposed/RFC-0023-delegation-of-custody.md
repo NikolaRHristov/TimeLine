@@ -1,11 +1,47 @@
-# RFC-0023 - Delegation of custody
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the delegation table,
-the client's custody screen, revocation, publication **Kind:** contract **Subject:** identity
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0012
-(audience is who may read; this record is where a copy is held), RFC-0013 (revocation rotates an
-epoch), RFC-0014 (grants and membership), RFC-0016 (the host is a holder), RFC-0026 (a peer is a
-holder); implementing card to be created: "Delegation rows, revocation and the custody screen"
+---
+title: Delegation of custody
+rfc: 0023
+category: Contract/Identity
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the delegation table, the client's custody screen, revocation, publication
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0012 (audience is who may read; this record is where a copy is held)"
+    - RFC-0013 (revocation rotates an epoch)
+    - RFC-0014 (grants and membership)
+    - RFC-0016 (the host is a holder)
+    - |-
+        RFC-0026 (a peer is a holder); implementing card to be created: "Delegation rows, revocation and the custody screen"
+statuses:
+    - name: Shape
+      state: open
+      evidence: the rule names no file or command
+    - name: Scope is narrower than authorship
+      state: open
+      evidence: the rule names no file or command
+    - name: Three kinds of holder, one record
+      state: open
+      evidence: the rule names no file or command
+    - name: Holding is not reading
+      state: open
+      evidence: the rule names no file or command
+    - name: Revocation rotates, and only forward
+      state: open
+      evidence: the rule names no file or command
+    - name: No one delegates on another's behalf
+      state: open
+      evidence: the rule names no file or command
+    - name: Delegations outlive the room
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

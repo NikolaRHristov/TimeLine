@@ -6,13 +6,22 @@ task, not after it fails.**
 
 ## The skills, and when to load them
 
-| Task                                                                       | Load                                                       |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Reading or refreshing the saved-post archive                               | `Documentation/Skill/Timeline-Bookmarks/SKILL.md`          |
-| Driving a browser tab over CDP (click, type, scroll, scrape)               | `Documentation/Skill/Timeline-Browser-Transport/SKILL.md`  |
-| Anything about the shadow store, publishing, or the build/workspace layout | `Documentation/Skill/Timeline-Hermes-Maintenance/SKILL.md` |
-| Running or editing the SpacetimeDB module                                  | `Documentation/Skill/SpacetimeDB-Local/SKILL.md`           |
-| Several agents working the same tree at once                               | `Documentation/Skill/Parallel-Epic-Execution/SKILL.md`     |
+| Task                                                         | Load                                                       |
+| ------------------------------------------------------------ | ---------------------------------------------------------- |
+| Reading or refreshing the saved-post archive                 | `Documentation/Skill/Timeline-Bookmarks/SKILL.md`          |
+| Driving a browser tab over CDP (click, type, scroll, scrape) | `Documentation/Skill/Timeline-Browser-Transport/SKILL.md`  |
+| The site build fails, or a built page must be proven         | `Documentation/Skill/Timeline-Site-Build/SKILL.md`         |
+| A page must paint before its JavaScript runs                 | `Documentation/Skill/Progressive-Enhancement/SKILL.md`     |
+| Proving a built page matches the design                      | `Documentation/Skill/Design-Verification/SKILL.md`         |
+| Reading a Figma file into components                         | `Documentation/Skill/Figma-MCP/SKILL.md`                   |
+| Running or editing the SpacetimeDB module                    | `Documentation/Skill/SpacetimeDB-Local/SKILL.md`           |
+| Adding or re-syncing an RFC on the project board             | `Documentation/Skill/RFC-Board/SKILL.md`                   |
+| Several agents working the same tree at once                 | `Documentation/Skill/Parallel-Epic-Execution/SKILL.md`     |
+| The gateway, the board or the workers stall                  | `Documentation/Skill/Timeline-Hermes-Maintenance/SKILL.md` |
+| A script worked and should outlive the session that wrote it | `Documentation/Skill/Tool-Archive/SKILL.md`                |
+
+Each directory carries a `Reference/Index.md` listing its archived files; a skill's body holds the
+rules and points at the worked instance rather than inlining it.
 
 These are boilerplate: they describe _how this kind of repository works_, never a particular
 account, project or machine. Anything specific belongs in `.env`.

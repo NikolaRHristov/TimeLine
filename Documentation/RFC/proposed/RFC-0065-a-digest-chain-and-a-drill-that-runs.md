@@ -1,16 +1,51 @@
-# RFC-0065 - A digest chain, and a drill that runs
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the shadow store's
-file format, `store verify`, the drill command, the archive's RPO and RTO **Kind:** architecture
-**Subject:** data **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0001 (the store is the only complete history), RFC-0015 (the `rootHash` this
-record gives a producer and a consumer), RFC-0018 (a drill is a run), RFC-0011 (RPO and RTO are
-terms), RFC-0066 (where a member sees the last drill); implementing card to be created: "Store hash
-chain, digests and the restore drill"
-
-This record covers two topics the wave named separately - archive integrity and disaster recovery
-drills - because a digest nobody restores proves the wrong thing and a restore nobody digests proves
-nothing.
+---
+title: A digest chain, and a drill that runs
+rfc: 0065
+category: Architecture/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the shadow store's file format, `store verify`, the drill command, the archive's RPO and RTO
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001 (the store is the only complete history)
+    - "RFC-0015 (the `rootHash` this record gives a producer and a consumer)"
+    - RFC-0018 (a drill is a run)
+    - RFC-0011 (RPO and RTO are terms)
+    - |-
+        RFC-0066 (where a member sees the last drill); implementing card to be created: "Store hash chain, digests and the restore drill" This record covers two topics the wave named separately - archive integrity and disaster recovery drills - because a digest nobody restores proves the wrong thing and a restore nobody digests proves nothing.
+statuses:
+    - name: Every append extends a chain
+      state: current
+      evidence: Index.json
+    - name: A digest is a checkpoint, not a replacement
+      state: open
+      evidence: Digest/NNNN.json
+    - name: Verification is offline and total
+      state: open
+      evidence: the rule names no file or command
+    - name: The chain proves non-alteration, not authenticity
+      state: open
+      evidence: the rule names no file or command
+    - name: A drill is a restore into a fresh directory, verified, then removed
+      state: open
+      evidence: the rule names no file or command
+    - name: RPO and RTO are declared numbers, and the drill measures them
+      state: open
+      evidence: the rule names no file or command
+    - name: A failed drill is a defect with a card
+      state: open
+      evidence: the rule names no file or command
+    - name: The drill runs on a schedule nobody has to remember
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

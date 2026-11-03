@@ -1,11 +1,46 @@
-# RFC-0042 - Plugin and extension model
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** module composition,
-the review record, revocation by republish **Kind:** policy **Subject:** network **Horizon:** next
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0025 §3 (a module is
-composed from reviewed libraries), RFC-0022 (egress is declared and the database is the isolation
-unit), RFC-0024 §1 (one action entry point), RFC-0016 §2 (staged rollout); implementing card to be
-created: "Composition manifest and the library review record"
+---
+title: Plugin and extension model
+rfc: 0042
+category: Policy/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: module composition, the review record, revocation by republish
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0025 §3 (a module is composed from reviewed libraries)"
+    - RFC-0022 (egress is declared and the database is the isolation unit)
+    - "RFC-0024 §1 (one action entry point)"
+    - |-
+        RFC-0016 §2 (staged rollout); implementing card to be created: "Composition manifest and the library review record"
+statuses:
+    - name: The unit of extension is the composed module, not a plugin
+      state: open
+      evidence: the rule names no file or command
+    - name: Why there is no runtime plugin, stated once
+      state: open
+      evidence: the rule names no file or command
+    - name: A library is admitted by a review that pins its hash
+      state: open
+      evidence: the rule names no file or command
+    - name: What a composed library can reach is enumerated, and the list is short
+      state: open
+      evidence: the rule names no file or command
+    - name: Revocation is a republish, not an uninstall
+      state: open
+      evidence: the rule names no file or command
+    - name: A room may refuse an extension and stay interoperable
+      state: open
+      evidence: the rule names no file or command
+    - name: A third-party reducer in the ordinary sense does not exist
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

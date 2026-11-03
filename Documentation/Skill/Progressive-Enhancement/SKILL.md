@@ -186,10 +186,17 @@ A profile names what the design promises, never the markup a page happens to use
   These are the names `Documentation/Reference/Design-Composition.md` gives its own parts.
 - **The empty state a page renders when the archive holds nothing** - `.drawer__empty`.
 
-A profile pinned to `.roster__row` or `article.sheet` fails the day the surface is redrawn, and a
-redraw is not a no-script regression. The heading is the clearest case: the rules name `h1`, never
-`h1.board__title`, because the class belongs to the component that draws the page while "one visible
-heading" is the contract a screen reader depends on.
+**A selector is a claim about the DOM, never about the source.** The audit runs
+`document.querySelector` inside the page, so it is immune to the minifier - but it is not immune to
+a redesign, and the two look the same when a route fails. A profile pinned to `.roster__row` or
+`article.sheet` fails the day the surface is redrawn, and a redraw is not a no-script regression:
+when six of nine routes fail while each still renders its text with zero islands, the content
+contract held and the selector profile went stale. Assert what the design guarantees, and let a
+per-route profile name only classes the composition spec makes contractual. A grep over `Target/` is
+the weaker check in both directions: `@playform/compress` strips attribute quotes, so `class="foo"`
+matches nothing on a page full of `class=foo`. The heading is the clearest case: the rules name
+`h1`, never `h1.board__title`, because the class belongs to the component that draws the page while
+"one visible heading" is the contract a screen reader depends on.
 
 Expectations are structural selectors, not counts of records: a count that depends on the archive
 would make the audit fail on a fresh clone, which is a normal state.

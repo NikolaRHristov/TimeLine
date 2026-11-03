@@ -1,11 +1,48 @@
-# RFC-0038 - Legal posture
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the privacy notice,
-access and erasure requests, residency claims, lawful requests, hosting strangers **Kind:** policy
-**Subject:** operation **Horizon:** next **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0016 §4 (what the host observes), RFC-0015 (the export is the access answer),
-RFC-0028 §4 (erasure is per author), RFC-0013 (no server-side escrow by default), RFC-0031 §4 (the
-host's only lever); implementing card to be created: "Privacy notice and the takedown procedure"
+---
+title: Legal posture
+rfc: 0038
+category: Policy/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the privacy notice, access and erasure requests, residency claims, lawful requests, hosting strangers
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0016 §4 (what the host observes)"
+    - RFC-0015 (the export is the access answer)
+    - "RFC-0028 §4 (erasure is per author)"
+    - RFC-0013 (no server-side escrow by default)
+    - |-
+        RFC-0031 §4 (the host's only lever); implementing card to be created: "Privacy notice and the takedown procedure"
+statuses:
+    - name: Two roles, one document
+      state: open
+      evidence: the rule names no file or command
+    - name: Access and portability are the export
+      state: open
+      evidence: the rule names no file or command
+    - name: Erasure is per author and cannot reach another person's copy
+      state: open
+      evidence: the rule names no file or command
+    - name: Residency is a residency of ciphertext and metadata, not of content
+      state: open
+      evidence: the rule names no file or command
+    - name: A lawful request receives what the host has, and the answer names the limit
+      state: open
+      evidence: the rule names no file or command
+    - name: Before hosting strangers, five things must be true
+      state: open
+      evidence: the rule names no file or command
+    - name: A limitation that is disclosed is the whole defence
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

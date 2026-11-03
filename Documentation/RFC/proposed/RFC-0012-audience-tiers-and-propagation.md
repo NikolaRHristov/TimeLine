@@ -1,11 +1,39 @@
-# RFC-0012 - Audience tiers and propagation
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module, the
-envelope (RFC-0007), the static site's publication step, federation **Kind:** contract **Subject:**
-data **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005
-(rooms are databases), RFC-0007 (the envelope), RFC-0013 (widening needs a signature); t_1621cc5c
-(substrate research); implementing card to be created: "Audience tiers and the propagation record in
-the module"
+---
+title: Audience tiers and propagation
+rfc: 0012
+category: Contract/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the module, the envelope (RFC-0007), the static site's publication step, federation
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0005 (rooms are databases)
+    - RFC-0007 (the envelope)
+    - |-
+        RFC-0013 (widening needs a signature); t_1621cc5c (substrate research); implementing card to be created: "Audience tiers and the propagation record in the module"
+statuses:
+    - name: Narrowing is unilateral by the author
+      state: open
+      evidence: the rule names no file or command
+    - name: Widening requires the author's signature over the new audience (RFC-0013)
+      state: open
+      evidence: the rule names no file or command
+    - name: A federated push is a call from the sending room's module to the receiving...
+      state: open
+      evidence: the rule names no file or command
+    - name: "Every move appends a `propagation` row - `{id, postId, from, to, actor, at,..."
+      state: open
+      evidence: the rule names no file or command
+    - name: "`internal` content is excluded from export and from federation by the module,..."
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

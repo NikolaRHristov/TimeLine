@@ -1,12 +1,52 @@
-# RFC-0075 - The layer tree is the authority, the picture is a likeness
-
-**Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:** design intake from a
-design file into `Documentation/Reference/`, and the tools under
-`Documentation/Skill/Figma-MCP/Reference/` **Kind:** method **Subject:** operation **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (client surface),
-RFC-0045 (the material, the tokens and the component contract), RFC-0072 (a verifier asserts the
-spec - the record this one feeds numbers into); implementing card to be created: "Carry a node id
-from the metadata reply into the spec's invariant table"
+---
+title: The layer tree is the authority, the picture is a likeness
+rfc: 0075
+category: Method/Operation
+kind: rfc
+date: 2026-11-03
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    design intake from a design file into `Documentation/Reference/`, and the tools under `Documentation/Skill/Figma-MCP/Reference/`
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0017 (client surface)
+    - RFC-0045 (the material, the tokens and the component contract)
+    - |-
+        RFC-0072 (a verifier asserts the spec - the record this one feeds numbers into); implementing card to be created: "Carry a node id from the metadata reply into the spec's invariant table"
+statuses:
+    - name: The spec says which source it was measured from, and that source is the tree
+      state: open
+      evidence: the rule names no file or command
+    - name: Intake goes over the MCP endpoint, and the payload lands in a file
+      state: current
+      evidence: "mcp_call.py:12-15"
+    - name: A missing credential is reported, never guessed
+      state: current
+      evidence: "mcp_call.py:22-24"
+    - name: Intake records what a picture cannot distinguish
+      state: open
+      evidence: the rule names no file or command
+    - name: The layers panel is a cross-check, not a source
+      state: current
+      evidence: cdp-figma-tree.js
+    - name: Generated markup is a description of the design, not the code to commit
+      state: open
+      evidence: ".tsx"
+    - name: No value is taken from a raster
+      state: open
+      evidence: the rule names no file or command
+    - name: The verdict is the tool's own error flag, not the process exit code
+      state: current
+      evidence: "mcp_call.py:211-227"
+    - name: The transcription into the spec is manual, and the spec is where a number lives
+      state: current
+      evidence: "verify-composition.mjs:40-105"
+---
 
 ## Decision
 

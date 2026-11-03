@@ -11,12 +11,17 @@
  * Preconditions are reported as blockers with exit 2, never as failures: a missing
  * build or a missing browser is not the page's fault.
  *
+ * The build is snapshotted before it is served. `astro build` empties `Target/`
+ * before it writes, so serving the live directory while another build runs reports
+ * every route as serving no document - a failure of the observer, not the page.
+ *
  *   node verify-composition.mjs              # serve ./Target and probe it
  *   node verify-composition.mjs --url <u>    # probe a server already running
  *   CDP_URL=http://127.0.0.1:9223 node ...   # a browser on another port
  */
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readdirSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -165,6 +170,37 @@ async function serve(Directory) {
 	return Server;
 }
 
+/** The newest write under a directory, in milliseconds. */
+function newest(Directory) {
+	let Latest = 0;
+
+	for (const Entry of readdirSync(Directory, { withFileTypes: true })) {
+		const Path = resolve(Directory, Entry.name);
+		Latest = Math.max(Latest, Entry.isDirectory() ? newest(Path) : statSync(Path).mtimeMs);
+	}
+
+	return Latest;
+}
+
+/**
+ * Wait for the build to stop writing, then copy the tree aside.
+ *
+ * `astro build` empties the output directory before it writes, so a probe that
+ * serves the live `Target/` while another build runs reports every route as
+ * serving no document - a total failure that lives in the observer, not the
+ * page. The snapshot is what makes a run that overlaps a build honest.
+ */
+async function snapshot(Directory) {
+	const Deadline = Date.now() + 180_000;
+
+	while (Date.now() < Deadline && Date.now() - newest(Directory) < 1500) await sleep(500);
+
+	const Copy = mkdtempSync(resolve(tmpdir(), "verify-composition-"));
+	cpSync(Directory, Copy, { recursive: true });
+
+	return Copy;
+}
+
 /** One CDP round trip: open a background tab, read the frame, close it. */
 async function measure(Url) {
 	const Tabs = await (await fetch(`${CDP}/json/list`)).json();
@@ -251,7 +287,7 @@ try {
 			process.exit(2);
 		}
 
-		Server = await serve(resolve(Root, "Target"));
+		Server = await serve(await snapshot(resolve(Root, "Target")));
 		// A cache-busted URL, because Chromium keeps the previous document across a
 		// rebuild: an unparameterised probe reports the page that used to exist.
 		Url = `http://127.0.0.1:${PORT}/Workspace/?v=${Date.now()}`;

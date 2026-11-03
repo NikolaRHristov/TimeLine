@@ -1,12 +1,46 @@
-# RFC-0058 - A room's public face, and no member directory
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the room's metadata
-row, the published site, the curated index, invitations **Kind:** contract **Subject:** network
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0014
-(join-without-seeing and the invitation this record shortens the path to), RFC-0036 §5 (no name
-resolution and no global directory), RFC-0027 §2 (a face is nominated and selected like a card),
-RFC-0012 (the audience types a face may declare); implementing card to be created: "Room face
-document and the discoverability setting"
+---
+title: A room's public face, and no member directory
+rfc: 0058
+category: Contract/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the room's metadata row, the published site, the curated index, invitations
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0014 (join-without-seeing and the invitation this record shortens the path to)
+    - "RFC-0036 §5 (no name resolution and no global directory)"
+    - "RFC-0027 §2 (a face is nominated and selected like a card)"
+    - |-
+        RFC-0012 (the audience types a face may declare); implementing card to be created: "Room face document and the discoverability setting"
+statuses:
+    - name: The unit of discovery is a public face
+      state: open
+      evidence: the rule names no file or command
+    - name: A face names no member
+      state: open
+      evidence: the rule names no file or command
+    - name: Discoverability is a three-valued setting the authority chooses
+      state: open
+      evidence: the rule names no file or command
+    - name: A directory may only publish faces
+      state: open
+      evidence: the rule names no file or command
+    - name: A join still needs an invitation
+      state: open
+      evidence: the rule names no file or command
+    - name: A face is re-signed, never edited
+      state: open
+      evidence: the rule names no file or command
+    - name: No search over content, ever
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

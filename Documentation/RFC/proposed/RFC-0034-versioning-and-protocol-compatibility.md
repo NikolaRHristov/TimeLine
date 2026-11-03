@@ -1,11 +1,49 @@
-# RFC-0034 - Versioning and protocol compatibility
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the schema, the client
-protocol, the artifact, the compatibility window **Kind:** contract **Subject:** transport
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0011
-(`schemaVersion` and the term lifecycle), RFC-0002 (derivation from one schema), RFC-0025 §1 (the
-artifact is content-addressed), RFC-0016 §2 (staged rollout and a window); implementing card to be
-created: "Version triple in the health view"
+---
+title: Versioning and protocol compatibility
+rfc: 0034
+category: Contract/Transport
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the schema, the client protocol, the artifact, the compatibility window
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0011 (`schemaVersion` and the term lifecycle)"
+    - RFC-0002 (derivation from one schema)
+    - "RFC-0025 §1 (the artifact is content-addressed)"
+    - |-
+        RFC-0016 §2 (staged rollout and a window); implementing card to be created: "Version triple in the health view"
+statuses:
+    - name: The schema version belongs to the module
+      state: open
+      evidence: the rule names no file or command
+    - name: The protocol version belongs to the client
+      state: open
+      evidence: the rule names no file or command
+    - name: The artifact version belongs to the host
+      state: open
+      evidence: the rule names no file or command
+    - name: The compatibility window is two releases or 90 days, whichever comes first
+      state: open
+      evidence: the rule names no file or command
+    - name: A newer client degrades against an older room, and says so
+      state: open
+      evidence: the rule names no file or command
+    - name: An older client against a newer room gets the old shape for the window, and...
+      state: open
+      evidence: the rule names no file or command
+    - name: A schema change never rewrites a row
+      state: open
+      evidence: the rule names no file or command
+    - name: The version triple is observable per room
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

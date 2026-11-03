@@ -1,11 +1,50 @@
-# RFC-0033 - Room migration between hosts
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** export, the new host's
-database, epoch rotation at cutover, the old host's deletion **Kind:** architecture **Subject:**
-network **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0015 (the export is the only complete copy), RFC-0025 §1 (the artifact is content-addressed),
-RFC-0013 (epochs travel wrapped), RFC-0014 (archive is the default close), RFC-0016 §5 (a provider
-stopping is planned); implementing card to be created: "Migration record and cutover"
+---
+title: Room migration between hosts
+rfc: 0033
+category: Architecture/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: export, the new host's database, epoch rotation at cutover, the old host's deletion
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0015 (the export is the only complete copy)
+    - "RFC-0025 §1 (the artifact is content-addressed)"
+    - RFC-0013 (epochs travel wrapped)
+    - RFC-0014 (archive is the default close)
+    - |-
+        RFC-0016 §5 (a provider stopping is planned); implementing card to be created: "Migration record and cutover"
+statuses:
+    - name: A room's identity is its epoch chain plus its founding signature
+      state: open
+      evidence: the rule names no file or command
+    - name: Migration is RFC-0015's export in full, taken by a member
+      state: open
+      evidence: the rule names no file or command
+    - name: The new host publishes the artifact, creates the database, imports, and records...
+      state: open
+      evidence: the rule names no file or command
+    - name: Authorship survives because signatures travel
+      state: open
+      evidence: the rule names no file or command
+    - name: Members re-point by room identity, not by invitation
+      state: open
+      evidence: the rule names no file or command
+    - name: Cutover is a record, and writes stop at the old host when it lands
+      state: open
+      evidence: the rule names no file or command
+    - name: The old host must delete, and must say it did
+      state: open
+      evidence: the rule names no file or command
+    - name: Cutover rotates the epoch, so the old host's copy stops being openable to new...
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

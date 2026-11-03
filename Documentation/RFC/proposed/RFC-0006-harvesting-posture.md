@@ -1,8 +1,28 @@
-# RFC-0006 - Harvesting posture
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `store scrape`, the
-transport seam, the shadow store **Kind:** policy **Subject:** operation **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0003, RFC-0004
+---
+title: Harvesting posture
+rfc: 0006
+category: Policy/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "`store scrape`, the transport seam, the shadow store"
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0003
+    - RFC-0004
+statuses:
+    - name: Harvesting is read-only by default, and the default is enforced in code rather...
+      state: open
+      evidence: the rule names no file or command
+    - name: The scraper may navigate, scroll and read
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

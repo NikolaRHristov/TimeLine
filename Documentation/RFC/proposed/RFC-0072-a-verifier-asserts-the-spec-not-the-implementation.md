@@ -1,11 +1,52 @@
-# RFC-0072 - A verifier asserts the spec, not the implementation
-
-**Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:** every verifier under
-`Documentation/Skill/*/Reference/` and `Scripts/` **Kind:** method **Subject:** operation
-**Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0037 (what
-can be proven before a second host exists), RFC-0045 (the component contract), RFC-0049 and RFC-0048
-(the state and the status words the composition asserts), RFC-0053 (the showcase surface);
-implementing card to be created: "A spec-to-verifier link that fails when the spec moves"
+---
+title: A verifier asserts the spec, not the implementation
+rfc: 0072
+category: Method/Operation
+kind: rfc
+date: 2026-11-03
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "every verifier under `Documentation/Skill/*/Reference/` and `Scripts/`"
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0037 (what can be proven before a second host exists)
+    - RFC-0045 (the component contract)
+    - RFC-0049 and RFC-0048 (the state and the status words the composition asserts)
+    - |-
+        RFC-0053 (the showcase surface); implementing card to be created: "A spec-to-verifier link that fails when the spec moves"
+statuses:
+    - name: The spec names the verifier, and the verifier names the spec
+      state: current
+      evidence: Documentation/Skill/Design-Verification/Reference/verify-composition.mjs
+    - name: An invariant is a fact from the design record
+      state: current
+      evidence: "verify-composition.mjs:84-89"
+    - name: Transcription is manual and the record says so
+      state: current
+      evidence: Documentation/Skill/Design-Verification/Reference/verify-composition.mjs
+    - name: A verifier drives the built page in a browser
+      state: current
+      evidence: "no-js-audit.mjs:17-20"
+    - name: "A verifier has three exit codes, and `2` is not a defect"
+      state: current
+      evidence: "verify-composition.mjs:288"
+    - name: A probe tolerates an absent node, so a missing part fails rather than blocks
+      state: current
+      evidence: "verify-showcase.mjs:60-63"
+    - name: A count invariant guards every universal one
+      state: current
+      evidence: "verify-showcase.mjs:67"
+    - name: An inequality states the inequality it asserts
+      state: current
+      evidence: "verify-spread.mjs:160-164"
+    - name: A verifier states what it does not measure
+      state: current
+      evidence: "verify-composition.mjs:5"
+---
 
 ## Decision
 

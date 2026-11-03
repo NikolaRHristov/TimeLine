@@ -1,11 +1,46 @@
-# RFC-0040 - Time, ordering and causality
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every row's timestamp,
-the replay window, observation reconciliation, the migration seam **Kind:** architecture
-**Subject:** data **Horizon:** next **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0022 §2 (a reducer reads no clock), RFC-0007 (the envelope's timestamp field),
-RFC-0021 §4 (reconciliation by `at`), RFC-0033 §6 (cutover and two clocks); implementing card to be
-created: "Accepted time and claimed time on every row"
+---
+title: Time, ordering and causality
+rfc: 0040
+category: Architecture/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: every row's timestamp, the replay window, observation reconciliation, the migration seam
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0022 §2 (a reducer reads no clock)"
+    - RFC-0007 (the envelope's timestamp field)
+    - "RFC-0021 §4 (reconciliation by `at`)"
+    - |-
+        RFC-0033 §6 (cutover and two clocks); implementing card to be created: "Accepted time and claimed time on every row"
+statuses:
+    - name: A reducer reads no clock, and the only time a room writes is the engine's
+      state: open
+      evidence: the rule names no file or command
+    - name: A client timestamp is a claim inside the signed envelope, kept and never...
+      state: open
+      evidence: the rule names no file or command
+    - name: Order within a room is total and needs no sequence
+      state: open
+      evidence: the rule names no file or command
+    - name: An observation's timestamp is the observer's claim, corroborated by arrival
+      state: open
+      evidence: the rule names no file or command
+    - name: Across rooms there is no order, only the causality a row records
+      state: open
+      evidence: the rule names no file or command
+    - name: Clock skew is a property of a host, not of a room
+      state: open
+      evidence: the rule names no file or command
+    - name: A duration is measured in the room's clock and a person is told so
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

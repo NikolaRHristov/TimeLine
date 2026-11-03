@@ -1,9 +1,27 @@
-# RFC-0002 - Single schema source of truth
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:**
-`Maintain/Source/Model/`, `Source/content.config.ts`, the SpacetimeDB module **Kind:** architecture
-**Subject:** data **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
-dependencies:** t_fe20eeee (implements)
+---
+title: Single schema source of truth
+rfc: 0002
+category: Architecture/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "`Maintain/Source/Model/`, `Source/content.config.ts`, the SpacetimeDB module"
+supersedes: none
+superseded_by: none
+depends:
+    - t_fe20eeee (implements)
+statuses:
+    - name: "The TypeScript model under `Maintain/Source/Model/` is the single declaration..."
+      state: open
+      evidence: the rule names no file or command
+    - name: Until derivation exists, a conformance test asserts the three declarations...
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

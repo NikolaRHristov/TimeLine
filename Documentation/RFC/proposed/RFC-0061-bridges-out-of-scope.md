@@ -1,12 +1,46 @@
-# RFC-0061 - Bridges are out of scope; the export is the interface
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** federation scope, the
-export format, versioning **Kind:** policy **Subject:** network **Horizon:** later **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0015 (the export that is the whole interop
-story), RFC-0023 §3 (publication is a delegation out of the room, which is what a bridge would be),
-RFC-0034 (the format version a bridge would depend on), RFC-0007 (the host cannot read, which is why
-a bridge cannot carry an audience); implementing card to be created: none - this record decides that
-no card is created
+---
+title: "Bridges are out of scope; the export is the interface"
+rfc: 0061
+category: Policy/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: later
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: federation scope, the export format, versioning
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0015 (the export that is the whole interop story)
+    - "RFC-0023 §3 (publication is a delegation out of the room, which is what a bridge would be)"
+    - RFC-0034 (the format version a bridge would depend on)
+    - |-
+        RFC-0007 (the host cannot read, which is why a bridge cannot carry an audience); implementing card to be created: none - this record decides that no card is created
+statuses:
+    - name: The interop surface is a file, not a protocol
+      state: open
+      evidence: the rule names no file or command
+    - name: A bridge could preserve three things and no more
+      state: open
+      evidence: the rule names no file or command
+    - name: A bridge cannot preserve audience
+      state: open
+      evidence: the rule names no file or command
+    - name: A bridge cannot preserve retraction
+      state: open
+      evidence: the rule names no file or command
+    - name: A bridge cannot preserve blindness, and that is the reason for the boundary
+      state: open
+      evidence: the rule names no file or command
+    - name: A third party may build one, and the cost is theirs
+      state: open
+      evidence: the rule names no file or command
+    - name: What would change this decision is named
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

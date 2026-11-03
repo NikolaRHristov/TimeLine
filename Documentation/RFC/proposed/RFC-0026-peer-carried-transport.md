@@ -1,11 +1,45 @@
-# RFC-0026 - Peer-carried transport
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the transport seam,
-relays, replicas, the wire protocol **Kind:** architecture **Subject:** transport **Horizon:** next
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0003 (the seam a third
-transport joins), RFC-0005 (one authority per room), RFC-0007 (a carrier sees ciphertext), RFC-0022
-(a replica is a host), RFC-0023 (a peer is a holder), RFC-0025 (a replica runs the artifact);
-implementing card to be created: "Peer transport: relay mode, and the replica decision gate"
+---
+title: Peer-carried transport
+rfc: 0026
+category: Architecture/Transport
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the transport seam, relays, replicas, the wire protocol
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0003 (the seam a third transport joins)
+    - RFC-0005 (one authority per room)
+    - RFC-0007 (a carrier sees ciphertext)
+    - RFC-0022 (a replica is a host)
+    - RFC-0023 (a peer is a holder)
+    - |-
+        RFC-0025 (a replica runs the artifact); implementing card to be created: "Peer transport: relay mode, and the replica decision gate"
+statuses:
+    - name: A third transport joins the seam
+      state: open
+      evidence: the rule names no file or command
+    - name: Two modes, decided separately
+      state: open
+      evidence: the rule names no file or command
+    - name: 'Relay is the default answer to "one member offers connectivity for the rest"'
+      state: open
+      evidence: the rule names no file or command
+    - name: One authority per room, always
+      state: open
+      evidence: the rule names no file or command
+    - name: A carrier is a holder, so custody applies
+      state: open
+      evidence: the rule names no file or command
+    - name: A relay sees the connection graph
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

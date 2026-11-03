@@ -1,9 +1,28 @@
-# RFC-0003 - Transport seam
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every command under
-`Maintain/Source/Command/` **Kind:** contract **Subject:** transport **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** t_7936cc8e (implements),
-`Documentation/Reference/Transport.md` (spec)
+---
+title: Transport seam
+rfc: 0003
+category: Contract/Transport
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "every command under `Maintain/Source/Command/`"
+supersedes: none
+superseded_by: none
+depends:
+    - t_7936cc8e (implements)
+    - "`Documentation/Reference/Transport.md` (spec)"
+statuses:
+    - name: Every command receives a transport rather than importing one
+      state: open
+      evidence: the rule names no file or command
+    - name: There is no automatic fallback
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

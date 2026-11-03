@@ -1,13 +1,51 @@
-# RFC-0067 - Keep everything, compress, and name the cost
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the shadow store's
-layout, the compression codec, payload deduplication, the cost statement **Kind:** policy
-**Subject:** data **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0001 (the store is the authority and never loses history), RFC-0028 (the room's
-retention, which this record does not touch), RFC-0039 (what a room pays, kept separate from what a
-member pays), RFC-0059 (the duplicates that make deduplication worth doing), RFC-0015 (the export,
-which stays uncompressed); implementing card to be created: "Store codec, payload area and the cost
-view"
+---
+title: Keep everything, compress, and name the cost
+rfc: 0067
+category: Policy/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the shadow store's layout, the compression codec, payload deduplication, the cost statement
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001 (the store is the authority and never loses history)
+    - RFC-0028 (the room's retention, which this record does not touch)
+    - RFC-0039 (what a room pays, kept separate from what a member pays)
+    - RFC-0059 (the duplicates that make deduplication worth doing)
+    - |-
+        RFC-0015 (the export, which stays uncompressed); implementing card to be created: "Store codec, payload area and the cost view"
+statuses:
+    - name: No age tiering of the archive
+      state: open
+      evidence: the rule names no file or command
+    - name: Compression is a codec with a version, applied per record
+      state: open
+      evidence: the rule names no file or command
+    - name: Deduplication is by content hash, and it is exact
+      state: open
+      evidence: the rule names no file or command
+    - name: The media half is separate and is the expensive half
+      state: open
+      evidence: the rule names no file or command
+    - name: Growth is a measured rate, not a quota
+      state: open
+      evidence: the rule names no file or command
+    - name: The cost statement separates what the member pays from what a room pays
+      state: open
+      evidence: the rule names no file or command
+    - name: A member is told what keeping everything costs before they choose it
+      state: open
+      evidence: the rule names no file or command
+    - name: Compression and deduplication are invisible to every other record
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

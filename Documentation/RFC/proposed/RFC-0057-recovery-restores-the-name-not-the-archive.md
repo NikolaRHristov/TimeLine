@@ -1,12 +1,50 @@
-# RFC-0057 - Recovery restores the name, not the archive
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the client keystore,
-the epoch wrap, the recovery secret, the guardianship ceremony **Kind:** policy **Subject:**
-identity **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0013 (the recovery secret and the escrow holder; this record extends its recovery clause),
-RFC-0056 §4 (guardianship over rotations, not restated here), RFC-0028 §4 (the copies erasure cannot
-reach), RFC-0038 (what the operator owes); implementing card to be created: "Recovery ceremony and
-the archive wrap"
+---
+title: Recovery restores the name, not the archive
+rfc: 0057
+category: Policy/Identity
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the client keystore, the epoch wrap, the recovery secret, the guardianship ceremony
+supersedes: none
+superseded_by: none
+depends:
+    - |-
+        RFC-0013 (the recovery secret and the escrow holder; this record extends its recovery clause)
+    - "RFC-0056 §4 (guardianship over rotations, not restated here)"
+    - "RFC-0028 §4 (the copies erasure cannot reach)"
+    - |-
+        RFC-0038 (what the operator owes); implementing card to be created: "Recovery ceremony and the archive wrap"
+statuses:
+    - name: A rotation restores the name and opens no ciphertext
+      state: open
+      evidence: the rule names no file or command
+    - name: Every epoch is wrapped twice, and the second target is offline
+      state: open
+      evidence: the rule names no file or command
+    - name: The recovery secret is a file, not a service
+      state: open
+      evidence: the rule names no file or command
+    - name: Guardianship never touches the archive key
+      state: open
+      evidence: the rule names no file or command
+    - name: The four outcomes are named, and the client says which one applies
+      state: open
+      evidence: the rule names no file or command
+    - name: Case (d) is stated at setup, not discovered at failure
+      state: open
+      evidence: the rule names no file or command
+    - name: A room may be recoverable, and pays for it in blindness
+      state: open
+      evidence: the rule names no file or command
+    - name: The cost is a count of parties who could read, not a slogan
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

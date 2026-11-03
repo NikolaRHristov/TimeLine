@@ -1,9 +1,35 @@
-# RFC-0044 - Toolchain upgrade policy
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the root
-`package.json`, `Scripts/Compatibility.mjs`, `pnpm run check`, the Node workflow, every dependency
-the site builds with **Kind:** method **Subject:** operation **Horizon:** now **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0009 (build, release and toolchain), t_344b78d0
+---
+title: Toolchain upgrade policy
+rfc: 0044
+category: Method/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the root `package.json`, `Scripts/Compatibility.mjs`, `pnpm run check`, the Node workflow, every dependency the site builds with
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0009 (build, release and toolchain)
+    - t_344b78d0
+statuses:
+    - name: A patch or minor inside a recorded major is taken as it ships
+      state: current
+      evidence: package.json
+    - name: "A major is taken when the ecosystem in `package.json` has published against it..."
+      state: current
+      evidence: package.json
+    - name: Every direct dependency is an exact version
+      state: open
+      evidence: the rule names no file or command
+    - name: "The floor rises only when a dependency's own `engines` forces it"
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

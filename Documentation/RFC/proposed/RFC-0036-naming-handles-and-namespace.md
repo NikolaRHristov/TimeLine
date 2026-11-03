@@ -1,12 +1,46 @@
-# RFC-0036 - Naming, handles and namespace
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** display names,
-certificates, published attribution, room names **Kind:** specification **Subject:** identity
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0013 (an
-identity is a keypair plus a display name, and a certificate carries the name), RFC-0019 (the
-glossary is the naming authority), RFC-0017 (published cards), RFC-0023 §3 (publication is a
-delegation out of the room); implementing card to be created: "Certificate display fields and the
-disambiguator"
+---
+title: Naming, handles and namespace
+rfc: 0036
+category: Specification/Identity
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: display names, certificates, published attribution, room names
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0013 (an identity is a keypair plus a display name, and a certificate carries the name)
+    - RFC-0019 (the glossary is the naming authority)
+    - RFC-0017 (published cards)
+    - |-
+        RFC-0023 §3 (publication is a delegation out of the room); implementing card to be created: "Certificate display fields and the disambiguator"
+statuses:
+    - name: A name is a label, not an identifier
+      state: open
+      evidence: the rule names no file or command
+    - name: A collision resolves by a derived disambiguator, never by first-come
+      state: open
+      evidence: the rule names no file or command
+    - name: Impersonation is a certificate failure, not a naming failure
+      state: open
+      evidence: the rule names no file or command
+    - name: Published content carries the fingerprint, not the handle
+      state: open
+      evidence: the rule names no file or command
+    - name: A handle is not an address
+      state: open
+      evidence: the rule names no file or command
+    - name: Renaming is free, recorded, and does not touch a row
+      state: open
+      evidence: the rule names no file or command
+    - name: A room's own name is a label too
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

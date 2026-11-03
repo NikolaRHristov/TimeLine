@@ -1,9 +1,27 @@
-# RFC-0007 - Privacy, encryption and the validation boundary
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module, the
-client, export, hosting **Kind:** policy **Subject:** data **Horizon:** next **Supersedes:** none
-**Superseded by:** none **Task dependencies:** RFC-0001, RFC-0005, RFC-0013 (the key hierarchy these
-records are signed under), RFC-0024 (the gateway that applies the split below)
+---
+title: Privacy, encryption and the validation boundary
+rfc: 0007
+category: Policy/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the module, the client, export, hosting
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001
+    - RFC-0005
+    - RFC-0013 (the key hierarchy these records are signed under)
+    - RFC-0024 (the gateway that applies the split below)
+statuses:
+    - name: Authentication and action records
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

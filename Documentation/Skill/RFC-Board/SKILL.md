@@ -82,14 +82,32 @@ publishes nothing, because a corpus that cannot be parsed is a corpus whose boar
 ## The Record Is the Authority
 
 - **The body is assembled, never written.** It carries the `## Decision` section verbatim, the
-  `## Verification` table verbatim, the class, the area, the status, the `Task dependencies:` line,
-  the implementing card ids and a link to the file. It is never a summary, so it cannot drift from
-  the record in a way a reader could not detect.
+  `## Verification` table verbatim, the three classification axes, the status, the `depends` entries
+  joined with commas, the implementing card ids and a link to the file. It is never a summary, so it
+  cannot drift from the record in a way a reader could not detect.
 - **A body that differs from its record is rewritten.** `publish` compares the published body with
   the freshly rendered one and edits the issue when they differ, so editing a record and re-running
   is the whole update procedure.
+- **The classification is read from the frontmatter, never from a side table.** `category` states
+  `Kind` and `Subject` together and `horizon` states the third; `verify` compares every item's three
+  values against its record's, so a board that disagrees with the corpus fails rather than reporting
+  a second opinion.
 - **`Status` moves when the verification table passes against shipped code**, not when a plan
-  exists. The value is copied from the record's header; the tool never infers it.
+  exists. The value is copied from the record's frontmatter - `settled` is written as `Implemented`,
+  and `superseded` is reported and left alone - and the tool never infers it.
+- **A record that names no implementing card is design, not debt.** `horizon` (`now`, `next`,
+  `later`) states what the Decision presupposes, not who is working on it: `later` means nothing
+  here is owed. Sixty records at `later` are sixty decisions waiting for a presupposition, and the
+  board carries no due date and no `late` state for exactly that reason. Reading the horizon as a
+  backlog turns a settled design into a permanent failure - the measurement the README's "By
+  horizon" section reports is a split, not a fault in the axis.
+- **The frontmatter is generated, and Prettier has the last word on its shape.** Prettier reformats
+  a YAML block inside markdown: it wraps a scalar past the print width and turns a double-quoted
+  value into a single-quoted one when the text holds a double quote. `Scripts/RFC-Frontmatter.mjs`
+  writes what Prettier keeps - a literal block past 100 columns, the quote that needs no escape - so
+  `prettier --check Documentation/RFC` is clean without a second pass over the corpus. A hand-edited
+  block that misses either still parses, and fails the format check instead: run `--write`, never a
+  formatter, to change one.
 
 ---
 
@@ -99,8 +117,14 @@ A view's group-by is a manual interface step. GitHub's GraphQL schema accepts a 
 filter and visible fields, and no input object accepts `groupBy` or `sortBy`:
 `CreateProjectV2ViewInput` and `UpdateProjectV2ViewInput` carry only `name`, `layout`, `filter` and
 `configuration.visibleFieldIds`. The three views therefore arrive ungrouped from `gh project copy`,
-and each is opened once and given its grouping by hand: `Class` for the table, `Status` for the
-board, `Class` for the roadmap.
+and each is opened once and given its grouping by hand: `Kind` for the table, `Status` for the
+board, `Kind` for the roadmap.
+
+Deleting a field is also API-reachable, and it un-groups every view that grouped by it. Retiring
+`Class` and `Area` for the three axes therefore costs one interface pass over the two views that
+grouped by `Class`, which is the same pass a new project needs. The views are renamed to match in
+the same operation; a view whose name promises a grouping it no longer has is worse than an
+ungrouped one.
 
 Everything else about the project is API-reachable: the fields, their options, the item set and
 every field value.
@@ -119,10 +143,12 @@ python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py publish \
   --owner <owner> --repo <repository> --project <number> --branch <branch>
 ```
 
-The record-to-Area map lives in `Reference/area.json` and is the only per-record judgement in the
-tool. The tie-break rule is stated in `Documentation/RFC/README.md`: permission to governance, wire
-or room to network, key or name to identity, file or build or tool to tooling, rendering to site. A
-record with no entry is reported and its `Area` is left unset rather than guessed.
+The record-to-axis assignment is in the record, not in the tool: `category` states `Kind` and
+`Subject` together and `horizon` states the third, and the definitions plus the tie-break rules are
+in `Documentation/RFC/README.md`. `Scripts/RFC-Frontmatter.mjs` checks them inside `pnpm run check`,
+so a record with a missing or invented value fails before it reaches the board. The tool reads the
+three values and refuses a record whose value is outside the vocabulary, naming the record and the
+axis rather than publishing a guess.
 
 ---
 
@@ -161,6 +187,11 @@ record with no entry is reported and its `Area` is left unset rather than guesse
   deleting and recreating it under the same name, which issues a new id and appends the field to the
   end of each view's columns, because `visibleFieldIds` is a set and accepts membership rather than
   order. Resolve every id at run time and a stale id cannot be mistaken for an empty column.
+- **A deleted field takes its values and its groupings with it.** `deleteProjectV2Field` is one
+  call, and it removes every value written into the field and un-groups each view that grouped by
+  it. The grouping is not restorable by any API call, so a retirement needs the assignment committed
+  first: `Documentation/Reference/RFC-Classification.md` is the only complete record of what the old
+  values were, and `Scripts/RFC-Frontmatter.mjs --write` repopulates the new fields from it.
 - **`gh project item-list` lowercases only the first letter of a field name**, so a field named
   `RFC` arrives under the key `rFC`. Reading the wrong key looks exactly like a field that is empty
   on every item, which is why `verify` reads its values over GraphQL.
@@ -175,10 +206,12 @@ record with no entry is reported and its `Area` is left unset rather than guesse
 
 ## Adding a Record
 
-1. Write `Documentation/RFC/proposed/RFC-00NN-<slug>.md` with the `Status:` and `Decision class:`
-   header fields, a `## Decision` section and a `## Verification` table. The `## Open questions`
-   section is optional; everything else the body renders from is required.
-2. Add the record's `Area` to `Reference/area.json` using the tie-break rule above.
+1. Write `Documentation/RFC/proposed/RFC-00NN-<slug>.md` from `TEMPLATE.md`: the frontmatter block,
+   a `## Decision` section and a `## Verification` table. The `## Open questions` section is
+   optional; everything else the body renders from is required.
+2. Choose `category` and `horizon` from the vocabularies in `Documentation/RFC/README.md`, then run
+   `node Scripts/RFC-Frontmatter.mjs` and add the record to the audit's assignment table if it is
+   new there. A value outside a vocabulary fails the check.
 3. Commit the record. `publish` reads committed records only.
 4. Run `publish`, then `verify`. A non-zero exit from `verify` names the item and the field that
    disagree.
@@ -200,25 +233,25 @@ record with no entry is reported and its `Area` is left unset rather than guesse
 
 ## Files
 
-| File                          | What it is                                                                                    |
-| ----------------------------- | --------------------------------------------------------------------------------------------- |
-| `SKILL.md`                    | this procedure                                                                                |
-| `Reference/rfc_board.py`      | the tool: `render`, `publish`, `verify`, `readme`                                             |
-| `Reference/area.json`         | record to `Area`, the only per-record judgement, with the tie-break rule in the corpus README |
-| `Reference/project-README.md` | the project's own README, ASCII, with `@@DASH@@` and `@@COUNT@@` resolved at upload           |
-| `Reference/Index.md`          | the archive index for this directory                                                          |
+| File                          | What it is                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| `SKILL.md`                    | this procedure                                                                      |
+| `Reference/rfc_board.py`      | the tool: `render`, `publish`, `verify`, `readme`                                   |
+| `Reference/project-README.md` | the project's own README, ASCII, with `@@DASH@@` and `@@COUNT@@` resolved at upload |
+| `Reference/Index.md`          | the archive index for this directory                                                |
 
 ---
 
 ## Verification
 
-| Claim                            | Test                                                                                                                                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The tool runs from the tree      | `python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py render` exits 0 and prints `decision text intact: N/N`                              |
-| Only committed records publish   | `git ls-files Documentation/RFC/proposed \| wc -l` and the `committed records:` line of `render` agree                                            |
-| The board count is the corpus    | `python3 .../rfc_board.py verify` prints `committed records: N   board items: N` and exits 0                                                      |
-| Every item has RFC and Class     | the `[2]` block of `verify` prints `without RFC: 0` and `without Class: 0`                                                                        |
-| Publishing is idempotent         | a second `publish` prints `created=0 bodies_refreshed=0 items_added=0 fields_written=0`                                                           |
-| The group-by gap is real         | `gh api graphql -f query='query{__type(name:"UpdateProjectV2ViewInput"){inputFields{name}}}'` prints six fields and none is `groupBy` or `sortBy` |
-| The tool carries no machine path | `python3 Documentation/Skill/Tool-Archive/Reference/archive_tool.py --audit` prints `clean: no home paths`                                        |
-| The separator is a real em dash  | `gh api repos/TimeLine-DELO/TimeLine/issues/6 --jq .title \| od -An -tx1 \| head -1` shows `e2 80 94` between the id and the title                |
+| Claim                             | Test                                                                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The tool runs from the tree       | `python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py render` exits 0 and prints `decision text intact: N/N`                              |
+| Only committed records publish    | `git ls-files Documentation/RFC/proposed \| wc -l` and the `committed records:` line of `render` agree                                            |
+| The board count is the corpus     | `python3 .../rfc_board.py verify` prints `committed records: N   board items: N` and exits 0                                                      |
+| Every item has RFC and every axis | the `[2]` block of `verify` prints `without RFC: 0`, `without Kind: 0`, `without Subject: 0` and `without Horizon: 0`                             |
+| The board agrees with the files   | the `[2]` block prints `items whose axes disagree with their record: 0`, and the per-axis counts equal `node Scripts/RFC-Frontmatter.mjs`         |
+| Publishing is idempotent          | a second `publish` prints `created=0 bodies_refreshed=0 items_added=0 fields_written=0`                                                           |
+| The group-by gap is real          | `gh api graphql -f query='query{__type(name:"UpdateProjectV2ViewInput"){inputFields{name}}}'` prints six fields and none is `groupBy` or `sortBy` |
+| The tool carries no machine path  | `python3 Documentation/Skill/Tool-Archive/Reference/archive_tool.py --audit` prints `clean: no home paths`                                        |
+| The separator is a real em dash   | `gh api repos/TimeLine-DELO/TimeLine/issues/6 --jq .title \| od -An -tx1 \| head -1` shows `e2 80 94` between the id and the title                |

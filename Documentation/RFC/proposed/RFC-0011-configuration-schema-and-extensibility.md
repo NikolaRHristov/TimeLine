@@ -1,12 +1,36 @@
-# RFC-0011 - Configuration schema and extensibility
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:**
-`Maintain/Source/Configuration/`, the module, the client, `Documentation/Reference/Configure.md`
-**Kind:** architecture **Subject:** operation **Horizon:** now **Supersedes:** none **Superseded
-by:** none **Task dependencies:** RFC-0002 (one schema, one authority), RFC-0007 (key material is
-configuration); t_5ca276be and t_c65afc0c landed the map and the configuration-driven list taxonomy;
-implementing card to be created: "Configuration schema v2 - versioned terms, defaults, validation,
-unknown-key preservation"
+---
+title: Configuration schema and extensibility
+rfc: 0011
+category: Architecture/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    `Maintain/Source/Configuration/`, the module, the client, `Documentation/Reference/Configure.md`
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0002 (one schema, one authority)
+    - |-
+        RFC-0007 (key material is configuration); t_5ca276be and t_c65afc0c landed the map and the configuration-driven list taxonomy; implementing card to be created: "Configuration schema v2 - versioned terms, defaults, validation, unknown-key preservation"
+statuses:
+    - name: Every term the system can vary - audience, channel, network, key, propagation...
+      state: open
+      evidence: the rule names no file or command
+    - name: The schema is data
+      state: open
+      evidence: the rule names no file or command
+    - name: Unknown keys are preserved and reported
+      state: open
+      evidence: the rule names no file or command
+    - name: Loading is a fixed ladder - schema default, then the map, then the environment,...
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

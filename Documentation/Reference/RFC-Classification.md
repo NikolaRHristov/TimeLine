@@ -2,8 +2,13 @@
 
 Seventy-six records live in `Documentation/RFC/proposed/`; seventy-one of them are published to
 project 1. This page audits the classification those records carry, proposes the one that should
-replace it, assigns every record under the proposal, and answers the `Status` question. It reports.
-It does not re-tag: the re-tag is a separate card, and it reads this page as its input.
+replace it, assigns every record under the proposal, and answers the `Status` question.
+
+It reported before it was applied, and it is now the source the corpus is applied from. Each record
+carries `category` (`Kind`/`Subject`) and `horizon` in its frontmatter, the board carries the same
+three as fields, and `Scripts/RFC-Frontmatter.mjs` reads the assignment table below to write and to
+check them, so the table and the corpus cannot drift apart. The retired `Class` and `Area` values
+survive only in the audit table, which is where the evidence for retiring them is.
 
 The board carries two axes, `Class` and `Area`, five values each, and neither has a definition
 anywhere in the repository. `Documentation/RFC/README.md` says only that `Class` repeats the

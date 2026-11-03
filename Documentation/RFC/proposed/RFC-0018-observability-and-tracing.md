@@ -1,12 +1,45 @@
-# RFC-0018 - Observability and tracing
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every command in
-`Maintain/Source/Command/`, the transport seam, the module's event table **Kind:** architecture
-**Subject:** operation **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0001 (the shadow store is the authority and already holds events), RFC-0003 (the
-seam a span crosses), RFC-0004 (job orchestration), RFC-0016 (per-room health); t_7936cc8e
-(transport), t_92e48af0 (a failure that left no trace); implementing card to be created: "Runs and
-spans across the CLI, the transport and the module"
+---
+title: Observability and tracing
+rfc: 0018
+category: Architecture/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    every command in `Maintain/Source/Command/`, the transport seam, the module's event table
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001 (the shadow store is the authority and already holds events)
+    - RFC-0003 (the seam a span crosses)
+    - RFC-0004 (job orchestration)
+    - "RFC-0016 (per-room health); t_7936cc8e (transport)"
+    - |-
+        t_92e48af0 (a failure that left no trace); implementing card to be created: "Runs and spans across the CLI, the transport and the module"
+statuses:
+    - name: "Run - `{id, command, argv (redacted), startedAt, endedAt, outcome, counts}`"
+      state: open
+      evidence: the rule names no file or command
+    - name: "Span - `{id, runId, parentId, name, startedAt, endedAt, outcome, attributes}`"
+      state: open
+      evidence: the rule names no file or command
+    - name: Granularity floor - a command that touches the network or the browser emits at...
+      state: open
+      evidence: the rule names no file or command
+    - name: The run id is the trace id and travels with every reducer call as an argument,...
+      state: open
+      evidence: the rule names no file or command
+    - name: "What a person sees about their own archive, without logs - `maintain store..."
+      state: open
+      evidence: the rule names no file or command
+    - name: Retention - runs and spans are the newest append-only log in the shadow store
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

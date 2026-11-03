@@ -1,12 +1,51 @@
-# RFC-0064 - A list is a signed, versioned object
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the list collection,
-the list command, the `List/[Slug]` page, the export format **Kind:** contract **Subject:** data
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0027 §7
-(curation is one mechanism with two scopes), RFC-0017 (the gallery is the existing pages), RFC-0012
-(a list has an audience like any row), RFC-0015 (a list is a line type in the export), RFC-0060 (the
-signature a list carries), RFC-0059 §3 (a quoted entry is a reference); implementing card to be
-created: "List object, version history and the list command"
+---
+title: A list is a signed, versioned object
+rfc: 0064
+category: Contract/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "the list collection, the list command, the `List/[Slug]` page, the export format"
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0027 §7 (curation is one mechanism with two scopes)"
+    - RFC-0017 (the gallery is the existing pages)
+    - RFC-0012 (a list has an audience like any row)
+    - RFC-0015 (a list is a line type in the export)
+    - RFC-0060 (the signature a list carries)
+    - |-
+        RFC-0059 §3 (a quoted entry is a reference); implementing card to be created: "List object, version history and the list command"
+statuses:
+    - name: A list is an object with its own identity
+      state: open
+      evidence: the rule names no file or command
+    - name: Entries are ordered and may carry a reason
+      state: open
+      evidence: the rule names no file or command
+    - name: Every change is a new version, signed
+      state: open
+      evidence: the rule names no file or command
+    - name: Authorship is a key, and a list travels like a post
+      state: open
+      evidence: the rule names no file or command
+    - name: A list is a publication surface, so it is audienced
+      state: open
+      evidence: the rule names no file or command
+    - name: A rule-generated list is a saved query, and it is data too
+      state: open
+      evidence: the rule names no file or command
+    - name: A list never confers authority over what it lists
+      state: open
+      evidence: the rule names no file or command
+    - name: A list is exportable and a list is withdrawable
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

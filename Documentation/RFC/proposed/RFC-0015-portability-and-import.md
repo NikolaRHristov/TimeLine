@@ -1,12 +1,33 @@
-# RFC-0015 - Portability and import
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the export command,
-the import command, the module's read surface, the shadow store **Kind:** contract **Subject:** data
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (the
-exit guarantee), RFC-0007 (an export without keys is void), RFC-0013 (key epochs), RFC-0014
-(deletion is gated on export), RFC-0001 (the shadow store's own round trip); t_b9e11f0c (ingest),
-t_fe20eeee (storage); implementing card to be created: "Export and import format, with a round-trip
-verifier"
+---
+title: Portability and import
+rfc: 0015
+category: Contract/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the export command, the import command, the module's read surface, the shadow store
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0005 (the exit guarantee)
+    - RFC-0007 (an export without keys is void)
+    - RFC-0013 (key epochs)
+    - RFC-0014 (deletion is gated on export)
+    - "RFC-0001 (the shadow store's own round trip); t_b9e11f0c (ingest)"
+    - |-
+        t_fe20eeee (storage); implementing card to be created: "Export and import format, with a round-trip verifier"
+statuses:
+    - name: An export is five files with a version, and every byte in them is addressable
+      state: open
+      evidence: the rule names no file or command
+    - name: Ordering is deterministic, by id
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

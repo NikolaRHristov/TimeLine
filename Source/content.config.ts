@@ -3,9 +3,9 @@
 // `pnpm run Schema` rewrites this file; `pnpm run check` fails while it is
 // stale. A field that needs to exist belongs in the declaration, never here.
 
+import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
-import { defineCollection } from "astro:content";
 
 /**
 	* The site's content is written by the pipeline, not by hand.

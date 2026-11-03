@@ -1,12 +1,46 @@
-# RFC-0059 - One record, many references
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the post row, the
-envelope, the propagation record, the tombstone **Kind:** architecture **Subject:** data
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0021 §4
-(reconciliation inside a room, extended here across rooms), RFC-0005 (a room is a database, so no
-shared table exists to canonicalise in), RFC-0028 §2 (the tombstone this record propagates),
-RFC-0012 and RFC-0023 §5 (a delivered copy cannot be recalled); implementing card to be created:
-"Post key, propagation row and the retraction reducer"
+---
+title: One record, many references
+rfc: 0059
+category: Architecture/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the post row, the envelope, the propagation record, the tombstone
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0021 §4 (reconciliation inside a room, extended here across rooms)"
+    - RFC-0005 (a room is a database, so no shared table exists to canonicalise in)
+    - "RFC-0028 §2 (the tombstone this record propagates)"
+    - |-
+        RFC-0012 and RFC-0023 §5 (a delivered copy cannot be recalled); implementing card to be created: "Post key, propagation row and the retraction reducer"
+statuses:
+    - name: Identity is content plus author, not a row
+      state: open
+      evidence: the rule names no file or command
+    - name: Across rooms, five copies beat one canonical row with references
+      state: open
+      evidence: the rule names no file or command
+    - name: Repost and quote are different, and only one is a duplicate
+      state: open
+      evidence: the rule names no file or command
+    - name: A retraction is signed by the author and addressed to the post
+      state: open
+      evidence: the rule names no file or command
+    - name: A retraction travels one hop further than the copy did, and then stops
+      state: open
+      evidence: the rule names no file or command
+    - name: A conflict between two copies is visible, never resolved
+      state: open
+      evidence: the rule names no file or command
+    - name: The tombstone hash is the join key, and that is the price
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

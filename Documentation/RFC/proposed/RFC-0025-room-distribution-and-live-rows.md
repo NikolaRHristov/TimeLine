@@ -1,11 +1,44 @@
-# RFC-0025 - Room distribution: the module as artifact, the room as a stream
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** module publishing, the
-room's version record, client-side WebAssembly, live rows **Kind:** architecture **Subject:**
-network **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0005 (a room is a database), RFC-0016 (a room records the module it runs), RFC-0013 (keys never
-travel in the artifact), RFC-0022 (the artifact declares its egress), RFC-0017 (the client surface a
-live room feeds); implementing card to be created: "Module artifact manifest and the live-row view"
+---
+title: "Room distribution: the module as artifact, the room as a stream"
+rfc: 0025
+category: Architecture/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: module publishing, the room's version record, client-side WebAssembly, live rows
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0005 (a room is a database)
+    - RFC-0016 (a room records the module it runs)
+    - RFC-0013 (keys never travel in the artifact)
+    - RFC-0022 (the artifact declares its egress)
+    - |-
+        RFC-0017 (the client surface a live room feeds); implementing card to be created: "Module artifact manifest and the live-row view"
+statuses:
+    - name: The module is an artifact
+      state: open
+      evidence: the rule names no file or command
+    - name: A room is not a file
+      state: open
+      evidence: the rule names no file or command
+    - name: Distribution is a registry, not a handout
+      state: open
+      evidence: the rule names no file or command
+    - name: Client-side WebAssembly is a different pattern and stays where it belongs
+      state: open
+      evidence: the rule names no file or command
+    - name: A live room is an event table plus a per-member view
+      state: open
+      evidence: the rule names no file or command
+    - name: What a room never ships
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

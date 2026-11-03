@@ -1,9 +1,32 @@
-# RFC-0005 - Network substrate
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the SpacetimeDB
-module, room lifecycle, identity, federation **Kind:** architecture **Subject:** network
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** t_1621cc5c
-(research), RFC-0001, RFC-0004
+---
+title: Network substrate
+rfc: 0005
+category: Architecture/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the SpacetimeDB module, room lifecycle, identity, federation
+supersedes: none
+superseded_by: none
+depends:
+    - t_1621cc5c (research)
+    - RFC-0001
+    - RFC-0004
+statuses:
+    - name: A room is a database, not a table
+      state: open
+      evidence: the rule names no file or command
+    - name: Each room is its own SpacetimeDB database, published from a shared module
+      state: open
+      evidence: the rule names no file or command
+    - name: Rooms federate by calling reducers in other rooms' databases - the mechanism...
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

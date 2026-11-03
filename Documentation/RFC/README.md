@@ -14,9 +14,9 @@ The records are also published as issues on a public project linked to this repo
 - **One issue per record.** The title repeats the number and the title. The body carries the
   record's Decision section verbatim, its classification, its task dependencies, a link back to the
   file, and the verification table. An issue is never a summary of its record.
-- **Six fields.** `RFC` is the number. `Kind`, `Subject` and `Horizon` are the record's own header
-  lines, each a closed vocabulary defined below; the board copies them and never infers one.
-  `Status` is `Proposed` until the verification table passes against shipped code, then
+- **Six fields.** `RFC` is the number. `Kind`, `Subject` and `Horizon` are the record's own
+  frontmatter fields, each a closed vocabulary defined below; the board copies them and never infers
+  one. `Status` is `Proposed` until the verification table passes against shipped code, then
   `Implemented`. `Cards` holds the card ids a record names, and is empty for the records that name
   none.
 - **Three views over one item set.** A table by kind, a board by status and a roadmap by kind. Each
@@ -27,9 +27,9 @@ The records are also published as issues on a public project linked to this repo
 
 `Class` and `Area` are retired. Each was five values with no written definition, `governance` was a
 value on both, and the audit in `Documentation/Reference/RFC-Classification.md` measured what that
-produced: of seventy-one records, twenty-seven carried a label that contradicted their own Decision
-on at least one axis, and the two largest values were where a record landed when it fitted nowhere
-else. The board now carries the three axes below and no other taxonomy.
+produced: of seventy-one records, twenty-two carried a label that contradicted their own Decision on
+at least one axis, and the largest values were where a record landed when it fitted nowhere else.
+The board now carries the three axes below and no other taxonomy.
 
 The project is generated from `proposed/` and the files remain the authority. An issue with no
 record, or a record with no issue, is a defect of the same kind as an unlisted file.
@@ -107,12 +107,12 @@ a value names one question and cannot be read as the answer to another.
 7. **Horizon reads the presupposition, not the card.** A record that names a card is not thereby
    `now`, and a record with no card is not thereby `later`.
 
-A record states its three values in its header block, beside its status.
-`Scripts/Classification.mjs` writes them from the assignment table in the audit and checks them:
+A record states `Kind` and `Subject` as one `category` in its frontmatter, and `Horizon` beside it.
+`Scripts/RFC-Frontmatter.mjs` writes both from the assignment table in the audit and checks them:
 
 ```sh
-node Scripts/Classification.mjs          # check every record states its three axes
-node Scripts/Classification.mjs --write  # write the axes from the audit's assignment table
+node Scripts/RFC-Frontmatter.mjs          # check every record's frontmatter against the tree
+node Scripts/RFC-Frontmatter.mjs --write  # write it from the record and the assignment table
 ```
 
 The check exits non-zero when a record is missing an axis, carries a value outside a vocabulary, or
@@ -131,11 +131,23 @@ being no fourth axis - is `Documentation/Reference/RFC-Classification.md`.
 - **Filename** - `RFC-NNNN-kebab-case-title.md`.
 - **Location** - `proposed/` while open, `implemented/` once shipped.
 - **Numbering** - assigned on creation, never reused. `0077` is the next free number.
-- **Supersession** - a new record marks the old one `Superseded by`, and both stay.
-- **Cards** - every record names the cards that implement it, by id.
-- **Classification** - `Kind`, `Subject` and `Horizon` on every record, from the vocabularies above.
-  A new record chooses its three values before it is written, and the check refuses one that does
-  not.
+- **Supersession** - a new record marks the old one `superseded_by`, and both stay.
+- **Cards** - every record names the cards that implement it, in `depends`.
+- **Header** - a YAML block between two `---` lines, and the body starts at `## Decision`. The
+  fields are `title`, `rfc`, `category`, `kind`, `date`, `status`, `horizon`, `registry`, `index`,
+  `owner`, `applies_to`, `supersedes`, `superseded_by`, `depends` and `statuses`, in that order.
+  There is no `# RFC-NNNN - Title` heading above the block: the title and the number are fields, and
+  a heading that repeats them is a second copy that can disagree with the first.
+- **Status** - `proposed`, `settled` or `superseded`, lowercase. `settled` is the record's word for
+  what the board calls Implemented, and `superseded` has no option on the board yet, so a record
+  that carries it renders its own word in the issue and leaves the field alone.
+- **Statuses** - one entry per rule in the Decision section: the rule in a few words, the state of
+  the tree, and the evidence. `current` means the file or command the rule names is in the tree
+  today; `open` means the rule names none, or names something that is not there. The tool derives
+  both from the record, so a rule cannot be marked settled by editing the block.
+- **Classification** - `category` is `<Kind>/<Subject>` from the vocabularies above, and `horizon`
+  is the third axis. A new record chooses its three values before it is written, and the check
+  refuses one that does not.
 
 ---
 
@@ -143,6 +155,12 @@ being no fourth axis - is `Documentation/Reference/RFC-Classification.md`.
 
 Seventy-six are written; none is implemented. A record moves to `implemented/` only when its
 verification table passes against the shipped code.
+
+Each record states its rules in `statuses`, with the file or command each rule names as the
+evidence. Read against the tree, 36 of the 450 rules name something that exists today and the other
+414 name nothing, or name something that is not there. That is the sentence above stated per rule:
+no record has passed its verification table, and the 36 are rules the tree already keeps - the shape
+of the gate itself, mostly.
 
 Every file in `proposed/` appears below once under its `Kind`, and again in the two short indexes
 that follow, which list every record by `Subject` and by `Horizon`. A record absent from any of the

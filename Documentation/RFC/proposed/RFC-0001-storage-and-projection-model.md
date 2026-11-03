@@ -1,9 +1,31 @@
-# RFC-0001 - Storage and projection model
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `Maintain/Storage/`,
-the SpacetimeDB module, `Source/Content/` **Kind:** architecture **Subject:** data **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** t_fe20eeee (implements),
-t_e1a18798 (push bridge, done)
+---
+title: Storage and projection model
+rfc: 0001
+category: Architecture/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "`Maintain/Storage/`, the SpacetimeDB module, `Source/Content/`"
+supersedes: none
+superseded_by: none
+depends:
+    - t_fe20eeee (implements)
+    - t_e1a18798 (push bridge, done)
+statuses:
+    - name: "Authority - the shadow store at `Maintain/Storage/Shadow/`"
+      state: current
+      evidence: Index.json
+    - name: Projection - the SpacetimeDB module
+      state: open
+      evidence: the rule names no file or command
+    - name: "Publication - `Source/Content/`"
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

@@ -1,11 +1,51 @@
-# RFC-0073 - A tool that ran belongs to a skill
-
-**Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:**
-`Documentation/Skill/**/Reference/`, the archive script that writes it, and the audit that reads it
-**Kind:** method **Subject:** operation **Horizon:** now **Supersedes:** none **Superseded by:**
-none **Task dependencies:** RFC-0009 (build, release and toolchain), RFC-0010 (documentation and
-template policy); implementing card to be created: "Make the archiver validate its own path inputs
-and index rows"
+---
+title: A tool that ran belongs to a skill
+rfc: 0073
+category: Method/Operation
+kind: rfc
+date: 2026-11-03
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    `Documentation/Skill/**/Reference/`, the archive script that writes it, and the audit that reads it
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0009 (build, release and toolchain)
+    - |-
+        RFC-0010 (documentation and template policy); implementing card to be created: "Make the archiver validate its own path inputs and index rows"
+statuses:
+    - name: "The archive is the skill's `Reference/` directory, and nothing else is"
+      state: current
+      evidence: "archive_tool.py:213-214"
+    - name: An archived tool opens with a generated header, not with front matter
+      state: current
+      evidence: "archive_tool.py:105-123"
+    - name: A shebang stays first, and an executable stays executable
+      state: current
+      evidence: "archive_tool.py:92"
+    - name: The body is scrubbed on the way in, in three passes
+      state: current
+      evidence: "archive_tool.py:126-141"
+    - name: A home path that survives the scrub is a refusal, not a warning
+      state: current
+      evidence: "archive_tool.py:235-243"
+    - name: The audit is a separate, read-only pass over the whole skill tree
+      state: current
+      evidence: "archive_tool.py:297-320"
+    - name: "`--dry-run` runs the whole validation chain and writes nothing"
+      state: current
+      evidence: "archive_tool.py:245-248"
+    - name: The archive never invents a skill
+      state: current
+      evidence: "archive_tool.py:191-197"
+    - name: An index row is written with the file, and it states what the file does
+      state: current
+      evidence: "archive_tool.py:166"
+---
 
 ## Decision
 

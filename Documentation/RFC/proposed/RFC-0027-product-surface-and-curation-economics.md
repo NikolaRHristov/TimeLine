@@ -1,11 +1,46 @@
-# RFC-0027 - Product surface and curation economics
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the curated index, the
-vote subsystem, the operator's powers, pricing **Kind:** policy **Subject:** economy **Horizon:**
-now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (the client surface
-the gallery is built from), RFC-0012 (what may be published at all), RFC-0016 (what is sold),
-RFC-0023 (publication is a delegation), RFC-0015 (exit is free); t_406cc8ab (owner-gated curation
-landed)
+---
+title: Product surface and curation economics
+rfc: 0027
+category: Policy/Economy
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the curated index, the vote subsystem, the operator's powers, pricing
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0017 (the client surface the gallery is built from)
+    - RFC-0012 (what may be published at all)
+    - RFC-0016 (what is sold)
+    - RFC-0023 (publication is a delegation)
+    - "RFC-0015 (exit is free); t_406cc8ab (owner-gated curation landed)"
+statuses:
+    - name: What is showcased is published content with a vote record
+      state: open
+      evidence: the rule names no file or command
+    - name: Curation is a nomination followed by an operator decision
+      state: open
+      evidence: the rule names no file or command
+    - name: The operator has three powers
+      state: open
+      evidence: the rule names no file or command
+    - name: The operator has three non-powers
+      state: open
+      evidence: the rule names no file or command
+    - name: What is never showcased
+      state: open
+      evidence: the rule names no file or command
+    - name: The economics are hosting, not content
+      state: open
+      evidence: the rule names no file or command
+    - name: The gallery is the same shelf for a room
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

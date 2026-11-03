@@ -1,12 +1,50 @@
-# RFC-0068 - Language is content; accessibility is a contract
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the site shell, every
-component, the content schema, every client **Kind:** contract **Subject:** surface **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0017 (the client surface and
-its empty states), RFC-0015 (the export gains a language field), RFC-0034 (a format change),
-RFC-0060 §7 (a translation is a copy, not an edit), RFC-0045 (the tokens an accessible contrast is
-measured in); implementing card to be created: "Language in the content schema and the accessibility
-audit"
+---
+title: "Language is content; accessibility is a contract"
+rfc: 0068
+category: Contract/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the site shell, every component, the content schema, every client
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0017 (the client surface and its empty states)
+    - RFC-0015 (the export gains a language field)
+    - RFC-0034 (a format change)
+    - "RFC-0060 §7 (a translation is a copy, not an edit)"
+    - |-
+        RFC-0045 (the tokens an accessible contrast is measured in); implementing card to be created: "Language in the content schema and the accessibility audit"
+statuses:
+    - name: Accessibility is a contract with a named floor
+      state: open
+      evidence: the rule names no file or command
+    - name: The check is mechanical and part of the build
+      state: open
+      evidence: the rule names no file or command
+    - name: What the audit cannot check is a review rule
+      state: open
+      evidence: the rule names no file or command
+    - name: Language is content, not metadata
+      state: open
+      evidence: the rule names no file or command
+    - name: The shell's language is a declared default, and it is not the content's
+      state: open
+      evidence: the rule names no file or command
+    - name: Direction is per record too
+      state: open
+      evidence: the rule names no file or command
+    - name: Translation is a copy, and it is authored
+      state: open
+      evidence: the rule names no file or command
+    - name: A member's language preference is not a filter
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

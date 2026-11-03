@@ -1,11 +1,41 @@
-# RFC-0016 - Hosting and tenancy
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the host, module
-rollouts, per-room health, the shutdown path **Kind:** policy **Subject:** operation **Horizon:**
-next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (a room is a
-database), RFC-0009 (build and release), RFC-0015 (the exit format), RFC-0020 (what the host may
-observe); t_17031e18 (build), t_1621cc5c (substrate research); implementing card to be created:
-"Room rollout, per-room health and the cost model"
+---
+title: Hosting and tenancy
+rfc: 0016
+category: Policy/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the host, module rollouts, per-room health, the shutdown path
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0005 (a room is a database)
+    - RFC-0009 (build and release)
+    - RFC-0015 (the exit format)
+    - "RFC-0020 (what the host may observe); t_17031e18 (build)"
+    - |-
+        t_1621cc5c (substrate research); implementing card to be created: "Room rollout, per-room health and the cost model"
+statuses:
+    - name: Cost is a published model, not a promise
+      state: open
+      evidence: the rule names no file or command
+    - name: Upgrades are staged and reversible per room
+      state: open
+      evidence: the rule names no file or command
+    - name: A bad publish cannot be silent
+      state: open
+      evidence: the rule names no file or command
+    - name: What the host observes is enumerated
+      state: open
+      evidence: the rule names no file or command
+    - name: The provider stopping is a planned event
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

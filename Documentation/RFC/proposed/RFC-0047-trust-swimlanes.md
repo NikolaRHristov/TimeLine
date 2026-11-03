@@ -1,12 +1,48 @@
-# RFC-0047 - The trust swimlanes
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the band between the
-canvas and the spectrometer, the lane vocabulary, every surface that draws who trusts whom **Kind:**
-specification **Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none
-**Task dependencies:** RFC-0012 (audiences), RFC-0013 (identity, keys and certificate authorities),
-RFC-0019 (vocabulary), RFC-0020 (the trust model), RFC-0021 (observation provenance), RFC-0022 (room
-isolation), RFC-0023 (delegation), RFC-0046 (the capability spectrometer), RFC-0048 (the status
-surfaces)
+---
+title: The trust swimlanes
+rfc: 0047
+category: Specification/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    the band between the canvas and the spectrometer, the lane vocabulary, every surface that draws who trusts whom
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0012 (audiences)
+    - RFC-0013 (identity, keys and certificate authorities)
+    - RFC-0019 (vocabulary)
+    - RFC-0020 (the trust model)
+    - RFC-0021 (observation provenance)
+    - RFC-0022 (room isolation)
+    - RFC-0023 (delegation)
+    - RFC-0046 (the capability spectrometer)
+    - RFC-0048 (the status surfaces)
+statuses:
+    - name: A lane is an actor, never a person
+      state: open
+      evidence: the rule names no file or command
+    - name: Trust runs in two directions, and one arrow is a lie
+      state: open
+      evidence: the rule names no file or command
+    - name: "`see` is the first permission, and it is named once"
+      state: open
+      evidence: the rule names no file or command
+    - name: An accreditation is a claim with an issuer
+      state: open
+      evidence: the rule names no file or command
+    - name: The band is a diagram, so it gets more air than a grid
+      state: open
+      evidence: the rule names no file or command
+    - name: A lane states its own layer
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

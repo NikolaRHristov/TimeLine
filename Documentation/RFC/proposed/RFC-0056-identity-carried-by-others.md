@@ -1,11 +1,46 @@
-# RFC-0056 - Identity carried by others
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the identity model,
-attestations, guardianship, recovery, cross-network sign-in **Kind:** policy **Subject:** identity
-**Horizon:** later **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0013
-(identity, keys and certificate authorities), RFC-0019 (vocabulary), RFC-0020 (the trust model),
-RFC-0023 (delegation of custody), RFC-0026 (peer-carried transport), RFC-0038 (what the operator
-owes), RFC-0047 (the swimlanes), RFC-0055 (the provider position)
+---
+title: Identity carried by others
+rfc: 0056
+category: Policy/Identity
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: later
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the identity model, attestations, guardianship, recovery, cross-network sign-in
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0013 (identity, keys and certificate authorities)
+    - RFC-0019 (vocabulary)
+    - RFC-0020 (the trust model)
+    - RFC-0023 (delegation of custody)
+    - RFC-0026 (peer-carried transport)
+    - RFC-0038 (what the operator owes)
+    - RFC-0047 (the swimlanes)
+    - RFC-0055 (the provider position)
+statuses:
+    - name: Nobody else ever holds the private key
+      state: open
+      evidence: the rule names no file or command
+    - name: Others carry attestations, not secrets
+      state: open
+      evidence: the rule names no file or command
+    - name: Relaying is a challenge, never a credential
+      state: open
+      evidence: the rule names no file or command
+    - name: Guardianship is a threshold over rotations, nothing else
+      state: open
+      evidence: the rule names no file or command
+    - name: The identifier is derived from the key, so it travels
+      state: open
+      evidence: the rule names no file or command
+    - name: The operator is never the identity provider
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

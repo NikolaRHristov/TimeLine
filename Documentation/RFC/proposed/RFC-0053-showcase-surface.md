@@ -1,10 +1,43 @@
-# RFC-0053 - The showcase surface
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every public page that
-is not the workspace, the uncontained bento, the copy layer **Kind:** architecture **Subject:**
-surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0045 (the material), RFC-0047 (the swimlanes), RFC-0048 (the status surfaces), RFC-0050 (the
-data states), RFC-0055 (DELO and the provider position)
+---
+title: The showcase surface
+rfc: 0053
+category: Architecture/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: every public page that is not the workspace, the uncontained bento, the copy layer
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0045 (the material)
+    - RFC-0047 (the swimlanes)
+    - RFC-0048 (the status surfaces)
+    - RFC-0050 (the data states)
+    - RFC-0055 (DELO and the provider position)
+statuses:
+    - name: The workspace is the only data surface
+      state: open
+      evidence: the rule names no file or command
+    - name: A showcase page reads nothing
+      state: open
+      evidence: the rule names no file or command
+    - name: The bento is uncontained and larger
+      state: open
+      evidence: the rule names no file or command
+    - name: The sidebar stays
+      state: open
+      evidence: the rule names no file or command
+    - name: Large headings, and copy that is the content
+      state: open
+      evidence: the rule names no file or command
+    - name: No call to action that the product cannot honour
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

@@ -45,17 +45,17 @@ It writes `Documentation/Skill/Figma-MCP/Reference/cdp-page.js`, stamps the file
 comment in that file's own syntax, marks a `.py` or `.sh` executable, and appends a row to the
 skill's `Reference/Index.md`.
 
-| Flag        | Effect                                                            |
-| ----------- | ----------------------------------------------------------------- |
-| `--skill`   | The skill directory that owns the tool. It must already exist.    |
-| `--file`    | The script to archive. An empty or unreadable file is refused.    |
-| `--as`      | The name it takes in `Reference/`; defaults to the source name.   |
-| `--summary` | One sentence. It becomes the header line and the index row.       |
-| `--force`   | Replace an existing reference file. Without it a collision stops. |
-| `--dry-run` | Report what would be written, write nothing.                      |
-| `--list`    | Every archived tool, per skill, with sizes.                       |
-| `--show`    | Print one archived tool: `--skill <Skill> --show <file>`.         |
-| `--audit`   | Fail on any reference file that still names a home directory.     |
+| Flag        | Effect                                                                     |
+| ----------- | -------------------------------------------------------------------------- |
+| `--skill`   | The skill directory that owns the tool. It must already exist.             |
+| `--file`    | The script to archive. An empty or unreadable file is refused.             |
+| `--as`      | The name it takes in `Reference/`; defaults to the source name.            |
+| `--summary` | One sentence. It becomes the header line and the index row.                |
+| `--force`   | Replace an existing reference file. Without it a collision stops.          |
+| `--dry-run` | Report what would be written, write nothing.                               |
+| `--list`    | Every archived tool, per skill, with sizes.                                |
+| `--show`    | Print one archived tool: `--skill <Skill> --show <file>`.                  |
+| `--audit`   | Fail on any skill file - a reference or a `SKILL.md` - naming a home path. |
 
 ## The rules the tool enforces
 
@@ -77,8 +77,10 @@ path
 
 **A script reads its configuration from the environment.** An archived tool that hardcodes a token
 path or an endpoint is not portable; it names one machine's layout and breaks in every other clone.
-`--audit` is the check: it walks every reference file and fails on a line that names a home
-directory.
+`--audit` is the check: it walks every reference file and every `SKILL.md`, and fails on a line that
+names a home directory. The prose is audited beside the tools because the body is what a reader
+trusts - a home path in a paragraph leaks the same machine a script would, and no archiver stamped
+it there.
 
 **The header is written in the file's own comment syntax** - `#` for Python, `//` for JavaScript,
 `/* */` for a stylesheet - because a reference file is run, and a `//` line in a Python file is a

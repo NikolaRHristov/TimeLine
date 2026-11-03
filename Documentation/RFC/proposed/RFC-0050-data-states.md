@@ -1,10 +1,42 @@
-# RFC-0050 - The data states
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every surface that
-reads a collection, the empty and partial states, the failure vocabulary **Kind:** specification
-**Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0017 (offline as a first-class state), RFC-0049 (the component states), RFC-0038
-(what the operator owes)
+---
+title: The data states
+rfc: 0050
+category: Specification/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    every surface that reads a collection, the empty and partial states, the failure vocabulary
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0017 (offline as a first-class state)
+    - RFC-0049 (the component states)
+    - RFC-0038 (what the operator owes)
+statuses:
+    - name: "`empty` is a state with an explanation and a way out"
+      state: open
+      evidence: the rule names no file or command
+    - name: "`partial` is a state, not an error"
+      state: open
+      evidence: the rule names no file or command
+    - name: "`stale` states its age"
+      state: open
+      evidence: the rule names no file or command
+    - name: "`failed` is named, with the code"
+      state: open
+      evidence: the rule names no file or command
+    - name: The state is derived, never passed as a flag
+      state: open
+      evidence: the rule names no file or command
+    - name: "`pending` preserves the frame"
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

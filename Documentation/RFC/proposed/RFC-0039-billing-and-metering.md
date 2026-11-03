@@ -1,11 +1,46 @@
-# RFC-0039 - Billing and metering
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the meter, the room's
-bill, the cap, the invite price **Kind:** policy **Subject:** economy **Horizon:** next
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0016 §1 (the unit model is
-published), RFC-0027 §6 (the paid product is hosting, never content), RFC-0032 §5 (exhaustion
-degrades), RFC-0005 (the tenancy unit is the database); implementing card to be created: "Meter rows
-and the room bill view"
+---
+title: Billing and metering
+rfc: 0039
+category: Policy/Economy
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the meter, the room's bill, the cap, the invite price
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0016 §1 (the unit model is published)"
+    - "RFC-0027 §6 (the paid product is hosting, never content)"
+    - "RFC-0032 §5 (exhaustion degrades)"
+    - |-
+        RFC-0005 (the tenancy unit is the database); implementing card to be created: "Meter rows and the room bill view"
+statuses:
+    - name: Five meters, all envelope
+      state: open
+      evidence: the rule names no file or command
+    - name: Content is never metered
+      state: open
+      evidence: the rule names no file or command
+    - name: A room is priced, not a person
+      state: open
+      evidence: the rule names no file or command
+    - name: The bill shows units, price and headroom
+      state: open
+      evidence: the rule names no file or command
+    - name: Cap behaviour is degrade, never destroy
+      state: open
+      evidence: the rule names no file or command
+    - name: An invitation has a price
+      state: open
+      evidence: the rule names no file or command
+    - name: Every line item names the query that produced it
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

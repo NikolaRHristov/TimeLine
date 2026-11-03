@@ -1,9 +1,34 @@
-# RFC-0010 - Documentation and template policy
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** `Documentation/`,
-`AGENTS.md`, `README.md`, every tracked file **Kind:** policy **Subject:** text **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** t_34ee3d19 (docs repair, done),
-t_bceac9f5 (naming)
+---
+title: Documentation and template policy
+rfc: 0010
+category: Policy/Text
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "`Documentation/`, `AGENTS.md`, `README.md`, every tracked file"
+supersedes: none
+superseded_by: none
+depends:
+    - t_34ee3d19 (docs repair, done)
+    - t_bceac9f5 (naming)
+statuses:
+    - name: No identifiers
+      state: open
+      evidence: the rule names no file or command
+    - name: No transcripts
+      state: open
+      evidence: the rule names no file or command
+    - name: Skills live in the repository
+      state: open
+      evidence: the rule names no file or command
+    - name: Every claim carries its test
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

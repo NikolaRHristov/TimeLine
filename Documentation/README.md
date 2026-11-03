@@ -45,24 +45,34 @@ what is intended, the RFCs state what was decided, and the skills state how to d
 - **`Reference/Network-Substrate.md`** - what SpacetimeDB actually provides for rooms, permissions
   and federation, with a claim → source table, the configuration schema the network needs, and the
   engine's limits.
+- **`Reference/RFC-Classification.md`** - the audit of the RFC corpus's classification, the three
+  axes that replace it, and the assignment of all seventy-six records.
 
 ---
 
 ## The skills
 
-- **`Skill/Timeline-Bookmarks/`** - reading and refreshing the saved-post archive.
-- **`Skill/Timeline-Browser-Transport/`** - driving the person's own browser over CDP.
-- **`Skill/Timeline-Hermes-Maintenance/`** - the shadow store, publishing, and the workspace layout.
-- **`Skill/SpacetimeDB-Local/`** - running and editing the local SpacetimeDB module.
-- **`Skill/Parallel-Epic-Execution/`** - several agents working the same tree at once.
-- **`Skill/Figma-MCP/`** - reading a design file into components.
-- **`Skill/Design-Verification/`** - proving a built page matches the design, not just that it
-  compiles.
-- **`Skill/Tool-Archive/`** - keeping a working script instead of rewriting it next session.
-- **`Skill/RFC-Board/`** - assembling the public RFC project from the committed records: the file is
-  authoritative, the issue follows it, the project item follows the issue.
+One directory per skill, each with a `SKILL.md` and a `Reference/Index.md`. The body holds the
+rules; a worked instance lives in `Reference/` behind a one-line pointer.
+
+- **`Skill/Timeline-Bookmarks/`** - the archive pipeline: scrape the shadow store, publish the
+  collection, build the site.
+- **`Skill/Timeline-Browser-Transport/`** - driving the person's own browser over CDP, and what a
+  relaunch silently drops.
+- **`Skill/Timeline-Site-Build/`** - the Astro build: the config layer that decides whether a page
+  compiles, and the island layer that decides whether it is the page.
 - **`Skill/Progressive-Enhancement/`** - the first paint is the server's; the no-script audit that
   proves it.
+- **`Skill/Design-Verification/`** - proving a built page matches the design, not just that it
+  compiles.
+- **`Skill/Figma-MCP/`** - reading a design file into components.
+- **`Skill/SpacetimeDB-Local/`** - running and editing the local SpacetimeDB module.
+- **`Skill/RFC-Board/`** - assembling the public RFC project from the committed records: the file is
+  authoritative, the issue follows it, the project item follows the issue.
+- **`Skill/Parallel-Epic-Execution/`** - several agents working the same tree at once.
+- **`Skill/Timeline-Hermes-Maintenance/`** - the gateway, the board and the workers, when task work
+  stalls.
+- **`Skill/Tool-Archive/`** - keeping a working script instead of rewriting it next session.
 
 ---
 

@@ -1,11 +1,46 @@
-# RFC-0024 - Action ingress gateway
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module's reducer
-surface, the worker, agent turns, the inbound HTTP router **Kind:** contract **Subject:** transport
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0004 (jobs
-are one class of action), RFC-0006 (which classes a job may submit), RFC-0003 (the transport's
-`mutable` flag), RFC-0020 (the envelope checks this record routes through); implementing card to be
-created: "Action gateway reducer and the action-class table"
+---
+title: Action ingress gateway
+rfc: 0024
+category: Contract/Transport
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the module's reducer surface, the worker, agent turns, the inbound HTTP router
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0004 (jobs are one class of action)
+    - RFC-0006 (which classes a job may submit)
+    - "RFC-0003 (the transport's `mutable` flag)"
+    - |-
+        RFC-0020 (the envelope checks this record routes through); implementing card to be created: "Action gateway reducer and the action-class table"
+statuses:
+    - name: One entry point
+      state: open
+      evidence: the rule names no file or command
+    - name: The class is derived, not declared
+      state: open
+      evidence: the rule names no file or command
+    - name: Attribution is the signing identity, never the prompting one
+      state: open
+      evidence: the rule names no file or command
+    - name: Validation is split three ways, one rule each
+      state: open
+      evidence: the rule names no file or command
+    - name: "Actions are idempotent by `actionId`"
+      state: open
+      evidence: the rule names no file or command
+    - name: Inbound HTTP is the second door with the same lock
+      state: open
+      evidence: the rule names no file or command
+    - name: A refused action says why, by name
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

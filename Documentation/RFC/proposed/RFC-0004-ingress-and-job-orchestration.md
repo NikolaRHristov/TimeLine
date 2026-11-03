@@ -1,9 +1,31 @@
-# RFC-0004 - Ingress and job orchestration
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the SpacetimeDB
-module, the scraping worker, `store scrape` **Kind:** architecture **Subject:** operation
-**Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001
-(storage), RFC-0003 (transport)
+---
+title: Ingress and job orchestration
+rfc: 0004
+category: Architecture/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: "the SpacetimeDB module, the scraping worker, `store scrape`"
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001 (storage)
+    - RFC-0003 (transport)
+statuses:
+    - name: "A `Job` table carries what to do, for which source, and a `ScheduleAt` column"
+      state: open
+      evidence: the rule names no file or command
+    - name: "A `JobRun` table records each attempt"
+      state: open
+      evidence: the rule names no file or command
+    - name: A worker process outside the module claims a due job, performs the browser work...
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

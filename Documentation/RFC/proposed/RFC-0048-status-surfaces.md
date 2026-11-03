@@ -1,11 +1,38 @@
-# RFC-0048 - The status surfaces
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the footer band, the
-rail's security cluster, every surface that states liveness **Kind:** specification **Subject:**
-surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0017 (the live layer and offline as a first-class state), RFC-0020 (the trust model), RFC-0026
-(peer-carried transport), RFC-0045 (the material), RFC-0046 (the spectrometer), RFC-0047 (the
-swimlanes)
+---
+title: The status surfaces
+rfc: 0048
+category: Specification/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the footer band, the rail's security cluster, every surface that states liveness
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0017 (the live layer and offline as a first-class state)
+    - RFC-0020 (the trust model)
+    - RFC-0026 (peer-carried transport)
+    - RFC-0045 (the material)
+    - RFC-0046 (the spectrometer)
+    - RFC-0047 (the swimlanes)
+statuses:
+    - name: The footer states liveness, not achievement
+      state: open
+      evidence: the rule names no file or command
+    - name: One baseline across two columns
+      state: open
+      evidence: the rule names no file or command
+    - name: A mark without a state is not drawn
+      state: open
+      evidence: the rule names no file or command
+    - name: Degraded is a state, never a grey
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

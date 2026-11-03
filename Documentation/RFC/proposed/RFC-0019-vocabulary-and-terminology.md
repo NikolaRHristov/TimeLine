@@ -1,12 +1,37 @@
-# RFC-0019 - Vocabulary and terminology
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every document, every
-identifier, every table and command name **Kind:** specification **Subject:** text **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0010 (documentation and
-template policy), RFC-0001 (the store's terms), RFC-0005 (room, federation), RFC-0012 (audience,
-propagation), RFC-0013 (identity, epoch, authority), RFC-0018 (run, span); t_23dc5d47
-(account-agnostic naming), t_bceac9f5 (PascalCase convention); implementing card to be created:
-"Glossary as the naming authority, with the membership/curation rename"
+---
+title: Vocabulary and terminology
+rfc: 0019
+category: Specification/Text
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: every document, every identifier, every table and command name
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0010 (documentation and template policy)
+    - RFC-0001 (the store's terms)
+    - RFC-0005 (room, federation)
+    - RFC-0012 (audience, propagation)
+    - RFC-0013 (identity, epoch, authority)
+    - "RFC-0018 (run, span); t_23dc5d47 (account-agnostic naming)"
+    - |-
+        t_bceac9f5 (PascalCase convention); implementing card to be created: "Glossary as the naming authority, with the membership/curation rename"
+statuses:
+    - name: "There is one glossary, at `Documentation/Reference/Glossary.md`, and it is the..."
+      state: open
+      evidence: the rule names no file or command
+    - name: Each term is defined once, in one sentence, with its kind (concept, table,...
+      state: open
+      evidence: the rule names no file or command
+    - name: Identifiers follow the glossary
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

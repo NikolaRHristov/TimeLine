@@ -1,11 +1,48 @@
-# RFC-0076 - A worker that cannot hold both cards stops
-
-**Status:** Proposed **Date:** 2026-11-03 **Owner:** operator **Applies to:** every card worked on
-the shared board, and the coordinator that decomposes an epic **Kind:** method **Subject:**
-operation **Horizon:** now **Supersedes:** none **Superseded by:** none **Task dependencies:**
-extends `Documentation/Skill/Parallel-Epic-Execution/SKILL.md:86-94` from a pitfall into a decision,
-RFC-0010 (documentation and template policy); implementing card to be created: "Make the block kind
-and the decision comment part of the card template"
+---
+title: A worker that cannot hold both cards stops
+rfc: 0076
+category: Method/Operation
+kind: rfc
+date: 2026-11-03
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: every card worked on the shared board, and the coordinator that decomposes an epic
+supersedes: none
+superseded_by: none
+depends:
+    - |-
+        extends `Documentation/Skill/Parallel-Epic-Execution/SKILL.md:86-94` from a pitfall into a decision
+    - |-
+        RFC-0010 (documentation and template policy); implementing card to be created: "Make the block kind and the decision comment part of the card template"
+statuses:
+    - name: '"Both cannot hold" is a finding the worker establishes, not a suspicion it...'
+      state: open
+      evidence: the rule names no file or command
+    - name: The worker stops before rewriting the sibling's output
+      state: open
+      evidence: the rule names no file or command
+    - name: The work is preserved so it can be restored byte-identically
+      state: open
+      evidence: the rule names no file or command
+    - name: The escalation is a comment with the evidence, then a block with the reason
+      state: open
+      evidence: the rule names no file or command
+    - name: A file two cards own is named as a hotspot
+      state: open
+      evidence: the rule names no file or command
+    - name: The decision is recorded on the card before either card resumes
+      state: open
+      evidence: the rule names no file or command
+    - name: The card that loses is closed as superseded, and its surviving contributions...
+      state: open
+      evidence: the rule names no file or command
+    - name: A rule written to protect a feature can itself be the conflict
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

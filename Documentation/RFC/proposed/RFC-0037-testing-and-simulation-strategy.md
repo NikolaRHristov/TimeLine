@@ -1,11 +1,46 @@
-# RFC-0037 - Testing and simulation strategy
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the pure layer, the
-module, the client, the federation **Kind:** method **Subject:** operation **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001 (the observation log is
-a recording), RFC-0002 (one schema to test), RFC-0003 (`view` is a transport), RFC-0020 (the engine
-does not authorize for the module); implementing card to be created: "Fixture rooms and the replay
-harness"
+---
+title: Testing and simulation strategy
+rfc: 0037
+category: Method/Operation
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the pure layer, the module, the client, the federation
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001 (the observation log is a recording)
+    - RFC-0002 (one schema to test)
+    - "RFC-0003 (`view` is a transport)"
+    - |-
+        RFC-0020 (the engine does not authorize for the module); implementing card to be created: "Fixture rooms and the replay harness"
+statuses:
+    - name: The pure layer needs no engine
+      state: open
+      evidence: the rule names no file or command
+    - name: The module layer runs on an ephemeral local database
+      state: open
+      evidence: the rule names no file or command
+    - name: The replay layer reproduces a projection from a recording
+      state: open
+      evidence: the rule names no file or command
+    - name: "The client layer runs over the `view` transport"
+      state: open
+      evidence: the rule names no file or command
+    - name: The federation layer needs two databases, and two databases are not two hosts
+      state: open
+      evidence: the rule names no file or command
+    - name: The engine's authorization is never mocked
+      state: open
+      evidence: the rule names no file or command
+    - name: A record's verification table is the test list
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

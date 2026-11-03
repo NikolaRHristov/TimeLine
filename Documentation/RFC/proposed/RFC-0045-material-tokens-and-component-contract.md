@@ -1,13 +1,33 @@
-# RFC-0045 - The material, the tokens and the component contract
-
-**Status:** Proposed **Owner:** operator **Applies to:** every sheet under `Source/Stylesheet/`,
-every component under `Source/Component/`, every page under `Source/pages/`, and
-`Source/Layout/Base.astro` **Kind:** contract **Subject:** surface **Horizon:** now **Supersedes:**
-none **Superseded by:** none **Task dependencies:** RFC-0009 (the build that compiles a sheet),
-RFC-0010 (documentation voice), RFC-0017 (the client surface this material dresses), RFC-0019
-(vocabulary); `t_15d5d8fd` (the token set promoted to the whole site), `t_30030978` (the token
-contract tests), `t_6b11bda7` (the fidelity pass), `t_bd4c07b0`, `t_e2a377d0`, `t_52a99949` (the
-surfaces that adopt the material)
+---
+title: The material, the tokens and the component contract
+rfc: 0045
+category: Contract/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    every sheet under `Source/Stylesheet/`, every component under `Source/Component/`, every page under `Source/pages/`, and `Source/Layout/Base.astro`
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0009 (the build that compiles a sheet)
+    - RFC-0010 (documentation voice)
+    - RFC-0017 (the client surface this material dresses)
+    - "RFC-0019 (vocabulary); `t_15d5d8fd` (the token set promoted to the whole site)"
+    - "`t_30030978` (the token contract tests)"
+    - "`t_6b11bda7` (the fidelity pass)"
+    - "`t_bd4c07b0`"
+    - "`t_e2a377d0`"
+    - "`t_52a99949` (the surfaces that adopt the material)"
+statuses:
+    - name: The site is built from one material, one token set, one stage map and one...
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

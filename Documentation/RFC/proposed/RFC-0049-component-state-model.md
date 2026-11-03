@@ -1,10 +1,46 @@
-# RFC-0049 - The component state model
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** every component in
-`Source/Component/`, the state vocabulary, the material's state rules **Kind:** specification
-**Subject:** surface **Horizon:** now **Supersedes:** none **Superseded by:** none **Task
-dependencies:** RFC-0045 (the material and the token set), RFC-0019 (vocabulary), RFC-0050 (the data
-states), RFC-0051 (the token lifecycle)
+---
+title: The component state model
+rfc: 0049
+category: Specification/Surface
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: |-
+    every component in `Source/Component/`, the state vocabulary, the material's state rules
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0045 (the material and the token set)
+    - RFC-0019 (vocabulary)
+    - RFC-0050 (the data states)
+    - RFC-0051 (the token lifecycle)
+statuses:
+    - name: The set is closed and shared
+      state: open
+      evidence: the rule names no file or command
+    - name: "`active` and `selected` are different states"
+      state: open
+      evidence: the rule names no file or command
+    - name: Focus is never removed, only made visible
+      state: open
+      evidence: the rule names no file or command
+    - name: "`locked` is not `disabled`"
+      state: open
+      evidence: the rule names no file or command
+    - name: "`busy` preserves the geometry"
+      state: open
+      evidence: the rule names no file or command
+    - name: Every state is reachable without a pointer
+      state: open
+      evidence: the rule names no file or command
+    - name: A state changes one channel
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

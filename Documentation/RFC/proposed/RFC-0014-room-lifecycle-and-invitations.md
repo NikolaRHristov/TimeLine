@@ -1,11 +1,31 @@
-# RFC-0014 - Room lifecycle and invitations
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the module's room
-tables, invitations, grants, archival and deletion **Kind:** architecture **Subject:** network
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0005 (a
-room is a database), RFC-0012 (audiences and propagation), RFC-0013 (an invitation carries wrapped
-key epochs), RFC-0015 (deletion is gated on export); t_1621cc5c (substrate research); implementing
-card to be created: "Room lifecycle, invitations and grants"
+---
+title: Room lifecycle and invitations
+rfc: 0014
+category: Architecture/Network
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the module's room tables, invitations, grants, archival and deletion
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0005 (a room is a database)
+    - RFC-0012 (audiences and propagation)
+    - RFC-0013 (an invitation carries wrapped key epochs)
+    - |-
+        RFC-0015 (deletion is gated on export); t_1621cc5c (substrate research); implementing card to be created: "Room lifecycle, invitations and grants"
+statuses:
+    - name: A room has four states and a side state, a membership has five, and an...
+      state: open
+      evidence: the rule names no file or command
+    - name: "``` room"
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

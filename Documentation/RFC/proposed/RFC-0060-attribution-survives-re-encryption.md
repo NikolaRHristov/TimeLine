@@ -1,13 +1,47 @@
-# RFC-0060 - Attribution survives re-encryption because it signs plaintext
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the envelope, the
-signature chain, the propagation record, published attribution **Kind:** contract **Subject:**
-identity **Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:**
-RFC-0013 §Authorship (the signature this record gives a canonical form), RFC-0013 (the
-`additionalData` rule it distinguishes itself from), RFC-0021 (observation provenance, which is
-about who saw rather than who wrote), RFC-0015 (`signature: null`, the degenerate chain), RFC-0059
-(a copy and a retraction); implementing card to be created: "Canonical post form and the signature
-chain"
+---
+title: Attribution survives re-encryption because it signs plaintext
+rfc: 0060
+category: Contract/Identity
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the envelope, the signature chain, the propagation record, published attribution
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0013 §Authorship (the signature this record gives a canonical form)"
+    - "RFC-0013 (the `additionalData` rule it distinguishes itself from)"
+    - RFC-0021 (observation provenance, which is about who saw rather than who wrote)
+    - "RFC-0015 (`signature: null`, the degenerate chain)"
+    - |-
+        RFC-0059 (a copy and a retraction); implementing card to be created: "Canonical post form and the signature chain"
+statuses:
+    - name: What is signed
+      state: open
+      evidence: the rule names no file or command
+    - name: "RFC-0013's `additionalData` is not this signature"
+      state: open
+      evidence: the rule names no file or command
+    - name: A copy is a chain, not a replacement
+      state: open
+      evidence: the rule names no file or command
+    - name: Re-encryption changes the ciphertext and must not change the chain
+      state: open
+      evidence: the rule names no file or command
+    - name: What survives is attribution, not the name
+      state: open
+      evidence: the rule names no file or command
+    - name: A copier signs the act of copying, not the content
+      state: open
+      evidence: the rule names no file or command
+    - name: An edited copy is a fork, and a fork has a new head
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

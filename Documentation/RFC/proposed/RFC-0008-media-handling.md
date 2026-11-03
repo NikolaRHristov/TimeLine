@@ -1,8 +1,30 @@
-# RFC-0008 - Media handling
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the extractor, the
-shadow store, export, the site build **Kind:** architecture **Subject:** data **Horizon:** now
-**Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001
+---
+title: Media handling
+rfc: 0008
+category: Architecture/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: now
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the extractor, the shadow store, export, the site build
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001
+statuses:
+    - name: Media is referenced by default and copied only on request
+      state: open
+      evidence: the rule names no file or command
+    - name: "A post stores `media"
+      state: open
+      evidence: the rule names no file or command
+    - name: Blob URLs are discarded at extraction time
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

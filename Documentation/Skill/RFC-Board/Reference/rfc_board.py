@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Archived tool: rfc_board.py
 #
-# What it does: Assemble the RFC project board from the committed record files: render one body per record, create and refresh the issues, add them to the project, write the five field values and verify the result.
+# What it does: Assemble the RFC project board from the committed record files: render one body per record, create and refresh the issues, add them to the project, write each item's field values and verify the result.
 # Kept here so a later session reuses it instead of rewriting it.
 # Run it from the repository root; it reads the paths it names and nothing else.
 # Archived: 2026-11-03 by Documentation/Skill/Tool-Archive/Reference/archive_tool.py
@@ -14,10 +14,11 @@ project item follows the issue. Nothing here writes back into a record.
            work directory, leak-scan the bodies and prove each Decision section
            survived the round trip byte for byte. Touches nothing remote.
   publish  create the issues that are missing, refresh the bodies that drifted,
-           add the issues to the project and write the five field values.
+           add the issues to the project and write each item's field values.
            Idempotent: a second run creates nothing and rewrites nothing.
   verify   an independent read of the published project - counts, field values,
-           views, one file-to-board trace, a leak sweep - and an exit code.
+           views, one file-to-board trace, every item's axes against its record,
+           a leak sweep - and an exit code.
 
 Only committed records are published. `git ls-files Documentation/RFC/proposed` is
 the list; a record still untracked is somebody's work in progress, so it is
@@ -48,6 +49,17 @@ DEFAULT_BRANCH = "Current"
 
 STATUS_OPTIONS = ("Proposed", "Implemented")
 
+# The record's own status vocabulary is lowercase and is a lifecycle, not a board
+# option: `settled` is the record's word for what the project calls Implemented.
+# `superseded` has no option on the board, so a record that carries it renders its
+# own word in the body and leaves the field alone rather than claiming a state.
+BOARD_STATUS = {
+    "proposed": "Proposed",
+    "settled": "Implemented",
+    "superseded": "Superseded",
+}
+
+
 # The three classification axes, each a closed vocabulary. No value appears on
 # two axes: `governance` was a class and an area at once, so a table sorted by
 # one and a board filtered by the other returned the same rows, and the second
@@ -56,7 +68,16 @@ AXES = (
     ("Kind", ("architecture", "contract", "policy", "specification", "method")),
     (
         "Subject",
-        ("data", "transport", "identity", "surface", "network", "operation", "economy", "text"),
+        (
+            "data",
+            "transport",
+            "identity",
+            "surface",
+            "network",
+            "operation",
+            "economy",
+            "text",
+        ),
     ),
     ("Horizon", ("now", "next", "later")),
 )
@@ -93,11 +114,15 @@ LEAK = re.compile(
     + r"|gho_|ghp_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|/private/tmp"
 )
 
-HEADER_FIELD = re.compile(
-    r"\*\*(Status|Date|Owner|Applies to|Kind|Subject|Horizon|Supersedes|Superseded by|"
-    r"Task dependencies):\*\*"
-)
-H1 = re.compile(r"^# (RFC-\d{4})[ \t]+[-\u2014][ \t]+(.+)$")
+# A record states its metadata in a YAML block at the top of the file. The block
+# is written by `Scripts/RFC-Frontmatter.mjs`, and it is read here by a parser for
+# the shape that writer emits rather than by a general YAML library: this tool
+# runs under whatever `python3` the operator has, and a dependency on PyYAML would
+# make `pnpm run RFC:Board` fail on a machine that has no network. The parser is
+# narrow on purpose - a construct it does not know is a `RecordError` naming the
+# line, never a value guessed into place.
+KEY_LINE = re.compile(r"^([a-z_]+):(?:[ ](.*))?$")
+ITEM_LINE = re.compile(r"^([ ]*)- (.*)$")
 CARD_ID = re.compile(r"\bt_[0-9a-f]{8}\b")
 
 ITEMS_QUERY = """
@@ -179,26 +204,117 @@ def untracked_files(root: Path) -> list[str]:
     return sorted(name for name in out.split("\0") if name.endswith(".md"))
 
 
-def split_header(text: str) -> tuple[str, str]:
-    """Return (header block, remainder). The header is everything before `## `."""
-    index = text.find("\n## ")
-    if index == -1:
-        raise RecordError("no section heading found")
-    return text[:index], text[index:]
+def split_frontmatter(text: str) -> tuple[dict, str]:
+    """The metadata block at the top of a record, and the body that follows it."""
+    if not text.startswith("---\n"):
+        raise RecordError("no frontmatter block at the top of the file")
+    end = text.find("\n---\n", 3)
+    if end == -1:
+        raise RecordError("the frontmatter block is never closed")
+    return parse_block(text[4 : end + 1].split("\n")), text[end + 5 :]
 
 
-def parse_header(block: str) -> dict[str, str]:
-    """Header fields wrap across lines, so the block is flattened first."""
-    flat = re.sub(r"\s+", " ", block).strip()
-    matches = list(HEADER_FIELD.finditer(flat))
-    fields: dict[str, str] = {}
-    for position, match in enumerate(matches):
-        start = match.end()
-        end = (
-            matches[position + 1].start() if position + 1 < len(matches) else len(flat)
-        )
-        fields[match.group(1)] = flat[start:end].strip()
+def read_scalar(text: str):
+    """One scalar: plain, double-quoted, or single-quoted."""
+    if text.startswith('"'):
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as error:
+            raise RecordError(f"a double-quoted scalar does not read back: {error}")
+    if text.startswith("'"):
+        if len(text) < 2 or not text.endswith("'"):
+            raise RecordError("a single-quoted scalar is not closed")
+        return text[1:-1].replace("''", "'")
+    return text
+
+
+def read_block(lines: list[str]) -> str:
+    """A literal block scalar: the lines under `|-`, with their common indent removed."""
+    body = [line for line in lines if line.strip()]
+    if not body:
+        raise RecordError("a block scalar holds nothing")
+    indent = min(len(line) - len(line.lstrip(" ")) for line in body)
+    return "\n".join(line[indent:] if line.strip() else "" for line in lines).rstrip(
+        "\n"
+    )
+
+
+def parse_block(lines: list[str]) -> dict:
+    """Every top-level `key: value` in a block, with the sequences it holds."""
+    fields: dict[str, object] = {}
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if not line.strip():
+            index += 1
+            continue
+        match = KEY_LINE.match(line)
+        if not match:
+            raise RecordError(f"unreadable frontmatter line {index + 1}: {line!r}")
+        key, rest = match.group(1), (match.group(2) or "").strip()
+        index += 1
+        if rest in ("|-", "|"):
+            start = index
+            while index < len(lines) and (
+                not lines[index].strip() or lines[index].startswith(" ")
+            ):
+                index += 1
+            fields[key] = read_block(lines[start:index])
+        elif rest == "[]":
+            fields[key] = []
+        elif rest:
+            fields[key] = read_scalar(rest)
+        else:
+            fields[key], index = parse_sequence(lines, index)
     return fields
+
+
+def parse_sequence(lines: list[str], index: int) -> tuple[list, int]:
+    """A block sequence, whose items are scalars, block scalars or small mappings."""
+    items: list = []
+    indent = None
+    while index < len(lines):
+        line = lines[index]
+        if not line.strip():
+            index += 1
+            continue
+        match = ITEM_LINE.match(line)
+        if match is None or (indent is not None and len(match.group(1)) != indent):
+            if indent is None:
+                raise RecordError(
+                    f"line {index + 1}: a key with no value holds no sequence"
+                )
+            break
+        if indent is None:
+            indent = len(match.group(1))
+        first = match.group(2)
+        index += 1
+        base = indent + 2
+        continuation: list[str] = []
+        while index < len(lines):
+            following = lines[index]
+            if not following.strip():
+                index += 1
+                continue
+            if len(following) - len(following.lstrip(" ")) < base:
+                break
+            continuation.append(following[base:])
+            index += 1
+        items.append(parse_item(first, continuation))
+    if indent is None:
+        raise RecordError(f"line {index + 1}: a key with no value holds no sequence")
+    return items, index
+
+
+def parse_item(first: str, continuation: list[str]):
+    """One sequence item, in the three shapes the writer emits."""
+    if first in ("|-", "|"):
+        return read_block(continuation)
+    if KEY_LINE.match(first):
+        return parse_block([first, *continuation])
+    if continuation:
+        raise RecordError(f"a scalar item carries a continuation: {first!r}")
+    return read_scalar(first)
 
 
 def section(body: str, name: str, required: bool = True) -> str:
@@ -217,28 +333,58 @@ def section(body: str, name: str, required: bool = True) -> str:
 
 def parse_record(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
-    first = text.splitlines()[0] if text else ""
-    match = H1.match(first)
-    if not match:
-        raise RecordError(f"unexpected H1 {first!r}")
-    header_block, body = split_header(text)
-    fields = parse_header(header_block)
-    decision = section(body, "Decision")
+    fields, body = split_frontmatter(text)
+
+    required = ("title", "rfc", "category", "kind", "status", "horizon", "depends")
+    missing = [key for key in required if key not in fields]
+    if missing:
+        raise RecordError(f"the frontmatter is missing {', '.join(missing)}")
+    if fields["kind"] != "rfc":
+        raise RecordError(f"kind {fields['kind']!r} is not a record")
+
+    category = str(fields["category"])
+    kind, separator, subject = category.partition("/")
+    if not separator:
+        raise RecordError(f"category {category!r} is not <Kind>/<Subject>")
+    kind, subject = kind.lower(), subject.lower()
+    for axis, value in (
+        ("Kind", kind),
+        ("Subject", subject),
+        ("Horizon", fields["horizon"]),
+    ):
+        if value not in AXIS_OPTIONS[axis]:
+            raise RecordError(f"{axis} {value!r} is not one of {AXIS_OPTIONS[axis]}")
+
+    status = BOARD_STATUS.get(str(fields["status"]).lower())
+    if status is None:
+        raise RecordError(
+            f"status {fields['status']!r} is not one of {tuple(BOARD_STATUS)}"
+        )
+
+    try:
+        number = int(str(fields["rfc"]).zfill(4))
+    except ValueError:
+        raise RecordError(f"rfc {fields['rfc']!r} is not a number")
+
+    depends = fields["depends"]
+    if not isinstance(depends, list):
+        raise RecordError("depends is not a list")
+
     return {
-        "number": int(match.group(1).split("-")[1]),
-        "id": match.group(1),
-        "title": match.group(2).strip(),
+        "number": number,
+        "id": f"RFC-{number:04d}",
+        "title": str(fields["title"]),
         "path": path.as_posix(),
-        "status": fields.get("Status", "").split()[0] if fields.get("Status") else "",
-        "date": fields.get("Date", ""),
-        "kind": fields.get("Kind", "").split()[0] if fields.get("Kind") else "",
-        "subject": fields.get("Subject", "").split()[0] if fields.get("Subject") else "",
-        "horizon": fields.get("Horizon", "").split()[0] if fields.get("Horizon") else "",
-        "task_dependencies": fields.get("Task dependencies", ""),
-        "applies_to": fields.get("Applies to", ""),
-        "supersedes": fields.get("Supersedes", ""),
-        "superseded_by": fields.get("Superseded by", ""),
-        "decision": decision,
+        "status": status,
+        "date": str(fields.get("date", "")),
+        "kind": kind,
+        "subject": subject,
+        "horizon": str(fields["horizon"]),
+        "task_dependencies": ", ".join(str(item) for item in depends),
+        "applies_to": str(fields.get("applies_to", "")),
+        "supersedes": str(fields.get("supersedes", "")),
+        "superseded_by": str(fields.get("superseded_by", "")),
+        "decision": section(body, "Decision"),
         "verification": section(body, "Verification"),
         "open_questions": section(body, "Open questions", required=False),
     }
@@ -714,11 +860,13 @@ def cmd_publish(args) -> int:
     if missing_fields:
         print(f"  warn fields absent from the project: {missing_fields}")
     rfc_text = fields.get("RFC", {}).get("dataType") == "TEXT"
-    options: dict[str, object] = {"Status": option_id(fields, "Status", "Proposed")}
-    for axis, values in AXES:
-        present = [option["name"] for option in fields.get(axis, {}).get("options", [])]
-        options[axis] = {
-            name: option_id(fields, axis, name) for name in values if name in present
+    options: dict[str, dict[str, str]] = {}
+    for field, values in (("Status", STATUS_OPTIONS), *AXES):
+        present = [
+            option["name"] for option in fields.get(field, {}).get("options", [])
+        ]
+        options[field] = {
+            name: option_id(fields, field, name) for name in values if name in present
         }
     ids = {name: fields[name]["id"] for name in FIELDS if name in fields}
 
@@ -838,20 +986,14 @@ def cmd_publish(args) -> int:
             print(f"  would add {title}")
         attached = len(pending)
 
-    def value_of(field: str, record: dict) -> str:
+    def value_of(field: str, record: dict, value: str) -> str:
         """GraphQL input objects take unquoted keys, so each value is a literal."""
         if field == "RFC":
             if rfc_text:
                 padded = f"{record['number']:04d}"
                 return f"{{text: {json.dumps(padded)}}}"
             return f"{{number: {record['number']}}}"
-        if field == "Status":
-            return f"{{singleSelectOptionId: {json.dumps(options['Status'])}}}"
-        if field == "Class":
-            return f"{{singleSelectOptionId: {json.dumps(options['Class'][record['decision_class']])}}}"
-        if field == "Area":
-            return f"{{singleSelectOptionId: {json.dumps(options['Area'][areas[record['id']]])}}}"
-        raise AssertionError(field)
+        return f"{{singleSelectOptionId: {json.dumps(options[field][value])}}}"
 
     slices = 0
     written = 0
@@ -865,12 +1007,14 @@ def cmd_publish(args) -> int:
                 failures.append(f"no project item for {title}")
                 continue
             item_id = current["id"]
-            area = areas.get(record["id"], "")
-            desired: dict[str, object] = {"RFC": record["number"], "Status": "Proposed"}
-            if record["decision_class"] in options["Class"]:
-                desired["Class"] = record["decision_class"]
-            if area in options["Area"]:
-                desired["Area"] = area
+            desired: dict[str, object] = {
+                "RFC": record["number"],
+                "Status": record["status"] or "Proposed",
+            }
+            for axis, _ in AXES:
+                value = record[axis.lower()]
+                if value in options[axis]:
+                    desired[axis] = value
             cards = cards_of(record)
             if cards and "Cards" in ids:
                 desired["Cards"] = ", ".join(cards)
@@ -878,10 +1022,18 @@ def cmd_publish(args) -> int:
                 if current[field.lower()] == value:
                     unchanged += 1
                     continue
+                if field != "Cards" and value not in options.get(field, {}):
+                    # The record carries a value the project has no option for, so
+                    # the field is left as it stands rather than written as another
+                    # state: a wrong option is a claim, an absent one is a gap.
+                    print(
+                        f"  warn {record['id']}: {field} {value!r} has no option on the project"
+                    )
+                    continue
                 if field == "Cards":
                     literal = f"{{text: {json.dumps(value)}}}"
                 else:
-                    literal = value_of(field, record)
+                    literal = value_of(field, record, str(value))
                 aliases.append(
                     f"f{position}_{field}: updateProjectV2ItemFieldValue(input:{{"
                     f"projectId: {json.dumps(project)}, itemId: {json.dumps(item_id)}, "
@@ -928,7 +1080,7 @@ def cmd_publish(args) -> int:
 
 
 def cmd_verify(args) -> int:
-    root, work, records, areas, slug = prepare(args)
+    root, work, records, slug = prepare(args)
     tool = relative_tool(root)
     failures: list[str] = []
 
@@ -969,9 +1121,8 @@ def cmd_verify(args) -> int:
 
     for label, key in (
         ("RFC", "rfc"),
-        ("Class", "class"),
         ("Status", "status"),
-        ("Area", "area"),
+        *((axis, axis.lower()) for axis, _ in AXES),
     ):
         missing = [item["content"]["title"] for item in titled if not item.get(key)]
         print(f"    without {label}: {len(missing)}")
@@ -991,19 +1142,45 @@ def cmd_verify(args) -> int:
             f"board RFC numbers differ from the corpus: extra {extra} absent {absent}"
         )
 
-    classes = collections.Counter(
-        item["class"]["name"] for item in titled if item.get("class")
-    )
-    print(f"    classes on the board: {json.dumps(dict(sorted(classes.items())))}")
+    for axis, _ in AXES:
+        key = axis.lower()
+        counts = collections.Counter(
+            item[key]["name"] for item in titled if item.get(key)
+        )
+        print(f"    {axis} on the board: {json.dumps(dict(sorted(counts.items())))}")
 
-    # 3 - the five fields, their data types and their options.
+    # 2b - every item's axes equal its record's. This is what the three header
+    # fields are for: the board is derived from the files, so a disagreement is a
+    # stale projection and not a second opinion.
+    by_number = {record["number"]: record for record in records}
+    disagreements: list[str] = []
+    for item in titled:
+        record = by_number.get(item["rfc"]) if item.get("rfc") else None
+        if record is None:
+            continue
+        for axis, _ in AXES:
+            on_item = (item.get(axis.lower()) or {}).get("name")
+            in_file = record[axis.lower()]
+            if on_item != in_file:
+                disagreements.append(
+                    f"RFC-{record['number']:04d} {axis}: board {on_item!r} file {in_file!r}"
+                )
+    print(f"    items whose axes disagree with their record: {len(disagreements)}")
+    for line in disagreements[:5]:
+        print(f"    {line}")
+    if disagreements:
+        failures.append(
+            f"{len(disagreements)} board value(s) disagree with the record: {disagreements[:3]}"
+        )
+
+    # 3 - the fields, their data types and their options.
     fields = project_fields(project)
     names = list(fields)
     print(f"[3] fields: {len(names)} -> {names}")
     absent_fields = [name for name in FIELDS if name not in names]
     if absent_fields:
         failures.append(f"fields absent: {absent_fields}")
-    for name in ("RFC", "Cards", "Status", "Class", "Area"):
+    for name in ("RFC", "Cards", "Status", *[axis for axis, _ in AXES]):
         if name in fields:
             options = [option["name"] for option in fields[name].get("options", [])]
             print(
@@ -1039,15 +1216,26 @@ def cmd_verify(args) -> int:
         print(f"    issue #{item['content']['number']} {item['content']['url']}")
         print(
             f"    board says Status={item['status']['name'] if item['status'] else None!r} "
-            f"Class={item['class']['name'] if item['class'] else None!r} "
-            f"Area={item['area']['name'] if item['area'] else None!r} "
-            f"RFC={item['rfc']}"
+            + " ".join(
+                f"{axis}={item[axis.lower()]['name'] if item.get(axis.lower()) else None!r}"
+                for axis, _ in AXES
+            )
+            + f" RFC={item['rfc']}"
         )
         if not item["status"] or item["status"]["name"] != file_status:
             failures.append(f"{probe}: board status != file status {file_status}")
+        if record is None:
+            failures.append(f"{probe}: the item has no committed record")
+        else:
+            for axis, _ in AXES:
+                on_item = (item.get(axis.lower()) or {}).get("name")
+                if on_item != record[axis.lower()]:
+                    failures.append(
+                        f"{probe}: board {axis} {on_item!r} != file {record[axis.lower()]!r}"
+                    )
 
     # 6 - leak sweep and verbatim decision text over the published bodies.
-    bodies, leaks, _ = bodies_for(records, areas, slug, args.branch, tool)
+    bodies, leaks, _ = bodies_for(records, slug, args.branch, tool)
     published = issue_index(slug, args.limit, with_body=True)
     hits = [
         (issue["number"], match.group(0))

@@ -1,11 +1,46 @@
-# RFC-0032 - Rate limiting and abuse resistance
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the action gateway's
-envelope checks, ingestion backpressure, invitation cost **Kind:** policy **Subject:** transport
-**Horizon:** next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0024 §4
-(the gateway validates rate and quota), RFC-0020 (rate is the only content-adjacent check a blind
-host has), RFC-0004 (ingestion is scheduled work), RFC-0014 (an invitation expires and has a use
-bound); implementing card to be created: "Quota and invite-ledger rows"
+---
+title: Rate limiting and abuse resistance
+rfc: 0032
+category: Policy/Transport
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the action gateway's envelope checks, ingestion backpressure, invitation cost
+supersedes: none
+superseded_by: none
+depends:
+    - "RFC-0024 §4 (the gateway validates rate and quota)"
+    - RFC-0020 (rate is the only content-adjacent check a blind host has)
+    - RFC-0004 (ingestion is scheduled work)
+    - |-
+        RFC-0014 (an invitation expires and has a use bound); implementing card to be created: "Quota and invite-ledger rows"
+statuses:
+    - name: Two dimensions, one gate, envelope fields only
+      state: open
+      evidence: the rule names no file or command
+    - name: Backpressure is applied to the job, never to the person
+      state: open
+      evidence: the rule names no file or command
+    - name: "An identity is free; admission is not"
+      state: open
+      evidence: the rule names no file or command
+    - name: An invitation is not free in three separate ways
+      state: open
+      evidence: the rule names no file or command
+    - name: A room's quota is the room's bill, and exhaustion degrades
+      state: open
+      evidence: the rule names no file or command
+    - name: A refusal is a named code carrying the dimension and the window
+      state: open
+      evidence: the rule names no file or command
+    - name: What this does not defend is stated
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

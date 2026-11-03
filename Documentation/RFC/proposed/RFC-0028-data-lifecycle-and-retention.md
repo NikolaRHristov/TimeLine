@@ -1,11 +1,47 @@
-# RFC-0028 - Data lifecycle and retention
-
-**Status:** Proposed **Date:** 2026-11-02 **Owner:** operator **Applies to:** the shadow store, the
-module's payload rows, the observation log, erasure **Kind:** policy **Subject:** data **Horizon:**
-next **Supersedes:** none **Superseded by:** none **Task dependencies:** RFC-0001 (the store is the
-only complete history), RFC-0021 (an observation names its observer), RFC-0014 (delete is gated on
-export), RFC-0018 (runs and spans already expire), RFC-0012 and RFC-0023 (a delivered copy cannot be
-recalled); implementing card to be created: "Retention terms and the tombstone row"
+---
+title: Data lifecycle and retention
+rfc: 0028
+category: Policy/Data
+kind: rfc
+date: 2026-11-02
+status: proposed
+horizon: next
+registry: Documentation/RFC/README.md
+index: Documentation/RFC/README.md
+owner: operator
+applies_to: the shadow store, the module's payload rows, the observation log, erasure
+supersedes: none
+superseded_by: none
+depends:
+    - RFC-0001 (the store is the only complete history)
+    - RFC-0021 (an observation names its observer)
+    - RFC-0014 (delete is gated on export)
+    - RFC-0018 (runs and spans already expire)
+    - |-
+        RFC-0012 and RFC-0023 (a delivered copy cannot be recalled); implementing card to be created: "Retention terms and the tombstone row"
+statuses:
+    - name: Retention is a configuration term per room, not a constant in code
+      state: open
+      evidence: the rule names no file or command
+    - name: A tombstone is a hash and a reason, not a stub of the text
+      state: open
+      evidence: the rule names no file or command
+    - name: A source deletion is an observation, not a delete
+      state: open
+      evidence: the rule names no file or command
+    - name: Erasure is per author, and it cannot reach another person's copy
+      state: open
+      evidence: the rule names no file or command
+    - name: Erasing the room's history is not a member power
+      state: open
+      evidence: the rule names no file or command
+    - name: "The module enforces the room's clock; the client enforces the store's"
+      state: open
+      evidence: the rule names no file or command
+    - name: A retention term that would outrun an export obligation is refused
+      state: open
+      evidence: the rule names no file or command
+---
 
 ## Decision
 

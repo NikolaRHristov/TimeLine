@@ -295,16 +295,21 @@ def show(skill: str, name: str) -> int:
 
 
 def audit() -> int:
-    """Report every tracked reference file that still names a machine.
+    """Report every skill file that still names a machine.
+
+    A `SKILL.md` is audited beside the reference files: the prose is what a reader
+    trusts, so a home path in the body leaks the same machine a script would, and
+    the tool that stamps a header is not the only writer in this tree.
 
     This file is skipped: it holds the pattern that does the matching, so its own
     definition line is the one place a home path is legitimately written down.
     """
     hits = 0
     self_path = Path(__file__).resolve()
+    audited = set(COMMENT) | {".md"}
 
     for path in sorted(SKILL_ROOT.rglob("*")):
-        if not path.is_file() or path.suffix not in COMMENT:
+        if not path.is_file() or path.suffix.lower() not in audited:
             continue
 
         if path.resolve() == self_path:

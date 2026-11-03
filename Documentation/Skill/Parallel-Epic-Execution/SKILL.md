@@ -66,6 +66,43 @@ At the end, one pass, in this order - each step cheap enough that failing early 
 4. `pnpm run build` (site - the expensive one, last)
 5. a single scrape of the source the epic touched, if it touched a parser
 
+**A generated file must never be formatted.** Step 3 is the one that can quietly corrupt an epic: a
+formatter rewrites bytes a tool owns, and the next `pnpm run check` compares those bytes exactly, so
+the pass that "tidied" the tree turns a current artifact into a stale one. `.prettierignore` carries
+the exclusions and every entry is anchored (`/Target/`, `Maintain/Target/`, `/Content/`,
+`Source/Content/`, `Source/Generated/`, `Maintain/Source/Model/Generated/`,
+`Source/content.config.ts`). An unanchored `Target/` also matches a source directory four levels
+down - `Maintain/Source/Browser/Target/` - so the ignore list is verified by its resolved set, not
+by reading the lines. Prettier's own resolver is the probe:
+
+```sh
+node -e 'import("prettier").then(async ({ getFileInfo }) => { for (const F of ["Source/content.config.ts", "Maintain/Source/Browser/Target/Client.ts"]) { console.log(F, "ignored=" + (await getFileInfo(F, { ignorePath: ".prettierignore" })).ignored); } })'
+```
+
+A generated artifact must print `ignored=true`; a source file that merely lives under a directory
+named like an ignored one must print `ignored=false`. `git diff --stat` over the generated trees
+after the boundary pass must print nothing. A formatter that touched a generated artifact is a
+defect in the ignore list, not in the artifact.
+
+## When two cards cannot both hold
+
+Two cards can each be right and still contradict each other: one reverses a decision the other
+implements, or both claim the same file with different instructions. Guessing which one wins costs
+whichever loses its whole run, and the guess is unrecoverable once the file is written.
+
+Stop, preserve the work, and escalate with four facts. Not a summary, not a concern - these four:
+
+1. **Both card ids**, with the status each is in.
+2. **The contested files**, by path.
+3. **The two contradicting decisions**, quoted as the records or card bodies state them, not
+   paraphrased.
+4. **The commits or blobs** that hold each version, so the coordinator can read both without asking
+   again.
+
+The worker is often right and the coordinator wrong, which is why the escalation carries evidence
+rather than an opinion: twice in one epic the worker's reading held and the plan did not. A blocked
+card costs one card; two implementations of one page cost the epic.
+
 ## Pitfalls
 
 - **A worker that "helpfully" reinstalls** invalidates every other worker's `node_modules` mid-run.
@@ -85,8 +122,9 @@ At the end, one pass, in this order - each step cheap enough that failing early 
   without the boundary pass is unfinished.
 - **A card that rewrites files another card owns mid-run is a blocked card, not a race.** When a
   scope reversal puts two cards on the same file, the later record has to be amended before either
-  worker continues - guessing which record wins costs one of them the whole run. Stop and escalate;
-  the cost of one blocked card is smaller than two implementations of one page.
+  worker continues - guessing which record wins costs one of them the whole run. Stop and escalate
+  with the four facts above; the cost of one blocked card is smaller than two implementations of one
+  page.
 - **A restore after a reversal is a byte-identical copy, proven by hash.** Take the file from the
   commit or the preserved copy, write it, then compare `git hash-object <path>` with
   `git rev-parse <commit>:<path>` (or `cmp` against the preserved copy). A restore that only looks
@@ -95,10 +133,12 @@ At the end, one pass, in this order - each step cheap enough that failing early 
 
 ## Claim → test
 
-| Claim                          | Test                                                                 |
-| ------------------------------ | -------------------------------------------------------------------- |
-| No build ran per edit          | the epic's git log has no build-output churn between feature commits |
-| Validation ran once            | one `pnpm run check` at the end, not N                               |
-| Storage untouched by code work | shadow post count unchanged by a code-only card                      |
-| Ownership was disjoint         | no two concurrent cards touched the same folder                      |
-| A restore is the original      | `git hash-object` of every restored file equals its source blob      |
+| Claim                          | Test                                                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| No build ran per edit          | the epic's git log has no build-output churn between feature commits                                 |
+| Validation ran once            | one `pnpm run check` at the end, not N                                                               |
+| Storage untouched by code work | shadow post count unchanged by a code-only card                                                      |
+| Ownership was disjoint         | no two concurrent cards touched the same folder                                                      |
+| A restore is the original      | `git hash-object` of every restored file equals its source blob                                      |
+| Generated artifacts untouched  | `git diff --stat` over the generated trees is empty after the pass                                   |
+| The ignore list is anchored    | Prettier's `getFileInfo` reports `ignored=false` for a source file under a `Target/`-named directory |
