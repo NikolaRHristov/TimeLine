@@ -52,6 +52,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The push below always targets Current, so the checkout has to be
+          # Current too: checking out the triggering ref and pushing it at
+          # Current would carry another branch's ancestry into this one.
+          ref: Current
 
       - run: |
           echo "Update: $(date)" > .github/Update.md
