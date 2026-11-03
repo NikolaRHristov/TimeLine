@@ -10,3 +10,9 @@
 # interpreter reads `env: bash\r`, is not found, and the script refuses to run on
 # macOS and Linux. `*.sh` keeps this rule even if the one above is narrowed.
 *.sh text eol=lf
+
+# A symlink is a blob whose entire content is the target path. Marking it `-text`
+# keeps any conversion away from it: a CRLF rewrite of `../Documentation/Skill`
+# would point at a directory that does not exist. Git stores the entry as mode
+# 120000 either way; this is the belt to that braces.
+/.agents/skills -text
