@@ -109,6 +109,16 @@ afterwards; the listing is the proof that the tree still parses.
 a pointer to its header for the rest. The header is where the detail lives, because a table that
 tried to hold a script's flags would go stale the first time the script changed.
 
+## Claim → test
+
+| Claim                                              | Test                                                                                                                                                                                |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The destination is the owning skill's `Reference/` | `python3 .../archive_tool.py --skill <Skill> --file <script> --summary "<sentence>" --dry-run` prints `[dry] would record <name> in Documentation/Skill/<Skill>/Reference/Index.md` |
+| An existing file is never replaced silently        | the same call without `--force` exits non-zero and prints `<path> exists; pass --force to replace it`                                                                               |
+| The index gains the row it archived                | `grep -c '<as>' Documentation/Skill/<Skill>/Reference/Index.md` returns one more than before the call                                                                               |
+| A home path is scrubbed on the way in              | `python3 .../archive_tool.py --audit` prints `clean: no home paths` and exits 0                                                                                                     |
+| The tree still parses after an edit to the tool    | `python3 .../archive_tool.py --list` exits 0 and prints every skill directory with its files and sizes                                                                              |
+
 ## References
 
 | File                | Covers                                              |

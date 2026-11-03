@@ -1,6 +1,6 @@
 ---
 name: timeline-bookmarks
-description: Drive the bookmark pipeline: scrape, publish, build.
+description: "Use when the saved-post archive is read, scraped or published."
 license: CC0-1.0
 ---
 

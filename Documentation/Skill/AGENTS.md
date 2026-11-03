@@ -22,6 +22,8 @@ Read the skill before the task. A skill states the failure it exists to prevent.
   route twice and fails a page whose content waits for hydration.
 - **`RFC-Board/`** - assembling the public project from the committed records. The file is
   authoritative, the issue follows it, the project item follows the issue; nothing writes back.
+- **`Skill-Authoring/`** - where a lesson lives: this repository or an agent profile, the naming and
+  the anonymisation gate, and `SkillContract.mjs`, the check that holds the tree to them.
 - **`SpacetimeDB-Local/`** - running and editing the local module.
 - **`Timeline-Bookmarks/`** - reading and refreshing the saved-post archive.
 - **`Timeline-Browser-Transport/`** - driving a person's own browser over CDP.

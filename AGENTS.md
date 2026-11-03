@@ -19,6 +19,7 @@ task, not after it fails.**
 | Several agents working the same tree at once                 | `Documentation/Skill/Parallel-Epic-Execution/SKILL.md`     |
 | The gateway, the board or the workers stall                  | `Documentation/Skill/Timeline-Hermes-Maintenance/SKILL.md` |
 | A script worked and should outlive the session that wrote it | `Documentation/Skill/Tool-Archive/SKILL.md`                |
+| Writing, moving or checking a skill (here or in a profile)   | `Documentation/Skill/Skill-Authoring/SKILL.md`             |
 
 Each directory carries a `Reference/Index.md` listing its archived files; a skill's body holds the
 rules and points at the worked instance rather than inlining it.

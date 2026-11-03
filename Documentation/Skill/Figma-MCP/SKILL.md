@@ -136,6 +136,16 @@ marker size and corner radius ramp away from the selected stage. That ramp is a 
 distance from the selection (`Ladder` in `Provenance.tsx`), so the rail holds any number of stages
 without a new rule.
 
+## Claim → test
+
+| Claim                                           | Test                                                                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| The server is registered and reachable          | `hermes mcp test figma` prints `Auth: OAuth 2.0`, `Connected` and a tool count                                                        |
+| The stored token cannot read the REST API       | `curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" https://api.figma.com/v1/me` prints `403`                   |
+| A large reply survives as a file                | `python3 mcp_call.py get_metadata '{"fileKey":"<KEY>","nodeId":"4-4"}' figma-meta.xml` writes the file and prints its first 600 bytes |
+| A file card opens only through the input domain | `node cdp-figma-click.js "<folder URL>" "<card name>"` prints `after:` with the resulting `location.href`                             |
+| The layers panel is a cross-check, not a source | the row count printed by `cdp-figma-tree.js` matches the node count in the `get_metadata` reply                                       |
+
 ## References
 
 | File                 | Covers                                                      |

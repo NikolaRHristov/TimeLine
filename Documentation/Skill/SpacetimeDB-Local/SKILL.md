@@ -1,5 +1,5 @@
 ---
-name: spacetimedb-local-module
+name: spacetimedb-local
 description: Use when running a SpacetimeDB module locally.
 version: 1.0.0
 author: Hermes Agent
