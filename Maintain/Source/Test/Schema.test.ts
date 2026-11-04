@@ -238,6 +238,7 @@ test("the catalog tables are declared, and the archive keeps its own names", () 
 			"capability",
 			"generation",
 			"lease",
+			"property",
 			"probe",
 			"belief",
 			"trace",
@@ -258,6 +259,30 @@ test("the catalog tables are declared, and the archive keeps its own names", () 
 			"ingestedAt",
 		],
 		"the disclosure table is `probe`, and it declares the columns the catalog names",
+	);
+
+	// The private truth the disclosure is computed from. Asserted beside `probe`
+	// on purpose: the receipt and the thing it quotes are two declarations that
+	// can drift apart while both files stay self-consistent.
+	assert.deepEqual(
+		namesFor(entity("property"), "module"),
+		["id", "capability", "name", "version", "resource", "value", "evidence", "updatedAt"],
+		"the private-truth table is `property`, and it declares the columns the contract names",
+	);
+
+	// Private, and reachable only through the two lookups the reveal path makes.
+	// A dropped index or a flipped `public` passes the byte comparison - the
+	// generated file would simply agree with the declaration - so both are
+	// asserted here rather than left to the generator.
+	assert.equal(
+		entity("property").module?.public,
+		false,
+		"the private truth must not be published: a public table is one a subscriber reads",
+	);
+	assert.deepEqual(
+		entity("property").module?.index,
+		["capability", "resource"],
+		"the property table must index the capability and the entitlement resource",
 	);
 
 	// The archive's observation is not the catalog's: same columns, same key, and

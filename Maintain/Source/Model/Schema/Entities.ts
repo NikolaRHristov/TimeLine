@@ -688,6 +688,78 @@ const Lease: Entity = {
 };
 
 /**
+ * The private truth about one capability's property.
+ *
+ * The one table no reader sees. `probe` records what an audience was told and
+ * `belief` records what it inferred, so both are about a disclosure; this is
+ * the thing disclosed. It is separate from them because it has exactly one
+ * writer and no readers: a table a subscriber can read, and a table only a
+ * reducer can read, are different objects with different rules, and merging
+ * them would put the truth in a row somebody is subscribed to.
+ *
+ * `value` and `evidence` are separate columns for a reason that is not
+ * organisation. A reveal computes a disclosure from `value` and must not copy
+ * `evidence`, and "compute only the permitted disclosure" is only a rule with
+ * something to obey: a column that exists, sits one line away, and is never
+ * disclosed.
+ *
+ * `resource` is declared here rather than passed by the caller. A probe names a
+ * capability and a property; the entitlement a reveal of that property needs is
+ * the property's own fact. A caller that named its own resource could present a
+ * lease on anything it holds and read a property it was never granted.
+ */
+const Property: Entity = {
+	name: "property",
+	doc: "The private truth about one capability's property: what it is, and why it is believed.",
+	model: {
+		type: "PropertyRecord",
+		doc: "A property as the catalog keeps it: the truth, the evidence behind it, and the entitlement a reveal of it requires.",
+		fields: {
+			id: {
+				kind: "string",
+				doc: "`<capability>:<property>`, where the capability is its id and not its bare name - a capability version bump re-declares its properties from one, so the key has to say which declaration a truth belongs to.",
+			},
+			capability: {
+				kind: "string",
+				doc: "The capability id, `<name>@<version>` - the same value `probe.capability` carries.",
+			},
+			name: {
+				kind: "string",
+				doc: "The property's own name, without a version. `probe.property` names this, and the version travels beside it.",
+			},
+			version: {
+				kind: "integer",
+				column: "u32",
+				doc: "The property's own monotone version. Seeing the current truth is a separate entitlement, so a reveal pins one of these numbers and a receipt never turns ambiguous when the truth moves on.",
+			},
+			resource: {
+				kind: "string",
+				doc: "The lease resource a reveal of this property requires - the entitlement binding. Declared, never supplied: a caller that named its own resource could present a lease on anything it holds.",
+			},
+			value: {
+				kind: "string",
+				doc: "The private truth. No subscriber reads it, no reducer returns it, no view projects it: a reveal computes a disclosure from it, and the disclosure is what leaves.",
+			},
+			evidence: {
+				kind: "string",
+				doc: "Why the value is believed. Never disclosed, and that is its purpose: a disclosure computed from this row has something it must not copy.",
+			},
+			updatedAt: {
+				kind: "timestamp",
+				doc: "`T_ingest` - when the module last accepted a write of this truth. The row is replaced rather than appended, so its own clock is the only record of when the truth moved.",
+			},
+		},
+	},
+	module: {
+		table: "property",
+		key: "id",
+		index: ["capability", "resource"],
+		public: false,
+		doc: "One row per `<capability>:<property>`. Private like the other catalog tables: no subscriber reads it, no reducer returns it, no view projects it. A new version rewrites the row, and the receipt keeps what was told at the old one.",
+	},
+};
+
+/**
  * What one audience was told about one property, at one version.
  *
  * Immutable, because a probe row is the receipt for a disclosure: rewriting one
@@ -892,6 +964,7 @@ export const Entities: readonly Entity[] = [
 	Capability,
 	Generation,
 	Lease,
+	Property,
 	Probe,
 	Belief,
 	Trace,

@@ -187,6 +187,29 @@ const lease = table(
 	},
 );
 
+/** One row per `<capability>:<property>`. Private like the other catalog tables: no subscriber reads it, no reducer returns it, no view projects it. A new version rewrites the row, and the receipt keeps what was told at the old one. */
+const property = table(
+	{ name: "property", public: false },
+	{
+		/** `<capability>:<property>`, where the capability is its id and not its bare name - a capability version bump re-declares its properties from one, so the key has to say which declaration a truth belongs to. */
+		id: t.string().primaryKey(),
+		/** The capability id, `<name>@<version>` - the same value `probe.capability` carries. */
+		capability: t.string().index(),
+		/** The property's own name, without a version. `probe.property` names this, and the version travels beside it. */
+		name: t.string(),
+		/** The property's own monotone version. Seeing the current truth is a separate entitlement, so a reveal pins one of these numbers and a receipt never turns ambiguous when the truth moves on. */
+		version: t.u32(),
+		/** The lease resource a reveal of this property requires - the entitlement binding. Declared, never supplied: a caller that named its own resource could present a lease on anything it holds. */
+		resource: t.string().index(),
+		/** The private truth. No subscriber reads it, no reducer returns it, no view projects it: a reveal computes a disclosure from it, and the disclosure is what leaves. */
+		value: t.string(),
+		/** Why the value is believed. Never disclosed, and that is its purpose: a disclosure computed from this row has something it must not copy. */
+		evidence: t.string(),
+		/** `T_ingest` - when the module last accepted a write of this truth. The row is replaced rather than appended, so its own clock is the only record of when the truth moved. */
+		updatedAt: t.string(),
+	},
+);
+
 /** Immutable. One row per disclosure, keyed by content so replaying a probe appends nothing. */
 const probe = table(
 	{ name: "probe", public: false },
@@ -264,6 +287,7 @@ export const spacetimedb = schema({
 	capability,
 	generation,
 	lease,
+	property,
 	probe,
 	belief,
 	trace,

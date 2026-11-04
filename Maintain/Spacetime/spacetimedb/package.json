@@ -7,7 +7,8 @@
 	"author": "",
 	"scripts": {
 		"build": "spacetime build",
-		"publish": "spacetime publish"
+		"publish": "spacetime publish",
+		"test": "node --import ./Test/Support/Register.mjs --test Test/*.test.ts"
 	},
 	"dependencies": {
 		"spacetimedb": "2.14.0"

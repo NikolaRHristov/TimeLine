@@ -225,6 +225,26 @@ export type LeaseRecord = {
 	state: "held" | "released";
 };
 
+/** A property as the catalog keeps it: the truth, the evidence behind it, and the entitlement a reveal of it requires. */
+export type PropertyRecord = {
+	/** `<capability>:<property>`, where the capability is its id and not its bare name - a capability version bump re-declares its properties from one, so the key has to say which declaration a truth belongs to. */
+	id: string;
+	/** The capability id, `<name>@<version>` - the same value `probe.capability` carries. */
+	capability: string;
+	/** The property's own name, without a version. `probe.property` names this, and the version travels beside it. */
+	name: string;
+	/** The property's own monotone version. Seeing the current truth is a separate entitlement, so a reveal pins one of these numbers and a receipt never turns ambiguous when the truth moves on. */
+	version: number;
+	/** The lease resource a reveal of this property requires - the entitlement binding. Declared, never supplied: a caller that named its own resource could present a lease on anything it holds. */
+	resource: string;
+	/** The private truth. No subscriber reads it, no reducer returns it, no view projects it: a reveal computes a disclosure from it, and the disclosure is what leaves. */
+	value: string;
+	/** Why the value is believed. Never disclosed, and that is its purpose: a disclosure computed from this row has something it must not copy. */
+	evidence: string;
+	/** `T_ingest` - when the module last accepted a write of this truth. The row is replaced rather than appended, so its own clock is the only record of when the truth moved. */
+	updatedAt: string;
+};
+
 /** A receipt for one disclosure - what was revealed, to whom, at which property version, and when. */
 export type ProbeRecord = {
 	/** `<capability>:<property>:<propertyVersion>:<audience>` - the reveal is its own receipt, so a second probe at the same version finds this row instead of appending a duplicate. */
