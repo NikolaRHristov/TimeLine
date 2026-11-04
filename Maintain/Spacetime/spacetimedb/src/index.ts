@@ -1,4 +1,19 @@
-import { SenderError, t, type InferSchema, type ReducerCtx } from "spacetimedb/server";
+// Runtime value classes come from the root package, not `spacetimedb/server`.
+import { Timestamp } from "spacetimedb";
+import { SenderError, t } from "spacetimedb/server";
+import {
+	currentGrant,
+	extendDeadline,
+	HELD,
+	isLive,
+	liveGrant,
+	microsOf,
+	nextFence,
+	nowOf,
+	requireCoherentGeneration,
+	writeGrant,
+	type Lease,
+} from "./Catalog";
 // This sub-package resolves imports the way the SpacetimeDB module bundler
 // does - without an extension - which is why it is the one place in the
 // repository that does not spell `.ts`.
@@ -220,79 +235,70 @@ export const attach = spacetimedb.reducer(
  * superseded.
  */
 
-/** The reducer context, narrowed to this module's own tables. */
-type Ctx = ReducerCtx<InferSchema<typeof spacetimedb>>;
+/**
+ * The content a trace row is keyed by, as one unambiguous string.
+ *
+ * Only what the caller states about the act is here: `kind`, `subject` and
+ * `payload`. `id` is what this produces, so it cannot be an input; `at` is the
+ * writer's claim about when the act happened, and a retry that restates the
+ * instant is still the same act - keying on it would append a second row for
+ * one piece of evidence. `generation`, `ingestedAt`, `scheduledAt` and `ranAt`
+ * are stamps this module writes, so none of them can be part of what a caller
+ * is deduplicated on either.
+ *
+ * Each field states its length before its text, because a field can hold the
+ * separator: `["a|b", "c"]` and `["a", "b|c"]` must not name the same key.
+ */
+function traceContent(kind: string, subject: string, payload: string): string {
+	return [kind, subject, payload].map((field) => `${field.length}:${field}`).join("|");
+}
+
+/** The FNV-1a 64-bit offset basis and prime, and the mask that keeps a sum in range. */
+const FNV_OFFSET_BASIS = 0xcbf29ce484222325n;
+const FNV_PRIME = 0x100000001b3n;
+const U64_MASK = (1n << 64n) - 1n;
 
 /**
- * The sequence number a generation id states, or null when it states none.
+ * The FNV-1a 64-bit digest of `text`, as sixteen lowercase hex digits.
  *
- * Ids are dense decimal sequence numbers and the `generation` table has no
- * sequence column, so the number is read out of the key itself. Comparing the
- * parsed number back against the key is what makes that fail closed: `01`,
- * `1.0`, `-1` and ` 1` all parse to a number and none of them round-trips, so
- * each is treated as no generation rather than as generation `1`.
+ * A digest rather than the encoding itself because `payload` is opaque JSON of
+ * unbounded length and `id` is the primary key: repeating the payload inside
+ * the key would store every trace twice. It is written out here rather than
+ * taken from a package because a reducer is replayed - the same text has to
+ * produce the same key on every host, and a digest whose version a replay has
+ * to match is one more thing that can disagree.
+ *
+ * `charCodeAt` reads UTF-16 code units, which the language fixes whether or not
+ * a runtime happens to hold the string as UTF-8.
  */
-function generationSequence(id: string): number | null {
-	const sequence = Number(id);
-	if (!Number.isSafeInteger(sequence) || sequence < 1) return null;
-	return String(sequence) === id ? sequence : null;
+function digestOf(text: string): string {
+	let hash = FNV_OFFSET_BASIS;
+
+	for (let index = 0; index < text.length; index += 1) {
+		hash = ((hash ^ BigInt(text.charCodeAt(index))) * FNV_PRIME) & U64_MASK;
+	}
+
+	return hash.toString(16).padStart(16, "0");
+}
+
+/** The id a trace row is stored under: a digest of its content, and of nothing else. */
+function traceId(kind: string, subject: string, payload: string): string {
+	return `trace:${digestOf(traceContent(kind, subject, payload))}`;
 }
 
 /**
- * Whether a generation is the latest bound one.
- *
- * A generation is superseded by the existence of its successor, never by a
- * column someone rewrote: `bind` computes a successor's id as its parent's
- * sequence plus one, so one key lookup answers the whole question and the
- * predecessor stays byte-identical. A sequence at the top of the range has no
- * successor to be superseded by, so it is the latest rather than a lookup that
- * would wrap.
- */
-function isLatestBoundGeneration(ctx: Ctx, generationId: string): boolean {
-	if (ctx.db.generation.id.find(generationId) === null) return false;
-
-	const sequence = generationSequence(generationId);
-	if (sequence === null) return false;
-
-	const successor = sequence + 1;
-	if (!Number.isSafeInteger(successor)) return true;
-
-	return ctx.db.generation.id.find(String(successor)) === null;
-}
-
-/**
- * Refuse a write that names any generation but the latest bound one.
- *
- * Coherence is the whole point of the column: a row naming a generation claims
- * the act happened under that policy, so a worker still carrying an older one
- * would otherwise write as though the policy had not moved. Every reducer that
- * writes under a generation calls this one function, so the refusal has a single
- * wording and a single meaning. It reads, compares and throws; it writes nothing,
- * so a refusal leaves no partial row behind.
- *
- * The message carries the reason code the catalog's own manifest declares rather
- * than a list of conditions: the caller learns that its write did not land, not
- * which of several things it got wrong.
- *
- * Kept unexported on purpose - the entry file's named exports are the values
- * SpacetimeDB registers, and a helper is a module-level function that the
- * reducers in this file call directly.
- */
-function assertLatestBoundGeneration(ctx: Ctx, generationId: string): void {
-	if (isLatestBoundGeneration(ctx, generationId)) return;
-	throw new SenderError(
-		`admission-refused: generation ${generationId} is not the latest bound one`,
-	);
-}
-
-/**
- * Append one trace row: evidence of an act, keyed by its instant, kind and
- * subject.
+ * Append one trace row: evidence of an act, keyed by the act's content.
  *
  * A trace is evidence, not authority. It carries no fence, because the write
  * worth keeping is often the one that was refused, and fencing the log would
  * drop exactly that. It does carry the generation, because an act read under the
  * wrong interpreter is a different act.
+ *
+ * The key is the content and nothing else, so recording the same act twice
+ * appends one row. `at` sits deliberately outside it: it is the writer's claim
+ * about when the act happened, and a worker that retries an hour later restates
+ * the same act with a later instant. The first row's `at` therefore stands,
+ * because this reducer never rewrites a row it finds.
  *
  * `at` is the writer's `T_event` - when the act happened, as the worker states
  * it - and `ingestedAt` is the module's `T_ingest`, read from the reducer
@@ -301,30 +307,68 @@ function assertLatestBoundGeneration(ctx: Ctx, generationId: string): void {
  * for a row persisted as a one-shot, and a synchronously written trace was never
  * scheduled.
  *
- * Append-only in both directions. A replay at the same instant appends nothing,
- * and a different payload under the same key is refused rather than allowed to
- * replace the first row, because reusing a content key with different content is
- * how a log starts lying. No path updates and none deletes.
+ * The generation stamped on the row is the one the shared coherence helper
+ * answers with, not the string the caller sent: a caller's claim is checked
+ * against what is bound now, and the row states what it was written under. A
+ * caller that names no generation is under the latest by construction, because
+ * the whole reducer is one transaction.
+ *
+ * Append-only in both directions. A replay of the same content appends nothing,
+ * and two contents that would share a key - a digest collision - are refused
+ * rather than allowed to replace each other, because reusing a key with
+ * different content is how a log starts lying. No path updates and none
+ * deletes.
+ *
+ * Shape: every column `event` carries - `id`, `kind`, `subject`, `payload`,
+ * `at` - with the same types, plus the generation and the three trace-only time
+ * columns. A reader folding both logs iterates the same five fields. The
+ * deliberate difference is the key: `event` is keyed by
+ * `<at>:<kind>:<subject>`, so the same act restated at a later instant is a
+ * second event, while a trace is keyed by its content, so it is not.
  */
 export const recordTrace = spacetimedb.reducer(
 	{
-		generation: t.string(),
+		generation: t.string().optional(),
 		kind: t.string(),
 		subject: t.string(),
 		payload: t.string(),
 		at: t.string(),
 	},
 	(ctx, args) => {
-		assertLatestBoundGeneration(ctx, args.generation);
+		// The one coherence check in the module, shared with `bind`, `claim` and
+		// `renew`. It answers with the latest bound generation, and that answer
+		// is what the row carries: the caller's claim is checked, never echoed.
+		const generation = requireCoherentGeneration(ctx, args.generation);
+
+		// A trace names the generation it was recorded under and the column is
+		// not optional, so a module with nothing bound has nothing to write.
+		if (generation === null) {
+			throw new SenderError(
+				"unbound-generation: a trace names the generation it was recorded under, and none has been bound",
+			);
+		}
 
 		if (args.kind.length === 0 || args.subject.length === 0) {
 			throw new SenderError("admission-refused: a trace needs a kind and a subject");
 		}
 
-		const id = `${args.at}:${args.kind}:${args.subject}`;
+		const id = traceId(args.kind, args.subject, args.payload);
 		const known = ctx.db.trace.id.find(id);
+
 		if (known !== null) {
-			if (known.payload === args.payload) return;
+			// Same content, so the act is already recorded: a replay appends
+			// nothing and rewrites nothing, its `at` included.
+			if (
+				known.kind === args.kind &&
+				known.subject === args.subject &&
+				known.payload === args.payload
+			) {
+				return;
+			}
+
+			// Different content under the same id means the digest collided.
+			// Refusing keeps the log honest; the alternative is dropping an act
+			// the caller believes it recorded.
 			throw new SenderError(
 				`admission-refused: trace ${id} already records a different payload`,
 			);
@@ -332,7 +376,7 @@ export const recordTrace = spacetimedb.reducer(
 
 		ctx.db.trace.insert({
 			id,
-			generation: args.generation,
+			generation,
 			kind: args.kind,
 			subject: args.subject,
 			payload: args.payload,
@@ -341,5 +385,184 @@ export const recordTrace = spacetimedb.reducer(
 			scheduledAt: undefined,
 			ranAt: undefined,
 		});
+	},
+);
+
+/**
+ * The last instant `Timestamp.toISOString()` can render: the largest whole
+ * millisecond a JavaScript `Date` represents, plus the microseconds below it.
+ *
+ * A duration is a `t.u64()`, so a caller can name a deadline far past this. The
+ * `Timestamp` constructor accepts such a value without complaint and the
+ * formatting throws a bare `RangeError` afterwards, which would reach the caller
+ * as an unnamed module fault. The bound is therefore checked before the row is
+ * built and refused as a lease error like every other refusal here.
+ */
+const LAST_RENDERABLE_MICROS = BigInt(Number.MAX_SAFE_INTEGER) * 1000n + 999n;
+
+/**
+ * Take the lease on a resource, or be refused because one is live.
+ *
+ * A lease is the standing a fenced write needs, so this is the reducer that
+ * opens one. It grants only while nothing holds the resource: a live grant is
+ * one whose `state` is held and whose deadline is still in the future, and while
+ * one exists the claim is refused with `lease-held`. It is not queued, not
+ * blocked and not written over - a queue would make the caller wait on a holder
+ * it cannot see, and an overwrite would take the resource from a worker that is
+ * still using it.
+ *
+ * An expired grant and a released grant are both not live, so a claim after
+ * either is granted. Its fence is one past the newest fence the resource ever
+ * issued - not one past the live one - so the number is strictly greater than
+ * every fence before it and is never reused. That is what makes a takeover safe:
+ * the worker whose lease expired still carries the old number, and every write it
+ * makes from then on is refused instead of landing late on top of the new holder.
+ *
+ * The row is written through `writeGrant`, the table's single write path, which
+ * re-checks the fence and the named generation before its one insert. Every
+ * refusal here therefore throws before anything is written, and the transaction
+ * rolls back with the `lease` table byte-for-byte as it was.
+ *
+ * `durationMicros` is the caller's lease length, added to the reducer's own
+ * clock rather than to a wall clock, so the deadline is the module's fact and
+ * not the caller's. `generation` is optional: a claim that names one is refused
+ * when it is not the latest bound generation, and a claim that names none is
+ * under the latest by construction, because the whole reducer is one
+ * transaction.
+ */
+export const claim = spacetimedb.reducer(
+	{
+		resource: t.string(),
+		durationMicros: t.u64(),
+		generation: t.string().optional(),
+	},
+	(ctx, args) => {
+		const resource = args.resource;
+		const now = nowOf(ctx);
+
+		if (resource.length === 0) {
+			throw new SenderError("lease-invalid: a claim needs a resource name");
+		}
+
+		// A zero or negative length would write a grant that is dead the instant
+		// it is accepted: the next claim would find the resource free and take
+		// it, which is a grant that granted nothing.
+		if (args.durationMicros <= 0n) {
+			throw new SenderError(
+				`lease-invalid: a claim on ${resource} needs a positive duration, not ${args.durationMicros}µs`,
+			);
+		}
+
+		const expiresMicros = ctx.timestamp.microsSinceUnixEpoch + args.durationMicros;
+		if (expiresMicros > LAST_RENDERABLE_MICROS) {
+			throw new SenderError(
+				`lease-invalid: a ${args.durationMicros}µs claim on ${resource} would expire past the representable range`,
+			);
+		}
+
+		const live = liveGrant(ctx, resource, now);
+		if (live !== null) {
+			throw new SenderError(
+				`lease-held: ${resource} is held by ${live.holder} under fence ${live.fence} until ${live.expiresAt}`,
+			);
+		}
+
+		// The fence counts grants issued for the resource, so it is read from the
+		// newest row whether that row expired, was released, or is still held.
+		const previous = currentGrant(ctx, resource);
+		const fence = nextFence(previous?.fence);
+
+		const grant: Lease = {
+			// Unique per claim without a sequence column: a fence is issued once
+			// per resource, so the pair names one grant and a released grant's id
+			// is never handed to its successor.
+			id: `${resource}:${fence}`,
+			resource,
+			holder: ctx.sender.toHexString(),
+			fence,
+			acquiredAt: now,
+			expiresAt: new Timestamp(expiresMicros).toISOString(),
+			state: HELD,
+		};
+
+		writeGrant(ctx, grant, { generation: args.generation });
+	},
+);
+
+/**
+ * Extend a grant the caller still holds, provided it presents the current
+ * fence.
+ *
+ * The fence is the whole of the refusal. A worker whose grant lapsed and was
+ * taken over still carries the number it was given, and the resource has moved
+ * past it, so its renewal is refused by `writeGrant` before anything is written
+ * instead of landing on top of the new holder's grant. The presented fence is
+ * handed to that one write path rather than compared here, so "the current
+ * fence" has a single definition in the module and a renewal cannot grow a
+ * second one that disagrees.
+ *
+ * A held grant is extended from the deadline it already carries, so a renewal
+ * never shortens one; a held grant that has lapsed is extended from now,
+ * because measuring from a past instant would hand back a deadline that is
+ * already spent. `fence`, `holder`, `acquiredAt` and `state` are carried
+ * through untouched - a renewal is the same grant, not a new one - and a
+ * released grant is refused rather than extended, because the resource is free
+ * and claiming it is the verb that says so.
+ *
+ * A resource that was never granted is refused for the same reason: there is no
+ * lease to extend, and a renewal that opened one would hand out a fence outside
+ * `claim`, which is the reducer that issues them. A grant whose deadline is not
+ * text this module can read is refused too, rather than extended from the clock:
+ * that would report success while replacing a deadline the caller never saw.
+ *
+ * `generation` is optional and checked by the shared write path exactly as
+ * `claim` checks it: a renewal that names a superseded generation is refused,
+ * and one that names none is under the latest by construction, because the
+ * whole reducer is one transaction.
+ */
+export const renew = spacetimedb.reducer(
+	{
+		resource: t.string(),
+		fence: t.u64(),
+		extensionMicros: t.u64(),
+		generation: t.string().optional(),
+	},
+	(ctx, args) => {
+		const lease = currentGrant(ctx, args.resource);
+
+		if (lease === null) {
+			throw new SenderError(
+				`admission-refused: ${args.resource} has never been granted, so there is no lease to renew`,
+			);
+		}
+
+		if (lease.state !== HELD) {
+			throw new SenderError(
+				`admission-refused: grant ${lease.id} on ${args.resource} is ${lease.state}, and a renewal extends a held grant rather than reopening one`,
+			);
+		}
+
+		const now = nowOf(ctx);
+
+		// A deadline the module cannot read is refused rather than replaced. The
+		// rule below is "extend from the deadline while it is still in the
+		// future, otherwise from now", and neither branch is answerable about
+		// text that names no instant - measuring from now would report success
+		// while discarding a deadline nobody could inspect.
+		if (microsOf(lease.expiresAt) === null) {
+			throw new SenderError(
+				`admission-refused: grant ${lease.id} on ${args.resource} carries ${JSON.stringify(lease.expiresAt)}, which is not a deadline this module can read`,
+			);
+		}
+
+		// A live grant keeps the deadline it has; a lapsed one is measured from
+		// the reducer's own clock, never from the caller's idea of the time.
+		const base = isLive(lease, now) ? lease.expiresAt : now;
+
+		writeGrant(
+			ctx,
+			{ ...lease, expiresAt: extendDeadline(base, args.extensionMicros) },
+			{ fence: args.fence, generation: args.generation },
+		);
 	},
 );

@@ -147,6 +147,70 @@ while the reducers stay readable.
   Write `from "./Schema"` there even when the surrounding repository spells `.ts` everywhere else.
 - Give each table its database name explicitly - `table({ name: "post", public: true }, {…})` - so
   the published table name is a decision rather than whatever the variable happens to be called.
+- **A helper is a sibling module, not an export of the entry.** The entry file's named exports are
+  reserved for values registered with SpacetimeDB - reducers, lifecycle hooks, views - so an
+  ordinary function exported from there is at best ignored and at worst read as a module export. Put
+  the helper in `src/<Name>.ts`, import it with the same extensionless spelling
+  (`from "./Catalog"`), and the bundler resolves it exactly as it resolves `./Schema`.
+- **`spacetime build` typechecks every file the package `tsconfig.json` includes** (`./**/*`), not
+  only what the entry reaches. A test file under `Test/` that imports `node:test` therefore fails
+  the module build with `TS2591: Cannot find name 'node:test'` even though the module itself is
+  fine; exclude the test directory in the module tsconfig rather than adding `@types/node` to a
+  module that never runs under node.
+
+## Running the module's own code under node
+
+`spacetimedb/server` and `spacetimedb/server/test-utils` import `spacetime:sys@2.x`, virtual modules
+the host injects and node cannot resolve, so importing the module's sources directly fails with
+`ERR_UNSUPPORTED_ESM_URL_SCHEME: Received protocol 'spacetime:'`. A resolve hook that points every
+`spacetime:sys@*` specifier at a stub module, and appends `.ts` to an extensionless relative
+specifier, is enough to load both the module and the SDK's test harness under plain node. The module
+package carries that hook at `Test/Support/Register.mjs`:
+
+```sh
+node --import ./Test/Support/Register.mjs Test/<Name>.test.ts
+```
+
+`createModuleTestHarness(schema, {})` then gives a real reducer context:
+`withReducerTx(auth, ctx => …)` runs one transaction and rolls it back when the body throws,
+`harness.clock.set(...)` moves the clock, and `ctx.timestamp.toISOString()` carries microseconds.
+
+Three traps in that harness:
+
+- **The clock starts at the Unix epoch.** A fixture dated 2026 is never expired by a test that
+  advances a few minutes, so a liveness check silently passes for the wrong reason. Pin the base
+  timestamp first (`Timestamp.fromDate(new Date(...))` plus an offset) and assert the context's own
+  `toISOString()` once.
+- **Reading `harness.db` inside an open transaction traps the wasm backend** with `unreachable`.
+  Read through `ctx.db` inside the transaction and through `harness.db` after it returns.
+- **`JSON.stringify` cannot carry a `bigint` column**, so "the table is byte-for-byte unchanged"
+  needs a snapshot that maps `fence` through `String(...)` first.
+
+## A deadline is text, and the text has a ceiling
+
+Every deadline column in this module is a `t.string()`, written as `ctx.timestamp.toISOString()` -
+microseconds, a `Z`, a four-digit year. Three facts about that format decide what a reducer may
+write:
+
+- **Past year 9999 the renderer switches format instead of failing.**
+  `new Timestamp(253_402_300_799_999_999n + 1n).toISOString()` answers
+  `"+010000-01-01T00:00:00.000000Z"`, which nothing that expects four digits reads back. A row
+  holding one is unreadable, and it also sorts _before_ every current stamp (`+` is below `2`), so
+  `expiresAt > now` calls that grant already expired: the claim that wrote it granted nothing, the
+  resource looks free, and a second claim takes it at once. Bound a computed deadline at
+  `STAMP_CEILING` (`src/Catalog.ts`) and refuse past it.
+- **`Number.MAX_SAFE_INTEGER * 1000` is not that bound.**
+  `new Timestamp(9_007_199_254_740_991_999n)` throws `RangeError: Invalid time value`, while a
+  smaller value still renders the extended format; a guard written against `MAX_SAFE_INTEGER` lets
+  both through. Check the stamp ceiling.
+- **A negative instant does not render as one.** `new Timestamp(-1n).toISOString()` answers
+  `"1970-01-01T00:00:00.000001Z"` - a microsecond _after_ the epoch - so arithmetic that can go
+  negative is refused, never rendered.
+
+`Date` is the wrong parser in both directions: it carries milliseconds, so `new Date(text)` drops
+the three digits that separate two deadlines inside one millisecond, and `Date.UTC` rolls
+`2026-02-30` into March rather than rejecting it. Parse the fields, compare them back, and re-render
+through `Timestamp` (`microsOf` / `stampOf` in `src/Catalog.ts`).
 
 ## Schema rules that keep it replayable
 
@@ -209,18 +273,23 @@ build must never connect to the database, or a static/CI build acquires a live s
 
 ## Claim → test
 
-| Claim                           | Test                                                                                                                               |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| CLI installed                   | `spacetime --version` prints the release tag                                                                                       |
-| Server up                       | `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows `spacetime`                                                                             |
-| Module compiles                 | `spacetime build` → `Build finished successfully.`                                                                                 |
-| Database published              | `spacetime list --server http://127.0.0.1:<port>` shows the name                                                                   |
-| Reducer writes                  | `spacetime call …` then `spacetime sql … "select count(*) from <table>"`                                                           |
-| Replay is idempotent            | a second identical `call` leaves `count(*)` unchanged                                                                              |
-| Optional argument round-trips   | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())` |
-| Config matches reality          | the name in `spacetime.local.json` equals the row in `spacetime list`                                                              |
-| Schema is discoverable          | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                         |
-| Aggregation is client-side      | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                     |
-| A program reads rows            | `POST <URL>/v1/database/<identity>/sql` with a raw `SELECT` body returns `[{schema, rows}]`                                        |
-| An optional column survives     | write `{"some":"<value>"}`, then read `[0,"<value>"]` back - `[1,[]]` means the value was lost                                     |
-| Generated schema, hand reducers | `spacetime build` passes with `src/Schema.ts` imported as `"./Schema"` (no extension)                                              |
+| Claim                                     | Test                                                                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| CLI installed                             | `spacetime --version` prints the release tag                                                                                               |
+| Server up                                 | `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows `spacetime`                                                                                     |
+| Module compiles                           | `spacetime build` → `Build finished successfully.`                                                                                         |
+| Database published                        | `spacetime list --server http://127.0.0.1:<port>` shows the name                                                                           |
+| Reducer writes                            | `spacetime call …` then `spacetime sql … "select count(*) from <table>"`                                                                   |
+| Replay is idempotent                      | a second identical `call` leaves `count(*)` unchanged                                                                                      |
+| Optional argument round-trips             | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())`         |
+| Config matches reality                    | the name in `spacetime.local.json` equals the row in `spacetime list`                                                                      |
+| Schema is discoverable                    | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                                 |
+| Aggregation is client-side                | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                             |
+| A program reads rows                      | `POST <URL>/v1/database/<identity>/sql` with a raw `SELECT` body returns `[{schema, rows}]`                                                |
+| An optional column survives               | write `{"some":"<value>"}`, then read `[0,"<value>"]` back - `[1,[]]` means the value was lost                                             |
+| Generated schema, hand reducers           | `spacetime build` passes with `src/Schema.ts` imported as `"./Schema"` (no extension)                                                      |
+| A helper module bundles                   | a reducer that imports `from "./Catalog"` builds, and the reducer's name appears in `dist/bundle.js`                                       |
+| A test file cannot break the module build | `spacetime build` stays green with `"exclude": ["Test"]` in the module `tsconfig.json`                                                     |
+| The module loads under node               | `node --import ./Test/Support/Register.mjs` imports `src/Schema.ts` and `createModuleTestHarness` without `ERR_UNSUPPORTED_ESM_URL_SCHEME` |
+| A stamp round-trips                       | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                      |
+| A deadline past year 9999 is refused      | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                      |

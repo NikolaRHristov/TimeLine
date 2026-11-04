@@ -6,7 +6,13 @@
 // datastore, a controllable clock, and the module's real reducers called the way
 // the host calls them. Nothing here touches a server.
 
+// The module's tsconfig carries no node types: this file is run by node with its
+// own loader (`Test/Support/Register.mjs`), not bundled into the module. The
+// directives are deliberate, and tsc reports them as unused once the types are
+// installed, which is when they should go.
+// @ts-expect-error - `node:assert/strict` has no declarations in this program
 import assert from "node:assert/strict";
+// @ts-expect-error - `node:test` has no declarations in this program
 import { test } from "node:test";
 import { Timestamp } from "spacetimedb";
 import type { InferSchema } from "spacetimedb/server";
@@ -27,6 +33,9 @@ const Claimed: TraceArguments = {
 	payload: '{"fence":1}',
 	at: "2026-01-01T00:00:00.000Z",
 };
+
+/** The same act with no generation named, which is the latest by construction. */
+const { generation: _Generation, ...Unnamed } = Claimed;
 
 /**
  * A harness holding the given generation rows.
@@ -82,29 +91,57 @@ test("a replay does not rewrite the row it found, even after the clock moves", (
 	assert.deepEqual(Traces(harness), [first]);
 });
 
-test("distinct acts append distinct rows", () => {
+test("a replay that restates a later instant is still one row, keeping the first stamp", () => {
+	const harness = Setup();
+
+	Call(harness, Claimed);
+	Call(harness, { ...Claimed, at: "2026-01-01T00:00:01.000Z" });
+
+	const [row] = Traces(harness);
+	assert.equal(Traces(harness).length, 1);
+	// `at` is outside the key and the reducer never rewrites a row, so the
+	// first write's claim is the one the log keeps.
+	assert.equal(row.at, Claimed.at);
+});
+
+test("distinct content appends distinct rows", () => {
 	const harness = Setup();
 
 	Call(harness, Claimed);
 	Call(harness, { ...Claimed, subject: "browser:second" });
-	Call(harness, { ...Claimed, at: "2026-01-01T00:00:01.000Z" });
 	Call(harness, { ...Claimed, kind: "lease.released" });
+	Call(harness, { ...Claimed, payload: '{"fence":2}' });
 
 	assert.equal(Traces(harness).length, 4);
 });
 
-test("a different payload under the same key is refused and writes nothing", () => {
+test("the id is a digest of the content, not of the instant", () => {
 	const harness = Setup();
 
 	Call(harness, Claimed);
+	Call(harness, { ...Claimed, at: "2026-01-01T00:00:01.000Z" });
+
 	const [first] = Traces(harness);
+	assert.match(first.id, /^trace:[0-9a-f]{16}$/);
 
-	assert.throws(
-		() => Call(harness, { ...Claimed, payload: '{"fence":2}' }),
-		/admission-refused: trace .* already records a different payload/,
+	Call(harness, { ...Claimed, payload: '{"fence":2}' });
+
+	const [, second] = Traces(harness);
+	assert.notEqual(second.id, first.id);
+});
+
+test("a different payload under the same act appends a second row", () => {
+	const harness = Setup();
+
+	Call(harness, Claimed);
+	Call(harness, { ...Claimed, payload: '{"fence":2}' });
+
+	const rows = Traces(harness);
+	assert.equal(rows.length, 2);
+	assert.deepEqual(
+		rows.map((row) => row.payload),
+		['{"fence":1}', '{"fence":2}'],
 	);
-
-	assert.deepEqual(Traces(harness), [first]);
 });
 
 test("a write under a superseded generation is refused by the shared helper", () => {
@@ -112,13 +149,13 @@ test("a write under a superseded generation is refused by the shared helper", ()
 
 	assert.throws(
 		() => Call(harness, Claimed),
-		/admission-refused: generation 1 is not the latest bound one/,
+		/stale-generation: the write names generation 1, the latest bound generation is 2/,
 	);
 
 	assert.equal(Traces(harness).length, 0);
 });
 
-test("the latest bound generation is accepted", () => {
+test("the latest bound generation is accepted, and is the generation the row carries", () => {
 	const harness = Setup(["1", "2"]);
 
 	Call(harness, { ...Claimed, generation: "2" });
@@ -127,23 +164,42 @@ test("the latest bound generation is accepted", () => {
 	assert.equal(Traces(harness)[0].generation, "2");
 });
 
-test("a generation that was never bound is refused", () => {
-	const harness = Harness(["1"]);
+test("a caller that names no generation is written under the latest bound one", () => {
+	const harness = Setup(["1", "2"]);
 
-	assert.throws(
-		() => Call(harness, { ...Claimed, generation: "9" }),
-		/admission-refused: generation 9 is not the latest bound one/,
-	);
+	Call(harness, Unnamed);
+
+	assert.equal(Traces(harness).length, 1);
+	assert.equal(Traces(harness)[0].generation, "2");
+});
+
+test("a generation that was never bound is refused", () => {
+	const harness = Setup(["1"]);
+
+	assert.throws(() => Call(harness, { ...Claimed, generation: "9" }), /stale-generation/);
 
 	assert.equal(Traces(harness).length, 0);
 });
 
-test("a generation key that is not a canonical sequence is refused", () => {
-	// `01` parses to 1 but does not round-trip, so the density assumption fails
-	// closed instead of reading it as generation 1.
-	const harness = Harness(["01"]);
+test("a generation id that is not a decimal sequence is skipped, not treated as latest", () => {
+	// `latestGeneration` skips a row it cannot read rather than throwing, so one
+	// unreadable row cannot wedge every write in the module - and it cannot be
+	// the latest either, so a write naming it is refused.
+	const harness = Setup(["1", "gen-2"]);
 
-	assert.throws(() => Call(harness, { ...Claimed, generation: "01" }), /admission-refused/);
+	Call(harness, Claimed);
+	assert.equal(Traces(harness)[0].generation, "1");
+
+	assert.throws(() => Call(harness, { ...Claimed, generation: "gen-2" }), /stale-generation/);
+
+	assert.equal(Traces(harness).length, 1);
+});
+
+test("nothing bound: a trace is refused rather than stamped with no generation", () => {
+	const harness = Setup([]);
+
+	assert.throws(() => Call(harness, Unnamed), /unbound-generation/);
+	assert.throws(() => Call(harness, Claimed), /unbound-generation/);
 
 	assert.equal(Traces(harness).length, 0);
 });
@@ -180,11 +236,16 @@ test("a trace row carries every column an event row carries, with the same types
 	const [event] = [...harness.db.event.iter()];
 	const [trace] = Traces(harness);
 
-	for (const column of Object.keys(event)) {
-		assert.ok(column in trace, `trace is missing the event column ${column}`);
+	// Both rows are read by column name, which is the point of the test, so the
+	// two are widened rather than indexed through their declared shapes.
+	const eventColumns = event as Record<string, unknown>;
+	const traceColumns = trace as Record<string, unknown>;
+
+	for (const column of Object.keys(eventColumns)) {
+		assert.ok(column in traceColumns, `trace is missing the event column ${column}`);
 		assert.equal(
-			typeof trace[column],
-			typeof event[column],
+			typeof traceColumns[column],
+			typeof eventColumns[column],
 			`trace.${column} is not the type event.${column} is`,
 		);
 	}
