@@ -252,11 +252,11 @@ const belief = table(
 	},
 );
 
-/** Append-only, keyed `<at>:<kind>:<subject>`. Evidence, not authority: a trace records a decision after it was taken, and is the one place a refused write still leaves a mark. */
+/** Append-only, keyed by a digest of the content. Evidence, not authority: a trace records a decision after it was taken, and is the one place a refused write still leaves a mark. */
 const trace = table(
 	{ name: "trace", public: false },
 	{
-		/** `<at>:<kind>:<subject>` - a replay at the same instant is the same fact, not a second one. */
+		/** A digest of the content - `kind`, `subject`, `payload` - so a replay of the same act appends nothing, whatever instant it restates. */
 		id: t.string().primaryKey(),
 		/** The generation the act happened under. A trace read without it cannot say which policy allowed the act. */
 		generation: t.string().index(),

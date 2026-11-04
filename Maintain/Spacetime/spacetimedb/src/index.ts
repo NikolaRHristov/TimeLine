@@ -370,7 +370,7 @@ export const recordTrace = spacetimedb.reducer(
 			// Refusing keeps the log honest; the alternative is dropping an act
 			// the caller believes it recorded.
 			throw new SenderError(
-				`admission-refused: trace ${id} already records a different payload`,
+				`admission-refused: trace ${id} already records different content`,
 			);
 		}
 

@@ -283,7 +283,7 @@ export type BeliefRecord = {
 
 /** One trace line, in the same shape as an event: when it happened, what it was, what it was about, and what it carries. */
 export type TraceRecord = {
-	/** `<at>:<kind>:<subject>` - a replay at the same instant is the same fact, not a second one. */
+	/** A digest of the content - `kind`, `subject`, `payload` - so a replay of the same act appends nothing, whatever instant it restates. */
 	id: string;
 	/** The generation the act happened under. A trace read without it cannot say which policy allowed the act. */
 	generation: string;

@@ -78,12 +78,18 @@ with `failed to find database timeline-<suffix>`. Fix the file, not the command:
 Reducers: `observe`, `record`, `setVisibility`, `classify`, `attach`.
 
 Six catalog tables - `capability`, `generation`, `lease`, `probe`, `belief`, `trace` - are declared
-in the same source of truth and rendered into the same `Schema.ts`, and none of them has a reducer
+in the same source of truth and rendered into the same `Schema.ts`. Three write paths exist so far:
+`claim` and `renew` for the lease, `recordTrace` for the log; `bind` and `probe` are not written
 yet. They are private: a row naming a lease holder or a probe's audience is not the site's business,
 so a reader that needs one gets a view rather than a subscription to the table. `probe` is the
 agentic layer's disclosure record and is deliberately not called `observation` - that name belongs
 to the archive, and the two rows mean different things. The columns each one carries, and which
 clock authority produced each timestamp, are stated in `Spacetime-Time.md`.
+
+A trace row is keyed by a digest of its content - kind, subject, payload - and not by its instant,
+so replaying the same act appends nothing while a distinct payload appends a second row. Its `at` is
+the writer's claim and sits outside the key for the same reason: a retry restates the act with a
+later instant and is still one act.
 
 ## Ingest: the archive into the projection
 

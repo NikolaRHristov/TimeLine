@@ -888,7 +888,7 @@ const Trace: Entity = {
 		fields: {
 			id: {
 				kind: "string",
-				doc: "`<at>:<kind>:<subject>` - a replay at the same instant is the same fact, not a second one.",
+				doc: "A digest of the content - `kind`, `subject`, `payload` - so a replay of the same act appends nothing, whatever instant it restates.",
 			},
 			generation: {
 				kind: "string",
@@ -943,7 +943,7 @@ const Trace: Entity = {
 		key: "id",
 		index: ["generation", "kind", "subject"],
 		public: false,
-		doc: "Append-only, keyed `<at>:<kind>:<subject>`. Evidence, not authority: a trace records a decision after it was taken, and is the one place a refused write still leaves a mark.",
+		doc: "Append-only, keyed by a digest of the content. Evidence, not authority: a trace records a decision after it was taken, and is the one place a refused write still leaves a mark.",
 	},
 };
 

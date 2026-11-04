@@ -153,10 +153,13 @@ while the reducers stay readable.
   the helper in `src/<Name>.ts`, import it with the same extensionless spelling
   (`from "./Catalog"`), and the bundler resolves it exactly as it resolves `./Schema`.
 - **`spacetime build` typechecks every file the package `tsconfig.json` includes** (`./**/*`), not
-  only what the entry reaches. A test file under `Test/` that imports `node:test` therefore fails
-  the module build with `TS2591: Cannot find name 'node:test'` even though the module itself is
-  fine; exclude the test directory in the module tsconfig rather than adding `@types/node` to a
-  module that never runs under node.
+  only what the entry reaches. Keep `Test/` inside that include: the suite is then typechecked with
+  the module, which is what catches a fixture's own mistakes - `ctx.db.<table>.id.find` answers
+  `Row | null`, and spreading it without a null check fails the build. The price is that
+  `import { test } from "node:test"` reports `TS2591: Cannot find name 'node:test'`, because the
+  module carries no `@types/node`; put a `// @ts-expect-error` directive above each `node:` import.
+  `"exclude": ["Test"]` in the module tsconfig also makes the build green, and gives the typecheck
+  up: prefer the directives.
 
 ## Running the module's own code under node
 
@@ -185,6 +188,11 @@ Three traps in that harness:
   Read through `ctx.db` inside the transaction and through `harness.db` after it returns.
 - **`JSON.stringify` cannot carry a `bigint` column**, so "the table is byte-for-byte unchanged"
   needs a snapshot that maps `fence` through `String(...)` first.
+- **A green suite is not evidence until a guard has been broken.** Copy the package to a scratch
+  directory (`node_modules` symlinked, so the bare `spacetimedb` specifier still resolves), negate
+  one guard in the copy, and require the run to fail on exactly the tests that name that rule: a
+  mutation caught by an unrelated test proves nothing, and one caught by nothing means the assertion
+  describes the code rather than testing it.
 
 ## A deadline is text, and the text has a ceiling
 
@@ -273,23 +281,25 @@ build must never connect to the database, or a static/CI build acquires a live s
 
 ## Claim → test
 
-| Claim                                     | Test                                                                                                                                       |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| CLI installed                             | `spacetime --version` prints the release tag                                                                                               |
-| Server up                                 | `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows `spacetime`                                                                                     |
-| Module compiles                           | `spacetime build` → `Build finished successfully.`                                                                                         |
-| Database published                        | `spacetime list --server http://127.0.0.1:<port>` shows the name                                                                           |
-| Reducer writes                            | `spacetime call …` then `spacetime sql … "select count(*) from <table>"`                                                                   |
-| Replay is idempotent                      | a second identical `call` leaves `count(*)` unchanged                                                                                      |
-| Optional argument round-trips             | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())`         |
-| Config matches reality                    | the name in `spacetime.local.json` equals the row in `spacetime list`                                                                      |
-| Schema is discoverable                    | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                                 |
-| Aggregation is client-side                | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                             |
-| A program reads rows                      | `POST <URL>/v1/database/<identity>/sql` with a raw `SELECT` body returns `[{schema, rows}]`                                                |
-| An optional column survives               | write `{"some":"<value>"}`, then read `[0,"<value>"]` back - `[1,[]]` means the value was lost                                             |
-| Generated schema, hand reducers           | `spacetime build` passes with `src/Schema.ts` imported as `"./Schema"` (no extension)                                                      |
-| A helper module bundles                   | a reducer that imports `from "./Catalog"` builds, and the reducer's name appears in `dist/bundle.js`                                       |
-| A test file cannot break the module build | `spacetime build` stays green with `"exclude": ["Test"]` in the module `tsconfig.json`                                                     |
-| The module loads under node               | `node --import ./Test/Support/Register.mjs` imports `src/Schema.ts` and `createModuleTestHarness` without `ERR_UNSUPPORTED_ESM_URL_SCHEME` |
-| A stamp round-trips                       | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                     |
-| A deadline past year 9999 is refused      | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                    |
+| Claim                                  | Test                                                                                                                                               |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CLI installed                          | `spacetime --version` prints the release tag                                                                                                       |
+| Server up                              | `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows `spacetime`                                                                                             |
+| Module compiles                        | `spacetime build` → `Build finished successfully.`                                                                                                 |
+| Database published                     | `spacetime list --server http://127.0.0.1:<port>` shows the name                                                                                   |
+| Reducer writes                         | `spacetime call …` then `spacetime sql … "select count(*) from <table>"`                                                                           |
+| Replay is idempotent                   | a second identical `call` leaves `count(*)` unchanged                                                                                              |
+| Optional argument round-trips          | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())`                 |
+| Config matches reality                 | the name in `spacetime.local.json` equals the row in `spacetime list`                                                                              |
+| Schema is discoverable                 | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                                         |
+| Aggregation is client-side             | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                                     |
+| A program reads rows                   | `POST <URL>/v1/database/<identity>/sql` with a raw `SELECT` body returns `[{schema, rows}]`                                                        |
+| An optional column survives            | write `{"some":"<value>"}`, then read `[0,"<value>"]` back - `[1,[]]` means the value was lost                                                     |
+| Generated schema, hand reducers        | `spacetime build` passes with `src/Schema.ts` imported as `"./Schema"` (no extension)                                                              |
+| A helper module bundles                | a reducer that imports `from "./Catalog"` builds, and the reducer's name appears in `dist/bundle.js`                                               |
+| A test file typechecks with the module | `spacetime build` stays green with `Test/` in the tsconfig include and a `// @ts-expect-error` above each `node:` import                           |
+| The module loads under node            | `node --import ./Test/Support/Register.mjs` imports `src/Schema.ts` and `createModuleTestHarness` without `ERR_UNSUPPORTED_ESM_URL_SCHEME`         |
+| A stale fence writes nothing           | a renewal presenting the fence a takeover superseded throws `stale-fence`, and the `lease` table is byte-for-byte unchanged (`Test/Lease.test.ts`) |
+| A guard is really guarded              | negating the guard in a scratch copy fails exactly the tests that name it, and no others                                                           |
+| A stamp round-trips                    | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                             |
+| A deadline past year 9999 is refused   | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                            |
