@@ -291,5 +291,5 @@ build must never connect to the database, or a static/CI build acquires a live s
 | A helper module bundles                   | a reducer that imports `from "./Catalog"` builds, and the reducer's name appears in `dist/bundle.js`                                       |
 | A test file cannot break the module build | `spacetime build` stays green with `"exclude": ["Test"]` in the module `tsconfig.json`                                                     |
 | The module loads under node               | `node --import ./Test/Support/Register.mjs` imports `src/Schema.ts` and `createModuleTestHarness` without `ERR_UNSUPPORTED_ESM_URL_SCHEME` |
-| A stamp round-trips                       | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                      |
-| A deadline past year 9999 is refused      | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                      |
+| A stamp round-trips                       | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                     |
+| A deadline past year 9999 is refused      | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                    |
