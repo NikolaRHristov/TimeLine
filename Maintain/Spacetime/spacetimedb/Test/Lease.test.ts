@@ -290,6 +290,76 @@ test("a claim exactly at the deadline is granted: liveness is strictly future", 
 	assert.equal(Live(harness, "browser", Stamp(MINUTE)).length, 1);
 });
 
+// ---------------------------------------------------------- the deadline bound
+
+/**
+ * The last instant a deadline stamp can name, restated here rather than imported
+ * from the module, so this is an independent oracle: a wrong ceiling inside the
+ * module cannot make the assertion that rests on it pass.
+ */
+const LAST_STAMPABLE = 253_402_300_799_999_999n;
+
+test("every granted claim is live at the instant it is granted", () => {
+	// The property the whole fence rests on. A grant that is not live when it is
+	// written leaves the resource free, so the next claim succeeds beside it and
+	// two holders share one resource - which no later assertion about fences can
+	// repair.
+	const harness = Setup();
+
+	// Liveness is measured at the clock the grant was written under, not at the
+	// fixture instant: a short grant from a later instant is still live then.
+	let offset = 0n;
+	for (const duration of [1n, 1_000n, MINUTE, 365n * 24n * 60n * MINUTE]) {
+		Claim(harness, { resource: "browser", durationMicros: duration });
+		assert.equal(
+			Live(harness, "browser", Stamp(offset)).length,
+			1,
+			`a ${duration}µs grant is not live at the instant it was written`,
+		);
+		offset += duration + 1n;
+		At(harness, offset);
+	}
+});
+
+test("a claim past the last stampable instant is refused, leaving the resource free", () => {
+	const harness = Setup();
+
+	// ~31,700 years. Above the ceiling `Timestamp.toISOString()` writes an
+	// extended-year form that reads as *before* a four-digit year, so an accepted
+	// claim would grant nothing and the next claim would take the resource.
+	const before = Committed(harness);
+	const refusal = Refused(() =>
+		Claim(harness, { resource: "browser", durationMicros: 1_000_000_000_000_000_000n }),
+	);
+
+	assert.match(refusal, /^lease-invalid: /);
+	assert.equal(Committed(harness), before, "a refused claim wrote a grant anyway");
+
+	// The fence was not consumed either: the first real claim is still fence 1.
+	Claim(harness, { resource: "browser", durationMicros: MINUTE });
+	assert.equal(Newest(harness, "browser").fence, 1n);
+});
+
+test("a claim landing exactly on the last stampable instant is granted", () => {
+	const harness = Setup();
+
+	// The bound is inclusive: the ceiling names an instant, so it is a deadline
+	// like any other and the grant it makes is live.
+	Claim(harness, { resource: "browser", durationMicros: LAST_STAMPABLE - BASE });
+
+	const granted = Newest(harness, "browser");
+	assert.equal(granted.expiresAt, "9999-12-31T23:59:59.999999Z");
+	assert.equal(Live(harness, "browser", Stamp(0n)).length, 1);
+
+	// One microsecond past it is not stampable, so it is refused.
+	const before = Committed(harness);
+	assert.throws(
+		() => Claim(harness, { resource: "other", durationMicros: LAST_STAMPABLE - BASE + 1n }),
+		/lease-invalid: .*past the last stampable instant/,
+	);
+	assert.equal(Committed(harness), before);
+});
+
 // ------------------------------------------------- renew with the current fence
 
 test("renew with the current fence moves the deadline forward and leaves the fence alone", () => {

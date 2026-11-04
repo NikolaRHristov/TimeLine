@@ -303,3 +303,4 @@ build must never connect to the database, or a static/CI build acquires a live s
 | A guard is really guarded              | negating the guard in a scratch copy fails exactly the tests that name it, and no others                                                           |
 | A stamp round-trips                    | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                             |
 | A deadline past year 9999 is refused   | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                            |
+| A grant is live the moment it is made  | every granted claim satisfies `state === held && expiresAt > acquiredAt` at the claim's own clock, for a one-microsecond lease and a year-long one |

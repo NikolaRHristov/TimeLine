@@ -1,5 +1,4 @@
-// Runtime value classes come from the root package, not `spacetimedb/server`.
-import { Timestamp } from "spacetimedb";
+// Builders, module exports and the refusal type all live in `spacetimedb/server`.
 import { SenderError, t } from "spacetimedb/server";
 import {
 	currentGrant,
@@ -11,6 +10,8 @@ import {
 	nextFence,
 	nowOf,
 	requireCoherentGeneration,
+	STAMP_CEILING,
+	stampOf,
 	writeGrant,
 	type Lease,
 } from "./Catalog";
@@ -389,18 +390,6 @@ export const recordTrace = spacetimedb.reducer(
 );
 
 /**
- * The last instant `Timestamp.toISOString()` can render: the largest whole
- * millisecond a JavaScript `Date` represents, plus the microseconds below it.
- *
- * A duration is a `t.u64()`, so a caller can name a deadline far past this. The
- * `Timestamp` constructor accepts such a value without complaint and the
- * formatting throws a bare `RangeError` afterwards, which would reach the caller
- * as an unnamed module fault. The bound is therefore checked before the row is
- * built and refused as a lease error like every other refusal here.
- */
-const LAST_RENDERABLE_MICROS = BigInt(Number.MAX_SAFE_INTEGER) * 1000n + 999n;
-
-/**
  * Take the lease on a resource, or be refused because one is live.
  *
  * A lease is the standing a fenced write needs, so this is the reducer that
@@ -425,10 +414,15 @@ const LAST_RENDERABLE_MICROS = BigInt(Number.MAX_SAFE_INTEGER) * 1000n + 999n;
  *
  * `durationMicros` is the caller's lease length, added to the reducer's own
  * clock rather than to a wall clock, so the deadline is the module's fact and
- * not the caller's. `generation` is optional: a claim that names one is refused
- * when it is not the latest bound generation, and a claim that names none is
- * under the latest by construction, because the whole reducer is one
- * transaction.
+ * not the caller's. It is bounded by `STAMP_CEILING` and formatted by `stampOf`,
+ * because a `t.u64()` duration can name a deadline past the last stampable
+ * instant: there `Timestamp.toISOString()` writes an extended-year form
+ * (`+033714-09-28T…`) that no deadline reader parses and that sorts *before* a
+ * four-digit year, so the grant would read as already expired the moment it was
+ * written - the resource would stay free and the next claim would succeed
+ * alongside it. `generation` is optional: a claim that names one is refused when
+ * it is not the latest bound generation, and a claim that names none is under
+ * the latest by construction, because the whole reducer is one transaction.
  */
 export const claim = spacetimedb.reducer(
 	{
@@ -454,9 +448,9 @@ export const claim = spacetimedb.reducer(
 		}
 
 		const expiresMicros = ctx.timestamp.microsSinceUnixEpoch + args.durationMicros;
-		if (expiresMicros > LAST_RENDERABLE_MICROS) {
+		if (expiresMicros > STAMP_CEILING) {
 			throw new SenderError(
-				`lease-invalid: a ${args.durationMicros}µs claim on ${resource} would expire past the representable range`,
+				`lease-invalid: a ${args.durationMicros}µs claim on ${resource} would expire past the last stampable instant, ${stampOf(STAMP_CEILING)}`,
 			);
 		}
 
@@ -481,7 +475,7 @@ export const claim = spacetimedb.reducer(
 			holder: ctx.sender.toHexString(),
 			fence,
 			acquiredAt: now,
-			expiresAt: new Timestamp(expiresMicros).toISOString(),
+			expiresAt: stampOf(expiresMicros),
 			state: HELD,
 		};
 
