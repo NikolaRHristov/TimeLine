@@ -371,6 +371,161 @@ test("the reducer returns nothing", () => {
 	assert.equal(returned, undefined);
 });
 
+// ------------------------------------- criteria 1 and 2: one write, or none
+
+/**
+ * Every table's row count, as one object.
+ *
+ * The receipt is the only write a reveal is allowed to make, so "wrote nothing"
+ * and "charged nothing" are one assertion here: the counts before a refused or
+ * aborted call and after it must be equal. There is no meter table to inspect
+ * because the receipt is the charge (`Maintain/Spacetime/Probe-Contract.md`,
+ * "The charge"), so a probe row that did not commit is a charge that was not
+ * taken.
+ */
+function Counts(harness: Harness): Record<string, number> {
+	const tables = harness.db as unknown as Record<string, { iter(): Iterable<unknown> }>;
+	const counts: Record<string, number> = {};
+
+	for (const name of Object.keys(tables).sort()) {
+		counts[name] = [...tables[name].iter()].length;
+	}
+
+	return counts;
+}
+
+/**
+ * A reducer context whose `probe.insert` throws and whose every other member is
+ * the harness's own.
+ *
+ * `reveal`'s only write is its final statement, so an insert that cannot commit
+ * is a failure in the exact window criterion 1 asks about: after the private
+ * value was read, before anything reached the datastore. Nothing in
+ * `src/index.ts` knows this seam exists - the context belongs to the host, and a
+ * host whose insert throws is a host whose transaction aborts - so the failure
+ * is injected without instrumenting the module and without leaving anything to
+ * revert.
+ */
+function UncommittableContext(ctx: Parameters<typeof Catalog.reveal>[0]) {
+	const db = ctx.db as unknown as Record<string, Record<string, unknown>>;
+
+	return {
+		...ctx,
+		db: {
+			...db,
+			probe: {
+				...db.probe,
+				insert: () => {
+					throw new Error("injected: the receipt could not be written");
+				},
+			},
+		},
+	} as Parameters<typeof Catalog.reveal>[0];
+}
+
+test("criterion 1: an entitled sender writes exactly one probe row, scoped to its server-resolved audience", () => {
+	const harness = Setup();
+	Declare(harness);
+	Grant(harness);
+
+	const before = Counts(harness);
+	Reveal(harness, Request());
+	const after = Counts(harness);
+
+	// Exactly one row, in the one table a reveal may write, and nothing else
+	// moved - no belief row, no second receipt.
+	assert.equal(after.probe, before.probe + 1);
+	assert.equal(after.probe, 1);
+
+	for (const table of Object.keys(before)) {
+		if (table === "probe") continue;
+		assert.equal(after[table], before[table], `a reveal wrote ${table}`);
+	}
+
+	const [receipt] = Receipts(harness);
+
+	// The scope column is the identity the host authenticated, read back through
+	// a reducer context rather than from the harness's own field, so this is the
+	// same answer the module computed for `ctx.sender`.
+	//
+	// The role that admitted the call (`prober`) is deliberately not a column: a
+	// permission is not a recipient, and a role-keyed receipt would collapse
+	// every sender sharing that role onto one row.
+	assert.equal(receipt.audience, CallerHex(harness));
+	assert.match(receipt.audience, /^[0-9a-f]{64}$/);
+	assert.equal(receipt.id, `${CAPABILITY}:${PROPERTY}:1:${CallerHex(harness)}`);
+});
+
+test("criterion 1: a failure after the private read and before the insert leaves no receipt and no charge", () => {
+	const harness = Setup();
+	Declare(harness);
+	Grant(harness);
+	const before = Counts(harness);
+
+	assert.throws(
+		() =>
+			harness.withReducerTx(Caller, (ctx) => {
+				Catalog.reveal(UncommittableContext(ctx), Request());
+			}),
+		/injected: the receipt could not be written/,
+	);
+
+	// The window is empty: no receipt committed, so nothing was charged, and no
+	// other table moved either.
+	assert.deepEqual(Receipts(harness), []);
+	assert.deepEqual([...harness.db.belief.iter()], []);
+	assert.deepEqual(Counts(harness), before);
+
+	// And the aborted attempt spent no allowance: the same reveal now succeeds
+	// and writes the one row it always would have.
+	Reveal(harness, Request());
+
+	const receipts = Receipts(harness);
+	assert.equal(receipts.length, 1);
+	assert.equal(receipts[0].audience, CallerHex(harness));
+});
+
+test("criterion 2: an unentitled sender is refused, writes no probe row and deducts no charge", () => {
+	const harness = Setup();
+	Declare(harness);
+	const before = Counts(harness);
+
+	// No lease held by this sender on the property's resource, so the resolved
+	// role is `none` and the refusal is decided before the private value is read.
+	let refusal = "";
+
+	try {
+		Reveal(harness, Request());
+	} catch (error) {
+		refusal = (error as Error).message;
+	}
+
+	assert.match(
+		refusal,
+		new RegExp(
+			`admission-refused: ${CallerHex(harness)} holds no live lease on ${RESOURCE}`,
+		),
+	);
+
+	// The refusal names the audience and the resource and never the truth it was
+	// refused: two worlds differing only in the private value read the same.
+	assert.ok(!refusal.includes(PRIVATE_VALUE), "the refusal leaked the private value");
+	assert.ok(!refusal.includes(EVIDENCE), "the refusal leaked the evidence");
+
+	assert.deepEqual(Receipts(harness), []);
+	assert.deepEqual([...harness.db.belief.iter()], []);
+	assert.deepEqual(Counts(harness), before);
+
+	// Nothing was deducted: once granted, this sender spends its first and only
+	// reveal here, which is only possible because the refusal cost it nothing.
+	Grant(harness);
+	Reveal(harness, Request());
+
+	const receipts = Receipts(harness);
+	assert.equal(receipts.length, 1);
+	assert.equal(receipts[0].audience, CallerHex(harness));
+});
+
 test("the view returns the caller's own receipts and no one else's", () => {
 	const harness = Setup();
 	Declare(harness);
@@ -411,4 +566,100 @@ test("a reveal touches no archive table", () => {
 
 	assert.equal(Archive(harness), before);
 	assert.deepEqual([...harness.db.observation.iter()], []);
+});
+
+// ------------------------------------------------------- the generation guard
+
+/**
+ * Seed the bound generations a test runs against.
+ *
+ * `bind` is a separate card and does not exist yet, so the rows are written
+ * through a reducer transaction - the same access a `bind` reducer would use,
+ * and the same fixture `Coherence.test.ts` uses for the helper's own contract.
+ */
+function Bind(harness: Harness, ...ids: readonly string[]): void {
+	harness.withReducerTx(Caller, (ctx) => {
+		for (const id of ids) {
+			ctx.db.generation.insert({
+				id,
+				boundAt: Stamp(0n),
+				manifestDigest: `digest:${id}`,
+				policyChanged: true,
+			});
+		}
+	});
+}
+
+test("a reveal naming a superseded generation is refused and writes nothing", () => {
+	const harness = Setup();
+	Bind(harness, "1", "2");
+	Declare(harness);
+	Grant(harness);
+	const before = Archive(harness);
+
+	// The refusal is the shared helper's, not a second message this reducer
+	// invented: one check, one vocabulary, whichever catalog write reaches it.
+	assert.throws(
+		() => Reveal(harness, Request({ generation: "1" })),
+		/stale-generation: the write names generation 1, the latest bound generation is 2/,
+	);
+
+	assert.deepEqual(Receipts(harness), []);
+	assert.equal(Archive(harness), before);
+});
+
+test("a reveal naming a generation that was never bound is refused as stale", () => {
+	const harness = Setup();
+	Bind(harness, "1");
+	Declare(harness);
+	Grant(harness);
+
+	assert.throws(
+		() => Reveal(harness, Request({ generation: "9" })),
+		/stale-generation: the write names generation 9, the latest bound generation is 1/,
+	);
+	assert.deepEqual(Receipts(harness), []);
+});
+
+test("a reveal naming a generation with nothing bound is refused as unbound", () => {
+	const harness = Setup();
+	Declare(harness);
+	Grant(harness);
+
+	assert.throws(
+		() => Reveal(harness, Request({ generation: "1" })),
+		/unbound-generation: nothing has been bound, so 1 cannot be the latest generation/,
+	);
+	assert.deepEqual(Receipts(harness), []);
+});
+
+test("naming the latest generation writes the same receipt as naming none", () => {
+	const named = Setup();
+	Bind(named, "1", "2");
+	Declare(named);
+	Grant(named);
+	Reveal(named, Request({ generation: "2" }));
+
+	const unnamed = Setup();
+	Bind(unnamed, "1", "2");
+	Declare(unnamed);
+	Grant(unnamed);
+	Reveal(unnamed, Request());
+
+	// The generation is a guard rather than a column, so the accepted path is
+	// byte-for-byte what it was before the argument existed.
+	assert.deepEqual(Receipts(named), Receipts(unnamed));
+});
+
+test("a reveal naming no generation is not refused when nothing is bound", () => {
+	// Only an assertion can be stale. A caller that asserts nothing is under
+	// the latest by construction, so a module with nothing bound still
+	// discloses - the same rule `claim` and `renew` follow.
+	const harness = Setup();
+	Declare(harness);
+	Grant(harness);
+
+	Reveal(harness, Request());
+
+	assert.equal(Receipts(harness).length, 1);
 });

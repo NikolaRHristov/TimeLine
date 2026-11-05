@@ -1,0 +1,253 @@
+// What `bind`'s admission step has to prove, restated from `Bind-Contract.md`
+// §1 and §6 onto this module's four-column `generation` table: a manifest that
+// names a capability the catalog does not declare is refused with that id in
+// the message, `generation` is byte-for-byte unchanged afterwards, and the
+// refusal is decided before the reducer resolves a predecessor or writes
+// anything at all.
+//
+// The harness is the one SpacetimeDB ships for module tests: an in-memory
+// datastore, a controllable clock, and the module's real reducer called the way
+// the host calls it. `withReducerTx` aborts the transaction when the body
+// throws, so "refused" and "wrote nothing" are one assertion here rather than
+// two hopes that agree.
+//
+// One case is the happy path, and it is not decoration: a refusal test that
+// passes because `bind` writes nothing on any input proves nothing about the
+// validation, so the same file shows a declared manifest appending exactly one
+// row.
+
+// The module's tsconfig carries no node types: this file is run by node with its
+// own loader (`Test/Support/Register.mjs`), not bundled into the module. The
+// directives are deliberate, and tsc reports them as unused once the types are
+// installed, which is when they should go.
+// @ts-expect-error - `node:assert/strict` has no declarations in this program
+import assert from "node:assert/strict";
+// @ts-expect-error - `node:test` has no declarations in this program
+import { test } from "node:test";
+import { Timestamp } from "spacetimedb";
+import type { InferSchema } from "spacetimedb/server";
+import { createModuleTestHarness, TestAuth } from "spacetimedb/server/test-utils";
+// The latest-generation pointer is read through its one implementation, so this
+// file cannot disagree with the module about what "latest" means.
+import { latestGeneration } from "../src/Catalog";
+import * as Catalog from "../src/index";
+
+/** The harness, typed to this module's own schema. */
+type Harness = ReturnType<typeof createModuleTestHarness<InferSchema<typeof Catalog.default>>>;
+
+/** What `bind` accepts, as the host passes it. */
+type BindArguments = Parameters<typeof Catalog.bind>[1];
+
+/** The instant every fixture starts from. */
+const BASE = Timestamp.fromDate(new Date("2026-01-01T00:00:00.000Z")).microsSinceUnixEpoch;
+
+/** Two capability ids the catalog declares, and one it never does. */
+const BROWSE = "agentic.browse@1.0.0";
+const CHAT = "agentic.chat@1.0.0";
+const UNDECLARED = "agentic.vote@1.0.0";
+
+/** The one sender every call in this file is made as. */
+const Caller = TestAuth.internal();
+
+/** The stamp `offsetMicros` after the fixture instant, in the format the module writes. */
+function Stamp(offsetMicros: bigint): string {
+	return new Timestamp(BASE + offsetMicros).toISOString();
+}
+
+/**
+ * A harness with the two declared capabilities and the clock at the fixture
+ * instant.
+ *
+ * The rows are seeded through a reducer transaction - the same access `bind`
+ * uses - because `capability` has no writer in the module and `init` seeds
+ * nothing: a declaration is a deployment, and `bind` may never create one.
+ */
+function Setup(): Harness {
+	const harness = createModuleTestHarness(Catalog.default, Catalog);
+	harness.clock.set(new Timestamp(BASE));
+
+	harness.withReducerTx(Caller, (ctx) => {
+		for (const id of [BROWSE, CHAT]) {
+			const [name, version] = id.split("@");
+
+			ctx.db.capability.insert({
+				id,
+				name,
+				version,
+				stateClass: "stateless",
+				contractDigest: `contract:${id}`,
+				declaredAt: Stamp(0n),
+			});
+		}
+	});
+
+	return harness;
+}
+
+/** One bind, as the host would call it. */
+function Bind(harness: Harness, args: BindArguments): void {
+	harness.withReducerTx(Caller, (ctx) => Catalog.bind(ctx, args));
+}
+
+/** The manifest every test starts from, with only the field under test changed. */
+function Manifest(overrides: Partial<BindArguments> = {}): BindArguments {
+	return {
+		previous: undefined,
+		manifestDigest: "sha256:first",
+		capabilities: [BROWSE],
+		policyChanged: true,
+		...overrides,
+	};
+}
+
+/**
+ * Every committed row of the two tables a bind could touch, as one stable text.
+ *
+ * `generation` and `capability` are the whole of it: a bind appends a generation
+ * and may never declare a capability, so a row appearing in either table on a
+ * refused call is the defect this file exists to catch. Read outside a
+ * transaction, because the harness's backend traps a read taken inside one.
+ */
+function Snapshot(harness: Harness): string {
+	const byId = (left: { id: string }, right: { id: string }) => left.id.localeCompare(right.id);
+	return JSON.stringify({
+		generation: [...harness.db.generation.iter()].sort(byId),
+		capability: [...harness.db.capability.iter()].sort(byId),
+	});
+}
+
+/** The latest bound generation, read through the module's own derivation. */
+function Latest(harness: Harness): string | null {
+	return harness.withReducerTx(Caller, (ctx) => latestGeneration(ctx));
+}
+
+// Every message assertion below is unanchored on purpose: `assert.throws` with a
+// RegExp matches `String(error)`, which begins with the error's class name -
+// `SenderError: admission-refused: ...` - so a `^admission-refused` pattern
+// would never match.
+
+test("a manifest naming an undeclared capability is refused, names it, and writes nothing", () => {
+	const harness = Setup();
+	const before = Snapshot(harness);
+
+	assert.throws(
+		() => Bind(harness, Manifest({ capabilities: [BROWSE, UNDECLARED] })),
+		/admission-refused: the manifest names agentic\.vote@1\.0\.0, which is not a declared capability/,
+	);
+
+	assert.equal(Snapshot(harness), before);
+	assert.equal(Latest(harness), null);
+});
+
+test("a bare capability name is not a declared id", () => {
+	const harness = Setup();
+	const before = Snapshot(harness);
+
+	assert.throws(
+		() => Bind(harness, Manifest({ capabilities: ["agentic.browse"] })),
+		/admission-refused: the manifest names agentic\.browse, which is not a declared capability/,
+	);
+
+	assert.equal(Snapshot(harness), before);
+});
+
+test("an empty digest and a duplicated capability are refused before any lookup", () => {
+	const harness = Setup();
+	const before = Snapshot(harness);
+
+	assert.throws(
+		() => Bind(harness, Manifest({ manifestDigest: "" })),
+		/admission-refused: a bind needs a manifest digest/,
+	);
+
+	assert.throws(
+		() => Bind(harness, Manifest({ capabilities: [BROWSE, BROWSE] })),
+		/admission-refused: the manifest names a capability more than once/,
+	);
+
+	assert.equal(Snapshot(harness), before);
+});
+
+test("an undeclared capability is refused ahead of the predecessor check", () => {
+	const harness = Setup();
+
+	Bind(harness, Manifest());
+
+	const before = Snapshot(harness);
+
+	// Two faults at once: a capability that is not declared, and no predecessor
+	// while generation 1 is already bound - which the reducer would refuse as a
+	// second history. The capability message is the one that arrives, which is
+	// how this file shows the admission step runs first rather than merely
+	// before the insert.
+	assert.throws(
+		() => Bind(harness, Manifest({ capabilities: [UNDECLARED] })),
+		/admission-refused: the manifest names agentic\.vote@1\.0\.0/,
+	);
+
+	assert.equal(Snapshot(harness), before);
+});
+
+test("a refusal over an existing history leaves every generation row byte-identical", () => {
+	const harness = Setup();
+
+	Bind(harness, Manifest());
+
+	const before = Snapshot(harness);
+
+	assert.throws(
+		() => Bind(harness, Manifest({ previous: "1", capabilities: [UNDECLARED] })),
+		/admission-refused: the manifest names agentic\.vote@1\.0\.0/,
+	);
+
+	assert.equal(Snapshot(harness), before);
+	assert.deepEqual(
+		[...harness.db.generation.iter()].map((row) => row.id),
+		["1"],
+	);
+});
+
+test("a declared manifest appends exactly one row at the module's clock", () => {
+	const harness = Setup();
+
+	Bind(harness, Manifest({ capabilities: [BROWSE, CHAT] }));
+
+	assert.deepEqual([...harness.db.generation.iter()], [
+		{
+			id: "1",
+			boundAt: Stamp(0n),
+			manifestDigest: "sha256:first",
+			policyChanged: true,
+		},
+	]);
+	assert.equal(Latest(harness), "1");
+});
+
+test("a successor appends one row and leaves its predecessor untouched", () => {
+	const harness = Setup();
+
+	Bind(harness, Manifest());
+
+	const first = [...harness.db.generation.iter()][0];
+
+	harness.clock.set(new Timestamp(BASE + 1_000_000n));
+
+	Bind(harness, Manifest({ previous: "1", capabilities: [BROWSE, CHAT], policyChanged: false }));
+
+	const rows = [...harness.db.generation.iter()].sort((left, right) =>
+		left.id.localeCompare(right.id),
+	);
+
+	assert.deepEqual(
+		rows.map((row) => row.id),
+		["1", "2"],
+	);
+	assert.deepEqual(rows[0], first);
+	assert.deepEqual(rows[1], {
+		id: "2",
+		boundAt: Stamp(1_000_000n),
+		manifestDigest: "sha256:first",
+		policyChanged: false,
+	});
+	assert.equal(Latest(harness), "2");
+});

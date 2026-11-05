@@ -43,6 +43,18 @@ export type Lease = {
 	state: string;
 };
 
+/** One row of the `generation` table, as `Schema.ts` declares it. */
+export type Generation = {
+	/** The sequence number as a decimal string: `1`, `2`, … */
+	id: string;
+	/** `T_ingest` - when the bind reducer accepted it. */
+	boundAt: string;
+	/** The composition root's digest of the manifest it bound. */
+	manifestDigest: string;
+	/** Whether this generation's admission policy differs from its parent's. */
+	policyChanged: boolean;
+};
+
 /** The only state a grant carries while it is held. */
 export const HELD = "held";
 
@@ -259,6 +271,38 @@ export function liveGrant(ctx: Context, resource: string, now: string): Lease | 
 	}
 
 	return null;
+}
+
+/**
+ * Append one `generation` row - the only path a generation is written through.
+ *
+ * `generation` is append-only: a generation is a fact about a moment, so there
+ * is no update and no delete here, and none may be added. A successor is a new
+ * row whose id is computed from its predecessor's, and that is what moves the
+ * latest-generation pointer `latestGeneration` derives - the table has no
+ * pointer column a write could disagree with.
+ *
+ * A colliding id is refused rather than replaced. Two binds naming the same
+ * predecessor serialise on this table, so the second one finds the first one's
+ * successor here; overwriting would silently rewrite a generation that rows
+ * already written under it name.
+ *
+ * `boundAt` is stamped by the caller from the reducer context (`nowOf`), never
+ * taken from an argument: a generation's birth is the module's own fact.
+ *
+ * The write lives here rather than in `index.ts` for the same reason the
+ * coherence check does - `ctx.db.generation` has exactly one owning file, which
+ * is the mechanical statement of "one write path" and is asserted by
+ * `Test/Coherence.test.ts`.
+ */
+export function appendGeneration(ctx: Context, row: Generation): Generation {
+	if (ctx.db.generation.id.find(row.id) !== null) {
+		throw new SenderError(`admission-refused: generation ${row.id} is already bound`);
+	}
+
+	ctx.db.generation.insert(row);
+
+	return row;
 }
 
 /**

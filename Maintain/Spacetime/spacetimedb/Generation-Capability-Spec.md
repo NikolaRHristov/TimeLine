@@ -119,8 +119,12 @@ assertion can be stale.
 It lives in `Catalog.ts` rather than `index.ts` because the entry file's named exports are reserved
 for values SpacetimeDB registers - reducers, lifecycle hooks, views, procedures - and the runtime
 refuses anything else at registration. `claim` and `renew` reach it through `writeGrant`;
-`recordTrace` calls it directly; `probe` does the same when it lands. No reducer compares generation
-ids itself, and no second name for this check exists.
+`recordTrace` and `reveal` - the reducer the brief called `probe` - call it directly. No reducer
+compares generation ids itself, and no second name for this check exists.
+
+`reveal` takes the generation as a guard rather than a stamp: `probe` has no generation column, so a
+superseded claim is refused before the private value is read, while the receipt records what was
+disclosed and not which interpreter allowed it.
 
 ## 4. No reducer executes DDL
 

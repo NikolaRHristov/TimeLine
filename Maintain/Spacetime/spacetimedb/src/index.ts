@@ -2,6 +2,7 @@
 import { SenderError, t } from "spacetimedb/server";
 import type { InferSchema, ReducerCtx } from "spacetimedb/server";
 import {
+	appendGeneration,
 	currentGrant,
 	extendDeadline,
 	HELD,
@@ -235,7 +236,123 @@ export const attach = spacetimedb.reducer(
  * catalog row is a fact about what this system was allowed to do, so it names the
  * generation it was allowed under and is refused when that generation has been
  * superseded.
+ *
+ * `probe` is the one catalog row with no generation column: a reveal carries the
+ * caller's claim as a guard only, so a write under a superseded generation is
+ * refused while the receipt states what was disclosed rather than which
+ * interpreter allowed it.
  */
+
+/**
+ * Bind a generation: append the row that states what this system was allowed to
+ * do, and make it the generation every later catalog write is checked against.
+ *
+ * `generation` is append-only, so this reducer appends and never rewrites. The
+ * latest bound generation is not a pointer that a write moves: it is derived by
+ * the one reader in `Catalog.ts` as the highest canonical decimal id in the
+ * table, and this reducer moves it by writing `String(parent + 1)` - `"1"` when
+ * the history is empty. That is why the id is not an argument and there is no
+ * auto-increment: a generation's number is its position in a dense sequence the
+ * module computes, which is what makes two binds naming one predecessor a
+ * compare-and-swap rather than a fork.
+ *
+ * `boundAt` is `nowOf(ctx)`, the reducer's own clock. The caller does not get
+ * to state when its generation was bound - a generation's birth is the module's
+ * own fact, and a client-supplied instant would let a caller backdate the
+ * policy it bound.
+ *
+ * `policyChanged` is carried, not derived. There is nothing here to compare
+ * against: `generation` has no policy column, and the admission policy belongs
+ * to the manifest rather than to this table, so the successor is the only place
+ * that knows whether it moved. The value is stored verbatim; defaulting it to
+ * false would assert "the policy did not move" for every bind.
+ *
+ * `capabilities` is the manifest's capability list, and every id in it must
+ * already be declared. The digest is opaque and names a manifest rather than
+ * its parts, so it cannot be parsed into that list; only emptiness is refused.
+ * A capability is never created here, because a reducer that could declare one
+ * would let a caller widen the set its own manifest is checked against.
+ *
+ * Steps, in this order and no other:
+ *
+ * 1. Refuse an empty digest, a duplicated capability id, and an undeclared one.
+ * 2. Resolve the predecessor and require that it is still the latest bound
+ *    generation. A bind naming none opens the history, so it is refused when
+ *    anything is already bound.
+ * 3. Compute the id and append exactly one row, through `appendGeneration`.
+ * 4. Re-assert coherence against the row just written.
+ *
+ * Nothing is written before step 3, and a `SenderError` anywhere rolls the call
+ * back - so a refusal leaves `generation` byte-for-byte as it was, and a bind
+ * that failed its own final assertion cannot leave a row behind.
+ */
+export const bind = spacetimedb.reducer(
+	{
+		/** The generation this one succeeds, when it succeeds one. */
+		previous: t.string().optional(),
+		/** The composition root's digest of the manifest it bound. Opaque here. */
+		manifestDigest: t.string(),
+		/** The manifest's capability ids, `<name>@<version>`, not bare names. */
+		capabilities: t.array(t.string()),
+		/** Whether this generation's admission policy differs from its parent's. */
+		policyChanged: t.bool(),
+	},
+	(ctx, args) => {
+		if (args.manifestDigest.length === 0) {
+			throw new SenderError("admission-refused: a bind needs a manifest digest");
+		}
+
+		// Sorting before deduplicating makes the refusal independent of the
+		// order the caller happened to list the ids in.
+		const named = [...args.capabilities].sort();
+		const declared = [...new Set(named)];
+
+		if (declared.length !== named.length) {
+			throw new SenderError("admission-refused: the manifest names a capability more than once");
+		}
+
+		for (const id of declared) {
+			if (ctx.db.capability.id.find(id) === null) {
+				throw new SenderError(
+					`admission-refused: the manifest names ${id}, which is not a declared capability`,
+				);
+			}
+		}
+
+		const opens = args.previous === undefined || args.previous === null;
+
+		// Naming no predecessor means opening the history, and the shared helper
+		// reads an absent generation as "under the latest by construction" -
+		// right for a write that stamps a row, wrong for the one reducer that
+		// moves the pointer. Asking it for the latest with no claim, then
+		// refusing when there is one, is what stops a bind opening a second
+		// history beside the first.
+		const parent = requireCoherentGeneration(ctx, opens ? null : args.previous);
+
+		if (opens && parent !== null) {
+			throw new SenderError(
+				`admission-refused: generation ${parent} is already bound, so a bind naming no predecessor cannot open a second history`,
+			);
+		}
+
+		// The successor's number is computed from its parent's, which is what
+		// keeps the ids dense and the latest single-valued.
+		const id = parent === null ? "1" : String(BigInt(parent) + 1n);
+
+		appendGeneration(ctx, {
+			id,
+			boundAt: nowOf(ctx),
+			manifestDigest: args.manifestDigest,
+			policyChanged: args.policyChanged,
+		});
+
+		// The row just appended is the generation every later write is checked
+		// against. This cannot fail in a correct reducer; it is kept because a
+		// throw here rolls the insert back instead of leaving a row nothing else
+		// would stamp.
+		requireCoherentGeneration(ctx, id);
+	},
+);
 
 /**
  * The content a trace row is keyed by, as one unambiguous string.
@@ -645,8 +762,17 @@ function discloseOf(row: { name: string; version: number; value: string }): stri
  * that name, and a reducer named `probe` declares an argument object whose type
  * is also called `Probe`, which the module registry refuses as a duplicate.
  *
+ * `generation` is optional and is the caller's claim about the world it is
+ * reading in, checked by the shared coherence helper before this reducer does
+ * anything else. A reveal that names a superseded generation is refused with
+ * `stale-generation`, and one that names none is under the latest by
+ * construction, because the whole reducer is one transaction - the same rule
+ * `claim`, `renew` and `recordTrace` are held to, and the reason this reducer
+ * contains no comparison of generation ids.
+ *
  * Steps, in this order and no other:
  *
+ * 0. Refuse a caller whose generation claim is not the latest bound one.
  * 1. Reject a malformed request - an empty capability, an empty property, or a
  *    version below one.
  * 2. Resolve the audience from `ctx.sender`. There is no audience argument, and
@@ -663,7 +789,7 @@ function discloseOf(row: { name: string; version: number; value: string }): stri
  * 7. Compute the disclosure.
  * 8. Insert the receipt - and that insert is the charge.
  *
- * A refusal at any of steps 1-6 writes nothing and charges nothing, and a throw
+ * A refusal at any of steps 0-6 writes nothing and charges nothing, and a throw
  * anywhere rolls back the call, so pay-and-reveal is all-or-nothing by
  * construction rather than by discipline.
  *
@@ -680,8 +806,24 @@ export const reveal = spacetimedb.reducer(
 		propertyVersion: t.u32(),
 		/** `T_event` - when the reading was taken, as the caller states it. */
 		at: t.string(),
+		/**
+		 * The generation the caller was bound with, when it names one.
+		 *
+		 * A reveal is a catalog write, so it is held to the same coherence rule
+		 * as the rest: naming a superseded generation is refused before
+		 * anything is read, and naming none is under the latest by
+		 * construction.
+		 */
+		generation: t.string().optional(),
 	},
 	(ctx, args) => {
+		// The one coherence check in the module, shared with `recordTrace`,
+		// `claim` and `renew`. It runs before the request is examined and long
+		// before the private value is read: a caller operating on a superseded
+		// generation is refused for that reason rather than for whatever its
+		// request happens to be, and nothing is written on the stale path.
+		requireCoherentGeneration(ctx, args.generation);
+
 		if (args.capability.length === 0) {
 			throw new SenderError("admission-refused: a reveal needs a capability id");
 		}
