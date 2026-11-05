@@ -9,6 +9,11 @@
 // check that can only be exercised through a reducer is a check whose edge cases
 // are whatever that reducer happens to reach.
 //
+// One test here is not behavioural: it reads `src/` and fails when the
+// derivation appears anywhere but `Catalog.ts`, because a second implementation
+// is a defect no single call can exhibit - both copies answer correctly until
+// the day they disagree.
+//
 // The harness is the one SpacetimeDB ships for module tests: an in-memory
 // datastore, a controllable clock, and a reducer context. Nothing here touches a
 // server.
@@ -19,6 +24,8 @@
 // installed, which is when they should go.
 // @ts-expect-error - `node:assert/strict` has no declarations in this program
 import assert from "node:assert/strict";
+// @ts-expect-error - `node:fs` has no declarations in this program
+import { readdirSync, readFileSync } from "node:fs";
 // @ts-expect-error - `node:test` has no declarations in this program
 import { test } from "node:test";
 import type { InferSchema } from "spacetimedb/server";
@@ -170,6 +177,30 @@ test("a row whose id is not a decimal sequence is skipped, never treated as late
 	);
 });
 
+test("a non-canonical id is skipped, so 1 and 01 cannot both be latest", () => {
+	// `bind` writes `String(n)`, so `01` is a key it never produced. Accepting
+	// it would tie with `1` - the same number under two keys - and leave the
+	// answer to whatever order the datastore yields rows in.
+	const harness = Setup(["1", "01"]);
+
+	assert.equal(Latest(harness), "1");
+	assert.equal(Check(harness, "1"), "1");
+	assert.throws(
+		() => Check(harness, "01"),
+		/stale-generation: the write names generation 01, the latest bound generation is 1/,
+	);
+});
+
+test("a zero id is skipped: a generation is numbered from 1", () => {
+	const harness = Setup(["0"]);
+
+	assert.equal(Latest(harness), null);
+	assert.throws(
+		() => Check(harness, "0"),
+		/unbound-generation: nothing has been bound, so 0 cannot be the latest generation/,
+	);
+});
+
 test("naming no generation is under the latest by construction, and is not refused", () => {
 	const harness = Setup(["1", "2"]);
 
@@ -185,4 +216,32 @@ test("nothing bound: naming no generation answers null rather than throwing", ()
 	const harness = Setup([]);
 
 	assert.equal(Check(harness), null);
+});
+
+// --------------------------------------------------------- one implementation
+
+/**
+ * The check has exactly one implementation, and this is its executable form.
+ *
+ * A second implementation needs a second derivation of "latest", and every
+ * derivation reads the `generation` table - so the accessor appearing in one
+ * file is the mechanical statement of "one check". A caller reaches the answer
+ * through `requireCoherentGeneration` and never by naming the derivation
+ * itself: `latestGeneration` outside `Catalog.ts` is a caller that has taken
+ * the comparison back, whatever it does with the answer.
+ *
+ * `Test/` is out of scope on purpose. A test seeds rows and calls the helper,
+ * which is not the module; this scans `src/`, where a reducer would put a copy.
+ */
+test("the generation table and its derivation are read from one file only", () => {
+	const source = new URL("../src/", import.meta.url);
+	const files = readdirSync(source).filter((name: string) => name.endsWith(".ts"));
+
+	const named = (needle: string): string[] =>
+		files
+			.filter((name: string) => readFileSync(new URL(name, source), "utf8").includes(needle))
+			.sort();
+
+	assert.deepEqual(named("ctx.db.generation"), ["Catalog.ts"]);
+	assert.deepEqual(named("latestGeneration"), ["Catalog.ts"]);
 });

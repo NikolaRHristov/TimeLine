@@ -270,6 +270,12 @@ export function liveGrant(ctx: Context, resource: string, now: string): Lease | 
  * written by `bind` and cannot be the latest bound generation: it is skipped
  * rather than thrown on, because one unreadable row must not wedge every write
  * in the module.
+ *
+ * An id also has to be the number it names. `bind` writes `String(n)`, so `01`,
+ * `007` and `0` are keys it never produced, and accepting them would make the
+ * answer depend on iteration order: `1` and `01` name the same number, and a
+ * strict comparison would keep whichever row the datastore happened to yield
+ * first. Skipping every non-canonical key keeps the answer single-valued.
  */
 export function latestGeneration(ctx: Context): string | null {
 	let latest: bigint | null = null;
@@ -279,6 +285,8 @@ export function latestGeneration(ctx: Context): string | null {
 		if (!/^\d+$/.test(row.id)) continue;
 
 		const value = BigInt(row.id);
+
+		if (value < 1n || String(value) !== row.id) continue;
 
 		if (latest === null || value > latest) {
 			latest = value;

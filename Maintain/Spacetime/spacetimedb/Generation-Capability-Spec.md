@@ -83,36 +83,44 @@ implement against.
 
 **Operationally, there is no pointer.** No column records the latest generation, and none may be
 added: the table is append-only, and a pointer row would be a second authority that a mutable write
-could disagree with. The latest generation is derived, and it is derived by one key lookup.
+could disagree with. The latest generation is derived from the rows themselves.
 
-A generation `n` is the latest when no row exists at `n + 1`. The crate's `Latest` is the reference
-implementation, and translated onto this table - which has no `sequence` column - it is four steps:
+`bind` writes dense decimal ids, so the latest is the highest decimal id present. `Catalog.ts`
+implements that as `latestGeneration`, one pass over the table. A row counts only when its id is
+canonical - `/^\d+$/`, at least `1`, and the text of its own value, so `01`, `007` and `0` are not
+generations - and an unreadable row is skipped rather than thrown on, because one corrupt row must
+not wedge every write in the module. Canonicality is what keeps the answer single-valued: `1` and
+`01` name the same number, and accepting both would leave "latest" to iteration order.
 
-1. `ctx.db.generation.id.find(id)`; absent means it was never bound, so not latest.
-2. read the sequence from the id itself, and fail closed on a non-canonical one: `Number(id)` must
-   be a safe integer, at least `1`, and `String(n) === id`. A key of `01`, `1.0`, `-1` or ` 1` is
-   treated as no generation rather than as one, which is what makes the density assumption fail
-   closed.
-3. `ctx.db.generation.id.find(String(n + 1))`; present means superseded, so not latest.
-4. otherwise it is the latest.
+The crate's `Latest` asks the successor question instead - `n` is latest when no row exists at
+`n + 1` - which needs a density this table cannot prove and calls every row above a gap latest. The
+two agree while the ids are dense; the highest-id form stays single-valued when they are not.
 
 `bind` uses the same property to compute its successor: the first generation is `"1"`, refused when
-a row at `"1"` already exists; a bind that names a predecessor requires that predecessor to be
-latest and writes `String(parent + 1)`. Two binds naming the same parent are therefore a
+a row at `"1"` already exists; a bind that names a predecessor requires that predecessor to be the
+latest one and writes `String(parent + 1)`. Two binds naming the same parent are therefore a
 compare-and-swap rather than a fork - the database serialises them and the second finds the first
 one's successor.
 
-The helper the other reducers call is one function in this file, not a reducer:
+The helper the other reducers call is one function, exported from `Catalog.ts`:
 
 ```
-function assertLatestBoundGeneration(ctx: Ctx, generationId: string): void
+requireCoherentGeneration(ctx, generation?): string | null
+latestGeneration(ctx): string | null
 ```
 
-It reads, compares and throws; it writes nothing. Keep it unexported. SpacetimeDB reserves named
-module exports for values it registers - reducers, lifecycle hooks, views, procedures - and a plain
-helper is a module-level function that `claim`, `renew`, `probe` and `recordTrace` call directly
-because they live in the same file. Exporting it would invite the bundler to read it as a runtime
-export.
+`requireCoherentGeneration` reads, compares and throws; it writes nothing, and it returns the latest
+id so the caller stamps the row with the generation it actually wrote under. A supplied id that is
+not the latest throws `stale-generation` naming both ids; a supplied id with nothing bound throws
+`unbound-generation`. A call naming no generation returns the latest and is not refused: a reducer
+is one transaction, so a write that names nothing is under the latest by construction, and only an
+assertion can be stale.
+
+It lives in `Catalog.ts` rather than `index.ts` because the entry file's named exports are reserved
+for values SpacetimeDB registers - reducers, lifecycle hooks, views, procedures - and the runtime
+refuses anything else at registration. `claim` and `renew` reach it through `writeGrant`;
+`recordTrace` calls it directly; `probe` does the same when it lands. No reducer compares generation
+ids itself, and no second name for this check exists.
 
 ## 4. No reducer executes DDL
 
@@ -130,22 +138,20 @@ declaration is a deployment. A card that adds `bind` must not add a writer for `
 manifest naming something absent is the signal that a deployment is missing, not that a write is
 due.
 
-## 5. Refusal style: what exists in `index.ts`
+## 5. Refusal style
 
-There is no throwing helper in the module today.
-`grep -rn "throw\|SenderError" Maintain/Spacetime/spacetimedb/src/` returns nothing, and `index.ts`
-imports only `t` and the schema.
+`SenderError` from `spacetimedb/server` is the refusal: it carries a reason and aborts the
+transaction, so no partial row survives. `Catalog.ts` throws it for a stale generation, a stale
+fence, an unreadable deadline and a non-positive extension; `index.ts` throws it for an unheld
+lease, an invalid claim and a trace collision.
 
-The only refusal pattern the file has is an idempotent early return:
+The archive reducers keep the idempotent early return, which is right for a replay:
 
 - `record` - `if (ctx.db.event.id.find(id) !== null) return;`
 - `observe` - the observation is appended only when its content-derived id is absent.
 
 Both are silent no-ops, which is right for a replay and wrong for a caller that sent an undeclared
-capability: it would report success and change nothing. The SDK idiom for a refusal that carries a
-reason is `throw new SenderError("...")` from `spacetimedb/server`, which aborts the transaction so
-no partial row survives. It is not imported yet; adding it is the first such import in this file:
-`import { SenderError, t } from "spacetimedb/server";`.
+capability: it would report success and change nothing. A `bind` that refuses must throw.
 
 Match the crate's vocabulary in the message so the module and its manifest agree:
 `admission-refused` for a malformed manifest or an ended authority, `lease-held` for a live or
@@ -163,8 +169,8 @@ insert-or-update, and no wall clock - `ctx.timestamp`, rendered to the string th
    `capabilities`, `boundAt`, `boundBy`); this module's has four. The reduced form is what a `bind`
    here has to work with, and the two missing ones change how the rule is written: the sequence is
    read out of the id string, and the capability list is an argument.
-3. `index.ts` has no error helper, so "match the existing error style" resolves to "there is none" -
-   `SenderError` is a new import, not an existing convention.
+3. `SenderError` is already the module's refusal type in both `index.ts` and `Catalog.ts`, so "match
+   the existing error style" resolves to that one convention rather than to a new import.
 4. `Agentic/Crate/SpacetimeCatalog/Test/Rules.rs` already holds twenty cases for these rules,
    including the four bind cases and the superseded-generation case. Restate them, do not invent new
    ones.
@@ -182,5 +188,8 @@ with `TestClock` for the timestamps. The cases that matter:
 - a bind with a declared list appends exactly one row, and `boundAt` is the harness clock.
 - a second bind naming the first as its predecessor appends `"2"` and leaves `"1"` byte-identical.
 - a bind naming a superseded predecessor is refused.
-- `assertLatestBoundGeneration` throws for `"1"` once `"2"` exists and returns for `"2"`.
+- `requireCoherentGeneration` throws for `"1"` once `"2"` exists and returns `"2"` for `"2"`.
 - a write carrying a generation id that was never bound is refused.
+
+The coherence cases are written in `Test/Coherence.test.ts`; the bind cases are the ones still to
+write.
