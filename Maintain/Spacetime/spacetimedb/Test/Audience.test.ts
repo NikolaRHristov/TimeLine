@@ -975,6 +975,29 @@ test("criterion 4: the only view is my_probe, it is not anonymous, and it is sen
 	assert.notEqual(own[0].id, theirs[0].id);
 });
 
+test("criterion 3: the receipt carries the bound generation, never the caller's string", () => {
+	const harness = Setup();
+	Declare(harness);
+	Bound(harness, "1", "2");
+	Grant(harness);
+
+	// A claim naming a superseded generation is refused before anything is read,
+	// so the stored column can only ever be the helper's answer.
+	assert.throws(
+		() => Reveal(harness, Request({ generation: "1" })),
+		/stale-generation/,
+	);
+	assert.deepEqual(Receipts(harness), []);
+
+	Reveal(harness, Request({ generation: "2" }));
+
+	const [receipt] = Receipts(harness);
+	Diagnostic("receipt under generation 2", receipt);
+
+	assert.equal(receipt.generation, "2");
+	assert.equal(receipt.audience, HexOf(harness));
+});
+
 test("criterion 4: a probe's receipt carries exactly the receipt columns and no private row", () => {
 	const harness = Setup();
 	Declare(harness);
@@ -989,12 +1012,17 @@ test("criterion 4: a probe's receipt carries exactly the receipt columns and no 
 		"at",
 		"audience",
 		"capability",
+		"generation",
 		"id",
 		"ingestedAt",
 		"property",
 		"propertyVersion",
 		"value",
 	]);
+
+	// The generation is the helper's answer, not the caller's string: the row
+	// states which interpreter allowed the disclosure.
+	assert.equal(receipt.generation, "1");
 
 	// The disclosure is the property's name, version and value; the evidence
 	// column and the lease resource it names are the two things that must not
@@ -1015,6 +1043,7 @@ test("criterion 4: a probe's receipt carries exactly the receipt columns and no 
 test("criterion 4: a refusal does not name the private lease resource", () => {
 	const harness = Setup();
 	Declare(harness);
+	Bound(harness, "1");
 	// No lease: the caller is refused by the entitlement check, which is exactly
 	// the caller that must not be told which resource the property declares.
 
