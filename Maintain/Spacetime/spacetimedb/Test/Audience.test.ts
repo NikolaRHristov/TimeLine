@@ -149,6 +149,28 @@ function Declare(harness: Harness): void {
 }
 
 /**
+ * Bind the generations a fixture runs under.
+ *
+ * `bind` is exercised by the sweep below and by `Bind.test.ts`; a fixture that
+ * only needs a receipt to name a generation writes the row through a reducer
+ * transaction, the same access `bind` itself uses. A reveal refuses when nothing
+ * is bound, because a receipt that says what was disclosed but not which
+ * interpreter allowed it is not evidence of a policy.
+ */
+function Bound(harness: Harness, ...ids: readonly string[]): void {
+	harness.withReducerTx(Caller, (ctx) => {
+		for (const id of ids) {
+			ctx.db.generation.insert({
+				id,
+				boundAt: Stamp(0n),
+				manifestDigest: `digest:${id}`,
+				policyChanged: true,
+			});
+		}
+	});
+}
+
+/**
  * Write one lease row.
  *
  * `claim` is not used where a fixture needs a holder other than the caller: the
