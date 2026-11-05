@@ -211,7 +211,9 @@ function MyProbe(harness: Harness, auth = Caller) {
  * in the test log goes through `process.stdout`.
  */
 function Diagnostic(label: string, row: unknown): void {
-	const text = JSON.stringify(row, (_key, value) => (typeof value === "bigint" ? value.toString() : value));
+	const text = JSON.stringify(row, (_key, value) =>
+		typeof value === "bigint" ? value.toString() : value,
+	);
 	process.stdout.write(`[audit] ${label}: ${text}\n`);
 }
 
@@ -227,7 +229,9 @@ function AllRows(harness: Harness): string {
 	}
 
 	// `fence` is a `t.u64()` and arrives as a bigint, which JSON cannot encode.
-	return JSON.stringify(tables, (_key, value) => (typeof value === "bigint" ? value.toString() : value));
+	return JSON.stringify(tables, (_key, value) =>
+		typeof value === "bigint" ? value.toString() : value,
+	);
 }
 
 // --------------------------------------------------------------- criterion 3
@@ -293,7 +297,14 @@ const SPOOFS: readonly (readonly [string, Record<string, unknown>])[] = [
 	["an actor argument", { actor: SPOOF }],
 	[
 		"every audience-like argument at once",
-		{ audience: SPOOF, role: "prober", holder: SPOOF, sender: SPOOF, identity: SPOOF, actor: SPOOF },
+		{
+			audience: SPOOF,
+			role: "prober",
+			holder: SPOOF,
+			sender: SPOOF,
+			identity: SPOOF,
+			actor: SPOOF,
+		},
 	],
 ];
 
@@ -825,7 +836,9 @@ test("criterion 4: no registered function in the module returns a value", () => 
 	// Coverage: every function the host publishes was found in the source, so a
 	// registration written some other way fails here rather than being skipped.
 	const names = registered.map((entry) => entry.name).sort();
-	const published = Catalog.default.moduleDef.reducers.map((reducer) => reducer.sourceName).sort();
+	const published = Catalog.default.moduleDef.reducers
+		.map((reducer) => reducer.sourceName)
+		.sort();
 
 	assert.deepEqual(names, published);
 
@@ -864,7 +877,15 @@ test("criterion 4: the catalog tables are private, so no subscriber reads a priv
 		Catalog.default.moduleDef.tables.map((table) => [table.sourceName, table.tableAccess.tag]),
 	);
 
-	for (const name of ["capability", "generation", "lease", "property", "probe", "belief", "trace"]) {
+	for (const name of [
+		"capability",
+		"generation",
+		"lease",
+		"property",
+		"probe",
+		"belief",
+		"trace",
+	]) {
 		Diagnostic(`visibility of ${name}`, visibility.get(name));
 		assert.equal(visibility.get(name), "Private", `${name} is subscriber-readable`);
 	}
@@ -942,7 +963,10 @@ test("criterion 4: a probe's receipt carries exactly the receipt columns and no 
 	// cross, and neither does.
 	const receiptText = JSON.stringify(receipt);
 	assert.ok(!receiptText.includes(EVIDENCE), "raw evidence crossed into the receipt");
-	assert.ok(!receiptText.includes(RESOURCE), "the private row's resource crossed into the receipt");
+	assert.ok(
+		!receiptText.includes(RESOURCE),
+		"the private row's resource crossed into the receipt",
+	);
 
 	// The same holds for the view, which is the read path a client uses.
 	const viewText = JSON.stringify(MyProbe(harness));
