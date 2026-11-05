@@ -303,7 +303,10 @@ the code rather than a hope about it.
 ## Claim → test
 
 Exercised on a local server (`spacetime start --listen-addr 127.0.0.1:3010`) against a throwaway
-database, with declarations inserted by `spacetime sql` - which does write private tables.
+database, with declarations inserted by `spacetime sql` - which does write private tables - and
+against the module test harness (`node --import ./Test/Support/Register.mjs --test Test/*.test.ts`
+in `Maintain/Spacetime/spacetimedb`), which runs the real reducer in a real transaction over an
+in-memory datastore with a controllable clock.
 
 | Claim                                             | Test                                                                                                                            |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -317,3 +320,6 @@ database, with declarations inserted by `spacetime sql` - which does write priva
 | Raw evidence never crosses                        | put a canary in `property.evidence`; grep every `probe`, `belief` and `my_probe` row → no match                                 |
 | Belief is derived, replaceable and idempotent     | `spacetime call <db> recompute_belief '"demo@1"'` twice → one row, `confidence` `0.5` for one receipt                           |
 | The archive is untouched                          | `namesFor(entity("observation"), "module")` in `Maintain/Source/Test/Schema.test.ts` → `["at","source","postId","action","id"]` |
+| One entitled reveal writes exactly one row        | `Test/Reveal.test.ts` → "an entitled sender writes exactly one probe row, scoped to its server-resolved audience"               |
+| A failure after the read charges nothing          | `Test/Reveal.test.ts` → "a failure after the private read and before the insert leaves no receipt and no charge"                |
+| An unentitled reveal charges nothing              | `Test/Reveal.test.ts` → "an unentitled sender is refused, writes no probe row and deducts no charge"                            |

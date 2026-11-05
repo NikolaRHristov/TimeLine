@@ -174,6 +174,18 @@ package carries that hook at `Test/Support/Register.mjs`:
 node --import ./Test/Support/Register.mjs Test/<Name>.test.ts
 ```
 
+**The suite is a gate stage, not a habit.** `pnpm run Check:Spacetime` (`Scripts/Spacetime.mjs`)
+runs every `Test/*.test.ts` from the module's own directory and sits in the root `pnpm run check`
+beside `Test`. It refuses the two states that would otherwise read as green:
+
+- **No install.** The module is deliberately not a member of `pnpm-workspace.yaml`, so neither the
+  root `pnpm install` nor `pnpm --filter` reaches it. A plain `pnpm install` run inside the module
+  directory is worse than nothing - it resolves the root workspace, installs there, and exits 0 with
+  the module still uninstalled. The stage names the remedy instead:
+  `cd Maintain/Spacetime/spacetimedb && pnpm install --ignore-workspace`.
+- **No test file.** `node --test` on an empty match exits 0, so a deleted or renamed suite would
+  pass silently; the stage fails on an empty `Test/` rather than reporting it.
+
 `createModuleTestHarness(schema, {})` then gives a real reducer context:
 `withReducerTx(auth, ctx => …)` runs one transaction and rolls it back when the body throws,
 `harness.clock.set(...)` moves the clock, and `ctx.timestamp.toISOString()` carries microseconds.
@@ -310,6 +322,7 @@ build must never connect to the database, or a static/CI build acquires a live s
 | A helper module bundles                | a reducer that imports `from "./Catalog"` builds, and the reducer's name appears in `dist/bundle.js`                                               |
 | A test file typechecks with the module | `spacetime build` stays green with `Test/` in the tsconfig include and a `// @ts-expect-error` above each `node:` import                           |
 | The module loads under node            | `node --import ./Test/Support/Register.mjs` imports `src/Schema.ts` and `createModuleTestHarness` without `ERR_UNSUPPORTED_ESM_URL_SCHEME`         |
+| The module suite runs on every check   | `pnpm run Check:Spacetime` exits 0, and `package.json` `check` names `Check:Spacetime` beside `Test`                                               |
 | A stale fence writes nothing           | a renewal presenting the fence a takeover superseded throws `stale-fence`, and the `lease` table is byte-for-byte unchanged (`Test/Lease.test.ts`) |
 | A guard is really guarded              | negating the guard in a scratch copy fails exactly the tests that name it, and no others                                                           |
 | A stamp round-trips                    | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                             |

@@ -125,6 +125,84 @@ function Latest(harness: Harness): string | null {
 // RegExp matches `String(error)`, which begins with the error's class name -
 // `SenderError: admission-refused: ...` - so a `^admission-refused` pattern
 // would never match.
+//
+// The snapshot assertions prove the outcome, not the ordering. `withReducerTx`
+// aborts a call that throws, so a reducer that wrote first and validated second
+// would leave `generation` unchanged too - the rollback hides the difference.
+// Ordering therefore gets its own observation: `CountedContext` counts the
+// inserts that reach the datastore, and a refused bind must reach none.
+
+/**
+ * The context a bind is called with, plus a reader for how many `generation`
+ * inserts reached it.
+ *
+ * The wrapper is the seam the harness does not offer: the datastore is the
+ * host's, and a host whose transaction aborts is a host whose rows never
+ * existed, so counting the writes is the only way to tell "refused before the
+ * insert" from "refused after it". Nothing in `src/index.ts` knows this wrapper
+ * exists.
+ */
+function CountedContext(ctx: Parameters<typeof Catalog.bind>[0]) {
+	const db = ctx.db as unknown as Record<string, Record<string, unknown>>;
+	const inner = db.generation.insert as (row: unknown) => unknown;
+	let inserts = 0;
+
+	const wrapped = {
+		...ctx,
+		db: {
+			...db,
+			generation: {
+				...db.generation,
+				insert: (row: unknown) => {
+					inserts += 1;
+					return inner(row);
+				},
+			},
+		},
+	} as unknown as Parameters<typeof Catalog.bind>[0];
+
+	return { ctx: wrapped, inserts: () => inserts };
+}
+
+test("a refused bind never reaches the insert", () => {
+	const harness = Setup();
+	let inserts = 0;
+
+	assert.throws(
+		() =>
+			harness.withReducerTx(Caller, (ctx) => {
+				const counted = CountedContext(ctx);
+
+				try {
+					return Catalog.bind(counted.ctx, Manifest({ capabilities: [UNDECLARED] }));
+				} finally {
+					inserts = counted.inserts();
+				}
+			}),
+		/admission-refused: the manifest names agentic\.vote@1\.0\.0/,
+	);
+
+	assert.equal(inserts, 0);
+});
+
+test("the insert counter sees the one write a valid bind makes", () => {
+	const harness = Setup();
+	let inserts = 0;
+
+	harness.withReducerTx(Caller, (ctx) => {
+		const counted = CountedContext(ctx);
+
+		try {
+			return Catalog.bind(counted.ctx, Manifest());
+		} finally {
+			inserts = counted.inserts();
+		}
+	});
+
+	// The control for the case above: a counter that never observes a write
+	// would report zero for every call, including the one that writes.
+	assert.equal(inserts, 1);
+});
 
 test("a manifest naming an undeclared capability is refused, names it, and writes nothing", () => {
 	const harness = Setup();

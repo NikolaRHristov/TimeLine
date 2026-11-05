@@ -11,7 +11,8 @@ the module build and the cases in §6 (§7).
 
 ## 1. The reducer
 
-Exported from `Maintain/Spacetime/spacetimedb/src/index.ts`:
+Exported from `Maintain/Spacetime/spacetimedb/src/index.ts`; the one write it performs goes through
+`appendGeneration` in `src/Catalog.ts`.
 
 ```ts
 export const bind = spacetimedb.reducer(
@@ -26,6 +27,8 @@ export const bind = spacetimedb.reducer(
 			throw new SenderError("admission-refused: a bind needs a manifest digest");
 		}
 
+		// Sorting before deduplicating makes the refusal independent of the
+		// order the caller happened to list the ids in.
 		const named = [...args.capabilities].sort();
 		const declared = [...new Set(named)];
 
@@ -43,27 +46,19 @@ export const bind = spacetimedb.reducer(
 			}
 		}
 
-		let parent: string | null = null;
+		const opens = args.previous === undefined || args.previous === null;
 
-		if (args.previous !== undefined && args.previous !== null) {
-			parent = requireCoherentGeneration(ctx, args.previous);
-		} else {
-			parent = latestGeneration(ctx);
+		const parent = requireCoherentGeneration(ctx, opens ? null : args.previous);
 
-			if (parent !== null) {
-				throw new SenderError(
-					`admission-refused: generation ${parent} is already bound, so a bind naming no predecessor cannot open a second history`,
-				);
-			}
+		if (opens && parent !== null) {
+			throw new SenderError(
+				`admission-refused: generation ${parent} is already bound, so a bind naming no predecessor cannot open a second history`,
+			);
 		}
 
 		const id = parent === null ? "1" : String(BigInt(parent) + 1n);
 
-		if (ctx.db.generation.id.find(id) !== null) {
-			throw new SenderError(`admission-refused: generation ${id} is already bound`);
-		}
-
-		ctx.db.generation.insert({
+		appendGeneration(ctx, {
 			id,
 			boundAt: nowOf(ctx),
 			manifestDigest: args.manifestDigest,
@@ -75,21 +70,44 @@ export const bind = spacetimedb.reducer(
 );
 ```
 
+The write itself, from `src/Catalog.ts` - the only path a `generation` row is written through:
+
+```ts
+export function appendGeneration(ctx: Context, row: Generation): Generation {
+	if (ctx.db.generation.id.find(row.id) !== null) {
+		throw new SenderError(`admission-refused: generation ${row.id} is already bound`);
+	}
+
+	ctx.db.generation.insert(row);
+
+	return row;
+}
+```
+
 - **Name** - `bind`, built with `spacetimedb.reducer(...)` like every other reducer in the file
-  (`observe` at `src/index.ts:67`, `claim` at `src/index.ts:427`). The export name is the reducer
-  name the host exposes.
-- **Placement** - in the catalog section that begins at `src/index.ts:229`, ahead of `traceContent`
-  (`src/index.ts:253`): `bind` is the reducer that creates a generation, and every other catalog
-  reducer stamps one.
+  (`observe`, `recordTrace`, `claim`, `reveal`). The export name is the reducer name the host
+  exposes.
+- **Placement** - in the catalog section, ahead of `traceContent`: `bind` is the reducer that
+  creates a generation, and every other catalog reducer stamps one.
 - **`previous`** - optional, the same builder the file already uses for an absent instant or an
-  unnamed generation (`src/index.ts:75`, `src/index.ts:332`). Absent means "open the history".
+  unnamed generation. Absent means "open the history".
 - **`capabilities`** - `t.array(t.string())`, not a JSON string. The SDK takes arrays for structured
   arguments (`node_modules/spacetimedb/dist/lib/type_builders.d.ts:1101`); a JSON string would be a
   second encoding of a list the module can already carry.
-- **Imports** - `src/index.ts:3-17` already imports `requireCoherentGeneration`; add
-  `latestGeneration` to that list. Both come from `./Catalog` with no extension, because the module
-  bundler resolves that way (`src/index.ts:18-21`). `SenderError` is already imported at
-  `src/index.ts:2`.
+- **Imports** - `requireCoherentGeneration` and `nowOf` are already imported by the entry file; the
+  one addition is `appendGeneration`, from `./Catalog` with no extension, because the module bundler
+  resolves that way. `SenderError` is already imported.
+- **Where the write lives** - `appendGeneration` is in `Catalog.ts`, not inline, because
+  `Test/Coherence.test.ts:236` scans every file in `src/` and fails when `ctx.db.generation` appears
+  anywhere but `Catalog.ts`. That scan is a string match, so it also fires on a comment: the entry
+  file may not even name the derivation in prose. The same rule keeps the coherence check imported
+  rather than re-derived (§3), and it is what makes "one write path" mechanical instead of a
+  convention.
+- **No predecessor, and no `latestGeneration` call** - a bind that names no predecessor needs the
+  latest generation only to refuse when one exists, and `requireCoherentGeneration(ctx, null)`
+  answers it without refusing (the helper reads an absent generation as "under the latest by
+  construction"). Calling the derivation directly would be the scan violation above, and asking the
+  helper is the same answer through the one implementation.
 - **Clock** - `nowOf(ctx)` (`src/Catalog.ts:64`), the module's one stamp format, not
   `ctx.timestamp.toISOString()` spelled a second time.
 
@@ -99,12 +117,11 @@ The order is the whole of the design:
 2. Sort and deduplicate `capabilities`; refuse when the length changed.
 3. Look every id up in `ctx.db.capability`; refuse on the first absence, naming it.
 4. Resolve the predecessor, and with it the invariant (§3).
-5. Compute the id; refuse a collision.
-6. Insert exactly one `generation` row.
-7. Re-assert coherence against the row just written.
+5. Compute the id and append exactly one row through `appendGeneration`, which refuses a collision.
+6. Re-assert coherence against the row just written.
 
-Nothing is written before step 6, so a refusal at 1-5 leaves `generation` untouched. A `SenderError`
-aborts the transaction, so a refusal at 7 rolls the insert back as well: no path leaves a row that
+Nothing is written before step 5, so a refusal at 1-4 leaves `generation` untouched. A `SenderError`
+aborts the transaction, so a refusal at 6 rolls the insert back as well: no path leaves a row that
 another reducer would refuse to stamp.
 
 ---
@@ -275,5 +292,23 @@ Cases, restated from `Agentic/Crate/SpacetimeCatalog/Test/Rules.rs`:
   cases plus 8 bind cases).
 - `spacetime build --module-path .` - `Build finished successfully`, which is the gate that proves
   `bind` registers as a reducer rather than as an ordinary export.
-- The probe is not part of the module: the real `src/index.ts` is unchanged, and the change that
-  implements `bind` owns that edit.
+
+Two corrections the probe could not make, because it ran before the scan in §1 landed:
+
+- The probe's copy deleted `Test/Coherence.test.ts`'s `ctx.db.generation` scan, which had appeared
+  after the copy was taken. In the tree the scan is live, so the write moved to `appendGeneration`
+  in `Catalog.ts` and the reducer calls the coherence helper with `null` instead of naming the
+  derivation. The landed shape is the one in §1.
+- The landed reducer was verified in place: `tsc --noEmit` exit 0, the module suite 84/84
+  (`Test/*.test.ts`, including the scan), and 11 bind cases run against the real sources from
+  `.hermes/tmp/bind-write` - first bind at the module clock, `boundAt` following the clock,
+  `policyChanged` stored verbatim both ways, undeclared and bare capability names refused with
+  `generation` byte-identical, successor appending `2` over an untouched `1`, superseded and
+  never-bound predecessors refused, no-predecessor-after-bound refused, empty digest and duplicate
+  capability refused, two binds on one predecessor as a compare-and-swap, and no `update`/`delete`
+  of a `generation` row anywhere in `src/`.
+- `spacetime build` on a clean copy of the tree (`git archive HEAD` plus the two landed source
+  files) finishes successfully. The same build in the working tree fails on
+  `Test/Reveal.test.ts(412,9)` (`TS2352`, a `ctx` cast), which belongs to the concurrent reveal
+  change and not to `bind`: dropping that one working-tree test file into the clean copy turns the
+  build red with the same error.

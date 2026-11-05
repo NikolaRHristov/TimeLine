@@ -19,13 +19,13 @@ Maintain/
 
 ## Commands
 
-| From the root                 | What it does                                                        |
-| ----------------------------- | ------------------------------------------------------------------- |
-| `pnpm build`                  | `astro build` - the site, nothing else                              |
-| `pnpm Build`                  | compiles the tool layer into `Maintain/Target/**`                   |
-| `pnpm maintain <group> <cmd>` | runs the compiled CLI                                               |
-| `pnpm tool <group> <cmd>`     | the same, through the Maintain package's `tool`                     |
-| `pnpm Run`                    | `astro dev --host`                                                  |
+| From the root                 | What it does                                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm build`                  | `astro build` - the site, nothing else                                                                                                |
+| `pnpm Build`                  | compiles the tool layer into `Maintain/Target/**`                                                                                     |
+| `pnpm maintain <group> <cmd>` | runs the compiled CLI                                                                                                                 |
+| `pnpm tool <group> <cmd>`     | the same, through the Maintain package's `tool`                                                                                       |
+| `pnpm Run`                    | `astro dev --host`                                                                                                                    |
 | `pnpm check`                  | the gate: the contract stages, the floor guard, the tool layer's type-check, the SpacetimeDB module's suite and the site's unit tests |
 
 `Maintain/package.json`:
@@ -141,10 +141,9 @@ from the environment, so no `MAINTAIN_*` value can reach a build.
   hand-edited.
 - A path stays tracked after it is added to `.gitignore`; `git rm -r --cached Target` is what makes
   the rule apply to site output committed before the rule existed.
-- `pnpm check` runs the contract stages, then the compatibility guard
-  (`Scripts/Compatibility.mjs`), then the tool layer's type-check, then the SpacetimeDB module's
-  suite (`Check:Spacetime`), then the site's unit tests. The guard is the only stage that can fail on
-  a wrong interpreter; the
+- `pnpm check` runs the contract stages, then the compatibility guard (`Scripts/Compatibility.mjs`),
+  then the tool layer's type-check, then the SpacetimeDB module's suite (`Check:Spacetime`), then
+  the site's unit tests. The guard is the only stage that can fail on a wrong interpreter; the
   type-check is still the backlog, not a build gate: the tool layer predates the strict base
   `tsconfig`, so `tsc --noEmit` reports errors that `@playform/build` logs and continues past. The
   build does not depend on either. The floor the guard enforces is recorded once, in

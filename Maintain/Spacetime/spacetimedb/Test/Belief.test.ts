@@ -16,6 +16,8 @@
 // installed, which is when they should go.
 // @ts-expect-error - `node:assert/strict` has no declarations in this program
 import assert from "node:assert/strict";
+// @ts-expect-error - `node:fs` has no declarations in this program
+import { mkdirSync, writeFileSync } from "node:fs";
 // @ts-expect-error - `node:test` has no declarations in this program
 import { test } from "node:test";
 import { Timestamp } from "spacetimedb";
@@ -156,6 +158,82 @@ function Recompute(harness: Harness, args: Partial<RecomputeArguments> = {}): vo
  */
 function Beliefs(harness: Harness) {
 	return [...harness.db.belief.iter()];
+}
+
+/**
+ * Every committed `belief` row, as one stable text.
+ *
+ * The column order is written out rather than taken from the row object, and
+ * the rows are ordered by `id`, so two dumps of the same state compare byte for
+ * byte. A diff between them is empty only when nothing moved - not merely when
+ * the same rows came back in another order.
+ */
+function Dump(harness: Harness): string {
+	const rows = Beliefs(harness)
+		.map(
+			(row): [string, string, string, string, number, string] => [
+				row.id,
+				row.audience,
+				row.capability,
+				row.value,
+				row.confidence,
+				row.at,
+			],
+		)
+		.sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0));
+
+	return JSON.stringify(rows);
+}
+
+/** The context a reducer body is handed, as this module's own reducer declares it. */
+type ReducerContext = Parameters<typeof Catalog.recomputeBelief>[0];
+
+/** Where a faulted recompute fails, and what it managed to attempt before it did. */
+type Fault = {
+	/** `after-write` throws once the insert has landed; `before-write` throws in its place. */
+	point: "after-write" | "before-write";
+	seen: { deletes: number; inserts: number };
+};
+
+/**
+ * The context handed to a recompute that has to fail partway through.
+ *
+ * The harness freezes its `DbView`, and V8's proxy invariants refuse a `get`
+ * trap that answers a frozen data property with anything but its actual value
+ * (`'get' on proxy: property 'belief' is a read-only and non-configurable data
+ * property ... but the proxy did not return its actual value`). So each faulted
+ * layer is an object whose prototype is the real one, with only the accessor the
+ * fault lives on shadowed as an own property: `sender`, `timestamp`,
+ * `capability` and `probe` are still the real context's, the module runs
+ * unmodified, and there is no instrumentation to revert.
+ */
+function Faulted(ctx: ReducerContext, fault: Fault): ReducerContext {
+	const belief = ctx.db.belief;
+
+	const id = Object.create(belief.id, {
+		delete: {
+			value: (key: string) => {
+				fault.seen.deletes += 1;
+				return belief.id.delete(key);
+			},
+		},
+	});
+
+	const table = Object.create(belief, {
+		id: { value: id },
+		insert: {
+			value: (row: Parameters<typeof belief.insert>[0]) => {
+				if (fault.point === "before-write") throw new Error(`boom-${fault.point}`);
+				belief.insert(row);
+				fault.seen.inserts += 1;
+				throw new Error(`boom-${fault.point}`);
+			},
+		},
+	});
+
+	const db = Object.create(ctx.db, { belief: { value: table } });
+
+	return Object.create(ctx, { db: { value: db } });
 }
 
 /** Every archive row, as one stable text. */
@@ -343,6 +421,156 @@ test("a failure after the rebuild leaves the previous belief intact", () => {
 	);
 
 	assert.deepEqual(Beliefs(harness), before);
+});
+
+/** The capabilities the criterion-5 fixtures spread their receipts across. */
+const SCOPES = ["latency@1", "throughput@1", "errors@1"];
+
+/**
+ * Three scopes whose receipts differ in count, property name and version, so a
+ * dump covers every column and every ordering key `compareReceipts` reads.
+ */
+function Seed(harness: Harness): void {
+	for (const capability of SCOPES) Declare(harness, capability);
+
+	// Two receipts, the newer version winning.
+	Receipt(harness, { capability: "latency@1" });
+	Receipt(harness, {
+		capability: "latency@1",
+		propertyVersion: 2,
+		value: Disclosure(PROPERTY, 2, "80ms"),
+	});
+
+	// Three receipts over two property names, written out of name order.
+	Receipt(harness, { capability: "throughput@1", property: "zeta", propertyVersion: 1 });
+	Receipt(harness, {
+		capability: "throughput@1",
+		property: "alpha",
+		propertyVersion: 3,
+		value: Disclosure("alpha", 3, "900rps"),
+	});
+	Receipt(harness, { capability: "throughput@1", property: "beta", propertyVersion: 1 });
+
+	// One receipt, a third of the confidence of the scope above it.
+	Receipt(harness, { capability: "errors@1", value: Disclosure(PROPERTY, 1, "0.2%") });
+}
+
+/** The test context member the criterion-5 tests print their dumps through. */
+type Diagnostics = { diagnostic: (message: string) => void };
+
+/**
+ * One dump, as evidence: always a diagnostic, and a file when the runner asks.
+ *
+ * `BELIEF_DUMP_DIR` exists because a reporter re-escapes diagnostic text, and a
+ * diff of re-escaped copies is not a diff of the bytes the assertion compared.
+ * With the variable set, the two dumps land as files and `diff -u` runs on
+ * exactly the text `assert.equal` saw. Unset, nothing is written.
+ */
+function Record(name: string, dump: string, t: Diagnostics): void {
+	t.diagnostic(`${name} ${dump}`);
+
+	const directory = process.env.BELIEF_DUMP_DIR;
+	if (directory === undefined) return;
+
+	mkdirSync(directory, { recursive: true });
+	writeFileSync(`${directory}/${name}.json`, dump);
+}
+
+test("criterion 5a: two back-to-back passes over three scopes leave a byte-identical dump", (t: Diagnostics) => {
+	const harness = Setup();
+	Seed(harness);
+
+	for (const capability of SCOPES) Recompute(harness, { capability });
+	const first = Dump(harness);
+
+	// A later instant: a re-stamp or an appended row shows up in the diff.
+	harness.clock.set(new Timestamp(BASE + MINUTE));
+	for (const capability of SCOPES) Recompute(harness, { capability });
+	const second = Dump(harness);
+
+	Record("criterion-5a-dump-1", first, t);
+	Record("criterion-5a-dump-2", second, t);
+
+	assert.equal(second, first, "the second pass changed a belief row");
+	assert.equal(Beliefs(harness).length, SCOPES.length, "the second pass duplicated rows");
+
+	for (const row of Beliefs(harness)) {
+		assert.equal(row.at, Stamp(0n), `a replay re-stamped ${row.id}`);
+	}
+});
+
+test("criterion 5b: a throw after the first belief write leaves every prior row intact", (t: Diagnostics) => {
+	const harness = Setup();
+	Seed(harness);
+	for (const capability of SCOPES) Recompute(harness, { capability });
+	const before = Dump(harness);
+
+	// A newer receipt on one scope, so the recompute has a derivation to write
+	// and cannot return early on the unchanged-content check.
+	harness.clock.set(new Timestamp(BASE + MINUTE));
+	Receipt(harness, {
+		capability: "latency@1",
+		propertyVersion: 3,
+		value: Disclosure(PROPERTY, 3, "40ms"),
+	});
+
+	const fault: Fault = { point: "after-write", seen: { deletes: 0, inserts: 0 } };
+	assert.throws(
+		() =>
+			harness.withReducerTx(Caller, (ctx) =>
+				Catalog.recomputeBelief(Faulted(ctx, fault), { capability: "latency@1" }),
+			),
+		/boom-after-write/,
+	);
+
+	const after = Dump(harness);
+	Record("criterion-5b-before", before, t);
+	Record("criterion-5b-after", after, t);
+
+	assert.equal(fault.seen.deletes, 1, "the recompute never reached the delete");
+	assert.equal(fault.seen.inserts, 1, "the fault did not land after the write it follows");
+	assert.equal(after, before, "the prior belief rows did not survive the failed recompute");
+	assert.equal(Beliefs(harness).length, SCOPES.length, "the row count moved");
+
+	// The rollback left the scope usable: the same derivation now lands.
+	Recompute(harness, { capability: "latency@1" });
+	const rebuilt = Beliefs(harness).find((row) => row.capability === "latency@1");
+	assert.equal(rebuilt?.value, Disclosure(PROPERTY, 3, "40ms"));
+	assert.equal(rebuilt?.at, Stamp(MINUTE));
+});
+
+test("criterion 5c: a throw between the delete and the insert leaves every prior row intact", (t: Diagnostics) => {
+	const harness = Setup();
+	Seed(harness);
+	for (const capability of SCOPES) Recompute(harness, { capability });
+	const before = Dump(harness);
+
+	harness.clock.set(new Timestamp(BASE + MINUTE));
+	Receipt(harness, {
+		capability: "latency@1",
+		propertyVersion: 3,
+		value: Disclosure(PROPERTY, 3, "40ms"),
+	});
+
+	// The window the delete opens: the old row is gone and the new one is never
+	// written, so only the transaction can put it back.
+	const fault: Fault = { point: "before-write", seen: { deletes: 0, inserts: 0 } };
+	assert.throws(
+		() =>
+			harness.withReducerTx(Caller, (ctx) =>
+				Catalog.recomputeBelief(Faulted(ctx, fault), { capability: "latency@1" }),
+			),
+		/boom-before-write/,
+	);
+
+	const after = Dump(harness);
+	Record("criterion-5c-before", before, t);
+	Record("criterion-5c-after", after, t);
+
+	assert.equal(fault.seen.deletes, 1, "the recompute never reached the delete");
+	assert.equal(fault.seen.inserts, 0, "the fault did not land before the insert");
+	assert.equal(after, before, "the deleted belief row did not come back with the rollback");
+	assert.equal(Beliefs(harness).length, SCOPES.length, "the row count moved");
 });
 
 test("a caller-supplied audience cannot set the stored column", () => {

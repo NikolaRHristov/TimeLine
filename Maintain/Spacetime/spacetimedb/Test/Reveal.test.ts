@@ -399,7 +399,7 @@ function Counts(harness: Harness): Record<string, number> {
  * the harness's own.
  *
  * `reveal`'s only write is its final statement, so an insert that cannot commit
- * is a failure in the exact window criterion 1 asks about: after the private
+ * is a failure in the window that matters for the charge: after the private
  * value was read, before anything reached the datastore. Nothing in
  * `src/index.ts` knows this seam exists - the context belongs to the host, and a
  * host whose insert throws is a host whose transaction aborts - so the failure
@@ -431,7 +431,7 @@ function UncommittableContext(
 	} as unknown as Parameters<typeof Catalog.reveal>[0];
 }
 
-test("criterion 1: an entitled sender writes exactly one probe row, scoped to its server-resolved audience", () => {
+test("an entitled sender writes exactly one probe row, scoped to its server-resolved audience", () => {
 	const harness = Setup();
 	Declare(harness);
 	Grant(harness);
@@ -464,7 +464,7 @@ test("criterion 1: an entitled sender writes exactly one probe row, scoped to it
 	assert.equal(receipt.id, `${CAPABILITY}:${PROPERTY}:1:${CallerHex(harness)}`);
 });
 
-test("criterion 1: a failure after the private read and before the insert leaves no receipt and no charge", () => {
+test("a failure after the private read and before the insert leaves no receipt and no charge", () => {
 	const harness = Setup();
 	Declare(harness);
 	Grant(harness);
@@ -509,7 +509,7 @@ test("criterion 1: a failure after the private read and before the insert leaves
 	assert.equal(receipts[0].audience, CallerHex(harness));
 });
 
-test("criterion 2: an unentitled sender is refused, writes no probe row and deducts no charge", () => {
+test("an unentitled sender is refused, writes no probe row and deducts no charge", () => {
 	const harness = Setup();
 	Declare(harness);
 	const before = Counts(harness);
