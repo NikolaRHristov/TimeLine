@@ -55,10 +55,50 @@ function Stamp(offsetMicros: bigint): string {
 	return new Timestamp(BASE + offsetMicros).toISOString();
 }
 
-/** A harness whose clock sits at the fixture instant. */
-function Setup(): Harness {
+/**
+ * A harness with nothing bound: the state the generation rules are about.
+ *
+ * A receipt names the generation it was allowed under, so this is a module that
+ * can be bound but has not been - `reveal` refuses to write a receipt here.
+ */
+function Unbound(): Harness {
 	const harness = createModuleTestHarness(Catalog.default, Catalog);
 	harness.clock.set(new Timestamp(BASE));
+	return harness;
+}
+
+/**
+ * Seed the bound generations a test runs against.
+ *
+ * Written through a reducer transaction rather than through `bind`, because
+ * `bind` derives its own id from its predecessor and requires every capability
+ * in the manifest to be declared: these fixtures need a named history, not a
+ * valid manifest, and `Coherence.test.ts` seeds the same way.
+ */
+function Bind(harness: Harness, ...ids: readonly string[]): void {
+	harness.withReducerTx(Caller, (ctx) => {
+		for (const id of ids) {
+			ctx.db.generation.insert({
+				id,
+				boundAt: Stamp(0n),
+				manifestDigest: `digest:${id}`,
+				policyChanged: true,
+			});
+		}
+	});
+}
+
+/**
+ * A harness whose clock sits at the fixture instant, with one generation bound.
+ *
+ * The world every receipt is written in: a receipt names the generation it was
+ * allowed under, so a reveal in a module with nothing bound writes nothing. The
+ * generation section below starts from `Unbound()` instead, because it is about
+ * which history a receipt may be written under.
+ */
+function Setup(): Harness {
+	const harness = Unbound();
+	Bind(harness, "1");
 	return harness;
 }
 
@@ -292,12 +332,13 @@ test("a receipt carries the disclosure and none of the private row", () => {
 		JSON.stringify({ name: PROPERTY, version: 1, value: PRIVATE_VALUE }),
 	);
 
-	// The eight declared columns, and no column holding the row the value came
+	// The nine declared columns, and no column holding the row the value came
 	// from: no `evidence`, no `resource`, no source id.
 	assert.deepEqual(Object.keys(receipt).sort(), [
 		"at",
 		"audience",
 		"capability",
+		"generation",
 		"id",
 		"ingestedAt",
 		"property",
@@ -571,12 +612,14 @@ test("the view returns the caller's own receipts and no one else's", () => {
 			value: JSON.stringify({ name: PROPERTY, version: 1, value: "someone else's truth" }),
 			at: Stamp(0n),
 			ingestedAt: Stamp(0n),
+			generation: "1",
 		});
 	});
 
 	const rows = MyProbe(harness);
 	assert.equal(rows.length, 1);
 	assert.equal(rows[0].audience, CallerHex(harness));
+	assert.equal(rows[0].generation, "1");
 	assert.equal(
 		rows[0].value,
 		JSON.stringify({ name: PROPERTY, version: 1, value: PRIVATE_VALUE }),
@@ -597,29 +640,8 @@ test("a reveal touches no archive table", () => {
 
 // ------------------------------------------------------- the generation guard
 
-/**
- * Seed the bound generations a test runs against.
- *
- * Written through a reducer transaction rather than through `bind`, because
- * `bind` derives its own id from its predecessor and requires every capability
- * in the manifest to be declared: these fixtures need a named history, not a
- * valid manifest, and `Coherence.test.ts` seeds the same way.
- */
-function Bind(harness: Harness, ...ids: readonly string[]): void {
-	harness.withReducerTx(Caller, (ctx) => {
-		for (const id of ids) {
-			ctx.db.generation.insert({
-				id,
-				boundAt: Stamp(0n),
-				manifestDigest: `digest:${id}`,
-				policyChanged: true,
-			});
-		}
-	});
-}
-
 test("a reveal naming a superseded generation is refused and writes nothing", () => {
-	const harness = Setup();
+	const harness = Unbound();
 	Bind(harness, "1", "2");
 	Declare(harness);
 	Grant(harness);
@@ -637,7 +659,7 @@ test("a reveal naming a superseded generation is refused and writes nothing", ()
 });
 
 test("a reveal naming a generation that was never bound is refused as stale", () => {
-	const harness = Setup();
+	const harness = Unbound();
 	Bind(harness, "1");
 	Declare(harness);
 	Grant(harness);
@@ -650,7 +672,7 @@ test("a reveal naming a generation that was never bound is refused as stale", ()
 });
 
 test("a reveal naming a generation with nothing bound is refused as unbound", () => {
-	const harness = Setup();
+	const harness = Unbound();
 	Declare(harness);
 	Grant(harness);
 
@@ -662,32 +684,42 @@ test("a reveal naming a generation with nothing bound is refused as unbound", ()
 });
 
 test("naming the latest generation writes the same receipt as naming none", () => {
-	const named = Setup();
+	const named = Unbound();
 	Bind(named, "1", "2");
 	Declare(named);
 	Grant(named);
 	Reveal(named, Request({ generation: "2" }));
 
-	const unnamed = Setup();
+	const unnamed = Unbound();
 	Bind(unnamed, "1", "2");
 	Declare(unnamed);
 	Grant(unnamed);
 	Reveal(unnamed, Request());
 
-	// The generation is a guard rather than a column, so the accepted path is
-	// byte-for-byte what it was before the argument existed.
+	// The generation is a guard on the way in and a stamp on the way out, and
+	// the stamp is the helper's answer in both cases: the caller named the
+	// latest, or named nothing and was under it by construction. Neither row
+	// carries the caller's string as a matter of trust.
 	assert.deepEqual(Receipts(named), Receipts(unnamed));
+	assert.equal(Receipts(named)[0].generation, "2");
+	assert.equal(Receipts(unnamed)[0].generation, "2");
 });
 
-test("a reveal naming no generation is not refused when nothing is bound", () => {
-	// Only an assertion can be stale. A caller that asserts nothing is under
-	// the latest by construction, so a module with nothing bound still
-	// discloses - the same rule `claim` and `renew` follow.
-	const harness = Setup();
+test("a reveal writes no receipt when nothing is bound, even naming no generation", () => {
+	// Naming nothing is not a stale claim, so the helper answers rather than
+	// refusing - but there is no generation to stamp the receipt with, and a
+	// receipt that names a policy cannot be written under none. `recordTrace`
+	// refuses this state for the same reason.
+	const harness = Unbound();
 	Declare(harness);
 	Grant(harness);
+	const before = Archive(harness);
 
-	Reveal(harness, Request());
+	assert.throws(
+		() => Reveal(harness, Request()),
+		/unbound-generation: a receipt names the generation it was allowed under, and none has been bound/,
+	);
 
-	assert.equal(Receipts(harness).length, 1);
+	assert.deepEqual(Receipts(harness), []);
+	assert.equal(Archive(harness), before);
 });

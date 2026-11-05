@@ -111,6 +111,10 @@ function Declare(harness: Harness, capability: string = CAPABILITY): void {
  * The value defaults to a disclosure of the property it names, and a test that
  * cares about the copy changes it: a belief that recomputed the truth instead of
  * copying the receipt would then disagree with the fixture on purpose.
+ *
+ * `generation` is the one a fixture module binds before it discloses. Belief is
+ * derived from receipts and never reads it; the column is here because a receipt
+ * cannot be written without one.
  */
 function Receipt(
 	harness: Harness,
@@ -121,6 +125,7 @@ function Receipt(
 		audience?: string;
 		value?: string;
 		at?: string;
+		generation?: string;
 	} = {},
 ): void {
 	const capability = options.capability ?? CAPABILITY;
@@ -139,6 +144,7 @@ function Receipt(
 			value,
 			at: options.at ?? Stamp(0n),
 			ingestedAt: Stamp(0n),
+			generation: options.generation ?? "1",
 		});
 	});
 }
@@ -411,6 +417,7 @@ test("a failure after the rebuild leaves the previous belief intact", () => {
 					value: Disclosure(PROPERTY, 2, "80ms"),
 					at: Stamp(MINUTE),
 					ingestedAt: Stamp(MINUTE),
+					generation: "1",
 				});
 				Catalog.recomputeBelief(ctx, { capability: CAPABILITY });
 				throw new Error("boom");

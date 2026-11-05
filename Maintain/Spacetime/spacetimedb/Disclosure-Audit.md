@@ -162,26 +162,34 @@ The assertion that pinned the old wording (`Test/Reveal.test.ts`,
 property is named and the resource is not. `Test/Audience.test.ts` locks it from the other side with
 `criterion 4: a refusal does not name the private lease resource`.
 
-### F2 - the lease refusal names the identity that holds the resource (open)
+### F2 - the lease refusal named the identity that holds the resource (fixed)
 
-`claim` refuses a second caller with the current holder's identity:
+`claim` refused a second caller with the current holder's identity:
 
 ```
 lease-held: catalog:latency is held by 0000…0000 under fence 1 until 2026-01-01T00:01:00.000000Z
 ```
 
-Measured with two authenticated senders and one resource; the refused sender learns the holder's
-hex, its fence and its deadline, none of which it is entitled to. It is an error channel rather than
-a return value, and it sits in `claim` rather than in the disclosure path, so it is recorded here
-and carded rather than changed in this pass. The message that keeps the same diagnostic value
-without the identity is:
+Measured with two authenticated senders and one resource; the refused sender learned the holder's
+hex, its fence and its deadline, none of which it is entitled to. `lease` is a private table, so the
+holder's identity is a value the refused caller cannot read for itself, and an error message is
+still a read. The refusal now keeps its diagnostic value and drops the identity:
 
 ```
 lease-held: catalog:latency is held by another identity under fence 1 until 2026-01-01T00:01:00.000000Z
 ```
 
-`Test/Lease.test.ts` asserts the prefix `lease-held: <resource> is held by `, so that wording keeps
-its assertions green.
+The caller still learns that the resource is taken, which fence stands in the way and when that
+fence lapses; it no longer learns who holds it. `Test/Lease.test.ts`,
+`the lease-held refusal does not name the identity that holds the resource`, measures it with two
+authenticated senders and one resource: it asserts the refusal matches `/held by another identity/`,
+that it does not contain the holder's hex, that it carries no identity hex at all
+(`/[0-9a-f]{64}/`), and that the first sender still holds the one grant afterwards. The prefix
+`lease-held: <resource> is held by ` is unchanged, so the file's earlier assertions stay green.
+
+Both halves of the assertion are load-bearing, measured by mutation: restoring `${live.holder}` in
+place of `another identity` fails the test on the wording, and a message that says
+`another identity` while also appending the hex fails it on the holder's hex.
 
 ### F3 - observations, not defects
 

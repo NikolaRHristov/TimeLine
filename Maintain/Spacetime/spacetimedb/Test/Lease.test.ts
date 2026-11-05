@@ -668,25 +668,15 @@ test("the lease-held refusal does not name the identity that holds the resource"
 	);
 
 	assert.match(refusal, /held by another identity/);
-	assert.ok(
-		!refusal.includes(holder),
-		`the refusal names the holder's identity: ${refusal}`,
-	);
+	assert.ok(!refusal.includes(holder), `the refusal names the holder's identity: ${refusal}`);
 
 	// No identity hex at all, not merely this one: the general shape is what the
 	// assertion is for, so a later change that leaks a different sender is caught.
-	assert.doesNotMatch(
-		refusal,
-		/[0-9a-f]{64}/,
-		`the refusal carries an identity hex: ${refusal}`,
-	);
+	assert.doesNotMatch(refusal, /[0-9a-f]{64}/, `the refusal carries an identity hex: ${refusal}`);
 
 	// The diagnostic value survives: the caller still learns that the resource is
 	// taken, which fence stands in the way and when that fence lapses.
-	assert.match(
-		refusal,
-		/^lease-held: browser is held by another identity under fence 1 until /,
-	);
+	assert.match(refusal, /^lease-held: browser is held by another identity under fence 1 until /);
 	assert.ok(
 		refusal.endsWith(`until ${Stamp(MINUTE)}`),
 		`the refusal does not name the deadline the caller waits on: ${refusal}`,
