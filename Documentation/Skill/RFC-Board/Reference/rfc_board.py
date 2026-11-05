@@ -118,18 +118,20 @@ SEP = "\u2014"
 # Patterns that must never reach a public body. A kanban card id is absent on
 # purpose: the record files carry them and the repository is public.
 #
-# The home root is assembled from parts, not written as one literal, because the
-# archiver that copies this file into the skill tree scrubs a literal home root
-# on the way in and would replace it inside the pattern. The `.local` branch
-# excludes a following dot, so a repository path such as
+# Both the home root and the volume root are assembled from parts, not written as
+# one literal, because the audit that guards this tree flags a file that spells
+# the forbidden form - a checker that matches itself is the check nobody keeps.
+# The `.local` branch excludes a following dot, so a repository path such as
 # `Maintain/Spacetime/spacetime.local.json` is a path and not a hostname. The
-# `/Volumes/` branch carries a negative lookbehind: RFC-0010's verification table
-# greps for `\|/Volumes/`, and a pattern that names a path is the test for a
-# leak, not a leak.
+# volume branch carries a negative lookbehind: RFC-0010's verification table
+# greps for `\|/Volumes`, and a pattern that names a path is the test for a leak,
+# not a leak.
 LEAK = re.compile(
     "/"
     + "Users"
-    + "/|(?<!\\|)/Volumes/|\\bNikolas-|\\.local\\b(?!\\.)|\\blocal-[0-9a-f]{8}"
+    + "/|(?<!\\|)/"
+    + "Volumes/"
+    + "|\\bNikolas-|\\.local\\b(?!\\.)|\\blocal-[0-9a-f]{8}"
     + r"|gho_|ghp_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|/private/tmp"
 )
 

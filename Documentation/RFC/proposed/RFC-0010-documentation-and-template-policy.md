@@ -67,12 +67,12 @@ both would have recurred without a rule - the fix is a policy plus a check, not 
 
 ## Verification
 
-| Claim                    | Test                                                                                            |
-| ------------------------ | ----------------------------------------------------------------------------------------------- |
-| No identifiers tracked   | `grep -rniE '<project-id>\|$HOME\|/Volumes/' Documentation README.md AGENTS.md` returns nothing |
-| No quoted owner phrasing | the same sweep for quoted fragments returns nothing                                             |
-| Skills are in-repo       | `find Documentation/Skill -name SKILL.md` lists each skill named in `AGENTS.md`                 |
-| Claims are tested        | every claim→test table names a runnable command                                                 |
+| Claim                    | Test                                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| No identifiers tracked   | `grep -rniE '<project-id>\|$HOME\|/Volumes' Documentation README.md AGENTS.md` returns nothing |
+| No quoted owner phrasing | the same sweep for quoted fragments returns nothing                                            |
+| Skills are in-repo       | `find Documentation/Skill -name SKILL.md` lists each skill named in `AGENTS.md`                |
+| Claims are tested        | every claim→test table names a runnable command                                                |
 
 ## Open questions
 
