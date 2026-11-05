@@ -467,6 +467,7 @@ type Diagnostics = { diagnostic: (message: string) => void };
 function Record(name: string, dump: string, t: Diagnostics): void {
 	t.diagnostic(`${name} ${dump}`);
 
+	// @ts-expect-error - `process` has no declarations in this program
 	const directory = process.env.BELIEF_DUMP_DIR;
 	if (directory === undefined) return;
 

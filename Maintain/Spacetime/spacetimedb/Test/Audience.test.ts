@@ -36,6 +36,15 @@ import type { InferSchema } from "spacetimedb/server";
 import { createModuleTestHarness, TestAuth } from "spacetimedb/server/test-utils";
 import * as Catalog from "../src/index";
 
+/**
+ * The one global this file needs, declared rather than imported.
+ *
+ * The module's tsconfig has no `types` entry, so `node:process` is not in scope;
+ * the diagnostics below go through it because `console` belongs to the module
+ * shim once the module is imported.
+ */
+declare const process: { stdout: { write(text: string): void } };
+
 /** The harness, typed to this module's own schema. */
 type Harness = ReturnType<typeof createModuleTestHarness<InferSchema<typeof Catalog.default>>>;
 
@@ -209,9 +218,12 @@ function Diagnostic(label: string, row: unknown): void {
 /** Every row of every table, as one text, for a value that must appear nowhere. */
 function AllRows(harness: Harness): string {
 	const tables: Record<string, unknown> = {};
+	// `db` is typed by column accessor; the table map underneath is what a scan
+	// needs, and it is the same object the accessors came from.
+	const db = harness.db as unknown as Record<string, { iter(): Iterable<unknown> }>;
 
-	for (const name of Object.keys(harness.db)) {
-		tables[name] = [...harness.db[name].iter()];
+	for (const name of Object.keys(db)) {
+		tables[name] = [...db[name].iter()];
 	}
 
 	// `fence` is a `t.u64()` and arrives as a bigint, which JSON cannot encode.
@@ -575,9 +587,9 @@ test("criterion 4: every reducer returns undefined when it is called", () => {
 
 	const returned: Record<string, unknown> = {};
 
-	returned.init = harness.withReducerTx(Caller, (ctx) => Catalog.init(ctx));
-	returned.onConnect = harness.withReducerTx(Caller, (ctx) => Catalog.onConnect(ctx));
-	returned.onDisconnect = harness.withReducerTx(Caller, (ctx) => Catalog.onDisconnect(ctx));
+	returned.init = harness.withReducerTx(Caller, (ctx) => Catalog.init(ctx, {}));
+	returned.onConnect = harness.withReducerTx(Caller, (ctx) => Catalog.onConnect(ctx, {}));
+	returned.onDisconnect = harness.withReducerTx(Caller, (ctx) => Catalog.onDisconnect(ctx, {}));
 
 	returned.observe = harness.withReducerTx(Caller, (ctx) =>
 		Catalog.observe(ctx, {
@@ -822,6 +834,29 @@ test("criterion 4: no registered function in the module returns a value", () => 
 
 		assert.deepEqual(offenders, [], `${entry.name} returns a value: ${offenders.join(" | ")}`);
 	}
+});
+
+test("criterion 4: no other client read path is registered beside the view", () => {
+	// Registration, so the published definition is complete.
+	Setup();
+
+	const definition = Catalog.default.moduleDef;
+
+	// A procedure can reach outside the module and an HTTP handler answers
+	// without a reducer context; neither exists here, so `my_probe` is the only
+	// read path into the catalog and the public archive tables are the only
+	// other rows a client can subscribe to.
+	Diagnostic("procedures", definition.procedures.length);
+	Diagnostic("http handlers", definition.httpHandlers.length);
+	Diagnostic("http routes", definition.httpRoutes.length);
+	Diagnostic("outboxes", definition.outboxes.length);
+	Diagnostic("row-level security", definition.rowLevelSecurity.length);
+
+	assert.equal(definition.procedures.length, 0);
+	assert.equal(definition.httpHandlers.length, 0);
+	assert.equal(definition.httpRoutes.length, 0);
+	assert.equal(definition.outboxes.length, 0);
+	assert.equal(definition.rowLevelSecurity.length, 0);
 });
 
 test("criterion 4: the catalog tables are private, so no subscriber reads a private column", () => {

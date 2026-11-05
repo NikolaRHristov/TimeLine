@@ -867,9 +867,16 @@ export const reveal = spacetimedb.reducer(
 		// read. A caller with no live lease on the resource the property
 		// declares is refused here, so two worlds differing only in a protected
 		// value produce the same transcript for that caller.
+		//
+		// The refusal names the property and never the resource the row
+		// declares. `property.resource` is a column of a private table, and the
+		// caller reaching this line is by definition not entitled to it - worse,
+		// it is the one value `claim` needs to make itself entitled, because
+		// `claim` grants a resource to any sender that names it. Printing it
+		// would turn the gate into an instruction for passing it.
 		if (standingOf(ctx, audience, row.resource) === null) {
 			throw new SenderError(
-				`admission-refused: ${audience} holds no live lease on ${row.resource}, which ${args.property} requires`,
+				`admission-refused: ${audience} holds no live lease on the resource ${args.property} requires`,
 			);
 		}
 

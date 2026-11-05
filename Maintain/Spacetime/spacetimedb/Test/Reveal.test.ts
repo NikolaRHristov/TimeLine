@@ -526,13 +526,18 @@ test("an unentitled sender is refused, writes no probe row and deducts no charge
 
 	assert.match(
 		refusal,
-		new RegExp(`admission-refused: ${CallerHex(harness)} holds no live lease on ${RESOURCE}`),
+		new RegExp(
+			`admission-refused: ${CallerHex(harness)} holds no live lease on the resource ${PROPERTY} requires`,
+		),
 	);
 
-	// The refusal names the audience and the resource and never the truth it was
-	// refused: two worlds differing only in the private value read the same.
+	// The refusal names the audience and the property and never the truth it was
+	// refused: two worlds differing only in the private value read the same. It
+	// names no resource either - `property.resource` is a column of a private
+	// table, and it is the one value `claim` would need to become entitled.
 	assert.ok(!refusal.includes(PRIVATE_VALUE), "the refusal leaked the private value");
 	assert.ok(!refusal.includes(EVIDENCE), "the refusal leaked the evidence");
+	assert.ok(!refusal.includes(RESOURCE), "the refusal leaked the private resource");
 
 	assert.deepEqual(Receipts(harness), []);
 	assert.deepEqual([...harness.db.belief.iter()], []);
