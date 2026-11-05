@@ -767,6 +767,12 @@ const Property: Entity = {
  * the private value and no reducer is ever given it - a row states what was
  * disclosed, never the thing it was computed from.
  *
+ * It does name the generation it was allowed under, as every catalog row does:
+ * a disclosure is an act under an admission policy, so the receipt carries the
+ * interpreter that permitted it. That value is the coherence helper's answer and
+ * never the caller's string, and a module with nothing bound writes no receipt
+ * at all - a receipt that names a policy cannot be written under none.
+ *
  * The name is `probe`, not `observation`: the archive already spends
  * `observation` on a channel showing a post, and that table's meaning is fixed.
  * A second `observation` would be a schema collision, and renaming the archive's
@@ -805,6 +811,10 @@ const Probe: Entity = {
 			ingestedAt: {
 				kind: "timestamp",
 				doc: "`T_ingest` - when the reducer accepted it. Paired with `at` on purpose: the two authorities never share a column, and their difference is the ingestion lag.",
+			},
+			generation: {
+				kind: "string",
+				doc: "The generation the disclosure was allowed under, as the coherence helper answered - never the caller's string. A receipt that says what was disclosed but not which interpreter permitted it is not evidence of a policy, so a module with nothing bound has nothing to write here.",
 			},
 		},
 	},

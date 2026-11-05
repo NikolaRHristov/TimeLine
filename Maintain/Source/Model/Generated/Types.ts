@@ -263,6 +263,8 @@ export type ProbeRecord = {
 	at: string;
 	/** `T_ingest` - when the reducer accepted it. Paired with `at` on purpose: the two authorities never share a column, and their difference is the ingestion lag. */
 	ingestedAt: string;
+	/** The generation the disclosure was allowed under, as the coherence helper answered - never the caller's string. A receipt that says what was disclosed but not which interpreter permitted it is not evidence of a policy, so a module with nothing bound has nothing to write here. */
+	generation: string;
 };
 
 /** One current inference per audience and capability, with the confidence the probes support it at. */

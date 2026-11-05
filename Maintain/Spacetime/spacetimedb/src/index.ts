@@ -237,10 +237,12 @@ export const attach = spacetimedb.reducer(
  * generation it was allowed under and is refused when that generation has been
  * superseded.
  *
- * `probe` is the one catalog row with no generation column: a reveal carries the
- * caller's claim as a guard only, so a write under a superseded generation is
- * refused while the receipt states what was disclosed rather than which
- * interpreter allowed it.
+ * `probe` is a receipt for a disclosure, and a disclosure is an act under an
+ * admission policy, so it follows the same rule as the rest: `reveal` stamps the
+ * generation the coherence helper answered with, and a module with nothing bound
+ * writes no receipt at all. `belief` is the one catalog row without the column,
+ * because a belief is derived rather than observed - it is recomputed from
+ * receipts that already carry theirs.
  */
 
 /**
@@ -532,6 +534,14 @@ export const recordTrace = spacetimedb.reducer(
  * refusal here therefore throws before anything is written, and the transaction
  * rolls back with the `lease` table byte-for-byte as it was.
  *
+ * The `lease-held` refusal names the resource, the fence and the deadline, and
+ * never the holder. `lease` is a private table, so the holder's identity is a
+ * value the refused caller cannot read for itself, and an error message is still
+ * a read: naming it there would disclose another sender's identity to whoever
+ * lost the claim. "Another identity" keeps the diagnostic - the caller learns
+ * that the resource is taken and what it would have to beat - without handing
+ * over who took it.
+ *
  * `durationMicros` is the caller's lease length, added to the reducer's own
  * clock rather than to a wall clock, so the deadline is the module's fact and
  * not the caller's. It is bounded by `STAMP_CEILING` and formatted by `stampOf`,
@@ -577,7 +587,7 @@ export const claim = spacetimedb.reducer(
 		const live = liveGrant(ctx, resource, now);
 		if (live !== null) {
 			throw new SenderError(
-				`lease-held: ${resource} is held by ${live.holder} under fence ${live.fence} until ${live.expiresAt}`,
+				`lease-held: ${resource} is held by another identity under fence ${live.fence} until ${live.expiresAt}`,
 			);
 		}
 
@@ -772,9 +782,18 @@ function discloseOf(row: { name: string; version: number; value: string }): stri
  * `claim`, `renew` and `recordTrace` are held to, and the reason this reducer
  * contains no comparison of generation ids.
  *
+ * The receipt carries the helper's answer and not the caller's string: the
+ * caller's value is the claim, the helper's is the generation the row was
+ * actually written under. That also means a module with nothing bound writes no
+ * receipt - it is refused with `unbound-generation`, exactly as `recordTrace`
+ * refuses - because a receipt is evidence that a policy permitted this
+ * disclosure, and it cannot state that under none.
+ *
  * Steps, in this order and no other:
  *
- * 0. Refuse a caller whose generation claim is not the latest bound one.
+ * 0. Refuse a caller whose generation claim is not the latest bound one, and
+ *    refuse a module with nothing bound at all. This is the one step whose
+ *    answer the receipt keeps.
  * 1. Reject a malformed request - an empty capability, an empty property, or a
  *    version below one.
  * 2. Resolve the audience from `ctx.sender`. There is no audience argument, and
@@ -824,7 +843,20 @@ export const reveal = spacetimedb.reducer(
 		// before the private value is read: a caller operating on a superseded
 		// generation is refused for that reason rather than for whatever its
 		// request happens to be, and nothing is written on the stale path.
-		requireCoherentGeneration(ctx, args.generation);
+		//
+		// Its answer is what the receipt carries. The caller's string was the
+		// claim; this is the generation the row is written under.
+		const generation = requireCoherentGeneration(ctx, args.generation);
+
+		// A receipt names the generation it was allowed under and the column is
+		// not optional, so a module with nothing bound has nothing to write.
+		// `recordTrace` refuses for the same reason and with the same reason
+		// string's vocabulary.
+		if (generation === null) {
+			throw new SenderError(
+				"unbound-generation: a receipt names the generation it was allowed under, and none has been bound",
+			);
+		}
 
 		if (args.capability.length === 0) {
 			throw new SenderError("admission-refused: a reveal needs a capability id");
@@ -905,6 +937,7 @@ export const reveal = spacetimedb.reducer(
 			value,
 			at: args.at,
 			ingestedAt: nowOf(ctx),
+			generation,
 		});
 	},
 );
@@ -924,6 +957,7 @@ const ProbeDisclosure = t.object("ProbeDisclosure", {
 	value: t.string(),
 	at: t.string(),
 	ingestedAt: t.string(),
+	generation: t.string(),
 });
 
 /**

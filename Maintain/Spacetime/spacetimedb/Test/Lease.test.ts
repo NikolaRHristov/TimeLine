@@ -17,7 +17,7 @@
 import assert from "node:assert/strict";
 // @ts-expect-error - `node:test` has no declarations in this program
 import { test } from "node:test";
-import { Timestamp } from "spacetimedb";
+import { ConnectionId, Timestamp } from "spacetimedb";
 import type { InferSchema } from "spacetimedb/server";
 import { createModuleTestHarness, TestAuth } from "spacetimedb/server/test-utils";
 import * as Catalog from "../src/index";
@@ -56,6 +56,24 @@ function Stamp(offsetMicros: bigint): string {
  */
 const Caller = TestAuth.internal();
 
+/**
+ * A second authenticated identity, distinct from `Caller`.
+ *
+ * `TestAuth.internal()` answers with the module's own identity, so a refusal
+ * measured against *another* sender needs a sender the module can tell apart
+ * from it. A JWT payload's `sub` decides the hex, and the connection id only has
+ * to differ from the first sender's.
+ */
+const Other = TestAuth.fromJwtPayload(
+	JSON.stringify({ iss: "test", sub: "other", aud: "timeline", exp: 4_000_000_000, iat: 0 }),
+	new ConnectionId(1n),
+);
+
+/** The hex identity a call is made as, read from a reducer context. */
+function HexOf(harness: Harness, auth = Caller): string {
+	return harness.withReducerTx(auth, (ctx) => ctx.sender.toHexString());
+}
+
 /** A harness whose clock sits at the fixture instant. */
 function Setup(): Harness {
 	const harness = createModuleTestHarness(Catalog.default, Catalog);
@@ -69,8 +87,8 @@ function At(harness: Harness, offsetMicros: bigint): void {
 }
 
 /** One claim, as the host would call it. */
-function Claim(harness: Harness, args: ClaimArguments): void {
-	harness.withReducerTx(Caller, (ctx) => Catalog.claim(ctx, args));
+function Claim(harness: Harness, args: ClaimArguments, auth = Caller): void {
+	harness.withReducerTx(auth, (ctx) => Catalog.claim(ctx, args));
 }
 
 /** One renewal, as the host would call it. */
@@ -628,4 +646,53 @@ test("a refusal rolls the transaction back, so a refused call writes nothing", (
 	);
 
 	assert.equal(Committed(harness), before);
+});
+
+// ---------------------------------------------------------------- disclosure
+
+test("the lease-held refusal does not name the identity that holds the resource", () => {
+	const harness = Setup();
+
+	// Two authenticated senders, one resource: the first takes it, the second is
+	// refused. `lease` is a private table, so the holder's identity is a value
+	// the refused caller cannot read for itself - and a refusal is a read, so it
+	// must not carry one.
+	const holder = HexOf(harness);
+	const second = HexOf(harness, Other);
+	assert.notEqual(second, holder, "the fixture's two senders resolved to one identity");
+
+	Claim(harness, { resource: "browser", durationMicros: MINUTE });
+
+	const refusal = Refused(() =>
+		Claim(harness, { resource: "browser", durationMicros: MINUTE }, Other),
+	);
+
+	assert.match(refusal, /held by another identity/);
+	assert.ok(
+		!refusal.includes(holder),
+		`the refusal names the holder's identity: ${refusal}`,
+	);
+
+	// No identity hex at all, not merely this one: the general shape is what the
+	// assertion is for, so a later change that leaks a different sender is caught.
+	assert.doesNotMatch(
+		refusal,
+		/[0-9a-f]{64}/,
+		`the refusal carries an identity hex: ${refusal}`,
+	);
+
+	// The diagnostic value survives: the caller still learns that the resource is
+	// taken, which fence stands in the way and when that fence lapses.
+	assert.match(
+		refusal,
+		/^lease-held: browser is held by another identity under fence 1 until /,
+	);
+	assert.ok(
+		refusal.endsWith(`until ${Stamp(MINUTE)}`),
+		`the refusal does not name the deadline the caller waits on: ${refusal}`,
+	);
+
+	// And the refusal wrote nothing: the first sender still holds the one grant.
+	assert.equal(Grants(harness, "browser").length, 1);
+	assert.equal(Newest(harness, "browser").holder, holder);
 });
