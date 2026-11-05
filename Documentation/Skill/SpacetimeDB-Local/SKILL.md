@@ -89,7 +89,7 @@ browser. Reach for `describe` before writing any query.
 | Live tail              | `spacetime subscribe <db> --server <URL> "select * from <table>"`          |
 | Typed client           | `spacetime generate --lang typescript --module-path <dir> --out-dir <dir>` |
 
-Three limits of the query surface read as failures, not as syntax you can fix:
+Four limits of the query surface read as failures, not as syntax you can fix:
 
 - **No `GROUP BY`.** `select visibility, count(*) … group by visibility` answers `400 Bad Request`.
   `count(*)` on its own works; every breakdown is a client-side count over
@@ -100,6 +100,16 @@ Three limits of the query surface read as failures, not as syntax you can fix:
 - **Columns are snake_case at the SQL surface.** A module declares `firstSeenAt` and `postCount`,
   but `describe` and `sql` expose `first_seen_at` and `post_count`; the camelCase spelling fails as
   an unknown column, which reads like a missing field rather than a naming convention.
+- **`--no-config` decides how the positionals are read.** In a module directory holding
+  `spacetime.json` and `spacetime.local.json` the CLI merges the configured database into the
+  argument list, so every positional shifts one slot:
+  `spacetime describe --server <URL> <db> tables belief` answers
+  `Error: Invalid describe arguments.`, `spacetime describe --server <URL> <db>` answers
+  `Error: Invalid entity_type '<db>'. Expected one of: env, procedures, reducers, routes, tables, types, views.`,
+  and `spacetime sql --server <URL> <db> "select id from capability"` answers
+  `sql parser error: Expected an SQL statement, found: t at Line: 1, Column 1` because the database
+  name is read as the statement. Pass `--no-config` to every `describe`, `sql` and `call` aimed at a
+  throwaway database, and the arguments mean what they say.
 
 ## Reading rows from a program
 

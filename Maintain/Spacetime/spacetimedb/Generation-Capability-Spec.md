@@ -144,11 +144,11 @@ receipts for one capability: `value` is copied from the receipt `compareReceipts
 `confidence` is `n / (n + 1)` over all of them - so a single column could name only one receipt's
 generation and would then be false about the rest. The generation the recompute itself ran under is
 not the row's fact either: it is the latest bound generation at that instant by construction, which
-`at` read against the append-only `generation` table already states, and the replace-on-recompute
-rule would overwrite it on the next pass anyway. A derivation history, if one is ever wanted,
-belongs in `trace` - append-only, already carrying the generation, with `belief.derived` already a
-declared kind - and adding it is its own decision, because a trace write is a stamped write and
-would make the recompute refuse in a module with nothing bound.
+makes it a fact about when the row was written rather than about what it says, and the
+replace-on-recompute rule would overwrite it on the next pass anyway. A derivation history, if one
+is ever wanted, belongs in `trace` - append-only, already carrying the generation, with
+`belief.derived` already a declared kind - and adding it is its own decision, because a trace write
+is a stamped write and would make the recompute refuse in a module with nothing bound.
 
 That refusal is the answer a stamp would force, and it is not wanted. In a module with nothing
 bound, `reveal` writes no receipt, so there is nothing to fold: the scope is empty, any stale row is

@@ -1065,8 +1065,8 @@ function compareReceipts(
  * receipts name theirs, and they are the durable evidence; a single column could
  * only name one of them, while `confidence` is derived from all. The generation
  * this reducer ran under is not the row's fact either: it is the latest bound
- * one by construction, already stated by `at` against the append-only
- * `generation` table, and the rebuild below would overwrite it on the next pass.
+ * one by construction, so it states when the row was written rather than what
+ * it says, and the rebuild below would overwrite it on the next pass.
  * So a module with nothing bound is not refused here: with nothing bound
  * `reveal` writes no receipt, so the scope is empty, any stale row is deleted
  * and the reducer returns - the no-receipts path below, reached without a
