@@ -252,7 +252,16 @@ test("criterion 3: no registered reducer declares an audience-like argument", ()
 
 	for (const reducer of Catalog.default.moduleDef.reducers) {
 		for (const parameter of reducer.params.elements) {
-			const name = parameter.name ?? "";
+			const name = parameter.name;
+
+			// A reducer argument always has a name: `RowBuilder` builds the
+			// elements from the keys of the params object, so a nameless one is a
+			// fixture fault rather than a pass. Defaulting it to "" would let the
+			// audit below read it as "not audience-like" and go green on an
+			// argument it never examined.
+			if (name === undefined) {
+				throw new Error(`${reducer.sourceName} declares an argument with no name`);
+			}
 
 			assert.ok(
 				!AUDIENCE_LIKE.test(name),
