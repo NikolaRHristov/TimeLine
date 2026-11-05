@@ -271,6 +271,17 @@ test("the catalog tables are declared, and the archive keeps its own names", () 
 		"the private-truth table is `property`, and it declares the columns the contract names",
 	);
 
+	// The derived row, asserted beside the receipt it is folded from. `probe`
+	// names the generation its disclosure was permitted under; `belief` names
+	// none, because a derivation admits nothing and a single column could not
+	// state a fold over receipts written under several. A seventh column here is
+	// the one this table decided against, so the absence is the assertion.
+	assert.deepEqual(
+		namesFor(entity("belief"), "module"),
+		["id", "audience", "capability", "value", "confidence", "at"],
+		"the derived table is `belief`, and it carries no generation column",
+	);
+
 	// Private, and reachable only through the two lookups the reveal path makes.
 	// A dropped index or a flipped `public` passes the byte comparison - the
 	// generated file would simply agree with the declaration - so both are

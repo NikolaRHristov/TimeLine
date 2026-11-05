@@ -64,6 +64,39 @@ function Setup(): Harness {
 }
 
 /**
+ * Append one bound generation, as `bind` would have left it.
+ *
+ * The fixture writes the row directly for the same reason it writes receipts
+ * directly: `bind` is exercised in `Bind.test.ts`, and what these cases need is
+ * the state a bound module is in, not the reducer that reaches it.
+ */
+function Bind(harness: Harness, id: string, offsetMicros: bigint = 0n): void {
+	harness.withReducerTx(Caller, (ctx) => {
+		ctx.db.generation.insert({
+			id,
+			boundAt: Stamp(offsetMicros),
+			manifestDigest: `digest:${id}`,
+			policyChanged: true,
+		});
+	});
+}
+
+/**
+ * A harness in the state a belief can actually be derived in.
+ *
+ * Bound by default, because a receipt names the generation it was permitted
+ * under and `reveal` refuses when nothing is bound: an unbound module can hold a
+ * belief only if a fixture planted the receipt. The one case that needs the
+ * unbound module asks for it, which is also what lets that case stand alone when
+ * a generation check is added here.
+ */
+function Bound(): Harness {
+	const bound = Setup();
+	Bind(bound, "1");
+	return bound;
+}
+
+/**
  * The hex identity every call in this file is made as.
  *
  * Read from a reducer context rather than from the harness's own field, so this
@@ -113,8 +146,9 @@ function Declare(harness: Harness, capability: string = CAPABILITY): void {
  * copying the receipt would then disagree with the fixture on purpose.
  *
  * `generation` is the id the receipt carries in a module that has bound one.
- * Belief is derived from receipts and never reads it - the column is here
- * because a receipt cannot be written without it.
+ * Belief is derived from receipts and reads none of it - the column is here
+ * because a receipt cannot be written without it, and the tests that plant
+ * different ids are what show the derivation consults no generation at all.
  */
 function Receipt(
 	harness: Harness,
@@ -253,7 +287,7 @@ function Archive(harness: Harness): string {
 }
 
 test("one receipt yields one belief, keyed by scope, at n/(n+1) confidence", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness);
 
@@ -269,8 +303,31 @@ test("one receipt yields one belief, keyed by scope, at n/(n+1) confidence", () 
 	assert.equal(rows[0].at, Stamp(0n));
 });
 
+test("a belief row declares six columns and none of them is a generation", () => {
+	const harness = Bound();
+	Declare(harness);
+	Receipt(harness);
+
+	Recompute(harness);
+
+	const [row] = Beliefs(harness);
+
+	// The six declared columns, written out rather than counted. `belief` is the
+	// catalog row that neither stamps a generation nor guards one - a derivation
+	// admits nothing, so it has no policy to name, and the receipts it folds
+	// already carry theirs - and a seventh key here would be that column.
+	assert.deepEqual(Object.keys(row).sort(), [
+		"at",
+		"audience",
+		"capability",
+		"confidence",
+		"id",
+		"value",
+	]);
+});
+
 test("two runs on unchanged receipts leave identical bytes, stamp included", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness);
 
@@ -286,7 +343,7 @@ test("two runs on unchanged receipts leave identical bytes, stamp included", () 
 });
 
 test("a changed derivation is rebuilt in place, not appended to", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness);
 	Recompute(harness);
@@ -305,7 +362,7 @@ test("a changed derivation is rebuilt in place, not appended to", () => {
 });
 
 test("the highest property version wins, whatever order the receipts arrive in", () => {
-	const older = Setup();
+	const older = Bound();
 	Declare(older);
 	Receipt(older, { property: "zeta", propertyVersion: 1 });
 	Receipt(older, {
@@ -315,7 +372,7 @@ test("the highest property version wins, whatever order the receipts arrive in",
 	});
 	Recompute(older);
 
-	const newer = Setup();
+	const newer = Bound();
 	Declare(newer);
 	Receipt(newer, {
 		property: "alpha",
@@ -330,13 +387,13 @@ test("the highest property version wins, whatever order the receipts arrive in",
 });
 
 test("a tie on version is broken by property name, not by insertion order", () => {
-	const ascending = Setup();
+	const ascending = Bound();
 	Declare(ascending);
 	Receipt(ascending, { property: "alpha" });
 	Receipt(ascending, { property: "beta" });
 	Recompute(ascending);
 
-	const descending = Setup();
+	const descending = Bound();
 	Declare(descending);
 	Receipt(descending, { property: "beta" });
 	Receipt(descending, { property: "alpha" });
@@ -348,7 +405,7 @@ test("a tie on version is broken by property name, not by insertion order", () =
 });
 
 test("a belief copies the receipt, never the private truth", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	// The disclosure a reveal would have written, deliberately not the truth.
 	Receipt(harness, { value: Disclosure(PROPERTY, 1, "250ms") });
@@ -363,7 +420,7 @@ test("a belief copies the receipt, never the private truth", () => {
 });
 
 test("another audience's receipts never enter the caller's belief", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness, { audience: OTHER, value: Disclosure(PROPERTY, 1, "someone else's truth") });
 
@@ -372,8 +429,52 @@ test("another audience's receipts never enter the caller's belief", () => {
 	assert.deepEqual(Beliefs(harness), []);
 });
 
-test("no receipts means no belief, and a stale row is removed", () => {
+test("a module with nothing bound recomputes without a generation and is not refused", () => {
 	const harness = Setup();
+	Declare(harness);
+
+	// Fixture-only state: `reveal` refuses in a module with nothing bound, so a
+	// receipt cannot exist here in production. It is written anyway, because the
+	// question is what the recompute consults, and an unbound module is the only
+	// place the answer is visible.
+	Receipt(harness);
+	assert.equal([...harness.db.generation.iter()].length, 0, "the fixture bound a generation");
+
+	Recompute(harness);
+
+	const [row] = Beliefs(harness);
+	assert.equal(row.value, Disclosure(PROPERTY, 1, PRIVATE_VALUE));
+	assert.equal(row.confidence, 0.5);
+});
+
+test("receipts written under different generations fold into one belief that names none", () => {
+	const harness = Bound();
+	Declare(harness);
+	Receipt(harness, { generation: "1" });
+
+	// A later bind, and a receipt written under it: two ids in one fold is what
+	// a real scope looks like, because a receipt carries the generation that was
+	// latest when it was written and a superseded one is never rewritten.
+	harness.clock.set(new Timestamp(BASE + MINUTE));
+	Bind(harness, "2", MINUTE);
+	Receipt(harness, {
+		propertyVersion: 2,
+		value: Disclosure(PROPERTY, 2, "80ms"),
+		at: Stamp(MINUTE),
+		generation: "2",
+	});
+
+	Recompute(harness);
+
+	const rows = Beliefs(harness);
+	assert.equal(rows.length, 1, "the fold did not collapse the two generations into one row");
+	assert.equal(rows[0].value, Disclosure(PROPERTY, 2, "80ms"));
+	assert.equal(rows[0].confidence, Math.fround(2 / 3));
+	assert.equal("generation" in rows[0], false, "the belief named one receipt's generation");
+});
+
+test("no receipts means no belief, and a stale row is removed", () => {
+	const harness = Bound();
 	Declare(harness);
 	const audience = CallerHex(harness);
 
@@ -395,7 +496,7 @@ test("no receipts means no belief, and a stale row is removed", () => {
 });
 
 test("a failure after the rebuild leaves the previous belief intact", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness);
 	Recompute(harness);
@@ -483,7 +584,7 @@ function Record(name: string, dump: string, t: Diagnostics): void {
 }
 
 test("criterion 5a: two back-to-back passes over three scopes leave a byte-identical dump", (t: Diagnostics) => {
-	const harness = Setup();
+	const harness = Bound();
 	Seed(harness);
 
 	for (const capability of SCOPES) Recompute(harness, { capability });
@@ -506,7 +607,7 @@ test("criterion 5a: two back-to-back passes over three scopes leave a byte-ident
 });
 
 test("criterion 5b: a throw after the first belief write leaves every prior row intact", (t: Diagnostics) => {
-	const harness = Setup();
+	const harness = Bound();
 	Seed(harness);
 	for (const capability of SCOPES) Recompute(harness, { capability });
 	const before = Dump(harness);
@@ -546,7 +647,7 @@ test("criterion 5b: a throw after the first belief write leaves every prior row 
 });
 
 test("criterion 5c: a throw between the delete and the insert leaves every prior row intact", (t: Diagnostics) => {
-	const harness = Setup();
+	const harness = Bound();
 	Seed(harness);
 	for (const capability of SCOPES) Recompute(harness, { capability });
 	const before = Dump(harness);
@@ -580,7 +681,7 @@ test("criterion 5c: a throw between the delete and the insert leaves every prior
 });
 
 test("a caller-supplied audience cannot set the stored column", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness);
 
@@ -593,7 +694,7 @@ test("a caller-supplied audience cannot set the stored column", () => {
 });
 
 test("an undeclared capability and an empty id are refused, writing nothing", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness);
 
@@ -603,7 +704,7 @@ test("an undeclared capability and an empty id are refused, writing nothing", ()
 });
 
 test("the reducer returns nothing", () => {
-	const harness = Setup();
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness);
 
@@ -613,8 +714,8 @@ test("the reducer returns nothing", () => {
 	assert.equal(returned, undefined);
 });
 
-test("a recompute touches no archive table and no receipt", () => {
-	const harness = Setup();
+test("a recompute touches no archive table, no receipt and no trace", () => {
+	const harness = Bound();
 	Declare(harness);
 	Receipt(harness);
 	const before = Archive(harness);
@@ -625,4 +726,10 @@ test("a recompute touches no archive table and no receipt", () => {
 	assert.equal(Archive(harness), before);
 	assert.equal(JSON.stringify([...harness.db.probe.iter()]), receipts);
 	assert.deepEqual([...harness.db.observation.iter()], []);
+
+	// The derivation leaves no history row. `belief.derived` is a declared trace
+	// kind and nothing writes it: recording a derivation is a decision of its
+	// own, and a stamped trace would make this reducer refuse in an unbound
+	// module - the refusal the generation paragraph of its doc declines.
+	assert.deepEqual([...harness.db.trace.iter()], []);
 });

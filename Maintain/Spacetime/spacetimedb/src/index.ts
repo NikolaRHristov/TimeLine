@@ -259,9 +259,12 @@ export const attach = spacetimedb.reducer(
  * `probe` is a receipt for a disclosure, and a disclosure is an act under an
  * admission policy, so it follows the same rule as the rest: `reveal` stamps the
  * generation the coherence helper answered with, and a module with nothing bound
- * writes no receipt at all. `belief` is the one catalog row without the column,
- * because a belief is derived rather than observed - it is recomputed from
- * receipts that already carry theirs.
+ * writes no receipt at all. `belief` is the exception, and deliberately not a
+ * guard either: a derivation admits nothing, so it has no policy to name, and
+ * the receipts it folds already carry the generations they were permitted under.
+ * It stamps nothing and refuses nothing for want of a generation - in a module
+ * with nothing bound it writes nothing at all, because no receipt can exist to
+ * fold.
  */
 
 /**
@@ -1054,6 +1057,20 @@ function compareReceipts(
  *   delete followed by a recompute restores every derived column and restamps
  *   `at` to the instant of that recompute, because `at` is `T_ingest`: the moment
  *   the row was computed, not the moment the evidence was.
+ *
+ * Generation. None is stamped and none is required, which is the one place this
+ * row differs from `trace` and `probe`. A belief is a fold, not an act: this
+ * reducer admits nothing - it opens `capability` to refuse an undeclared id and
+ * `probe` to read the receipts - so there is no policy for a row to name. The
+ * receipts name theirs, and they are the durable evidence; a single column could
+ * only name one of them, while `confidence` is derived from all. The generation
+ * this reducer ran under is not the row's fact either: it is the latest bound
+ * one by construction, already stated by `at` against the append-only
+ * `generation` table, and the rebuild below would overwrite it on the next pass.
+ * So a module with nothing bound is not refused here: with nothing bound
+ * `reveal` writes no receipt, so the scope is empty, any stale row is deleted
+ * and the reducer returns - the no-receipts path below, reached without a
+ * refusal.
  *
  * Atomicity. SpacetimeDB runs a reducer as one transaction, and this reducer's
  * writes all sit inside that boundary: the delete and the insert are never

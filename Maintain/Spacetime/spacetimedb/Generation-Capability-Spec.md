@@ -129,8 +129,40 @@ catalog rows whose generation is recorded rather than merely checked - and the t
 the same answer, so a receipt and the trace of the act it records cannot disagree about which
 interpreter allowed it. A module with nothing bound writes no receipt at all: `reveal` refuses with
 `unbound-generation`, the refusal `recordTrace` already makes, because a receipt that names a policy
-cannot be written under none. `belief` is the one catalog table with no generation column, and that
-is its own decision: a belief is derived from receipts that already carry theirs.
+cannot be written under none.
+
+`belief` is the third position: it neither stamps a generation nor guards one, and that is a
+decision rather than an omission. `lease` is guard-only because a grant's fact is its fence and its
+holder - the generation is checked when the claim is made, and it is not part of what the grant
+means. `belief` is guard-free for a stronger reason: a derivation admits nothing. `recomputeBelief`
+opens `capability` to refuse an undeclared id and `probe` to read the receipts, computes a copy and
+a ratio, and writes one row; no policy permits or refuses any part of that, so there is no
+generation for the row to name.
+
+The receipts are where that fact lives, and they are immutable. A belief folds one audience's
+receipts for one capability: `value` is copied from the receipt `compareReceipts` puts first and
+`confidence` is `n / (n + 1)` over all of them - so a single column could name only one receipt's
+generation and would then be false about the rest. The generation the recompute itself ran under is
+not the row's fact either: it is the latest bound generation at that instant by construction, which
+`at` read against the append-only `generation` table already states, and the replace-on-recompute
+rule would overwrite it on the next pass anyway. A derivation history, if one is ever wanted,
+belongs in `trace` - append-only, already carrying the generation, with `belief.derived` already a
+declared kind - and adding it is its own decision, because a trace write is a stamped write and
+would make the recompute refuse in a module with nothing bound.
+
+That refusal is the answer a stamp would force, and it is not wanted. In a module with nothing
+bound, `reveal` writes no receipt, so there is nothing to fold: the scope is empty, any stale row is
+deleted and the reducer returns. A recompute in an unbound module therefore writes nothing without
+refusing - the no-receipts outcome it already has, and one refusal fewer for a row that is
+disposable anyway.
+
+Because no column lands, there is no migration to state: `belief` keeps its six columns and a
+database that already holds beliefs publishes the unchanged schema. Had the column landed, the price
+would have been the one `probe` paid - SpacetimeDB 2.14 refuses any added column on an existing
+table without a default annotation, optional or not, and a fabricated default is not available for a
+fact this table does not have. `--delete-data` is free here, which is the one thing a derived table
+can say that a receipt cannot: the rows are rebuildable. That the price would have been low is not a
+reason to pay it.
 
 ## 4. No reducer executes DDL
 
@@ -203,6 +235,10 @@ with `TestClock` for the timestamps. The cases that matter:
 - a reveal writes a receipt whose `generation` is the helper's answer - the same id whether the
   caller named the latest generation or named none.
 - a reveal in a module with nothing bound writes no receipt and is refused `unbound-generation`.
+- a `belief` row declares six columns and no `generation` among them.
+- a recompute in a module with nothing bound writes no row and is not refused.
+- receipts written under different generations fold into one belief that names none of them.
+- a recompute writes no `trace` row: a derivation history is a separate decision, not a side effect.
 
-The coherence cases are written in `Test/Coherence.test.ts`; the bind cases are the ones still to
-write.
+The coherence cases are written in `Test/Coherence.test.ts`, the bind cases in `Test/Bind.test.ts`
+and the belief cases in `Test/Belief.test.ts`.

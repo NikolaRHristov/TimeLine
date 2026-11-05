@@ -24,6 +24,13 @@ $ ./node_modules/.bin/tsc --noEmit -p tsconfig.json
 (no output, exit 0)
 ```
 
+Re-verified at the epic boundary: `src/index.ts` sha256
+`c7fab4a1002f9a19b16b738b9fe06f76cd10d140fda253ba3d5ed08ee1f7e227` and `src/Schema.ts`
+`711fc75f34f1530d6b8714fe20e2b1768b38076c655e79c605ad36ee65a3990e`, on `Current` at `1b3398c5` plus
+the capability-seeding edits still in the tree. Whole suite 137/137 pass, `tsc` exit 0,
+`spacetime build` green, the maintain schema gate 11/11. The verdicts below hold at both revisions;
+the differences the newer one introduced are listed under "Re-verification at the epic boundary".
+
 ## Verdicts
 
 Criterion 1 (entitled sender): **PASS** - test
@@ -65,7 +72,8 @@ Criterion 4 (disclosure): **PASS** - 8 tests named `criterion 4: …` (`Test/Aud
 in `schema.moduleDef` and return `undefined` when called, the source scan finds no value-returning
 `return` inside any registration, the seven catalog tables are `Private`, `my_probe` is the only
 view and is sender-scoped and not anonymous, no procedure/HTTP/outbox/RLS read path is registered,
-and a receipt carries exactly its eight columns - no `evidence`, no `resource`. This criterion
+and a receipt carries exactly its nine columns - `generation` included, resolved by the coherence
+helper rather than accepted from the caller - with no `evidence` and no `resource`. This criterion
 failed before the fix recorded below and passes after it.
 
 Criterion 5 (belief recompute): **PASS** - tests
@@ -255,13 +263,21 @@ that returned early cannot make the assertion vacuous.
 
 ## Appendix C - Commits carrying the fixes and the tests
 
-| Commit     | What it carries                                                     |
-| ---------- | ------------------------------------------------------------------- |
-| `078efb0e` | the criterion-4 fix in `reveal`, plus the assertions that pin it    |
-| `9c975a0c` | the criterion-5 tests and the `Probe-Contract.md` claim → test rows |
-| `ae538dc3` | further belief-recompute failure tests                              |
-| `f06e5e90` | `Disclosure-Audit.md`, the criteria 3-4 record                      |
-| `d612d547` | `Test/Audience.test.ts` in its final form, and the audited revision |
+| Commit     | What it carries                                                      |
+| ---------- | -------------------------------------------------------------------- |
+| `078efb0e` | the criterion-4 fix in `reveal`, plus the assertions that pin it     |
+| `9c975a0c` | the criterion-5 tests and the `Probe-Contract.md` claim → test rows  |
+| `ae538dc3` | further belief-recompute failure tests                               |
+| `f06e5e90` | `Disclosure-Audit.md`, the criteria 3-4 record                       |
+| `d612d547` | `Test/Audience.test.ts` in its final form, and the audited revision  |
+| `fd4b102a` | `probe.generation`: the column, the helper-resolved stamp, the guard |
+| `58c5dfe0` | the receipt assertions moved to nine columns, in three test files    |
+| `d393b0a4` | the generation-binding fixture helper in `Test/Audience.test.ts`     |
+| `c1e76882` | the criterion-3 generation test and the bound entitlement fixture    |
+| `a1dcf03d` | this report's first note about the newer revision                    |
+
+The boundary pass's own edit to `Maintain/Source/Test/Schema.test.ts` is left uncommitted for the
+repository's auto-committer, as are the generation card's test fixtures it verified against.
 
 ## Residual, not a criterion failure
 
@@ -271,17 +287,76 @@ the criterion passes; the message is still a disclosure that hands one caller an
 identity. It is queued as follow-up work against `claim` alone; the fence and generation logic is
 not in question.
 
-## Superseded revision
+## Re-verification at the epic boundary
 
-The schema has since gained a column. `probe.generation` records the generation a receipt was
-written under, so a receipt now carries nine columns rather than the eight asserted above, and the
-criterion-4 column assertion has to move with it. `reveal` also requires a bound generation, so a
-fixture that binds none is refused at
-`unbound-generation: a receipt names the generation it was allowed under, and none has been bound`
-before the entitlement check is reached - which is a property of the newer revision, not a return of
-the leak.
+Every line below was re-run against the boundary revision - `src/index.ts` sha256
+`c7fab4a1002f9a19b16b738b9fe06f76cd10d140fda253ba3d5ed08ee1f7e227` - rather than carried over from
+`03868332`. The shared gates (the suite count grows as sibling cards add tests; the command is the
+gate, the number is this run's):
 
-Neither change touches the F1 fix, which still reads
+```
+$ cd Maintain/Spacetime/spacetimedb
+$ node --import ./Test/Support/Register.mjs --test Test/*.test.ts
+# tests 137
+# pass 137
+# fail 0
+# cancelled 0
+
+$ ./node_modules/.bin/tsc --noEmit -p tsconfig.json        # exit 0
+$ spacetime build --module-path .                          # Build finished successfully.
+$ cd .. && cd .. && node --test "Maintain/Source/Test/Schema.test.ts"   # 11/11 pass
+```
+
+- **Criterion 1 (entitled sender): PASS** -
+  `an entitled sender writes exactly one probe row, scoped to its server-resolved audience`
+  (`--test-name-pattern="exactly one probe row" Test/Reveal.test.ts`).
+- **Criterion 1 (atomic charge): PASS** -
+  `a failure after the private read and before the insert leaves no receipt and no charge`
+  (`--test-name-pattern="failure after the private read" Test/Reveal.test.ts`).
+- **Criterion 2 (unentitled sender): PASS** -
+  `an unentitled sender is refused, writes no probe row and deducts no charge`
+  (`--test-name-pattern="unentitled sender is refused" Test/Reveal.test.ts`).
+- **Criterion 3 (audience spoofing): PASS** - 15/15 tests named `criterion 3: …`
+  (`--test-name-pattern="criterion 3" Test/Audience.test.ts`), the newest being
+  `the receipt carries the bound generation, never the caller's string`.
+- **Criterion 4 (disclosure): PASS** - 8/8 tests named `criterion 4: …`
+  (`--test-name-pattern="criterion 4" Test/Audience.test.ts`). The audit still reads all 13
+  registered functions out of `schema.moduleDef` as unit return types - 10 reducers and 3 lifecycle
+  hooks - with `myProbe` the only view, and the receipt's nine columns contain no `evidence` and no
+  `resource`.
+- **Criterion 5 (belief recompute): PASS** - `criterion 5a`, `criterion 5b`, `criterion 5c`
+  (`--test-name-pattern="criterion 5" Test/Belief.test.ts`), 3/3.
+- **Archive `observation`: PASS** - the declaration block hashes
+  `145e668d339b7321219dccafb290a6f5d2b4b56cd8928cc5af3ce0917ceb5eaf` at `d0b2a63e`, at `1b3398c5`
+  and in the working tree; the only mutation site in the module is `src/index.ts:172`, inside
+  `observe`; `the catalog tables are declared, and the archive keeps its own names` passes in the
+  maintain gate; `--test-name-pattern="archive"` runs `a reveal touches no archive table` and
+  `a recompute touches no archive table and no receipt`.
+
+### What moved since the pinned revision
+
+`probe` gained a `generation` column, so a receipt states which interpreter allowed the disclosure
+rather than only which one was claimed - nine columns, stamped from the coherence helper's answer
+and never from the caller's string. `reveal` now refuses a receipt when nothing is bound
+(`unbound-generation`, `src/index.ts:876`), and that guard runs before the entitlement check. The F1
+fix is unchanged and still reads
 `admission-refused: ${audience} holds no live lease on the resource ${args.property} requires`
-(`src/index.ts:911`). Every verdict above was measured at `03868332`; a re-run against the newer
-revision is the epic-boundary pass, not a correction to this record.
+(`src/index.ts:930`).
+
+### Gaps the boundary pass found, and how each was closed
+
+- `Test/Audience.test.ts` still pinned eight receipt columns, so
+  `criterion 4: a probe's receipt carries exactly the receipt columns and no private row` failed
+  (`not ok 21` at `c1e76882`). The generation card's worker added `generation` to the expected list
+  and asserted the stored value, in its own working tree.
+- `criterion 4: a refusal does not name the private lease resource` bound no generation, so the
+  newer guard answered `unbound-generation` before the entitlement refusal was reached (`not ok 22`
+  at `c1e76882`). The same worker binds a generation in the fixture; the message the test then
+  asserts is still the entitlement refusal, and it still names no resource.
+- `Maintain/Source/Test/Schema.test.ts` still pinned `probe`'s eight declared columns, so the
+  maintain gate failed 10/11 against the newer declaration. Closed by this pass: `generation` added
+  to the expected list, gate 11/11, `prettier --check` clean.
+
+The first two are the generation card's own fixtures, swept into `1b3398c5` while this pass ran; the
+third is this pass's only change. No reducer was edited for this verification, so the verdicts stand
+on the same logic that produced them.

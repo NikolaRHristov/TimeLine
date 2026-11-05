@@ -196,6 +196,12 @@ Traps in that harness:
   advances a few minutes, so a liveness check silently passes for the wrong reason. Pin the base
   timestamp first (`Timestamp.fromDate(new Date(...))` plus an offset) and assert the context's own
   `toISOString()` once.
+- **The harness does not run `init`.** A fresh `createModuleTestHarness(...)` datastore holds zero
+  rows in every table `init` seeds - the `capability` declarations among them - so a test that binds
+  against the deployment's own list is refused by an empty catalog and looks like a broken reducer.
+  Seed the rows a case needs through `withReducerTx` (`ctx.db.capability.insert(...)`), and keep
+  fixture ids rather than the deployed ones: a case about an id that is _not_ declared must not
+  start passing the day someone declares it. `Test/Bind.test.ts` carries the worked `Setup`.
 - **Reading `harness.db` inside an open transaction traps the wasm backend** with `unreachable`.
   Read through `ctx.db` inside the transaction and through `harness.db` after it returns.
 - **`JSON.stringify` cannot carry a `bigint` column**, so "the table is byte-for-byte unchanged"
@@ -273,6 +279,24 @@ through `Timestamp` (`microsOf` / `stampOf` in `src/Catalog.ts`).
 Keep the files (or the existing store) authoritative and treat the database as rebuildable. An
 exporter reads the database and writes the same files a static site already consumes - the site
 build must never connect to the database, or a static/CI build acquires a live service dependency.
+
+## A refusal is a read
+
+A reducer returns nothing, so its error message is the only channel it has - and the caller reading
+it was refused, which means it is by definition not entitled to what it was refused for. Two
+refusals in this module named a value out of a private table before anyone noticed:
+
+- `reveal` answered `admission-refused: <audience> holds no live lease on catalog:latency`, naming
+  `property.resource` - a column of a private table, and the one value `claim` needs to make itself
+  entitled. It now names the property and not the resource.
+- `claim` answered `lease-held: <resource> is held by <holder hex> under fence 1 until <stamp>`,
+  naming `lease.holder` - another sender's identity, from a private table. It now says
+  `held by another identity` and keeps the fence and the deadline.
+
+The rule the two instances give: name the fact the caller must act on - the property, the fence, the
+deadline - and never the value it would have to read a private table to learn. Keep the diagnostic
+while dropping the identity; a refusal that says only "denied" makes the caller guess what to do
+next, which is its own defect.
 
 ## Pitfalls
 
@@ -363,3 +387,6 @@ build must never connect to the database, or a static/CI build acquires a live s
 | An added column is publishable             | publishing a module whose table gains a column over the previous database either succeeds, or fails with `requires a default value annotation` - it never drops rows silently                      |
 | A deadline past year 9999 is refused       | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                                                                            |
 | A grant is live the moment it is made      | every granted claim satisfies `state === held && expiresAt > acquiredAt` at the claim's own clock, for a one-microsecond lease and a year-long one                                                 |
+| A refusal discloses nothing                | two identities, one resource: the `lease-held` refusal matches `/held by another identity/`, carries no 64-character hex, and still names the fence and the deadline (`Test/Lease.test.ts`)        |
+| A generation row is never rewritten        | no `src/` file calls an `update` or `delete` on `generation`, and `bind`'s single append is followed by its own `requireCoherentGeneration` re-check (`Test/Bind.test.ts`)                         |
+| A table `init` seeds starts empty in tests | a fresh harness iterates zero `capability` rows, so every case seeds the ids it needs and a bind against them appends one row (`Test/Bind.test.ts`)                                                |

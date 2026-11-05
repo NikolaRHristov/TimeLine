@@ -836,6 +836,22 @@ const Probe: Entity = {
  *
  * A belief grants no access. It is the actor's own reading, which is why it may
  * carry an interpretation at all while `probe` may not carry the truth.
+ *
+ * It carries no generation, and that is a decision rather than an omission.
+ * `trace` and `probe` name the generation their act was permitted under because
+ * each is evidence of an admission; a derivation admits nothing - it reads
+ * receipts and copies one - so there is no policy for it to name. The receipts
+ * are where that fact lives, and they are immutable: a row folding several of
+ * them could carry only one id and would then be false about the rest, because
+ * `confidence` is a function of all of them and not of the one it copied. The
+ * generation the recompute itself ran under is not the row's fact either - it is
+ * the latest bound one at that instant by construction, which `at` read against
+ * the append-only `generation` table already states - so a column here would
+ * restate a constant on every row, and the replace-on-recompute rule would
+ * overwrite it on the next pass anyway. A derivation history, if one is ever
+ * wanted, is a `trace` row: that table is append-only and already carries the
+ * generation. So this table neither stamps a generation nor refuses for want of
+ * one, which is the one position left beside `lease`'s guard-only one.
  */
 const Belief: Entity = {
 	name: "belief",

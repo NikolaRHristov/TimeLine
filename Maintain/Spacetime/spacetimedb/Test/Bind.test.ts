@@ -22,6 +22,8 @@
 // installed, which is when they should go.
 // @ts-expect-error - `node:assert/strict` has no declarations in this program
 import assert from "node:assert/strict";
+// @ts-expect-error - `node:fs` has no declarations in this program
+import { readdirSync, readFileSync } from "node:fs";
 // @ts-expect-error - `node:test` has no declarations in this program
 import { test } from "node:test";
 import { Timestamp } from "spacetimedb";
@@ -59,8 +61,12 @@ function Stamp(offsetMicros: bigint): string {
  * instant.
  *
  * The rows are seeded through a reducer transaction - the same access `bind`
- * uses - because `capability` has no writer in the module and `init` seeds
- * nothing: a declaration is a deployment, and `bind` may never create one.
+ * uses - because `createModuleTestHarness` builds the module's datastore
+ * without running `init`, and `init` is the only thing that writes
+ * `capability` (`seedCapabilities` in `Declarations.ts`). Seeding also keeps
+ * these cases off the deployment's own list: a case about a capability that is
+ * *not* declared must not start passing because someone declared it, and the
+ * fixture ids pin that.
  */
 function Setup(): Harness {
 	const harness = createModuleTestHarness(Catalog.default, Catalog);
@@ -290,6 +296,9 @@ test("a declared manifest appends exactly one row at the module's clock", () => 
 
 	Bind(harness, Manifest({ capabilities: [BROWSE, CHAT] }));
 
+	// The count is asserted before the contents: "one row" is the claim, and a
+	// deep-equal against a one-element array states it only by implication.
+	assert.equal([...harness.db.generation.iter()].length, 1);
 	assert.deepEqual(
 		[...harness.db.generation.iter()],
 		[
@@ -331,4 +340,73 @@ test("a successor appends one row and leaves its predecessor untouched", () => {
 		policyChanged: false,
 	});
 	assert.equal(Latest(harness), "2");
+});
+
+test("boundAt is the module's clock, not a value the caller supplies", () => {
+	const harness = Setup();
+
+	// `bind` has no timestamp argument, so a caller cannot supply one through
+	// the host. The value below is offered anyway: "taken from the client" is a
+	// claim about what the reducer reads, and the only way to observe it is to
+	// put a value where a careless implementation would look and watch it be
+	// ignored. The clock is moved too, so the expected stamp is neither the
+	// fixture instant nor the caller's.
+	const clientStamp = Stamp(99_000_000n);
+	harness.clock.set(new Timestamp(BASE + 7_000_000n));
+
+	Bind(harness, { ...Manifest(), boundAt: clientStamp } as unknown as BindArguments);
+
+	const rows = [...harness.db.generation.iter()];
+
+	assert.equal(rows.length, 1);
+	assert.equal(rows[0].boundAt, Stamp(7_000_000n));
+	assert.notEqual(rows[0].boundAt, clientStamp);
+	assert.notEqual(rows[0].boundAt, Stamp(0n));
+});
+
+// The two assertions below are not behavioural, and that is the point: a
+// reducer that appends a row and then rewrites its parent leaves every row in
+// place and passes each case above, and a reducer that drops its post-append
+// re-assertion commits the same row as one that keeps it. Neither defect is
+// visible in the datastore, so they are read off the source the way
+// `Test/Coherence.test.ts` reads off the one-file rule.
+test("generation is appended to and never rewritten, and the append is re-checked", () => {
+	const source = new URL("../src/", import.meta.url);
+	const files = readdirSync(source)
+		.filter((name: string) => name.endsWith(".ts"))
+		.sort();
+	const text = (name: string) => readFileSync(new URL(name, source), "utf8");
+
+	// A generation is a fact about a moment. Nothing in the module may update
+	// or delete one, in any file, under any name.
+	const rewriters = files.filter((name: string) =>
+		/generation\.(id\.)?(update|delete)\s*\(/.test(text(name)),
+	);
+
+	assert.deepEqual(rewriters, []);
+
+	// Inside `bind`, the append is the single write, and the coherence check
+	// that follows it is what rolls the row back when the pointer did not move.
+	// A missing re-assertion is silent - the row commits and the history forks
+	// - so its presence and its position are asserted rather than assumed.
+	const index = text("index.ts");
+	const start = index.indexOf("export const bind = spacetimedb.reducer(");
+
+	assert.ok(start >= 0, "bind is registered in src/index.ts");
+
+	const rest = index.slice(start + 1);
+	const nextExport = rest.indexOf("\nexport const ");
+	const body = nextExport === -1 ? rest : rest.slice(0, nextExport);
+
+	assert.equal(
+		(body.match(/appendGeneration\(/g) ?? []).length,
+		1,
+		"bind appends exactly one generation row",
+	);
+
+	const appendAt = body.search(/appendGeneration\(/);
+	const recheckAt = body.search(/requireCoherentGeneration\(\s*ctx,\s*id\s*\)/);
+
+	assert.ok(recheckAt >= 0, "bind re-asserts coherence against the row it wrote");
+	assert.ok(appendAt < recheckAt, "the re-assertion follows the append");
 });
