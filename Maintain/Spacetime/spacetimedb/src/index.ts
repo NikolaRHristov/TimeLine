@@ -308,7 +308,9 @@ export const bind = spacetimedb.reducer(
 		const declared = [...new Set(named)];
 
 		if (declared.length !== named.length) {
-			throw new SenderError("admission-refused: the manifest names a capability more than once");
+			throw new SenderError(
+				"admission-refused: the manifest names a capability more than once",
+			);
 		}
 
 		for (const id of declared) {

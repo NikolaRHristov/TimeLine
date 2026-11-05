@@ -2,7 +2,7 @@
 
 ## The chain
 
-`pnpm run check` is nine steps in one line of `package.json`, and each step is independently
+`pnpm run check` is ten steps in one line of `package.json`, and each step is independently
 runnable, which is what makes a red gate locatable without reading the chain. The order is
 deliberate: the interpreter floor comes before anything that a wrong interpreter would turn into a
 syntax error that names neither the version nor the file (RFC-0074, rule 1).
@@ -20,10 +20,12 @@ stateDiagram-v2
   ToolLayer --> State: tsc --noEmit exits 0
   State --> Tokens: 31 properties hold
   Tokens --> Position: 8 checks
-  Position --> Test: RESULT positioned
+  Position --> Spacetime: RESULT positioned
+  Spacetime --> Test: RESULT module green
   Test --> Green: every test passes
   Green --> [*]
   Compatibility --> Stopped: RESULT incompatible
+  Spacetime --> Stopped: RESULT module untested
   Stopped --> [*]
 ```
 
@@ -48,7 +50,8 @@ flowchart TD
   F["Check:State"] --> F2["one of thirty-one properties over the state modules"]
   G["Check:Tokens"] --> G2["one of eight sheet, token and vocabulary checks"]
   H["Check:Position"] --> H2["a brand or vocabulary violation"]
-  I["Test"] --> I2["a unit test under Source/Test"]
+  I["Check:Spacetime"] --> I2["a module test under Maintain/Spacetime/spacetimedb/Test, or the module's own install"]
+  J["Test"] --> J2["a unit test under Source/Test"]
 ```
 
 ---
@@ -59,7 +62,13 @@ The gate is a claim about contracts, not about the tree. It does not build, it d
 the site, and it does not read the rendered page: no step of `pnpm run check` invokes `astro build`,
 no `astro check` runs anywhere in the repository, and nothing in the chain reads `Target/`, HTML or
 computed CSS (RFC-0074, rules 5 to 7). CI is narrower still - it runs the floor check and a build,
-and the four contracts and the unit tests are local-only.
+and the contracts and both suites are local-only.
+
+`Check:Spacetime` narrows that gap by one suite and no more. It runs the module's tests against the
+SDK's in-memory harness, so it needs no server, no published database and no identity: a green
+module stage is a claim about the reducers' own logic, not about anything a client can subscribe to.
+It also runs the suite rather than `spacetime build`, so the module's own typecheck stays outside
+the gate.
 
 legend: solid arrow = a transition a file performs; dotted arrow = a transition nothing performs;
 box = a state a file names; hexagon = a state no file names.
@@ -87,7 +96,7 @@ drawn as a gap rather than as a check the chain would report.
 - A stage that reports and does not fail. The dependency half of the floor check prints `SKIP` when
   `pnpm outdated` is absent or the registry does not answer, and `INFO` when a major is available;
   none of the three changes the exit code (RFC-0074, rule 3).
-- A count written twice. `package.json` lists nine steps while RFC-0074 calls the chain six, and the
+- A count written twice. `package.json` lists ten steps while RFC-0074 calls the chain six, and the
   token contract prints eight checks while the archive index describes five; the code is the only
   durable count.
 - The board the gate never reads. `Check:RFC-Board` patches `subprocess.run`, so a board that

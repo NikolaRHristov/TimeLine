@@ -405,8 +405,15 @@ function Counts(harness: Harness): Record<string, number> {
  * host whose insert throws is a host whose transaction aborts - so the failure
  * is injected without instrumenting the module and without leaving anything to
  * revert.
+ *
+ * `onInsert` receives the row the reducer tried to write, which is how the
+ * caller proves the failure came after the private value was read rather than
+ * before it.
  */
-function UncommittableContext(ctx: Parameters<typeof Catalog.reveal>[0]) {
+function UncommittableContext(
+	ctx: Parameters<typeof Catalog.reveal>[0],
+	onInsert: (row: Record<string, unknown>) => void = () => {},
+) {
 	const db = ctx.db as unknown as Record<string, Record<string, unknown>>;
 
 	return {
@@ -415,12 +422,13 @@ function UncommittableContext(ctx: Parameters<typeof Catalog.reveal>[0]) {
 			...db,
 			probe: {
 				...db.probe,
-				insert: () => {
+				insert: (row: Record<string, unknown>) => {
+					onInsert(row);
 					throw new Error("injected: the receipt could not be written");
 				},
 			},
 		},
-	} as Parameters<typeof Catalog.reveal>[0];
+	} as unknown as Parameters<typeof Catalog.reveal>[0];
 }
 
 test("criterion 1: an entitled sender writes exactly one probe row, scoped to its server-resolved audience", () => {
@@ -461,13 +469,29 @@ test("criterion 1: a failure after the private read and before the insert leaves
 	Declare(harness);
 	Grant(harness);
 	const before = Counts(harness);
+	const attempted: Record<string, unknown>[] = [];
 
 	assert.throws(
 		() =>
 			harness.withReducerTx(Caller, (ctx) => {
-				Catalog.reveal(UncommittableContext(ctx), Request());
+				Catalog.reveal(
+					UncommittableContext(ctx, (row) => attempted.push(row)),
+					Request(),
+				);
 			}),
 		/injected: the receipt could not be written/,
+	);
+
+	// The insert was reached with the disclosure in hand, so the failure is
+	// provably after the private value was read and before it was committed.
+	assert.equal(attempted.length, 1);
+	assert.equal(
+		attempted[0].value,
+		JSON.stringify({ name: PROPERTY, version: 1, value: PRIVATE_VALUE }),
+	);
+	assert.ok(
+		!JSON.stringify(attempted[0]).includes(EVIDENCE),
+		"the attempted receipt carried raw evidence",
 	);
 
 	// The window is empty: no receipt committed, so nothing was charged, and no
@@ -502,9 +526,7 @@ test("criterion 2: an unentitled sender is refused, writes no probe row and dedu
 
 	assert.match(
 		refusal,
-		new RegExp(
-			`admission-refused: ${CallerHex(harness)} holds no live lease on ${RESOURCE}`,
-		),
+		new RegExp(`admission-refused: ${CallerHex(harness)} holds no live lease on ${RESOURCE}`),
 	);
 
 	// The refusal names the audience and the resource and never the truth it was
@@ -573,9 +595,10 @@ test("a reveal touches no archive table", () => {
 /**
  * Seed the bound generations a test runs against.
  *
- * `bind` is a separate card and does not exist yet, so the rows are written
- * through a reducer transaction - the same access a `bind` reducer would use,
- * and the same fixture `Coherence.test.ts` uses for the helper's own contract.
+ * Written through a reducer transaction rather than through `bind`, because
+ * `bind` derives its own id from its predecessor and requires every capability
+ * in the manifest to be declared: these fixtures need a named history, not a
+ * valid manifest, and `Coherence.test.ts` seeds the same way.
  */
 function Bind(harness: Harness, ...ids: readonly string[]): void {
 	harness.withReducerTx(Caller, (ctx) => {

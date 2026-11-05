@@ -212,14 +212,17 @@ test("a declared manifest appends exactly one row at the module's clock", () => 
 
 	Bind(harness, Manifest({ capabilities: [BROWSE, CHAT] }));
 
-	assert.deepEqual([...harness.db.generation.iter()], [
-		{
-			id: "1",
-			boundAt: Stamp(0n),
-			manifestDigest: "sha256:first",
-			policyChanged: true,
-		},
-	]);
+	assert.deepEqual(
+		[...harness.db.generation.iter()],
+		[
+			{
+				id: "1",
+				boundAt: Stamp(0n),
+				manifestDigest: "sha256:first",
+				policyChanged: true,
+			},
+		],
+	);
 	assert.equal(Latest(harness), "1");
 });
 

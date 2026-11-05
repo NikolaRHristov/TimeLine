@@ -181,6 +181,8 @@ if (Run.status !== 0) {
 		"Each failing assertion is named in the TAP output above. The module's own",
 		"`cd Maintain/Spacetime/spacetimedb && pnpm test` runs the same files.",
 	]);
+	process.stdout.write("---\n");
+	process.stdout.write("RESULT module red\n");
 	process.exit(Run.status === null ? 1 : Run.status);
 }
 

@@ -77,19 +77,22 @@ function Disclosure(name: string, version: number, value: string): string {
 }
 
 /** Declare the capability, with the private truth under it. */
-function Declare(harness: Harness): void {
+function Declare(harness: Harness, capability: string = CAPABILITY): void {
+	// `<name>@<version>`, split on the one `@` the id format carries.
+	const [name, version] = capability.split("@");
+
 	harness.withReducerTx(Caller, (ctx) => {
 		ctx.db.capability.insert({
-			id: CAPABILITY,
-			name: "latency",
-			version: "1",
+			id: capability,
+			name,
+			version,
 			stateClass: "stateless",
-			contractDigest: "digest:latency@1",
+			contractDigest: `digest:${capability}`,
 			declaredAt: Stamp(0n),
 		});
 		ctx.db.property.insert({
-			id: `${CAPABILITY}:${PROPERTY}`,
-			capability: CAPABILITY,
+			id: `${capability}:${PROPERTY}`,
+			capability,
 			name: PROPERTY,
 			version: 1,
 			resource: RESOURCE,
@@ -110,6 +113,7 @@ function Declare(harness: Harness): void {
 function Receipt(
 	harness: Harness,
 	options: {
+		capability?: string;
 		property?: string;
 		propertyVersion?: number;
 		audience?: string;
@@ -117,6 +121,7 @@ function Receipt(
 		at?: string;
 	} = {},
 ): void {
+	const capability = options.capability ?? CAPABILITY;
 	const property = options.property ?? PROPERTY;
 	const propertyVersion = options.propertyVersion ?? 1;
 	const audience = options.audience ?? CallerHex(harness);
@@ -124,8 +129,8 @@ function Receipt(
 
 	harness.withReducerTx(Caller, (ctx) => {
 		ctx.db.probe.insert({
-			id: `${CAPABILITY}:${property}:${propertyVersion}:${audience}`,
-			capability: CAPABILITY,
+			id: `${capability}:${property}:${propertyVersion}:${audience}`,
+			capability,
 			property,
 			propertyVersion,
 			audience,
