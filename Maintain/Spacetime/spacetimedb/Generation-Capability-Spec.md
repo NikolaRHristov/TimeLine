@@ -40,8 +40,8 @@ declared version:
 - **`declaredAt`** - `t.string()`. `T_ingest` at declaration, which is the module's `init`.
 
 A column is added by editing `Entities.ts` and running
-`pnpm --filter @nikolarhristov/timeline-maintain run Schema`. `Schema.ts` is compared byte for byte
-by `Maintain/Source/Test/Schema.test.ts`, so hand-editing it fails the maintain check.
+`pnpm --filter @timeline/maintain run Schema`. `Schema.ts` is rendered from that declaration, so a
+hand edit is overwritten by the next run.
 
 ## 2. What a manifest digest is, and what it does not carry
 
@@ -220,7 +220,7 @@ insert-or-update, and no wall clock - `ctx.timestamp`, rendered to the string th
    `Agentic`, and the module here is the consumer. Confirm which tree the `bind` card should land in
    before editing `index.ts`.
 
-## 7. What a test has to prove
+## 7. What a test has to cover
 
 The module test harness is `createModuleTestHarness(schema, moduleExports)` from
 `spacetimedb/server/test-utils` (spacetimedb 2.14.0, also exported as `.../vitest` and `.../wasm`),
@@ -240,5 +240,5 @@ with `TestClock` for the timestamps. The cases that matter:
 - receipts written under different generations fold into one belief that names none of them.
 - a recompute writes no `trace` row: a derivation history is a separate decision, not a side effect.
 
-The coherence cases are written in `Test/Coherence.test.ts`, the bind cases in `Test/Bind.test.ts`
-and the belief cases in `Test/Belief.test.ts`.
+The package carries no test tree, so these are the cases a test would have to cover rather than a
+record of one that ran.

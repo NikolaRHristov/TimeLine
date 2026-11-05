@@ -13,20 +13,20 @@ Read the skill before the task. A skill states the failure it exists to prevent.
 - **`Chat-Research/`** - asking a web chat product a research question over CDP and reading the
   answer back: the three checks a composer send needs, the output contract the prompt must carry,
   and the mode and model that are part of the question.
-- **`Design-Verification/`** - proving a built page matches the design rather than merely compiling.
-  Two verifiers, `verify-composition.mjs` and `verify-spread.mjs`, asserting numbers read from
-  `Documentation/Reference/Design-Composition.md`.
+- **`Design-Verification/`** - proving a built page matches the design rather than merely compiling:
+  the manual probe of the built page, and the numbers read from
+  `Documentation/Reference/Design-Composition.md` that the probe is compared against.
 - **`Figma-MCP/`** - reading a design file into components over the Figma MCP endpoint, and the two
   failures that make it look broken: the `mcp:connect`-only token scope, and a large result replaced
   by a marker that was never stored.
 - **`Parallel-Epic-Execution/`** - several agents on one tree. File ownership, the boundary pass,
   the four facts an escalation must carry.
-- **`Progressive-Enhancement/`** - the first paint is the server's. `no-js-audit.mjs` loads every
-  route twice and fails a page whose content waits for hydration.
+- **`Progressive-Enhancement/`** - the first paint is the server's. Every route is loaded twice,
+  scripts off and on, and a page whose content waits for hydration fails.
 - **`RFC-Board/`** - assembling the public project from the committed records. The file is
   authoritative, the issue follows it, the project item follows the issue; nothing writes back.
-- **`Skill-Authoring/`** - where a lesson lives: this repository or an agent profile, the naming and
-  the anonymisation gate, and `SkillContract.mjs`, the check that holds the tree to them.
+- **`Skill-Authoring/`** - where a lesson lives: this repository or an agent profile, the naming,
+  and the anonymisation rule the tree is reviewed against.
 - **`SpacetimeDB-Local/`** - running and editing the local module.
 - **`Timeline-Bookmarks/`** - reading and refreshing the saved-post archive.
 - **`Timeline-Browser-Transport/`** - driving a person's own browser over CDP.

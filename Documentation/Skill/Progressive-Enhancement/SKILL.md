@@ -50,26 +50,23 @@ broken component rather than a broken environment:
 
 - **A background tab is never rendered.** A target created with `background: true` - the polite way
   to open a tab in someone's own browser - receives no rendering updates, so the observer stays
-  silent and the island never hydrates. The audit calls `Page.bringToFront` for this reason. A real
-  reader's tab is in front, so this is an audit-environment rule, not a product defect.
+  silent and the island never hydrates. Bring the tab to the front (`Page.bringToFront`) before
+  measuring for this reason. A real reader's tab is in front, so this is an audit-environment rule,
+  not a product defect.
 - **An observer target with no box never intersects.** Astro styles `astro-island` as
   `display: contents`, which is why the directive observes children rather than the island itself. A
   child that is itself `display: contents`, `display: none` or zero-height keeps the island dormant.
 
 A `client:visible` island that stays static is diagnosed by reading the `ssr` attribute: the runtime
 removes it on hydration, so `document.querySelector("astro-island[ssr]")` still matching means the
-directive never fired. The audit reports that as `js=static` and warns that the parity comparison
-measured two static renders.
+directive never fired. Report that as `js=static` and say the parity comparison measured two static
+renders - a parity that holds between two static pages proves nothing about hydration.
 
 ## The audit
 
-```sh
-node Documentation/Skill/Progressive-Enhancement/Reference/no-js-audit.mjs
-```
-
-It waits for `Target/` to stop being written, copies it to a temporary directory, serves that copy
-on loopback, launches its own headless browser on a throwaway profile, and loads every built route
-twice over CDP: once with `Emulation.setScriptExecutionDisabled`, once normally.
+It is two passes over every built route, and it is run by hand: launch a headless browser on a
+throwaway profile, point it at a copy of `Target/` served on loopback, and load each route twice
+over CDP - once with `Emulation.setScriptExecutionDisabled`, once normally.
 
 - **The script-free pass is the measurement.** `Runtime.evaluate` still answers while page script
   execution is disabled - the switch stops the document's own scripts, not the debugger's - so the
@@ -81,31 +78,19 @@ twice over CDP: once with `Emulation.setScriptExecutionDisabled`, once normally.
 - **The read is a snapshot, not the build directory.** `astro build` empties `Target/` before it
   writes, so a run that starts mid-build sees an empty tree and reports every route as serving no
   document - a total failure that looks exactly like the defect this exists to catch. The audit
-  waits for the newest mtime under `--root` to be older than 1.5s, copies the tree aside, checks
+  waits for the newest mtime under `Target/` to be older than 1.5s, copies the tree aside, checks
   that every copied document is complete and that the route set matches the live one, and serves the
   copy. A build that starts after the copy cannot take the pages away from the browser.
 - **Every route gets the generic contract, profile or not.** A non-empty `<title>`, at least 40
   characters of prose under `<main>`, exactly one visible `<h1>`, no island unless the profile
   allows one, no `client:only` island, and server-rendered content inside every island. A route with
   no profile is reported as `generic`, so a new page cannot pass by being unknown.
-- **Exit code 1 means at least one route failed.** The report lists every route, pass or fail, and a
-  failing route is named in the run's result rather than dropped.
+- **A failing route is named, never dropped.** Write the report as one line per route, pass or fail.
+  A route missing from the report is indistinguishable from a route that passed, and the second is
+  the claim the audit exists to make.
 
-| Flag          | Effect                                                      |
-| ------------- | ----------------------------------------------------------- |
-| `--root`      | The build directory to audit; defaults to `./Target`.       |
-| `--origin`    | Audit an already-served origin instead of serving `--root`. |
-| `--route`     | Audit one route; repeatable.                                |
-| `--browser`   | The Chromium binary; overrides `$NO_JS_AUDIT_BROWSER`.      |
-| `--json`      | Machine-readable report, including both passes' counts.     |
-| `--timeout`   | Per-command CDP timeout in milliseconds.                    |
-| `--wait`      | How long to wait for a build to stop writing; default 180s. |
-| `--keep`      | Leave the browser profile and the snapshot behind.          |
-| `--self-test` | Audit generated fixtures and require them to fail.          |
-
-The browser binary is configuration, never a constant: `--browser`, then `$NO_JS_AUDIT_BROWSER`,
-then the first installed candidate (Chrome, Chromium, Brave, a Playwright cache). A clone on another
-machine needs no edit.
+The browser binary is configuration, never a constant: the first installed candidate will do -
+Chrome, Chromium, Brave, a Playwright cache - so a clone on another machine needs no edit.
 
 ## One store, two islands
 
@@ -129,14 +114,8 @@ stage, and neither would be wrong about a value the other never had.
   render are then the same anonymous slot, so hydration has nothing to disagree with. A failed read
   keeps that slot, and the session layer states the failure once.
 
-The audit for this is `Reference/workspace-store-audit.mjs`.
-
-```sh
-node Documentation/Skill/Progressive-Enhancement/Reference/workspace-store-audit.mjs
-```
-
-It loads the built workspace page three times in its own tabs - anonymous, a session element that is
-not JSON, and a readable session - and asserts, per pass:
+The check for this is three passes of the built workspace page, each in its own tab - anonymous, a
+session element that is not JSON, and a readable session - read per pass:
 
 - two islands on the page, both hydrated (a pass that never hydrates reports it instead of measuring
   a static render);
@@ -156,27 +135,16 @@ falsifiable by construction - it requires the seam to name a stage it did not na
 
 ## Adding a route
 
-A new page is audited the moment it builds, and its expectations are a table entry in the script:
+A new page is audited the moment it builds, and its expectations are written down before the page is
+read: the route, how many islands it may mount, a minimum visible count per selector it must show,
+and any group of alternatives where one has to hold.
 
-```js
-{
-	Path: "/Workspace/",
-	Islands: 2,
-	Require: [
-		{ Selector: ".rail", Min: 1 },
-		{ Selector: ".drawer", Min: 1 },
-		{ Selector: "section.drawer-column", Min: 4 },
-	],
-	Some: [[{ Selector: "main ol", Min: 1 }, { Selector: "main p", Min: 1 }]],
-}
-```
-
-`Require` is a minimum visible count per selector. `Some` is a group of alternatives, at least one
-of which must hold - that is how an empty archive passes: the page shows rows when there is content
-and a note when there is none, and both are complete first paints. `Islands` is how many hydration
-boundaries the route is allowed and defaults to none, so a page that grows an island without a
-reason fails. A dynamic route names its variable segment with `:`, so `/Bookmark/:Id/` covers every
-built post.
+The workspace's profile is the shape: two islands; at least one `.rail`, one `.drawer` and four
+`section.drawer-column`; and, as the one alternative, at least one `main ol` or one `main p`. The
+alternative is how an empty archive passes: the page shows rows when there is content and a note
+when there is none, and both are complete first paints. The island count caps hydration boundaries
+and defaults to none, so a page that grows an island without a reason fails. A dynamic route names
+its variable segment with `:`, so `/Bookmark/:Id/` covers every built post.
 
 A profile names what the design promises, never the markup a page happens to use:
 
@@ -203,20 +171,17 @@ would make the audit fail on a fresh clone, which is a normal state.
 
 ## Proving the audit bites
 
-An audit that cannot fail is decoration. `--self-test` generates two pages that satisfy the
-structural rules and break them at render time - one draws a rail band from a script and carries an
-island with no server-rendered content, the other has lost its heading and its prose - then requires
-the audit to fail on both:
+An audit that cannot fail is decoration. Build two pages that satisfy the structural rules and break
+them at render time - one draws a rail band from a script and carries an island with no
+server-rendered content, the other has lost its heading and its prose - and require the audit to
+fail on both before trusting a clean run.
 
-```sh
-node Documentation/Skill/Progressive-Enhancement/Reference/no-js-audit.mjs --self-test
-# self-test passed: the fixtures failed on 6 rules, including hydration parity, an empty island and a lost heading
-```
-
-Exit code 0 means the rules fired. Exit code 1 means one of them stopped catching the defect it
-exists for, and the fixtures' report is printed so the gap is visible. The fixtures are generated by
-the script rather than archived beside it, so the negative control cannot drift away from the rules
-that are supposed to catch it. Run the self-test after changing the audit itself.
+Both fixtures must fail, and on the rules they were built to break: hydration parity, an empty
+island and a lost heading. A fixture that passes means a rule stopped catching the defect it exists
+for, and the fixture's report is where the gap shows. Build the fixtures from the current rules
+rather than keeping them beside them: a fixture archived next to the rules drifts the moment a rule
+changes, and then the control tests the fixture instead of the audit. Run the negative control after
+changing the rules.
 
 A build that is still writing is not a verdict: the audit waits for the tree to settle and then
 measures a copy, so a run that overlaps `astro build` reports what the finished build renders. A
@@ -228,22 +193,14 @@ for one another.
 
 | Claim                                        | Test                                                                                                                 |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Every built route renders without scripts    | `node .../no-js-audit.mjs` exits 0 and prints one `PASS` line per route                                              |
+| Every built route renders without scripts    | the two-pass audit reports one `PASS` line per route                                                                 |
 | The workspace island hydrates                | the audit's `/Workspace/` line ends in `js=hydrated`                                                                 |
 | A route's content is not hydration-only      | the route line carries no `content waits for hydration` failure                                                      |
 | Every route shows one visible heading        | every `PASS` line carries `h1=1`                                                                                     |
 | A route mounts an island only where expected | the `/Workspace/` line carries `islands=2` and every other route `islands=0`, except the post's `islands=1`          |
-| The audit catches the defect it exists for   | `--self-test` exits 0 and reports the fixtures failing on hydration parity, an empty island and a lost heading       |
-| The audit reads a settled build              | run `pnpm run build` in the background and the audit while it runs: exit 0, one `PASS` line per route                |
+| The audit catches the defect it exists for   | both negative-control fixtures fail on hydration parity, an empty island and a lost heading                          |
+| The audit reads a settled build              | run `pnpm run build` in the background and audit while it runs: one `PASS` line per route                            |
 | The island boots after the canvas paints     | the built HTML carries `<astro-island ... client=visible>`; `grep -c 'client=load' Target/Workspace/index.html` is 0 |
-| Two islands read one store                   | `pnpm run Audit:Store` exits 0 and its session pass reports the pressed stage in the seam                            |
+| Two islands read one store                   | the readable-session pass reports the pressed stage in the seam                                                      |
 | A failed session read is one warning         | the audit's malformed pass reports exactly one warning and `state=static`                                            |
 | An empty session slot hydrates cleanly       | the audit's anonymous pass reports no error, `state=static` and a `locked` seam                                      |
-| The store's own rules hold                   | `pnpm run Test` runs `Source/Test/Workspace.test.ts` green                                                           |
-
-## References
-
-| File                        | Covers                                                               |
-| --------------------------- | -------------------------------------------------------------------- |
-| `no-js-audit.mjs`           | The audit: two CDP passes, route profiles, verdict, exit code        |
-| `workspace-store-audit.mjs` | One store across two islands: three passes, session element, verdict |

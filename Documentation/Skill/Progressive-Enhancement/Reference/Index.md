@@ -1,9 +1,10 @@
 # Progressive-Enhancement reference
 
-Every file here was written during real work and archived rather than re-derived. Each one opens
-with a header stating what it does; nothing here names a machine, an account or an absolute path.
+This skill archives no tools. Its two audits - the no-JS pass and the workspace-store pass - were
+removed with the automated layer, and both are manual now: load the built route twice over CDP,
+scripts off and on, and compare what each pass shows. The procedure is `../SKILL.md`, and a copied
+script would age into a second description of the two passes it walks.
 
-| File                        | What it does                                                                                          | Notes                 |
-| --------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------- |
-| `no-js-audit.mjs`           | Load every built route twice over CDP, scripts off and on, and fail when content waits for hydration. | see the file's header |
-| `workspace-store-audit.mjs` | Prove one workspace store is shared by two islands, and that a failed session read is one warning.    | see the file's header |
+| File       | What it does                                                                    | Notes             |
+| ---------- | ------------------------------------------------------------------------------- | ----------------- |
+| `Index.md` | This inventory. The procedure and its claim → test table live in `../SKILL.md`. | no archived tools |

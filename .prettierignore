@@ -1,7 +1,6 @@
 # Generated, vendored or data-shaped - never format these. Every entry is bytes
 # a tool owns or bytes whose exact text is the value: a formatter that rewrites
-# either turns a current artifact into a stale one, and `pnpm run check` compares
-# the schema artifacts byte for byte.
+# either turns a current artifact into a stale one.
 
 # Build output. The two `Target` entries are anchored on purpose: an unanchored
 # `Target/` also matched the source directory `Maintain/Source/Browser/Target/`,
@@ -20,8 +19,8 @@ node_modules/
 Source/Generated/
 
 # Generated from Maintain/Source/Model/Schema/Entities.ts. The generator owns
-# these bytes and `pnpm run check` compares them exactly, so a format pass that
-# rewrites them turns a current artifact into a stale one.
+# these bytes, so a format pass that rewrites them turns a current artifact into
+# a stale one.
 Maintain/Source/Model/Generated/
 Maintain/Spacetime/spacetimedb/src/Schema.ts
 Source/content.config.ts

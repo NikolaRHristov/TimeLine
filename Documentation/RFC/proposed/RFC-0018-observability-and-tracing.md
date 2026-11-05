@@ -112,7 +112,7 @@ no schema change. That part is settled, not open.
 | A failure carries its run      | `MAINTAIN_CONFIG=/nonexistent maintain config show` exits 2 and prints `runId`; `maintain run show <runId>` shows one error span |
 | The tree is readable           | `maintain run show <runId> --json \| jq -r '.. \| .name? // empty'` lists spans in parent-before-child order                     |
 | A room event carries the trace | `spacetime sql <room> "select payload from event where kind='post.observed'"` contains the run id (intent)                       |
-| argv carries no secret         | `Scripts/AuditLeaks.sh` extended to fail on any recorded `argv` containing a configured secret (intent)                          |
+| argv carries no secret         | a leak audit extended to fail on any recorded `argv` containing a configured secret (intent)                                     |
 | Retention is enforced          | a run older than 30 days has one row and no spans (intent, needs the summariser)                                                 |
 | The floor holds                | a command that writes produces at least one write span (review rule; intent until spans land)                                    |
 

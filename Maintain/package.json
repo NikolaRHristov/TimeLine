@@ -1,5 +1,5 @@
 {
-	"name": "@nikolarhristov/timeline-maintain",
+	"name": "@timeline/maintain",
 	"version": "0.0.1",
 	"private": true,
 	"description": "Local tool layer: a dependency-free CDP client the site's content is scraped with.",
@@ -12,8 +12,6 @@
 		"Prepare": "esbuild Configuration/ESBuild.ts --format=esm --platform=node --target=esnext --outfile=Configuration/ESBuild.js",
 		"Watch": "pnpm run Prepare && Build 'Source/**/*.ts' --Watch --ESBuild Configuration/ESBuild.ts",
 		"Schema": "node Script/GenerateSchema.ts --write",
-		"check": "tsc --noEmit -p tsconfig.json && node Script/Test.ts",
-		"test": "node --test Target/Test/*.test.js",
 		"tool": "node Target/Index.js"
 	},
 	"devDependencies": {

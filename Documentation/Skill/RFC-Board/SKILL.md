@@ -12,7 +12,7 @@ metadata:
 
 # RFC Board
 
-The project at `TimeLine-DELO` project 1 is a projection of the record files in
+The project at `<owner>` project 1 is a projection of the record files in
 `Documentation/RFC/proposed/`, not a second copy of them. One direction of flow: the record is
 authoritative, the issue follows the record, the project item follows the issue. Nothing in this
 procedure writes back into a record.
@@ -47,9 +47,8 @@ python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py sync --reason "<why
 `plan` is the default, so a bare run is `plan`.
 
 The root scripts are the same calls: `pnpm run RFC:Board` is `plan`,
-`pnpm run RFC:Board:Sync --reason "<why>"` is `sync`, and `pnpm run RFC:Board:Verify` is `verify`;
-`pnpm run Check:RFC-Board` runs the tests in `Reference/`. The plain name is the read path on
-purpose, so running it out of habit writes nothing.
+`pnpm run RFC:Board:Sync --reason "<why>"` is `sync`, and `pnpm run RFC:Board:Verify` is `verify`.
+The plain name is the read path on purpose, so running it out of habit writes nothing.
 
 - **`plan`** compares the committed records with the board and reports what it would create, what it
   would update and what already agrees, one line per change. It exits `0` when the board agrees and
@@ -145,13 +144,13 @@ be a guess.
   board carries no due date and no `late` state for exactly that reason. Reading the horizon as a
   backlog turns a settled design into a permanent failure - the measurement the README's "By
   horizon" section reports is a split, not a fault in the axis.
-- **The frontmatter is generated, and Prettier has the last word on its shape.** Prettier reformats
-  a YAML block inside markdown: it wraps a scalar past the print width and turns a double-quoted
-  value into a single-quoted one when the text holds a double quote. `Scripts/RFC-Frontmatter.mjs`
-  writes what Prettier keeps - a literal block past 100 columns, the quote that needs no escape - so
-  `prettier --check Documentation/RFC` is clean without a second pass over the corpus. A hand-edited
-  block that misses either still parses, and fails the format check instead: run `--write`, never a
-  formatter, to change one.
+- **The frontmatter is hand-written, and Prettier has the last word on its shape.** Prettier
+  reformats a YAML block inside markdown: it wraps a scalar past the print width and turns a
+  double-quoted value into a single-quoted one when the text holds a double quote. Write what
+  Prettier keeps - a literal block past 100 columns, the quote that needs no escape - so
+  `pnpm run Format:Check` is clean without a second pass over the corpus. A hand-edited block that
+  misses either still parses, and fails the format check instead: run `pnpm run Format` on the
+  record rather than shaping the block by hand.
 
 ---
 
@@ -179,8 +178,8 @@ every field value.
 
 The project id is resolved from `--owner` and `--project`; the field ids, their data types and their
 option ids come from the project's own field list over GraphQL, in one request. The defaults are
-`TimeLine-DELO`, repository `TimeLine`, project `1`, branch `Current`; every one of them is a flag,
-so the same tool drives a copy of the project on another owner without an edit:
+`<owner>`, repository `TimeLine`, project `1`, branch `Current`; every one of them is a flag, so the
+same tool drives a copy of the project on another owner without an edit:
 
 ```sh
 python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py plan \
@@ -189,10 +188,8 @@ python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py plan \
 
 The record-to-axis assignment is in the record, not in the tool: `category` states `Kind` and
 `Subject` together and `horizon` states the third, and the definitions plus the tie-break rules are
-in `Documentation/RFC/README.md`. `Scripts/RFC-Frontmatter.mjs` checks them inside `pnpm run check`,
-so a record with a missing or invented value fails before it reaches the board. The tool reads the
-three values and refuses a record whose value is outside the vocabulary, naming the record and the
-axis rather than publishing a guess.
+in `Documentation/RFC/README.md`. The tool reads the three values and refuses a record whose value
+is outside the vocabulary, naming the record and the axis rather than publishing a guess.
 
 ---
 
@@ -235,7 +232,7 @@ axis rather than publishing a guess.
   call, and it removes every value written into the field and un-groups each view that grouped by
   it. The grouping is not restorable by any API call, so a retirement needs the assignment committed
   first: `Documentation/Reference/RFC-Classification.md` is the only complete record of what the old
-  values were, and `Scripts/RFC-Frontmatter.mjs --write` repopulates the new fields from it.
+  values were, and the new fields are repopulated from it by hand.
 - **`gh project item-list` lowercases only the first letter of a field name**, so a field named
   `RFC` arrives under the key `rFC`. Reading the wrong key looks exactly like a field that is empty
   on every item, which is why `verify` reads its values over GraphQL.
@@ -253,9 +250,9 @@ axis rather than publishing a guess.
 1. Write `Documentation/RFC/proposed/RFC-00NN-<slug>.md` from `TEMPLATE.md`: the frontmatter block,
    a `## Decision` section and a `## Verification` table. The `## Open questions` section is
    optional; everything else the body renders from is required.
-2. Choose `category` and `horizon` from the vocabularies in `Documentation/RFC/README.md`, then run
-   `node Scripts/RFC-Frontmatter.mjs` and add the record to the audit's assignment table if it is
-   new there. A value outside a vocabulary fails the check.
+2. Choose `category` and `horizon` from the vocabularies in `Documentation/RFC/README.md`, then add
+   the record to the audit's assignment table if it is new there. A value outside a vocabulary is
+   refused when the tool reads the record.
 3. Commit the record. Both `plan` and `sync` read committed records only.
 4. Run `plan` to see what it adds, then `sync --reason "<why>"` to write it, then `verify`. A
    non-zero exit from `verify` names the item and the field that disagree.
@@ -278,14 +275,12 @@ axis rather than publishing a guess.
 
 ## Files
 
-| File                                   | What it is                                                                                |
-| -------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `SKILL.md`                             | this procedure                                                                            |
-| `Reference/rfc_board.py`               | the tool: `plan`, `render`, `verify`, `readme` read; `sync` writes                        |
-| `Reference/project-README.md`          | the project's own README, ASCII, with `@@DASH@@` and `@@COUNT@@` resolved at upload       |
-| `Reference/test_committed_snapshot.py` | the snapshot test: a staged record is absent, an edited one publishes its committed bytes |
-| `Reference/test_read_only.py`          | the split test: a write is refused at the seam, the plan's exit codes, the sync's gate    |
-| `Reference/Index.md`                   | the archive index for this directory                                                      |
+| File                          | What it is                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| `SKILL.md`                    | this procedure                                                                      |
+| `Reference/rfc_board.py`      | the tool: `plan`, `render`, `verify`, `readme` read; `sync` writes                  |
+| `Reference/project-README.md` | the project's own README, ASCII, with `@@DASH@@` and `@@COUNT@@` resolved at upload |
+| `Reference/Index.md`          | the archive index for this directory                                                |
 
 ---
 
@@ -294,14 +289,14 @@ axis rather than publishing a guess.
 | Claim                             | Test                                                                                                                                                                                                                                                                         |
 | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | The tool runs from the tree       | `python3 Documentation/Skill/RFC-Board/Reference/rfc_board.py render` exits 0 and prints `decision text intact: N/N`                                                                                                                                                         |
-| Only committed records publish    | `pnpm run Check:RFC-Board` exits 0: a record staged and never committed is absent from the enumeration, and a record edited after its commit renders its committed bytes                                                                                                     |
+| Only committed records publish    | `plan` prints `warn <path>: staged but not in <commit>`, and the enumeration counts the committed records only                                                                                                                                                               |
 | The board count is the corpus     | `python3 .../rfc_board.py verify` prints `committed records: N   board items: N` and exits 0                                                                                                                                                                                 |
 | Every item has RFC and every axis | the `[2]` block of `verify` prints `without RFC: 0`, `without Kind: 0`, `without Subject: 0` and `without Horizon: 0`                                                                                                                                                        |
-| The board agrees with the files   | the `[2]` block prints `items whose axes disagree with their record: 0`, and the per-axis counts equal `node Scripts/RFC-Frontmatter.mjs`                                                                                                                                    |
-| A plain run writes nothing        | `grep -n "item-add\|item-edit\|issue create\|issue edit\|issue close" Reference/rfc_board.py` hits only inside `execute`, and `gh`/`graphql` refuse a mutation unless `sync` declared itself: `pnpm run Check:RFC-Board` fails the two seam tests when that check is removed |
+| The board agrees with the files   | the `[2]` block prints `items whose axes disagree with their record: 0`, and the per-axis counts equal the counts the committed frontmatter carries                                                                                                                          |
+| A plain run writes nothing        | `grep -n "item-add\|item-edit\|issue create\|issue edit\|issue close" Reference/rfc_board.py` hits only inside `execute`, and `gh`/`graphql` refuse a mutation unless `sync` declared itself                                                                                 |
 | The plain name is the read path   | `node -e "console.log(require('./package.json').scripts['RFC:Board'])"` prints a command ending in `plan`, and `pnpm run RFC:Board:Sync` is the only script that names `sync`, so the plain name cannot write, and the plain run exits `0` or `1` on the board and never `2` |
 | The plan is what sync performs    | `python3 .../rfc_board.py plan` exits `0` on a board that agrees and `1` on one that does not, and `sync` executes the list `plan_board` returned, not a second computation                                                                                                  |
 | A populated board needs a reason  | `python3 .../rfc_board.py sync` on a board holding items exits `2` with one line and no write; an empty board runs as the initial sync                                                                                                                                       |
 | The group-by gap is real          | `gh api graphql -f query='query{__type(name:"UpdateProjectV2ViewInput"){inputFields{name}}}'` prints six fields and none is `groupBy` or `sortBy`                                                                                                                            |
 | The tool carries no machine path  | `python3 Documentation/Skill/Tool-Archive/Reference/archive_tool.py --audit` prints `clean: no home paths`                                                                                                                                                                   |
-| The separator is a real em dash   | `gh api repos/TimeLine-DELO/TimeLine/issues/6 --jq .title \| od -An -tx1 \| head -1` shows `e2 80 94` between the id and the title                                                                                                                                           |
+| The separator is a real em dash   | `gh api repos/<owner>/TimeLine/issues/6 --jq .title \| od -An -tx1 \| head -1` shows `e2 80 94` between the id and the title                                                                                                                                                 |

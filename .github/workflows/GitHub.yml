@@ -52,8 +52,11 @@ jobs:
       VCPKG_DISABLE_METRICS: 1
 
     steps:
+      # The assignee is a repository variable, not a person: the workflow keeps a
+      # valid required input and names nobody.
       - uses: pozil/auto-assign-issue@d6e511896e5f1d2408e74db74416647d8ff80c8c # v4.1.0
+        if: vars.ASSIGNEE != ''
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          assignees: NikolaRHristov
+          assignees: ${{ vars.ASSIGNEE }}
           numOfAssignee: 1

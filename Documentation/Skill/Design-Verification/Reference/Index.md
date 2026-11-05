@@ -1,16 +1,11 @@
 # Design-Verification reference
 
-Every file here was written during real work and archived rather than re-derived. Each one opens
-with a header stating what it does; nothing here names a machine, an account or an absolute path.
+This skill archives no tools. The three verifiers it carried - the composition, showcase and spread
+probes - were removed with the automated layer, and the checks they made are manual now: serve a
+snapshot of the build, probe the route in a browser, and read the measurements against
+`Documentation/Reference/Design-Composition.md` and RFC-0053. The procedure is `../SKILL.md`, and a
+copied script would age into a second description of numbers that document already states.
 
-All three files are ad-hoc verification rather than a test suite: they exit `0` when every invariant
-holds, `1` when one broke, and `2` when a precondition is missing. The invariants come from
-`Documentation/Reference/Design-Composition.md` and RFC-0053, never from the current
-implementation - an invariant read off the code only proves the code agrees with itself. Each takes
-`--url` to probe a server that is already running.
-
-| File                     | What it does                                                                                                                                 | Notes                                |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `verify-composition.mjs` | Snapshot the build, serve it, probe `/Workspace/` and assert the frame's geometry and the seam's state.                                      | exits 2 without a build or a browser |
-| `verify-showcase.mjs`    | Probe the five showcase surfaces at 1440 wide and assert the rail, the hero, the three boxes and that no record is drawn.                    | `/Showcase` is not one of them       |
-| `verify-spread.mjs`      | Probe `/Showcase/` and assert the dispersion itself: distinct horizontal offsets, a gap wider than the canvas rhythm, three closing pillars. | the sixth page                       |
+| File       | What it does                                                                    | Notes             |
+| ---------- | ------------------------------------------------------------------------------- | ----------------- |
+| `Index.md` | This inventory. The procedure and its claim → test table live in `../SKILL.md`. | no archived tools |

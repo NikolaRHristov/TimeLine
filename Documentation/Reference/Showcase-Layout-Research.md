@@ -69,7 +69,7 @@ patterns combined:
 - **dispersion** from the Signals page: boxes alternate left and right rather than aligning, and the
   gaps are `5.5rem` against the canvas's `1.25rem`.
 
-The measured result, asserted by `Skill/Design-Verification/Reference/verify-spread.mjs`:
+The measured result, from a probe of the built page:
 
 ```
 six boxes                                  6

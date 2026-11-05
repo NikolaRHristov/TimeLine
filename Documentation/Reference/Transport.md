@@ -147,7 +147,7 @@ path turns on focus emulation before taking the reading. Without it a post with 
 | Read shapes match               | `post extract --id <id>` vs `post extract --id <id> --transport view`: identical keys and order, `source` `live`/`shadow`; only `metrics` and the media size suffix differ | pass   |
 | No silent fallback              | `MAINTAIN_CDP_PORT=9223 node Maintain/Target/Index.js tab list` → `cdp-unreachable`, not an empty list                                                                     | pass   |
 | View needs no browser           | same dead port, `post extract --id <id> --transport view` succeeds                                                                                                         | pass   |
-| Commands stay transport-blind   | `grep -rn "Transport/CDP\|Transport/View" Maintain/Source/Command` → nothing; enforced by `Source/Test/Transport.test.ts`                                                  | pass   |
+| Commands stay transport-blind   | `grep -rn "Transport/CDP\|Transport/View" Maintain/Source/Command` → nothing                                                                                               | pass   |
 | `store *` ignores `--transport` | `store status`, `store publish --id 999`, `store hide --id 999` byte-identical with and without `--transport view`                                                         | pass   |
 
 ## Not this

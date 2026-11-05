@@ -64,12 +64,11 @@ catches it in one pass instead of by pushing fixes and waiting for a build.
 
 ## Check the Node floor before believing the site is broken
 
-`package.json` declares `engines.node` (>= 22.23.4 today) and `Scripts/Compatibility.mjs` enforces
-it, so `pnpm run check` fails that gate before any real check runs. Astro refuses `astro sync` and
-`astro build` on a lower version, and the `node` first on `PATH` inside an agent terminal can be
-older than the person's own shell node. Run `node --version` and compare it against the declared
-floor before editing a single config file: a version refusal and a config defect both surface as
-"build failed".
+`package.json` declares `engines.node` (>= 22.23.4 today), and Astro refuses `astro sync` and
+`astro build` on a lower version. The `node` first on `PATH` inside an agent terminal can be older
+than the person's own shell node, so run `node --version` and compare it against the declared floor
+before editing a single config file: a version refusal and a config defect both surface as "build
+failed".
 
 Put the newer interpreter on `PATH` inside the same command that runs the build. Exporting it in an
 earlier call does not survive, and the bundled interpreter then fails with
@@ -87,8 +86,8 @@ timeout 420 pnpm run build > <log> 2>&1; echo "EXIT=$?"
 
 Never `... 2>&1 | tail -n`: the pipeline's status is `tail`'s, so a failed build reports 0 and an
 empty `Target/` looks like a pass. Keep the runner in the foreground - some runtimes auto-background
-a bare `pnpm run …` and the tool result then carries the launcher's status instead of the check's.
-`timeout 300 pnpm run check` and the `PATH=`-prefixed build above both return the real exit code.
+a bare `pnpm run …` and the tool result then carries the launcher's status instead of the build's.
+The `PATH=`-prefixed form above returns the real exit code.
 
 Then assert over ALL of `Target/`. Astro inlines a `<style is:global>` block into the emitted HTML,
 so rules imported through the alias land in `Target/index.html` inside `<style>`, NOT in the emitted
@@ -230,8 +229,9 @@ check. Confirm the measurement before reporting a defect to anyone.
   position and a `:last-child` rule lands on the closing band. Use `:nth-of-type` and
   `:last-of-type`.
 - **A `var(--token, <literal>)` fallback is still a stray literal.** When the token exists, the
-  literal is a second copy of the palette hiding inside a `var()`, and `Check:Tokens` refuses it.
-  Declare the missing token in `Source/Stylesheet/Global.css` and read it bare.
+  literal is a second copy of the palette hiding inside a `var()`; nothing checks for it, so it
+  survives unless the review reads the diff. Declare the missing token in
+  `Source/Stylesheet/Global.css` and read it bare.
 - **A required prop added to a component the runtime already renders breaks hydration, not the
   build.** Astro type-checks the page, not the island's runtime props; a missing prop surfaces as an
   undefined read inside the component.
@@ -250,10 +250,9 @@ check. Confirm the measurement before reporting a defect to anyone.
 | The CSS aliases resolve          | `grep -r '@Stylesheet/' Target/` finds no literal `@import`                    |
 | Every declared route is emitted  | `find Target -name index.html` matches the routes `Source/pages/` declares     |
 | The Node floor is met            | `node --version` is at or above `engines.node` in `package.json`               |
-| The check returns its own status | `timeout 300 pnpm run check; echo "EXIT=$?"` prints the check's code           |
+| The build returns its own status | `timeout 420 pnpm run build; echo "EXIT=$?"` prints the build's code           |
 | The island hydrated              | the probe reports `hydrated: true` and the island count the route expects      |
 | A sheet is imported              | the probe's computed style matches the rule, not the browser default           |
-| The palette has one home         | `pnpm run Check:Tokens` exits 0                                                |
 
 ## References
 

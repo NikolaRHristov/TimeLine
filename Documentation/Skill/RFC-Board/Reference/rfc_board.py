@@ -52,6 +52,7 @@ from __future__ import annotations
 import argparse
 import collections
 import json
+import os
 import re
 import subprocess
 import sys
@@ -61,7 +62,11 @@ from pathlib import Path
 
 PROPOSED = "Documentation/RFC/proposed"
 
-DEFAULT_OWNER = "TimeLine-DELO"
+# The owner is a property of the checkout, not of this tool. A handle written
+# here would be a name carried into every public clone, so it is resolved from
+# the environment first and from the repository's own remote second - never
+# spelled in this file.
+OWNER_ENV = "RFC_BOARD_OWNER"
 DEFAULT_REPO = "TimeLine"
 DEFAULT_PROJECT = 1
 DEFAULT_BRANCH = "Current"
@@ -131,17 +136,22 @@ LEAK = re.compile(
     + "Users"
     + "/|(?<!\\|)/"
     + "Volumes/"
-    + "|\\bNikolas-|\\.local\\b(?!\\.)|\\blocal-[0-9a-f]{8}"
+    # No branch names a person. A bare hyphenated name was one; it was dropped
+    # because this repository's own vocabulary is PascalCase-Kebab, so a
+    # name-shaped pattern matched `Design-Verification` and `Tool-Archive` and
+    # refused a record that leaked nothing. A home directory is caught by the
+    # path prefixes above, which is the form a name actually takes in a leak.
+    + "|\\.local\\b(?!\\.)|\\blocal-[0-9a-f]{8}"
     + r"|gho_|ghp_|github_pat_|BEGIN [A-Z ]*PRIVATE KEY|/private/tmp"
 )
 
 # A record states its metadata in a YAML block at the top of the file. The block
-# is written by `Scripts/RFC-Frontmatter.mjs`, and it is read here by a parser for
-# the shape that writer emits rather than by a general YAML library: this tool
-# runs under whatever `python3` the operator has, and a dependency on PyYAML would
-# make `pnpm run RFC:Board` fail on a machine that has no network. The parser is
-# narrow on purpose - a construct it does not know is a `RecordError` naming the
-# line, never a value guessed into place.
+# is written by hand, and it is read here by a parser for the shape the records
+# carry rather than by a general YAML library: this tool runs under whatever
+# `python3` the operator has, and a dependency on PyYAML would make
+# `pnpm run RFC:Board` fail on a machine that has no network. The parser is narrow
+# on purpose - a construct it does not know is a `RecordError` naming the line,
+# never a value guessed into place.
 KEY_LINE = re.compile(r"^([a-z_]+):(?:[ ](.*))?$")
 ITEM_LINE = re.compile(r"^([ ]*)- (.*)$")
 CARD_ID = re.compile(r"\bt_[0-9a-f]{8}\b")
@@ -213,6 +223,36 @@ def git(root: Path, *args: str) -> str:
     if proc.returncode != 0:
         raise SystemExit(f"git {' '.join(args)} failed: {proc.stderr.strip()}")
     return proc.stdout
+
+
+def repository_owner() -> str:
+    """The owner of the repository this checkout points at.
+
+    Read from the remote so that a clone answers for itself: the tool has no
+    owner of its own, and a handle written into it would be a name carried into
+    every public copy. An empty answer is honest - the flag then has to supply
+    one, and the caller says which of the two it used.
+    """
+    try:
+        proc = subprocess.run(
+            ["git", "config", "--get-regexp", r"^remote\..*\.url$"],
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return ""
+    urls = {}
+    for line in proc.stdout.splitlines():
+        key, _, url = line.partition(" ")
+        if key.startswith("remote.") and key.endswith(".url"):
+            urls[key[len("remote.") : -len(".url")]] = url.strip()
+    if not urls:
+        return ""
+    # `origin` first, then the name this ecosystem gives its canonical remote,
+    # then whatever else the checkout carries.
+    name = next((n for n in ("origin", "Source") if n in urls), next(iter(urls)))
+    match = re.search(r"[:/]([^/:]+)/[^/:]+?(?:\.git)?$", urls[name])
+    return match.group(1) if match else ""
 
 
 def head_commit(root: Path) -> str:
@@ -1809,7 +1849,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument(
-        "--owner", default=DEFAULT_OWNER, help="project and repository owner"
+        "--owner",
+        default=os.environ.get(OWNER_ENV) or repository_owner(),
+        help="project and repository owner",
     )
     common.add_argument("--repo", default=DEFAULT_REPO, help="repository name")
     common.add_argument(

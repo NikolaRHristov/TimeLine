@@ -8,9 +8,9 @@ export type { EventRecord };
  *
  * The closed set itself is declared in `Model/Schema/Entities.ts` and reaches
  * the site's Zod schema through `Source/content.config.ts`; this array is the
- * copy a caller iterates. `Schema.test.ts` asserts the two agree, because a
- * type cannot be enumerated and a list that silently fell behind would let a
- * command record an event the site then rejects.
+ * copy a caller iterates. The two must agree, because a type cannot be
+ * enumerated and a list that silently fell behind would let a command record an
+ * event the site then rejects.
  */
 export const EventKind = [
 	"scrape.started",

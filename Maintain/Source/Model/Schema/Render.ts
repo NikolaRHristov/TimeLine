@@ -5,9 +5,9 @@ import { fieldsFor, type Entity, type Field, type FieldMap } from "./Entity.ts";
  * The three artifacts, rendered from the declaration.
  *
  * Rendering is pure text: no filesystem, no clock, no network. That is what
- * lets the same function produce the file that is written and the file that is
- * expected, so `--check` compares bytes instead of re-deriving the schema a
- * second way.
+ * lets the same function produce the file that is written and the file it is
+ * compared against, so the comparison is byte-for-byte rather than a second
+ * derivation of the schema.
  *
  * Every artifact opens with the same "generated" header, and every artifact's
  * field order follows the declaration, so a diff between two runs shows exactly
@@ -16,7 +16,7 @@ import { fieldsFor, type Entity, type Field, type FieldMap } from "./Entity.ts";
 
 export type Artifact = { path: string; content: string };
 
-/** Repo-relative, so the generator and the test agree on where each artifact lives. */
+/** Repo-relative, so the generator and the comparison agree on where each artifact lives. */
 export const PATHS = {
 	types: "Maintain/Source/Model/Generated/Types.ts",
 	content: "Source/content.config.ts",
@@ -26,8 +26,8 @@ export const PATHS = {
 const HEADER = [
 	"// Generated from Maintain/Source/Model/Schema/Entities.ts - do not edit.",
 	"//",
-	"// `pnpm run Schema` rewrites this file; `pnpm run check` fails while it is",
-	"// stale. A field that needs to exist belongs in the declaration, never here.",
+	"// `pnpm run Schema` rewrites this file; never hand-edit it. A field that",
+	"// needs to exist belongs in the declaration, never here.",
 ].join("\n");
 
 /** A JSDoc block, indented to sit inside a type or an object literal. */

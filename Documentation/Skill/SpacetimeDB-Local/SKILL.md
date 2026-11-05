@@ -163,13 +163,13 @@ while the reducers stay readable.
   the helper in `src/<Name>.ts`, import it with the same extensionless spelling
   (`from "./Catalog"`), and the bundler resolves it exactly as it resolves `./Schema`.
 - **`spacetime build` typechecks every file the package `tsconfig.json` includes** (`./**/*`), not
-  only what the entry reaches. Keep `Test/` inside that include: the suite is then typechecked with
-  the module, which is what catches a fixture's own mistakes - `ctx.db.<table>.id.find` answers
-  `Row | null`, and spreading it without a null check fails the build. The price is that
+  only what the entry reaches. A probe placed in the package is typechecked with the module, which
+  is what catches the probe's own mistakes - `ctx.db.<table>.id.find` answers `Row | null`, and
+  spreading it without a null check fails the build. The price is that
   `import { test } from "node:test"` reports `TS2591: Cannot find name 'node:test'`, because the
   module carries no `@types/node`; put a `// @ts-expect-error` directive above each `node:` import.
-  `"exclude": ["Test"]` in the module tsconfig also makes the build green, and gives the typecheck
-  up: prefer the directives.
+  An `exclude` for the probe directory in the module tsconfig also makes the build green, and gives
+  the typecheck up: prefer the directives.
 
 ## Running the module's own code under node
 
@@ -177,24 +177,23 @@ while the reducers stay readable.
 the host injects and node cannot resolve, so importing the module's sources directly fails with
 `ERR_UNSUPPORTED_ESM_URL_SCHEME: Received protocol 'spacetime:'`. A resolve hook that points every
 `spacetime:sys@*` specifier at a stub module, and appends `.ts` to an extensionless relative
-specifier, is enough to load both the module and the SDK's test harness under plain node. The module
-package carries that hook at `Test/Support/Register.mjs`:
+specifier, is enough to load both the module and the SDK's test harness under plain node. Write that
+hook once, beside the probe, and run the probe through it:
 
 ```sh
-node --import ./Test/Support/Register.mjs Test/<Name>.test.ts
+node --import ./Register.mjs <probe>.ts
 ```
 
-**The suite is a gate stage, not a habit.** `pnpm run Check:Spacetime` (`Scripts/Spacetime.mjs`)
-runs every `Test/*.test.ts` from the module's own directory and sits in the root `pnpm run check`
-beside `Test`. It refuses the two states that would otherwise read as green:
+Nothing in the tree runs such a file, so it is a probe rather than a gate: it is hand-run, and a
+regression in the module passes review unless someone runs it. Two states read as green and are not:
 
 - **No install.** The module is deliberately not a member of `pnpm-workspace.yaml`, so neither the
   root `pnpm install` nor `pnpm --filter` reaches it. A plain `pnpm install` run inside the module
   directory is worse than nothing - it resolves the root workspace, installs there, and exits 0 with
-  the module still uninstalled. The stage names the remedy instead:
+  the module still uninstalled. The remedy is
   `cd Maintain/Spacetime/spacetimedb && pnpm install --ignore-workspace`.
-- **No test file.** `node --test` on an empty match exits 0, so a deleted or renamed suite would
-  pass silently; the stage fails on an empty `Test/` rather than reporting it.
+- **No test file.** `node --test` on an empty match exits 0, so a renamed or deleted file passes
+  silently. Read the runner's reported test count before reading its exit code.
 
 `createModuleTestHarness(schema, {})` then gives a real reducer context:
 `withReducerTx(auth, ctx => …)` runs one transaction and rolls it back when the body throws,
@@ -211,17 +210,17 @@ Traps in that harness:
   against the deployment's own list is refused by an empty catalog and looks like a broken reducer.
   Seed the rows a case needs through `withReducerTx` (`ctx.db.capability.insert(...)`), and keep
   fixture ids rather than the deployed ones: a case about an id that is _not_ declared must not
-  start passing the day someone declares it. `Test/Bind.test.ts` carries the worked `Setup`.
+  start passing the day someone declares it.
 - **Reading `harness.db` inside an open transaction traps the wasm backend** with `unreachable`.
   Read through `ctx.db` inside the transaction and through `harness.db` after it returns.
 - **`JSON.stringify` cannot carry a `bigint` column**, so "the table is byte-for-byte unchanged"
   needs a snapshot that maps `fence` through `String(...)` first.
 - **`console.log` is swallowed once the module is imported.** `spacetimedb/server` installs its own
   console (`node_modules/spacetimedb/src/server/polyfills.ts` does `globalThis.console = console`),
-  and every method on it writes through `spacetime:sys`, which `Test/Support/Syscalls.mjs` stubs to
-  a recording no-op. A test that logs its evidence with `console.log` prints nothing and looks like
-  a test that never ran. Use `t.diagnostic(...)` for text the runner reports, or
-  `process.stdout.write` for text a script reads back.
+  and every method on it writes through `spacetime:sys`, which the hook's stub module answers with a
+  recording no-op. A case that logs its evidence with `console.log` prints nothing and looks like
+  one that never ran. Use `t.diagnostic(...)` for text the runner reports, or `process.stdout.write`
+  for text a script reads back.
 - **The harness freezes its `DbView`, so a Proxy cannot inject a fault.** V8 refuses a `get` trap
   that answers a frozen, non-configurable data property with anything but the real value:
   `'get' on proxy: property 'belief' is a read-only and non-configurable data property on the proxy target but the proxy did not return its actual value`.
@@ -230,7 +229,6 @@ Traps in that harness:
   not the injected fault. Build the faulted context one layer at a time with
   `Object.create(<real accessor>, { <member>: { value: … } })`, and count the writes the reducer
   attempted (`deletes`, `inserts`) so a reducer that returns early cannot make the test vacuous.
-  `Test/Belief.test.ts` carries the worked `Faulted` helper.
 - **A rolled-back write looks exactly like a write that never happened.** `withReducerTx` aborts a
   throwing call, so "the table is byte-for-byte unchanged after a refusal" is true even when the
   reducer wrote first and refused second - a before/after snapshot cannot show that validation
@@ -238,11 +236,11 @@ Traps in that harness:
   green. Count the writes instead, by spreading a context whose one table overrides `insert`
   (spread, not a Proxy - see above): assert `0` on the refused call **and** `1` on the accepted one,
   because a counter that never observes anything reports zero for every input and proves the same
-  thing as a broken one. `Test/Bind.test.ts` carries the worked `CountedContext`.
-- **A green suite is not evidence until a guard has been broken.** Copy the package to a scratch
+  thing as a broken one.
+- **A green probe is not evidence until a guard has been broken.** Copy the package to a scratch
   directory (`node_modules` symlinked, so the bare `spacetimedb` specifier still resolves), negate
-  one guard in the copy, and require the run to fail on exactly the tests that name that rule: a
-  mutation caught by an unrelated test proves nothing, and one caught by nothing means the assertion
+  one guard in the copy, and require the run to fail on exactly the case that names that rule: a
+  mutation caught by an unrelated case proves nothing, and one caught by nothing means the assertion
   describes the code rather than testing it.
 
 ## A deadline is text, and the text has a ceiling
@@ -370,33 +368,31 @@ next, which is its own defect.
 
 ## Claim → test
 
-| Claim                                      | Test                                                                                                                                                                                               |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CLI installed                              | `spacetime --version` prints the release tag                                                                                                                                                       |
-| Server up                                  | `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows `spacetime`                                                                                                                                             |
-| Module compiles                            | `spacetime build` → `Build finished successfully.`                                                                                                                                                 |
-| Database published                         | `spacetime list --server http://127.0.0.1:<port>` shows the name                                                                                                                                   |
-| Reducer writes                             | `spacetime call …` then `spacetime sql … "select count(*) from <table>"`                                                                                                                           |
-| Replay is idempotent                       | a second identical `call` leaves `count(*)` unchanged                                                                                                                                              |
-| Optional argument round-trips              | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())`                                                                 |
-| Config matches reality                     | the name in `spacetime.local.json` equals the row in `spacetime list`                                                                                                                              |
-| Schema is discoverable                     | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                                                                                         |
-| Aggregation is client-side                 | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                                                                                     |
-| A program reads rows                       | `POST <URL>/v1/database/<identity>/sql` with a raw `SELECT` body returns `[{schema, rows}]`                                                                                                        |
-| An optional column survives                | write `{"some":"<value>"}`, then read `[0,"<value>"]` back - `[1,[]]` means the value was lost                                                                                                     |
-| Generated schema, hand reducers            | `spacetime build` passes with `src/Schema.ts` imported as `"./Schema"` (no extension)                                                                                                              |
-| A helper module bundles                    | a reducer that imports `from "./Catalog"` builds, and the reducer's name appears in `dist/bundle.js`                                                                                               |
-| A test file typechecks with the module     | `spacetime build` stays green with `Test/` in the tsconfig include and a `// @ts-expect-error` above each `node:` import                                                                           |
-| The module loads under node                | `node --import ./Test/Support/Register.mjs` imports `src/Schema.ts` and `createModuleTestHarness` without `ERR_UNSUPPORTED_ESM_URL_SCHEME`                                                         |
-| The module suite runs on every check       | `pnpm run Check:Spacetime` exits 0, and `package.json` `check` names `Check:Spacetime` beside `Test`                                                                                               |
-| A stale fence writes nothing               | a renewal presenting the fence a takeover superseded throws `stale-fence`, and the `lease` table is byte-for-byte unchanged (`Test/Lease.test.ts`)                                                 |
-| A derived row survives a mid-write failure | the delete and the insert of one derived row sit in one transaction: a throw after the insert, and one before it, both leave the prior row byte-identical (`Test/Belief.test.ts`, criterion 5b/5c) |
-| A guard is really guarded                  | negating the guard in a scratch copy fails exactly the tests that name it, and no others                                                                                                           |
-| A refusal precedes the write               | a counted context reports 0 inserts for the refused call and 1 for the accepted one (`Test/Bind.test.ts`)                                                                                          |
-| A stamp round-trips                        | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                                                                             |
-| An added column is publishable             | publishing a module whose table gains a column over the previous database either succeeds, or fails with `requires a default value annotation` - it never drops rows silently                      |
-| A deadline past year 9999 is refused       | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                                                                            |
-| A grant is live the moment it is made      | every granted claim satisfies `state === held && expiresAt > acquiredAt` at the claim's own clock, for a one-microsecond lease and a year-long one                                                 |
-| A refusal discloses nothing                | two identities, one resource: the `lease-held` refusal matches `/held by another identity/`, carries no 64-character hex, and still names the fence and the deadline (`Test/Lease.test.ts`)        |
-| A generation row is never rewritten        | no `src/` file calls an `update` or `delete` on `generation`, and `bind`'s single append is followed by its own `requireCoherentGeneration` re-check (`Test/Bind.test.ts`)                         |
-| A table `init` seeds starts empty in tests | a fresh harness iterates zero `capability` rows, so every case seeds the ids it needs and a bind against them appends one row (`Test/Bind.test.ts`)                                                |
+| Claim                                      | Test                                                                                                                                                                          |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CLI installed                              | `spacetime --version` prints the release tag                                                                                                                                  |
+| Server up                                  | `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows `spacetime`                                                                                                                        |
+| Module compiles                            | `spacetime build` → `Build finished successfully.`                                                                                                                            |
+| Database published                         | `spacetime list --server http://127.0.0.1:<port>` shows the name                                                                                                              |
+| Reducer writes                             | `spacetime call …` then `spacetime sql … "select count(*) from <table>"`                                                                                                      |
+| Replay is idempotent                       | a second identical `call` leaves `count(*)` unchanged                                                                                                                         |
+| Optional argument round-trips              | send `{"some":"<value>"}` for the optional argument, then `select <column> from <table>` shows the value rather than `(none = ())`                                            |
+| Config matches reality                     | the name in `spacetime.local.json` equals the row in `spacetime list`                                                                                                         |
+| Schema is discoverable                     | `spacetime describe <db> --server <URL>` lists tables, columns and indexes                                                                                                    |
+| Aggregation is client-side                 | `select count(*) from <table> --format json` works; the same query with `group by` returns 400                                                                                |
+| A program reads rows                       | `POST <URL>/v1/database/<identity>/sql` with a raw `SELECT` body returns `[{schema, rows}]`                                                                                   |
+| An optional column survives                | write `{"some":"<value>"}`, then read `[0,"<value>"]` back - `[1,[]]` means the value was lost                                                                                |
+| Generated schema, hand reducers            | `spacetime build` passes with `src/Schema.ts` imported as `"./Schema"` (no extension)                                                                                         |
+| A helper module bundles                    | a reducer that imports `from "./Catalog"` builds, and the reducer's name appears in `dist/bundle.js`                                                                          |
+| A probe typechecks with the module         | `spacetime build` stays green with the probe in the tsconfig include and a `// @ts-expect-error` above each `node:` import                                                    |
+| The module loads under node                | `node --import ./Register.mjs` imports `src/Schema.ts` and `createModuleTestHarness` without `ERR_UNSUPPORTED_ESM_URL_SCHEME`                                                 |
+| A stale fence writes nothing               | a renewal presenting the fence a takeover superseded throws `stale-fence`, and the `lease` table is byte-for-byte unchanged                                                   |
+| A derived row survives a mid-write failure | the delete and the insert of one derived row sit in one transaction: a throw after the insert, and one before it, both leave the prior row byte-identical                     |
+| A refusal precedes the write               | a counted context reports 0 inserts for the refused call and 1 for the accepted one                                                                                           |
+| A stamp round-trips                        | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                                                        |
+| An added column is publishable             | publishing a module whose table gains a column over the previous database either succeeds, or fails with `requires a default value annotation` - it never drops rows silently |
+| A deadline past year 9999 is refused       | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                                                       |
+| A grant is live the moment it is made      | every granted claim satisfies `state === held && expiresAt > acquiredAt` at the claim's own clock, for a one-microsecond lease and a year-long one                            |
+| A refusal discloses nothing                | two identities, one resource: the `lease-held` refusal matches `/held by another identity/`, carries no 64-character hex, and still names the fence and the deadline          |
+| A generation row is never rewritten        | no `src/` file calls an `update` or `delete` on `generation`, and `bind`'s single append is followed by its own `requireCoherentGeneration` re-check                          |
+| A table `init` seeds starts empty in tests | a fresh harness iterates zero `capability` rows, so every case seeds the ids it needs and a bind against them appends one row                                                 |

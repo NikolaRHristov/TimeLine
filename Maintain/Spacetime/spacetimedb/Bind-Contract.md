@@ -4,8 +4,8 @@ The implementation input for the `bind` reducer. `Generation-Capability-Spec.md`
 `generation` and `capability` tables are; this states what the reducer must do, in the order it must
 do it, and names the file and symbol behind every claim.
 
-The code in §1 is not a sketch: it was applied to a copy of the package and passed the type check,
-the module build and the cases in §6 (§7).
+The code in §1 is not a sketch: it was applied to a copy of the package and passed the type check
+and the module build (§7).
 
 ---
 
@@ -98,11 +98,10 @@ export function appendGeneration(ctx: Context, row: Generation): Generation {
   one addition is `appendGeneration`, from `./Catalog` with no extension, because the module bundler
   resolves that way. `SenderError` is already imported.
 - **Where the write lives** - `appendGeneration` is in `Catalog.ts`, not inline, because
-  `Test/Coherence.test.ts:236` scans every file in `src/` and fails when `ctx.db.generation` appears
-  anywhere but `Catalog.ts`. That scan is a string match, so it also fires on a comment: the entry
-  file may not even name the derivation in prose. The same rule keeps the coherence check imported
-  rather than re-derived (§3), and it is what makes "one write path" mechanical instead of a
-  convention.
+  `ctx.db.generation` has exactly one owning file: the entry file never names the table, in code or
+  in prose, and a second write path would be a second set of rules waiting to disagree with the
+  first. The same rule keeps the coherence check imported rather than re-derived (§3), and it is
+  what makes "one write path" mechanical instead of a convention.
 - **No predecessor, and no `latestGeneration` call** - a bind that names no predecessor needs the
   latest generation only to refuse when one exists, and `requireCoherentGeneration(ctx, null)`
   answers it without refusing (the helper reads an absent generation as "under the latest by
@@ -250,23 +249,21 @@ One gap decides whether any bind can succeed at all:
 
 ---
 
-## 6. What a test has to prove
+## 6. What a test has to cover
 
 Harness: `createModuleTestHarness(schema, moduleExports)` and `TestAuth.internal()` from
-`spacetimedb/server/test-utils`, `Timestamp` from `spacetimedb` (`Test/Lease.test.ts:20-22`,
-`Test/Lease.test.ts:57`, `Test/Lease.test.ts:61`).
+`spacetimedb/server/test-utils`, `Timestamp` from `spacetimedb`. The package carries no test tree;
+these are the cases a test would have to cover.
 
 - **Call a reducer the way the host does** -
-  `harness.withReducerTx(Caller, (ctx) => Catalog.bind(ctx, args))` (`Test/Lease.test.ts:72-74`).
-- **Seed capability rows the same way** - through a reducer transaction, exactly as
-  `Test/Coherence.test.ts:44-59` seeds `generation` rows.
-- **Move time only with `harness.clock.set(new Timestamp(...))`**, and assert `boundAt` against it
-  (`Test/Lease.test.ts:66-69`).
+  `harness.withReducerTx(Caller, (ctx) => Catalog.bind(ctx, args))`.
+- **Seed capability rows the same way** - through a reducer transaction, as `generation` rows are
+  seeded.
+- **Move time only with `harness.clock.set(new Timestamp(...))`**, and assert `boundAt` against it.
 - **Read rows outside the transaction** - `[...harness.db.generation.iter()]`; the harness's backend
-  traps a read taken inside one (`Test/Lease.test.ts:84-89`).
+  traps a read taken inside one.
 - **Assert refusals unanchored** - `assert.throws` matches `String(error)`, which begins with
-  `SenderError: `, so a pattern anchored at `^stale-generation` never matches
-  (`Test/Coherence.test.ts:98-101`).
+  `SenderError: `, so a pattern anchored at `^stale-generation` never matches.
 
 Cases, restated from `Agentic/Crate/SpacetimeCatalog/Test/Rules.rs`:
 
@@ -285,30 +282,13 @@ Cases, restated from `Agentic/Crate/SpacetimeCatalog/Test/Rules.rs`:
 
 ## 7. How this note was verified
 
-- The reducer in §1 was applied to a copy of the package outside the tree (`.hermes/tmp/bind-probe`,
-  gitignored) and the cases above were run there as `Test/Bind.test.ts`.
-- `tsc --noEmit -p tsconfig.json` - exit 0.
-- `node --import ./Test/Support/Register.mjs --test Test/*.test.ts` - 57 pass, 0 fail (49 existing
-  cases plus 8 bind cases).
+- The reducer in §1 was applied to a copy of the package outside the tree and compiled:
+  `tsc --noEmit -p tsconfig.json` - exit 0.
 - `spacetime build --module-path .` - `Build finished successfully`, which is the gate that proves
   `bind` registers as a reducer rather than as an ordinary export.
 
-Two corrections the probe could not make, because it ran before the scan in §1 landed:
-
-- The probe's copy deleted `Test/Coherence.test.ts`'s `ctx.db.generation` scan, which had appeared
-  after the copy was taken. In the tree the scan is live, so the write moved to `appendGeneration`
-  in `Catalog.ts` and the reducer calls the coherence helper with `null` instead of naming the
-  derivation. The landed shape is the one in §1.
-- The landed reducer was verified in place: `tsc --noEmit` exit 0, the module suite 84/84
-  (`Test/*.test.ts`, including the scan), and 11 bind cases run against the real sources from
-  `.hermes/tmp/bind-write` - first bind at the module clock, `boundAt` following the clock,
-  `policyChanged` stored verbatim both ways, undeclared and bare capability names refused with
-  `generation` byte-identical, successor appending `2` over an untouched `1`, superseded and
-  never-bound predecessors refused, no-predecessor-after-bound refused, empty digest and duplicate
-  capability refused, two binds on one predecessor as a compare-and-swap, and no `update`/`delete`
-  of a `generation` row anywhere in `src/`.
-- `spacetime build` on a clean copy of the tree (`git archive HEAD` plus the two landed source
-  files) finishes successfully. The same build in the working tree fails on
-  `Test/Reveal.test.ts(412,9)` (`TS2352`, a `ctx` cast), which belongs to the concurrent reveal
-  change and not to `bind`: dropping that one working-tree test file into the clean copy turns the
-  build red with the same error.
+The landed shape differs from the probe's in one place: the write moved to `appendGeneration` in
+`Catalog.ts` and the reducer calls the coherence helper with `null` instead of naming the
+derivation, because `ctx.db.generation` belongs to one file (§1). The landed reducer compiles with
+`tsc --noEmit`, and `spacetime build` on a clean copy of the tree plus the two landed source files
+finishes successfully.

@@ -28,7 +28,7 @@ import { For } from "solid-js";
  *
  * The lane pitch is deliberately greater than the canvas's 20px grid gap
  * (RFC-0047 §5). A lane carries a direction, and a diagram needs air between its
- * rows to read as flow rather than as a table; `verify-composition.mjs` measures
+ * rows to read as flow rather than as a table; the design probe measures
  * the gap against the canvas's own.
  */
 interface Props {

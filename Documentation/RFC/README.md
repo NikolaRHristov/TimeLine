@@ -9,7 +9,7 @@ A card references its RFC by number; an RFC references the cards that implement 
 ## The board
 
 The records are also published as issues on a public project linked to this repository:
-[project 1 on TimeLine-DELO](https://github.com/orgs/TimeLine-DELO/projects/1).
+[the project](https://github.com/orgs/<owner>/projects/1).
 
 - **One issue per record.** The title repeats the number and the title. The body carries the
   record's Decision section verbatim, its classification, its task dependencies, a link back to the
@@ -114,17 +114,16 @@ a value names one question and cannot be read as the answer to another.
    `now`, and a record with no card is not thereby `later`.
 
 A record states `Kind` and `Subject` as one `category` in its frontmatter, and `Horizon` beside it.
-`Scripts/RFC-Frontmatter.mjs` writes both from the assignment table in the audit and checks them:
+`Documentation/Skill/RFC-Board/Reference/rfc_board.py` refuses a record that is missing either,
+whose `category` is not `<Kind>/<Subject>`, or that carries a value outside the three vocabularies:
 
 ```sh
-node Scripts/RFC-Frontmatter.mjs          # check every record's frontmatter against the tree
-node Scripts/RFC-Frontmatter.mjs --write  # write it from the record and the assignment table
+pnpm run RFC:Board    # read: a record the parser refuses is reported as FAIL, not published
 ```
 
-The check exits non-zero when a record is missing an axis, carries a value outside a vocabulary, or
-disagrees with the assignment, and it runs inside `pnpm run check`. A classification nothing checks
-is a classification that ships empty: the check is what makes "every record carries a value on every
-axis" a fact about the tree rather than a hope about the board.
+What no command settles is whether the assignment agrees with the record's own Decision. A
+classification nothing reads is a classification that ships empty, so that comparison belongs to a
+reviewer, and the board copies the value it is given.
 
 The audit that produced the taxonomy - the reading of each record's previous labels, the three
 values it changed after testing them against all seventy-six records, and the argument for there
@@ -149,11 +148,11 @@ being no fourth axis - is `Documentation/Reference/RFC-Classification.md`.
   that carries it renders its own word in the issue and leaves the field alone.
 - **Statuses** - one entry per rule in the Decision section: the rule in a few words, the state of
   the tree, and the evidence. `current` means the file or command the rule names is in the tree
-  today; `open` means the rule names none, or names something that is not there. The tool derives
-  both from the record, so a rule cannot be marked settled by editing the block.
+  today; `open` means the rule names none, or names something that is not there. Nothing derives the
+  pair from the record, so a reader holding the block against the tree is what keeps it honest.
 - **Classification** - `category` is `<Kind>/<Subject>` from the vocabularies above, and `horizon`
-  is the third axis. A new record chooses its three values before it is written, and the check
-  refuses one that does not.
+  is the third axis. A new record chooses its three values before it is written, and the board's
+  parser refuses one that is not in them.
 
 ---
 
@@ -163,10 +162,9 @@ Seventy-six are written; none is implemented. A record moves to `implemented/` o
 verification table passes against the shipped code.
 
 Each record states its rules in `statuses`, with the file or command each rule names as the
-evidence. Read against the tree, 36 of the 450 rules name something that exists today and the other
-414 name nothing, or name something that is not there. That is the sentence above stated per rule:
-no record has passed its verification table, and the 36 are rules the tree already keeps - the shape
-of the gate itself, mostly.
+evidence. Read against the tree, most of them name nothing, or name something that is not there: no
+record has passed its verification table, and the few that name something the tree keeps are rules
+about the shape of the build itself.
 
 Every file in `proposed/` appears below once under its `Kind`, and again in the two short indexes
 that follow, which list every record by `Subject` and by `Horizon`. A record absent from any of the
@@ -441,9 +439,9 @@ see.
 ```
 
 Two of the five correct a count that was circulating. `verify-composition.mjs` holds twenty-two
-invariants and `TokenContract.mjs` runs eight checks; eighteen and five were both in circulation,
-and both records cite the command that settles it rather than the number that was repeated. That is
-the rule RFC-0072 exists to state, applied to the record that states it.
+invariants and the token contract held eight checks; eighteen and five were both in circulation, and
+each record names what settles the number rather than repeating it. That is the rule RFC-0072 exists
+to state, applied to the record that states it.
 
 None of the five names a card id either. Each names its implementing card by title marked "to be
 created", so the entries above stay bare until those cards exist.

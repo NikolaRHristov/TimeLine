@@ -39,7 +39,7 @@ statuses:
 
 ## Decision
 
-PlayForm hosts rooms as a provider, and the tenancy unit is the room database (RFC-0005). Five
+The operator hosts rooms as a provider, and the tenancy unit is the room database (RFC-0005). Five
 commitments follow, and each one is testable.
 
 1. **Cost is a published model, not a promise.** A room's cost is measured as rows x row size, plus

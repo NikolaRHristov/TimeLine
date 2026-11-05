@@ -150,8 +150,8 @@ have would be the failure it exists to prevent.
 | YAML front matter per archived tool                            | the header is a comment in the tool's own language, so the file stays valid in the language it is written in, which front matter does not                           |
 | Refuse any file that carries a home path, without rewriting it | a borrowed script would then have to be hand-edited before it could be archived, and the archive's value is that it records the tool as it ran                      |
 | Scrub the summary as well as the body                          | a summary is prose a reader reads in `Index.md`; rewriting it to `<home>` would make the index less legible than the leak it hides                                  |
-| Keep tools outside the skill tree, in one `Scripts/` directory | `Scripts/` holds the checks the build runs; a tool belongs where its procedure is, or the procedure and the script drift apart                                      |
-| Run the audit as part of `pnpm run check`                      | it scans documentation rather than code, and a documentation defect should not red a build that is otherwise green (RFC-0074)                                       |
+| Keep tools outside the skill tree, in one `Scripts/` directory | a shared directory holds scripts with no procedure beside them; a tool belongs where its procedure is, or the procedure and the script drift apart                  |
+| Run the audit as part of the build                             | it scans documentation rather than code, and a documentation defect should not red a build that is otherwise green (RFC-0074)                                       |
 | Enforce the header shape with a linter                         | the header's value is the sentence stating what the tool does; a schema check would enforce six lines of boilerplate and nothing about whether the sentence is true |
 
 ## Consequences

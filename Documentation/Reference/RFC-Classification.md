@@ -6,9 +6,9 @@ replace it, assigns every record under the proposal, and answers the `Status` qu
 
 It reported before it was applied, and it is now the source the corpus is applied from. Each record
 carries `category` (`Kind`/`Subject`) and `horizon` in its frontmatter, the board carries the same
-three as fields, and `Scripts/RFC-Frontmatter.mjs` reads the assignment table below to write and to
-check them, so the table and the corpus cannot drift apart. The retired `Class` and `Area` values
-survive only in the audit table, which is where the evidence for retiring them is.
+three as fields, and `rfc_board.py` refuses a record whose axes are missing or outside the
+vocabulary, so the table below and the corpus cannot drift apart. The retired `Class` and `Area`
+values survive only in the audit table, which is where the evidence for retiring them is.
 
 The board carries two axes, `Class` and `Area`, five values each, and neither has a definition
 anywhere in the repository. `Documentation/RFC/README.md` says only that `Class` repeats the
@@ -388,18 +388,18 @@ that reading does not already give, and it would be a fourth axis this corpus do
 | 0041 | policy        | operation | next    | the countable set and the published aggregate                           |
 | 0042 | policy        | network   | next    | a module composed from reviewed libraries                               |
 | 0043 | architecture  | surface   | now     | `/Workspace` and the drawer/canvas seam                                 |
-| 0044 | method        | operation | now     | `engines.node`, `Compatibility.mjs` and `pnpm run check`                |
-| 0045 | contract      | surface   | now     | `Source/Stylesheet/`, `Source/Component/` and the token check           |
+| 0044 | method        | operation | now     | `engines.node` and `Documentation/Reference/Compatibility.md`           |
+| 0045 | contract      | surface   | now     | `Source/Stylesheet/` and `Source/Component/`                            |
 | 0046 | specification | surface   | now     | the band beneath the canvas and its capability vocabulary               |
 | 0047 | specification | surface   | now     | the lane band and its actor vocabulary                                  |
 | 0048 | specification | surface   | now     | the footer, the rail's cluster and their state names                    |
 | 0049 | specification | surface   | now     | the seven component states and every component                          |
 | 0050 | specification | surface   | now     | the six data states on every surface that reads a collection            |
-| 0051 | policy        | surface   | now     | `Global.css`, the token check and every component's props               |
+| 0051 | policy        | surface   | now     | `Global.css` and every component's props                                |
 | 0052 | specification | surface   | now     | the two materials and the four names they both provide                  |
 | 0053 | architecture  | surface   | now     | every route that is not `/Workspace`                                    |
 | 0054 | architecture  | surface   | now     | `/Workspace` before a session exists                                    |
-| 0055 | policy        | economy   | now     | `Content/String/Brand/`, `Position.mjs` and the copy                    |
+| 0055 | policy        | economy   | now     | `Content/String/Brand/` and the copy                                    |
 | 0056 | policy        | identity  | later   | an attestation issued by a third network                                |
 | 0057 | policy        | identity  | next    | the recovery secret and the epoch wrap                                  |
 | 0058 | contract      | network   | next    | a room's signed face document                                           |
@@ -416,9 +416,9 @@ that reading does not already give, and it would be a fourth axis this corpus do
 | 0069 | contract      | network   | next    | a room's views, the export and the CLI's `--json`                       |
 | 0070 | architecture  | network   | next    | room creation and the module's initial rows                             |
 | 0071 | policy        | network   | next    | library publication and the review record                               |
-| 0072 | method        | operation | now     | every verifier under `Documentation/Skill/*/Reference/` and `Scripts/`  |
+| 0072 | method        | operation | now     | every verifier under `Documentation/Skill/*/Reference/`                 |
 | 0073 | method        | operation | now     | `Documentation/Skill/**/Reference/` and its audit                       |
-| 0074 | method        | operation | now     | `pnpm run check` and the six scripts it chains                          |
+| 0074 | method        | operation | now     | `package.json`'s `build` and `Build`, and `tsc --noEmit`                |
 | 0075 | method        | operation | now     | design intake into `Documentation/Reference/`                           |
 | 0076 | method        | operation | now     | every card worked on the shared board                                   |
 
@@ -497,10 +497,10 @@ Three facts make that a defect rather than a slow start.
   card can ever ship them, so `Implemented` can never be set. A field whose only transition cannot
   fire on three quarters of its rows is not a field.
 - **It is already false for five records.** RFC-0072 to RFC-0076 describe practice that runs today.
-  `package.json:15` chains `Check:Compatibility`, the tool layer's check, `Check:State`,
-  `Check:Tokens`, `Check:Position` and `Test`, which is RFC-0074's claim, and the verifiers and the
-  archive script RFC-0072 and RFC-0073 name are in the tree. Those five read `Proposed`, and that is
-  wrong now.
+  `pnpm run build`, `pnpm run Build` and `tsc --noEmit -p Maintain/tsconfig.json` are the gates the
+  tree ships, which is what is left of RFC-0074's claim, and the archive script RFC-0073 names is in
+  the tree; the verifiers RFC-0072 names were removed with the automated layer. Those five read
+  `Proposed`, and that is wrong now.
 - **It conflates two independent facts.** Whether a decision is accepted is a fact about the design.
   Whether code exists is a fact about delivery. One field cannot carry both, and the board needs
   both: a reader asks "is this settled?" and "is it built?" separately, and the second answer

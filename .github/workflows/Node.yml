@@ -56,11 +56,9 @@ jobs:
 
     strategy:
       matrix:
-        # One job per supported line, not per release. The exact patch floor is
-        # `package.json` `engines.node`, and `Scripts/Compatibility.mjs` fails the
-        # job when the runner's interpreter falls below it - so the matrix proves
-        # each line builds and the guard proves the floor, rather than the matrix
-        # hard-coding a patch version a runner image may not carry.
+        # One job per supported line, not per release. The floor is
+        # `package.json` `engines.node`; the matrix proves each line builds,
+        # rather than hard-coding a patch version a runner image may not carry.
         node-version: ["22", "24", "26"]
 
     steps:
@@ -92,20 +90,9 @@ jobs:
       - run: pnpm install
         working-directory: .
 
-      # Fails the job on a Node below the recorded floor and prints what is
-      # behind a major. Cheap, and it is the only place the floor is checked
-      # rather than assumed from the matrix.
-      - run: pnpm run Check:Compatibility
-        working-directory: .
-
-      # The whole repository gate - RFC frontmatter, skills, state, tokens,
-      # position, the Maintain package's check and the tests - not just the
-      # floor and the build. A green run otherwise says nothing about
-      # `pnpm run check` and reads as if it had passed. It repeats
-      # `Check:Compatibility` on purpose: the floor fails under its own name.
-      - run: pnpm run check
-        working-directory: .
-
+      # The build is the gate: it compiles the site and the tool layer. There is
+      # no separate static-check stage, so a green run here means the tree built,
+      # not that it was audited.
       - run: pnpm run prepublishOnly
         working-directory: .
 

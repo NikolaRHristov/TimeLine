@@ -1,7 +1,7 @@
 // Generated from Maintain/Source/Model/Schema/Entities.ts - do not edit.
 //
-// `pnpm run Schema` rewrites this file; `pnpm run check` fails while it is
-// stale. A field that needs to exist belongs in the declaration, never here.
+// `pnpm run Schema` rewrites this file; never hand-edit it. A field that
+// needs to exist belongs in the declaration, never here.
 
 /** A post as the shadow store keeps it: the record plus the archive bookkeeping. */
 export type PostRecord = {

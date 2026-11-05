@@ -62,7 +62,7 @@ and absent from another.
 ## Copying the project
 
 ```sh
-gh project copy 1 --source-owner TimeLine-DELO --target-owner <owner> --title "RFC corpus"
+gh project copy 1 --source-owner <owner> --target-owner <owner> --title "RFC corpus"
 gh project mark-template <number> --owner <owner>
 ```
 

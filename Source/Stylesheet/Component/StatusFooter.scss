@@ -15,7 +15,7 @@
 //
 // The padding is `--space-3` block, which is the number the rail's security
 // cluster matches so its last mark sits on this band's baseline. Change one and
-// `verify-composition.mjs` reports the two surfaces drifting apart.
+// The design probe reports the two surfaces drifting apart.
 .status {
 	display: flex;
 	align-items: baseline;

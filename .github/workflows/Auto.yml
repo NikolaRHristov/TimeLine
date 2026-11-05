@@ -58,8 +58,11 @@ jobs:
           # Current would carry another branch's ancestry into this one.
           ref: Current
 
+      # ISO 8601, because `date` pads the day of month with a second space and
+      # markdown collapses runs of spaces - so the written file failed
+      # `prettier --check` on every run that touched it.
       - run: |
-          echo "Update: $(date)" > .github/Update.md
+          echo "Update: $(date -u +%Y-%m-%dT%H:%M:%SZ)" > .github/Update.md
 
       - run: |
           git config user.name "Auto"

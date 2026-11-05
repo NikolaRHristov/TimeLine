@@ -30,10 +30,14 @@ export const DEFAULT_DATABASE = "timeline";
 
 /**
  * The CLI writes its token here. This is the only place the token is read: it
- * is never taken from argv, never from the environment, and never printed -
- * a command that echoes its arguments would otherwise leak it.
+ * is never taken from argv, never printed, and the file it comes from is named
+ * once - a command that echoes its arguments would otherwise leak it.
+ *
+ * The file lives outside this repository, so there is no relative form to try
+ * first: the variable wins, then the absolute default the CLI itself writes.
  */
-const CLI_CONFIGURATION = join(homedir(), ".config", "spacetime", "cli.toml");
+const CLI_CONFIGURATION =
+	process.env["SPACETIMEDB_CLI_CONFIG"] ?? join(homedir(), ".config", "spacetime", "cli.toml");
 
 /** Long enough for a slow local insert, short enough that a dead port fails fast. */
 const CALL_TIMEOUT = 15_000;

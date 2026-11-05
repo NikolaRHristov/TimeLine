@@ -9,7 +9,7 @@ horizon: now
 registry: Documentation/RFC/README.md
 index: Documentation/RFC/README.md
 owner: operator
-applies_to: "every verifier under `Documentation/Skill/*/Reference/` and `Scripts/`"
+applies_to: "every verifier under `Documentation/Skill/*/Reference/`"
 supersedes: none
 superseded_by: none
 depends:
@@ -131,9 +131,8 @@ require an externally running browser on `CDP_URL` while the audit launches its 
 duplication is why the exit-code vocabulary had to be written down as a rule rather than left to
 each file.
 
-The no-JS audit is the only verifier wired into `package.json` (`:21`, as `Audit`); the three design
-verifiers are run by hand. `pnpm run check` does not invoke any of them - the boundary RFC-0074
-draws.
+The no-JS audit is the only verifier wired into `package.json` (`:15`, as `Audit`); the three design
+verifiers are run by hand. No build step invokes any of them - the boundary RFC-0074 draws.
 
 ## Alternatives considered
 
@@ -177,7 +176,7 @@ draws.
 | The audit launches its own browser       | `grep -n "remote-debugging-port=0" Documentation/Skill/Progressive-Enhancement/Reference/no-js-audit.mjs` → the launch argument                    |
 | The audit's thesis is one-directional    | `grep -n "content waits for hydration" Documentation/Skill/Progressive-Enhancement/Reference/no-js-audit.mjs` → the parity rule at `:943`          |
 | A missing node fails rather than blocks  | `grep -cF 'Page.rail?.' Documentation/Skill/Design-Verification/Reference/verify-showcase.mjs` → `3`                                               |
-| Only the audit is in the gate            | `grep -n '"Audit"\|"check"' package.json` → `Audit` is a script; `check` names no verifier                                                         |
+| Only the audit is wired                  | `grep -n '"Audit"' package.json` → `Audit` is a script; no gate runs a verifier                                                                    |
 | The audit passes on the built tree       | `pnpm run Audit` → `9 routes: 9 pass, 0 fail, 0 skipped`, exit 0                                                                                   |
 
 ## Open questions

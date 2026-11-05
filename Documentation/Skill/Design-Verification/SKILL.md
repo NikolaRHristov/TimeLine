@@ -16,9 +16,10 @@ A green `astro build` proves a page compiled. It does not prove the composition 
 This skill is the check between those two facts: serve the build, drive it in a real browser, and
 compare the measured geometry against numbers that were read from the design file.
 
-The authority is `Documentation/Reference/Design-Composition.md`. The check is
-`Reference/verify-composition.mjs`. Neither is a test suite - the script is ad-hoc verification, and
-it says so when it fails.
+The authority is `Documentation/Reference/Design-Composition.md`. The check is the manual one
+described below: serve a snapshot of the build, read the route in a real browser, and compare the
+measured boxes against the numbers the spec states. It is ad-hoc verification, not a test suite, and
+a run that cannot read a number says so rather than passing.
 
 ## When to use
 
@@ -40,35 +41,33 @@ result describes the page that used to exist.
 
 ## Running it
 
-```sh
-node Documentation/Skill/Design-Verification/Reference/verify-composition.mjs
-```
+The check is four steps in this order, and the order is what makes the readings trustworthy.
 
-With no arguments it waits for the build to stop writing, serves a copy of `Target/` on port 4411
-itself, probes `/Workspace/`, prints one line per invariant and exits 0 when every one holds.
-
-The copy is the point: `astro build` empties the output directory before it writes, so a probe that
+**Snapshot the build.** `astro build` empties the output directory before it writes, so a probe that
 serves the live tree while another agent's build runs sees zero routes and reports each as "the
-route served no document" - a total failure that is in the observer, not the page. What the snapshot
-guarantees is narrower than coordination with the builder: it is a quiet-time heuristic. It waits
-until the newest mtime under `Target/` has been quiet for 1.5s, records that mtime, copies, and
-re-reads it; a tree that moved across the copy is thrown away and the wait starts again, and a tree
-still being written after 180s is a blocker rather than a snapshot of whatever was on disk. A build
-that starts in the instant between the quiet check and the copy is therefore still possible - the
-re-read catches it, so the run retries or blocks, but nothing prevented the overlap.
+route served no document" - a total failure that is in the observer, not the page. Copy `Target/`
+aside once the newest mtime under it has been quiet for 1.5s, re-read that mtime after the copy, and
+throw the copy away and wait again if the tree moved; a tree still being written after 180s is a
+blocker rather than a snapshot of whatever was on disk. What the snapshot guarantees is narrower
+than coordination with the builder: it is a quiet-time heuristic, so a build that starts in the
+instant between the quiet check and the copy is still possible - the re-read is what catches it, and
+the run retries or blocks rather than measuring a half-written tree.
 
-| Argument or variable | Effect                                                  |
-| -------------------- | ------------------------------------------------------- |
-| `--url <url>`        | Probe a server already running instead of spawning one. |
-| `PORT`               | The port it serves on. Default `4411`.                  |
-| `CDP_URL`            | The browser endpoint. Default `http://127.0.0.1:9222`.  |
+**Serve the copy, not the live tree.** Serve the snapshot on loopback (`PORT`, default `4411`) and
+point the browser at that origin, or probe a server that is already running instead.
 
-Exit codes: `0` every invariant held; `1` at least one broke, or an element an invariant names is
-absent from the page; `2` only that the check could not run - no build, no browser, or a route that
-served no document. A `2` names the command that fixes it, because a missing browser is not the
-page's fault. An absent element is never a `2`: it prints as `ABSENT` with the selector that stopped
-matching, because a deleted component reported in the precondition class is a page defect filed
-where the reader is told not to look.
+**Probe `/Workspace/`.** With a Chromium on `CDP_URL` (default `http://127.0.0.1:9222`), open the
+route, cache-bust it (`?v=$(date +%s)`), and read the box of every part an invariant names -
+`getBoundingClientRect` per part is enough. The cache-bust is not optional: Chromium keeps the
+document across a rebuild, so a probe run after a build can report the previous geometry with no
+error.
+
+**Read one line per invariant.** A measurement that does not match the number below is a failure. A
+selector that no longer matches anything is reported as `ABSENT` with the selector named, never as a
+pass - a deleted component is a page defect, and filing it in the precondition class is filing it
+where the reader is told not to look. A missing precondition is the only thing that is not the
+page's fault: no build, no browser, or a route that served no document is stated as such, with the
+step that fixes it.
 
 ## The invariants
 
@@ -94,36 +93,24 @@ which is why the state is asserted beside the frame.
 
 ## The showcase pages
 
-Five pages that are not the workspace are the showcase surfaces (RFC-0053), and they have their own
-script:
-
-```sh
-node Documentation/Skill/Design-Verification/Reference/verify-showcase.mjs
-```
-
-It serves the same build, probes `/`, `/Bookmark`, `/List`, `/Voted` and `/Activity` at 1440 wide,
-and asserts what a showcase page can be wrong about: the rail is 224 wide, sits at the page's left
-edge and stays in view while the page is read; the hero takes the one extra type step (48px); the
-page holds three boxes, each bleeding to the page's own edge with the tile's 24px corner on the side
-that is still inside the page, in the canvas's own three greys; the rail is a table of contents
-whose every band resolves to a section that exists; and no record is drawn at all - no canvas, no
-drawer, no seam.
+Five pages that are not the workspace are the showcase surfaces (RFC-0053), and they are the same
+check at another width. Serve the same snapshot, probe `/`, `/Bookmark`, `/List`, `/Voted` and
+`/Activity` at 1440 wide, and read what a showcase page can be wrong about: the rail is 224 wide,
+sits at the page's left edge and stays in view while the page is read; the hero takes the one extra
+type step (48px); the page holds three boxes, each bleeding to the page's own edge with the tile's
+24px corner on the side that is still inside the page, in the canvas's own three greys; the rail is
+a table of contents whose every band resolves to a section that exists; and no record is drawn at
+all - no canvas, no drawer, no seam.
 
 The last one is the point of the whole check. A showcase page that grew a tile would still look
 right, and would have become a data surface - the state RFC-0053 exists to keep it out of.
 
-**`/Showcase` is the sixth page that is not the workspace, and it has its own probe.** It
+**`/Showcase` is the sixth page that is not the workspace, and it is probed for its own claim.** It
 demonstrates the layout primitive with six dispersed boxes rather than three, so the three-box,
-three-grey invariants describe a surface it is not:
-
-```sh
-node Documentation/Skill/Design-Verification/Reference/verify-spread.mjs
-```
-
-That script asserts what the spread claims: consecutive boxes sit at different horizontal offsets,
-the vertical gap exceeds the canvas's own 20px rhythm, and the page ends on a three-column pillar
-band. A spread whose boxes lined up would still pass a "no record is drawn" check and would have
-lost the only thing it demonstrates.
+three-grey invariants describe a surface it is not. Probe it the same way and read what the spread
+claims: consecutive boxes sit at different horizontal offsets, the vertical gap exceeds the canvas's
+own 20px rhythm, and the page ends on a three-column pillar band. A spread whose boxes lined up
+would still pass a "no record is drawn" check and would have lost the only thing it demonstrates.
 
 The route inventory is the tree's own: `find Target -name index.html` lists every page the build
 emitted, and a route that appears there and in none of the three probes is unverified rather than
@@ -132,31 +119,23 @@ page is added.
 
 ## Extending it
 
-An invariant is one line in the `Frame` table: a label, a reader over the measured box, and either a
-literal or a function of the other measurements. Add the measurement to `Probe` when the reader
-needs something the page does not already expose - the band heights were added that way, after an
-assertion compared against `None` and reported a failure the page had not committed.
+An invariant is one line in the list above: a label, the box it reads, and either a literal or a
+relationship to another measurement on the same page. Add a measurement to the probe when an
+invariant needs something the page does not already expose - the band heights were added that way,
+after a reading came back empty and was reported as a failure the page had not committed.
 
 A new invariant must be a fact from the design file. An invariant invented from the implementation
 proves the implementation agrees with itself.
 
 ## Claim → test
 
-| Claim                                   | Test                                                                                          |
-| --------------------------------------- | --------------------------------------------------------------------------------------------- |
-| The workspace matches the frame         | `node .../verify-composition.mjs` exits 0 and every line reads `PASS`                         |
-| An absent element fails, and is named   | delete `class=bento` from a copy of the build: exit 1 and `ABSENT  .bento is not in the page` |
-| A snapshot refuses an unsettled tree    | run it against a tree that never stops being written: exit 2, and nothing is served           |
-| A probe reads a settled build           | run it while `pnpm run build` runs: exit 0, not "served no document"                          |
-| Every emitted route is probed           | `find Target -name index.html` lists only routes one of the three probes names                |
-| The seam states its state, not a title  | the workspace probe reports `locked/true` and the reason, not a record name                   |
-| No record is drawn on a showcase page   | `verify-showcase.mjs` reports `no record is drawn on the page`                                |
-| A missing precondition is not a failure | with no browser on `CDP_URL`, the exit code is 2 and the fix is printed                       |
-
-## References
-
-| File                     | Covers                                                                 |
-| ------------------------ | ---------------------------------------------------------------------- |
-| `verify-composition.mjs` | Serve, probe and assert the built workspace against the spec           |
-| `verify-showcase.mjs`    | Serve, probe and assert the five showcase pages against RFC-0053       |
-| `verify-spread.mjs`      | Serve, probe and assert `/Showcase` against the spread it demonstrates |
+| Claim                                   | Test                                                                                                |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| The workspace matches the frame         | the probe's readings match every number above, one line per invariant                               |
+| An absent element fails, and is named   | delete `class=bento` from a copy of the build: the report reads `ABSENT  .bento is not in the page` |
+| A snapshot refuses an unsettled tree    | probe a tree that never stops being written: the copy is refused and nothing is served              |
+| A probe reads a settled build           | probe while `pnpm run build` runs: the frame reads, not "served no document"                        |
+| Every emitted route is probed           | `find Target -name index.html` lists only routes one of the three probes covers                     |
+| The seam states its state, not a title  | the workspace probe reads `locked/true` and the reason, not a record name                           |
+| No record is drawn on a showcase page   | the showcase probe finds no canvas, drawer or seam on any of the five routes                        |
+| A missing precondition is not a failure | with no browser on `CDP_URL`, the report names the browser as missing, not the page                 |

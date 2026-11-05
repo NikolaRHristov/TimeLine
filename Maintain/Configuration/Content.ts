@@ -33,7 +33,7 @@
  * must read the same tree.
  */
 import { readdir, readFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** The three kinds of content, and the define prefix each one contributes. */
@@ -279,7 +279,19 @@ export async function Layer(Root: string): Promise<Layer> {
 		...flatten(await read(LocalPath), LocalPath),
 	};
 
-	const Entries = await Collect(join(Root, "Content"));
+	// The content tree, in the order every path in this repository resolves:
+	// relative to this module's own location first, then `MAINTAIN_CONTENT`, then
+	// the absolute default under the root. A relative variable is anchored the
+	// same way, so `MAINTAIN_CONTENT=Content` means the same tree from any cwd.
+	const declared = process.env["MAINTAIN_CONTENT"];
+	const Directory =
+		declared !== undefined && declared.length > 0
+			? isAbsolute(declared)
+				? declared
+				: resolve(Root, declared)
+			: join(Root, "Content");
+
+	const Entries = await Collect(Directory);
 
 	return { Entries, Values, Define: Define(Entries, Values) };
 }

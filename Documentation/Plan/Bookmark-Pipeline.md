@@ -146,8 +146,6 @@ Maintain/
   Command/Tab/List/List.ts
   Command/Tab/Focus/Focus.ts
   Command/Event/Append/Append.ts        # write an event file
-  Test/Parser.test.ts
-  Test/Select.test.ts
 ```
 
 Deep nesting is deliberate: a command's path states its domain, so the file that changes when X
@@ -359,6 +357,6 @@ prints `new:0`, post file count unchanged | | Docs leak nothing |
 that never readies fails | `page list open` on an id the page never shows →
 `{error:"page-not-ready",expression,timeout,url}`, and the body never runs | | A distribution is dry
 until armed | `author distribute apply` → `{dryRun:true,"counts":{records:0,added:0}}`, and
-`git status --porcelain Source/Content` stays empty | | A distribution paces and stops |
-`node --test Target/Test/Distribute.test.js` → adds are sequential `[3000,3000]` apart, and a
-`rate-limited` answer stops the run with `remaining` naming the rest |
+`git status --porcelain Source/Content` stays empty | | A distribution paces and stops | adds are
+sequential, `[3000,3000]` apart, and a `rate-limited` answer stops the run with `remaining` naming
+the rest |

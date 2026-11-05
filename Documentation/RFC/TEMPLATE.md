@@ -21,10 +21,10 @@ statuses:
       evidence: the file or command that settles it
 ---
 
-`Scripts/RFC-Frontmatter.mjs` writes this block from the record's own sections and checks it inside
-`pnpm run check`; a copied template is rewritten on the first `--write`. What a person decides is
-the title, the date, the owner, what the record applies to, what it depends on, and the rules in the
-Decision section. Everything else is read from the file or from the assignment table.
+This block is written by hand from the record's own sections; nothing generates it. What a person
+decides is the title, the date, the owner, what the record applies to, what it depends on, and the
+rules in the Decision section. Everything else follows from the file and the classification in
+`README.md`.
 
 - **title** - the record's title. The number lives in `rfc`, and the filename carries both.
 - **rfc** - four digits, matching the filename. Never reused, never renumbered.
@@ -44,7 +44,7 @@ Decision section. Everything else is read from the file or from the assignment t
 - **depends** - the records and the cards this one names, one per entry, each with its reason.
 - **statuses** - one entry per rule in the Decision section: the rule in a few words, whether the
   tree holds it (`current`) or does not yet (`open`), and the file or command that settles it. A
-  rule that names no file or command is `open`; the tool never calls a rule settled on no evidence.
+  rule that names no file or command is `open`; nothing may call such a rule settled.
 
 ## Decision
 

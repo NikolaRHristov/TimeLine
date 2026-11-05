@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
-import { isAbsolute, resolve } from "node:path";
 import type { Vocabulary } from "../../Model/Author/Evidence.ts";
+import { anchored } from "../Load/Load.ts";
 import { Keyword } from "./Keyword.ts";
 
 /**
@@ -79,7 +79,7 @@ export function loadVocabulary(): Vocabulary {
 	const configured = process.env[VOCABULARY_ENV];
 	if (configured === undefined || configured.trim() === "") return Keyword;
 
-	const path = isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
+	const path = anchored(configured);
 
 	let raw: string;
 	try {

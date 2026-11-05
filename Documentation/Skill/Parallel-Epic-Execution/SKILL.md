@@ -31,10 +31,12 @@ it just delays the answer.
 
 1. **No build per edit.** A worker that changed TypeScript does not run the site build, does not
    reinstall dependencies, and does not re-scrape. It runs the narrowest thing that proves its own
-   change: the package's `check`, or a single `node` invocation of the command it touched.
-2. **Validate at the epic boundary, once.** The coordinator runs the full pass - `pnpm run check`,
-   the site build, formatting, the module build - after the last card in the epic lands. Doing it
-   per card repeats the same minutes N times and tells you nothing new.
+   change: `tsc --noEmit -p Maintain/tsconfig.json`, or a single `node` invocation of the command it
+   touched.
+2. **Validate at the epic boundary, once.** The coordinator runs the full pass -
+   `tsc --noEmit -p Maintain/tsconfig.json`, the site build, formatting, the module build - after
+   the last card in the epic lands. Doing it per card repeats the same minutes N times and tells you
+   nothing new.
 3. **Storage is not rebuilt.** The shadow store, the scraped reference cache and the SpacetimeDB
    projection are append-only and expensive to produce. A code change never justifies re-scraping;
    only a new source or a parser fix does.
@@ -50,7 +52,7 @@ it just delays the answer.
 
 | Change                               | Run                                             | Do not run                 |
 | ------------------------------------ | ----------------------------------------------- | -------------------------- |
-| `Maintain/Source/**/*.ts`            | `pnpm run check` in `Maintain`                  | site build, `pnpm install` |
+| `Maintain/Source/**/*.ts`            | `tsc --noEmit -p Maintain/tsconfig.json`        | site build, `pnpm install` |
 | `Maintain/Spacetime/spacetimedb/src` | `spacetime build`                               | publish, server restart    |
 | Site pages/styles                    | nothing, or `astro check` if it is already warm | full `astro build`         |
 | Docs only                            | `prettier --check` on the touched files         | anything else              |
@@ -60,20 +62,20 @@ it just delays the answer.
 
 At the end, one pass, in this order - each step cheap enough that failing early saves the rest:
 
-1. `pnpm run check` (types)
+1. `tsc --noEmit -p Maintain/tsconfig.json` (types)
 2. `spacetime build` (module types + wasm)
 3. `pnpm exec prettier --check .` (style)
 4. `pnpm run build` (site - the expensive one, last)
 5. a single scrape of the source the epic touched, if it touched a parser
 
 **A generated file must never be formatted.** Step 3 is the one that can quietly corrupt an epic: a
-formatter rewrites bytes a tool owns, and the next `pnpm run check` compares those bytes exactly, so
-the pass that "tidied" the tree turns a current artifact into a stale one. `.prettierignore` carries
-the exclusions and every entry is anchored (`/Target/`, `Maintain/Target/`, `/Content/`,
-`Source/Content/`, `Source/Generated/`, `Maintain/Source/Model/Generated/`,
-`Source/content.config.ts`). An unanchored `Target/` also matches a source directory four levels
-down - `Maintain/Source/Browser/Target/` - so the ignore list is verified by its resolved set, not
-by reading the lines. Prettier's own resolver is the probe:
+formatter rewrites bytes a tool owns, and the next `pnpm run Format:Check` compares those bytes
+exactly, so the pass that "tidied" the tree turns a current artifact into a stale one.
+`.prettierignore` carries the exclusions and every entry is anchored (`/Target/`,
+`Maintain/Target/`, `/Content/`, `Source/Content/`, `Source/Generated/`,
+`Maintain/Source/Model/Generated/`, `Source/content.config.ts`). An unanchored `Target/` also
+matches a source directory four levels down - `Maintain/Source/Browser/Target/` - so the ignore list
+is verified by its resolved set, not by reading the lines. Prettier's own resolver is the probe:
 
 ```sh
 node -e 'import("prettier").then(async ({ getFileInfo }) => { for (const F of ["Source/content.config.ts", "Maintain/Source/Browser/Target/Client.ts"]) { console.log(F, "ignored=" + (await getFileInfo(F, { ignorePath: ".prettierignore" })).ignored); } })'
@@ -109,9 +111,9 @@ card costs one card; two implementations of one page cost the epic.
   Install once at the start of an epic, never inside it.
 - **`astro build` needs Node >= 22.23.4.** A worker on an older node reads that as a broken repo and
   starts fixing what is not broken. Check `node --version` before blaming the code.
-- **Prefix `pnpm` with `timeout` to keep it in the foreground.** Some runtimes background a bare
-  `pnpm run …` and report the wrapper's status instead of the check's, which reads as "unverified".
-  `timeout 300 pnpm run check` returns the real exit code.
+- **Prefix a slow command with `timeout` to keep it in the foreground.** Some runtimes background a
+  bare `pnpm run …` and report the wrapper's status instead of the check's, which reads as
+  "unverified". `timeout 300 tsc --noEmit -p Maintain/tsconfig.json` returns the real exit code.
 - **Put the newer Node on `PATH` inside the same command.**
   `PATH="…/v26.5.1/bin:$PATH" timeout 420 pnpm run build` passes; the same build fails with
   `Node.js v22.23.0 is not supported by Astro` when the bundled interpreter wins.
@@ -136,7 +138,7 @@ card costs one card; two implementations of one page cost the epic.
 | Claim                          | Test                                                                                                 |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------- |
 | No build ran per edit          | the epic's git log has no build-output churn between feature commits                                 |
-| Validation ran once            | one `pnpm run check` at the end, not N                                                               |
+| Validation ran once            | one `tsc --noEmit -p Maintain/tsconfig.json` at the end, not N                                       |
 | Storage untouched by code work | shadow post count unchanged by a code-only card                                                      |
 | Ownership was disjoint         | no two concurrent cards touched the same folder                                                      |
 | A restore is the original      | `git hash-object` of every restored file equals its source blob                                      |

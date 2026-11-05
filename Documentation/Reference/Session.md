@@ -28,7 +28,7 @@ first context selected, `static`, and the build's own time. `Resolve` replaces i
 when a reader answers, and otherwise returns the slot it was given.
 
 A failed read never empties the page. It returns the initial slot and logs exactly one warning whose
-text starts with `session:`, which is what `pnpm run Audit:Session` asserts. A silent absence would
+text starts with `session:`, which is what the check under Verifying reads. A silent absence would
 be the fallback RFC-0003 refuses: a reader who cannot tell the build's rows from a session's will
 act on the build's rows.
 
@@ -36,11 +36,7 @@ act on the build's rows.
 
 `Select(Slot, Next)` takes a slot and a context and returns a slot. There is no drawer parameter and
 no drawer field, so a context switch cannot alter one - and `Enter` hands the drawer through as the
-same value, not a copy. The unit test asserts the bytes:
-
-```sh
-node --test Source/Test/Session.test.ts
-```
+same value, not a copy, so the bytes a page receives are the bytes the slot held.
 
 `Enter` also decides the canvas: the selected context's own, or the build's when the context has
 none. An unreadable room renders the projection on screen rather than an empty container, because
@@ -81,13 +77,21 @@ compile error rather than a convention.
 
 ## Verifying
 
+The check is manual, and it is three readings of the built page:
+
 ```sh
-node --test Source/Test/Session.test.ts          # the rules, as assertions
-pnpm run Audit:Session                           # the rendered page, in a browser
-pnpm run Audit                                   # every route, with scripts off
 pnpm run build                                   # and the build itself
 ```
 
-`Audit:Session` serves a copy of the build, so a concurrent rebuild cannot swap a bundle mid-page.
-It measures the real page for an empty slot, then a fixture page - the same document with the
-session element a signed-in page embeds - for the resolved state and the context switch.
+Serve a copy of the build rather than the live tree, so a concurrent rebuild cannot swap a bundle
+mid-page. Then, with a Chromium on the CDP endpoint:
+
+- **The real page** - `/Workspace/` opens with the anonymous slot, no error, and a `locked` seam.
+- **The resolved page** - the same document with the session element a signed-in page embeds,
+  spliced into the HTML before any island script runs, reads `snapshot`, fills the drawer, and
+  survives a context switch with the drawer byte-identical.
+- **The malformed page** - the same document with a session element that is not JSON logs exactly
+  one warning whose text starts with `session:`, and still shows the anonymous slot.
+
+The splice is part of the check, not a convenience: the element has to be in the document before any
+island script runs, or the read races hydration.

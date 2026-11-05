@@ -199,7 +199,7 @@ between them: a room is a database, a five-to-six-person network is one room, an
 allows five databases and five users per project. A six-person circle exceeds the free tier by one
 user, and a network of seven rooms exceeds it by two databases. Pro removes both ceilings and prices
 the sixth person at $25/month. Standalone removes every ceiling and every guarantee at once, which
-is the tier the "PlayForm as host" shape actually needs.
+is the tier the "operator as host" shape actually needs.
 
 Storage is metered per GB-month and egress per GB, which is the other half of the media question: a
 room that stores bytes pays for them monthly, forever.

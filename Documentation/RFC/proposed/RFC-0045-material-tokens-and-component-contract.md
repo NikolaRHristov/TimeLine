@@ -412,12 +412,12 @@ workspace sheets call them rather than naming a fill. The token set is one file:
 colour. The stage map is one module: `Source/Library/Stage.ts` holds four steps, three kinds and the
 column binding, and its values are `var(...)` references rather than hexes.
 
-The colour rules are enforced. `Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs`, wired
-as `pnpm run Check:Tokens` inside `pnpm run check`, fails the build on five things: a stray colour
-literal, an orphan token, an undefined token, a second stage map and a redefined `Material` mixin.
-Every message names the file and the line.
+The colour rules had a check. The token contract, run as part of the gate, failed on five things: a
+stray colour literal, an orphan token, an undefined token, a second stage map and a redefined
+`Material` mixin. Every message named the file and the line. The contract is no longer in the tree,
+so the five are review rules now, and this record is the statement they are reviewed against.
 
-Three rules in this record have no check, and each already drifts:
+Three rules in this record are not checkable at all, and each already drifts:
 
 - **A selected row reads a fixed accent.**
   `grep -n 'stage-source' Source/Stylesheet/Component/Drawer.scss` returns the selected-row rule:
@@ -462,8 +462,8 @@ already holds.
   them.
 - Geometry stays in the parts. A fidelity pass therefore edits sheets, deliberately: the alternative
   is a token per corner and a component that cannot state its own shape.
-- The colour rules are enforced by `pnpm run Check:Tokens`; the rest are review rules, and this
-  record names them rather than implying that review covers everything.
+- No rule in this record has a check in the tree; all of them are review rules, and the record names
+  them rather than implying that review covers everything.
 - The record omits the template's `Date` field. Supersession orders this set, not recency: a reader
   asks which record replaced which, never which is newer.
 
@@ -471,12 +471,12 @@ already holds.
 
 | Claim                                | Test                                                                                                                                             |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Every colour is a token              | `pnpm run Check:Tokens`, check 1 (no stray literal) reports nothing; the `theme-color` meta is the one literal outside `Global.css`              |
+| Every colour is a token              | `Source/Stylesheet/Global.css` is the only sheet that declares one; the `theme-color` meta is the one literal outside it (review rule)           |
 | No rgb or hsl triple is written      | the same check covers `rgb()`; `grep -rn 'rgb(\|hsl(' Source/Stylesheet` returns no declaration                                                  |
-| No orphan token                      | `pnpm run Check:Tokens`, check 2 (no orphan token) reports nothing                                                                               |
-| No undefined token                   | `pnpm run Check:Tokens`, check 3 (no undefined token) reports nothing                                                                            |
-| One stage map                        | `pnpm run Check:Tokens`, check 4 (one stage map) reports nothing; `grep -rn 'stage-' Source --include=*.scss` shows reads only                   |
-| One material                         | `pnpm run Check:Tokens`, check 5 (no redefined mixin) reports nothing                                                                            |
+| No orphan token                      | every token declared in `Global.css` has a `var()` reader in `Source/Stylesheet` (review rule)                                                   |
+| No undefined token                   | every `var()` read resolves to a declaration in `Global.css`, a source-side setter, or a fallback (review rule)                                  |
+| One stage map                        | `Source/Library/Stage.ts` holds the four steps, three kinds and the column binding; `grep -rn 'stage-' Source --include=*.scss` shows reads only |
+| One material                         | `Source/Stylesheet/Material.scss` holds the eight mixins and no other sheet redefines one (review rule)                                          |
 | A component never reads a collection | `grep -rn 'astro:content' Source/Component` returns nothing (true today)                                                                         |
 | The shell owns the measure           | `grep -rn 'max-width' Source/Stylesheet Source/Component` returns `Shell.scss` and two media queries, nothing else                               |
 | Depth is drawn, never simulated      | `grep -rn 'box-shadow\|blur(\|linear-gradient' Source/Stylesheet` returns the two fade rules and nothing else                                    |

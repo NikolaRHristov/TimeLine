@@ -50,10 +50,9 @@ flowchart TD
 
 ## Two claims, not one
 
-`astro build` proves the page compiles. It does not prove the page is the page. The audits that read
-`Target/` - `Audit`, `Audit:Session` and `Audit:Store` in `package.json`, plus the design
-verifiers - are run by hand, and `pnpm run check` never reads the output directory at all (RFC-0074,
-rule 7).
+`astro build` proves the page compiles. It does not prove the page is the page. Every check that
+reads `Target/` - the two-pass no-JS audit, the session readings, the design probe - is run by hand,
+and nothing in the tree reads the output directory on the build's behalf (RFC-0074, rule 7).
 
 legend: solid arrow = a transition a file performs; dotted arrow = a transition nothing performs;
 box = a state a file names; hexagon = a state no file names.
@@ -64,8 +63,7 @@ flowchart LR
   B --> T["Target/"]
   T --> A["no-JS audit"]
   T --> P["probe-built-page"]
-  T --> V["design verifiers"]
-  G["pnpm run check"] -.->|"never reads Target/"| T
+  T --> V["design probe"]
 ```
 
 ---

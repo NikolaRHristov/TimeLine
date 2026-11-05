@@ -50,8 +50,7 @@ export const Content = {
 		 * The network is named by whoever runs it - `Brand.Title` - and the
 		 * company that carries it signs the footer once. A second mention
 		 * anywhere in the product surface is the advertising this rule exists
-		 * to prevent, and `Scripts/Position.mjs` counts the mentions so it
-		 * cannot creep in one component at a time.
+		 * to prevent, so the name appears once, in this string.
 		 */
 		Attribution: content(
 			process.env["CONTENT_STRING_BRAND_ATTRIBUTION"],
@@ -442,8 +441,7 @@ export const Content = {
 		 * A card states a capability and names the protocol or the record behind
 		 * it, which is why the bodies are the longest strings in this file: the
 		 * sentence that would have been an adjective is the one that has to name
-		 * `AES-GCM-256` or an RFC. `Scripts/Position.mjs` checks every body and
-		 * every pillar note against that rule.
+		 * `AES-GCM-256` or an RFC. Every card body and pillar note names one.
 		 */
 		Showcase: {
 			Card: {

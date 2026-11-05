@@ -212,7 +212,6 @@ ranks, and why approval is a human action.
 
 | Claim                                | Test                                                                                                       |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| No absolute machine paths committed  | `Scripts/AuditLeaks.sh .` → `RESULT clean`                                                                 |
 | No real project in the tree          | `git grep -niE 'apiKey\|projectId' -- .` → placeholders only                                               |
 | A fresh clone builds with no project | `pnpm run build` with no `MAINTAIN_VOTE_*` → `Target/Voted/index.html` contains "Voting is not configured" |
 | The page still ranks                 | the same build renders every candidate, sorted by `votes`                                                  |
@@ -220,5 +219,4 @@ ranks, and why approval is a human action.
 | Approval is idempotent               | a second `pnpm maintain vote approve --id <id>` → `"unchanged": true`, same bytes                          |
 | A tombstone stays dead               | `reject` then `approve` → `{"error":"tombstone"}`; `nominate` the same id → `tombstone`                    |
 | Curated cannot be rejected           | `reject` a curated id → `{"error":"already-curated"}`                                                      |
-| Ranks are dense and unique           | `node --test Maintain/Target/Test/Vote.test.js` → rank-density tests pass                                  |
 | The index is written, not rendered   | `grep -c '"text"' Source/Content/Curated/*.json` is 0 - the payload stays in `Bookmark` or `Voted`         |

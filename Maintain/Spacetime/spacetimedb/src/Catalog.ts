@@ -292,8 +292,7 @@ export function liveGrant(ctx: Context, resource: string, now: string): Lease | 
  *
  * The write lives here rather than in `index.ts` for the same reason the
  * coherence check does - `ctx.db.generation` has exactly one owning file, which
- * is the mechanical statement of "one write path" and is asserted by
- * `Test/Coherence.test.ts`.
+ * is the mechanical statement of "one write path".
  */
 export function appendGeneration(ctx: Context, row: Generation): Generation {
 	if (ctx.db.generation.id.find(row.id) !== null) {
@@ -356,9 +355,8 @@ export function latestGeneration(ctx: Context): string | null {
  * are reserved for values registered with SpacetimeDB: the runtime walks every
  * named export and throws `TypeError: exporting something that is not a
  * spacetime export` for anything else, so a helper exported from there fails the
- * module at registration rather than merely reading badly. A helper no test can
- * import is a refusal that can only be argued, never shown, so the check belongs
- * in a module that both `index.ts` and `Test/` import.
+ * module at registration rather than merely reading badly. The helper therefore
+ * lives in a module `index.ts` imports rather than in the entry file itself.
  *
  * A write that names **no** generation is not stale. It is evaluated inside one
  * transaction, so the latest at that instant is the generation it is made under

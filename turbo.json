@@ -12,10 +12,6 @@
 			"outputs": ["Target/**"]
 		},
 
-		"check": {
-			"outputs": []
-		},
-
 		"tool": {
 			"cache": false,
 

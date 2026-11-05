@@ -61,7 +61,7 @@
 // page ground would be unreadable. The 2rem of padding at the top is the context
 // strip's height, which is what makes the drum start level with the drawer beside
 // it - the strip is the frame's top band, and the rail is the block under it.
-// `verify-composition.mjs` holds the alignment, so a change to either number
+// The design probe holds the alignment, so a change to either number
 // reports itself instead of drifting.
 .rail {
 	display: flex;

@@ -71,12 +71,11 @@ Never edit `Public/_redirects` by hand. The next run overwrites it.
 - The service worker's cache name is derived from the route map, so adding or retiring a path
   produces a different cache and `cleanupOutdatedCaches` deletes the previous one on activate.
 - No absolute machine paths and no private origin names anywhere in the emitted files or in this
-  documentation (see `Storage-Model.md`). "Private" is measured by `Scripts/AuditLeaks.sh`, which
-  subtracts the public namespaces listed in `Maintain/Configuration/Local/Origin.public.txt` - the
-  build toolchain's npm scope and the maintainer contact - from the origin wordlist before grepping.
-  Those names are public by construction, so subtracting them keeps the sweep mechanical over every
-  tracked file instead of narrowing it to a few paths; the reason is recorded in
-  `Documentation/README.md`.
+  documentation (see `Storage-Model.md`). "Private" means a name in
+  `Maintain/Configuration/Local/Origin.txt`, less the entries `Origin.public.txt` declares public -
+  the build toolchain's npm scope and the maintainer contact. Those names are public by
+  construction, so subtracting them keeps the question answerable over every tracked file instead of
+  narrowing it to a few paths; the reason is recorded in `Documentation/README.md`.
 
 ## Claim → test
 
@@ -90,4 +89,3 @@ Never edit `Public/_redirects` by hand. The next run overwrites it.
 | Headers are present     | `Public/_headers` lists the four security headers and the `_astro/*` immutable rule                 | pass                                                                                   |
 | SW is production-only   | `astro build` emits `Target/service-worker.js` and a registration script; `astro dev` emits neither | pass                                                                                   |
 | SW precache is scoped   | the emitted precache manifest contains no `_redirects`, `_headers` or `*.json`                      | pass - 16 entries: 7 pages, 8 assets, `robots.txt`                                     |
-| No private origin named | `Scripts/AuditLeaks.sh .` → `== private origins` `PASS none`, exit 0                                | pass                                                                                   |

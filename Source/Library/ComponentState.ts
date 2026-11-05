@@ -6,10 +6,8 @@
  *
  * RFC-0049 fixes the set - `rest`, `hover`, `focus`, `active`, `selected`,
  * `locked`, `busy` - and this module is the only place it is declared. A
- * component that needs an eighth state is a vocabulary change in this file, and
- * `Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs` fails the
- * build when a sheet, a stylesheet or a component names a state that is not in
- * the set.
+ * component that needs an eighth state is a vocabulary change in this file: a
+ * sheet, a stylesheet and a component name these seven and no others.
  *
  * The reason the set is shared rather than documented per component: eleven
  * components with eleven spellings of "hover" is the drift every design system
@@ -20,9 +18,8 @@
  * set and separate channels of change.
  *
  * The module is dependency-free, holds no markup and renders nothing: it states
- * the facts a control has and derives one state from them. That is what lets
- * `Scripts/StateContract.mjs` import it directly and assert the contract, and
- * what keeps a page from having to know how a state is drawn.
+ * the facts a control has and derives one state from them. That is what keeps a
+ * page from having to know how a state is drawn.
  *
  * Two rules are enforced here rather than in review, because a component cannot
  * be trusted to remember them:

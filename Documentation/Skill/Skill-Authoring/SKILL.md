@@ -17,8 +17,8 @@ failure this prevents is invisible while it happens: a session learns how this t
 publishes, saves the lesson under a profile directory, and every clone of this repository starts
 without it. The person who owns the tree then watches their own tooling forget.
 
-`Scripts/AuditLeaks.sh` governs what may enter a tracked file. This skill governs where a lesson
-lives and what shape it takes.
+Nothing tracked may name a person or a machine path. This skill governs where a lesson lives and
+what shape it takes.
 
 ## When to Use
 
@@ -41,8 +41,8 @@ a small text file whose content is `../Documentation/Skill`, and the long path s
 
 The repository root `AGENTS.md` carries the task → skill table. It is the index: a skill nobody is
 pointed at is not loaded. `Documentation/README.md` carries the reader-facing list of the same
-directories, and the contract checks both, because a skill the loader finds and the reader does not
-is a folder nobody opens.
+directories, and both are read together, because a skill the loader finds and the reader does not is
+a folder nobody opens.
 
 ## The naming
 
@@ -87,29 +87,27 @@ states where each one goes.
 - **A skill written here is invisible to the session that wrote it.** The index is built when a
   session starts; the file is found by the next one. Write it now, and do not conclude from its
   absence that it was not saved.
-- **A directory with no `Reference/Index.md` is a half-written skill.** The contract check refuses
-  it, and so does the reading order: the index is where a reader learns what sits beside the prose.
-- **A name typed in two places drifts.** The directory and the frontmatter `name` are one fact; the
-  check compares them, because a rename that misses one leaves a skill nothing can address.
+- **A directory with no `Reference/Index.md` is a half-written skill.** The reading order refuses
+  it: the index is where a reader learns what sits beside the prose.
+- **A name typed in two places drifts.** The directory and the frontmatter `name` are one fact, and
+  they are changed together, because a rename that misses one leaves a skill nothing can address.
 - **A formatter rewrites prose.** Prettier reflows these files at 100 columns with tabs. Run it on
   the files you touched, never across the tree, and never on a generated artifact.
-- **A `Reference/` test that no root script runs never gates.** `Test` is
-  `node --test "Source/Test/*.test.ts"`, so a test written beside a tool in another language is
-  hand-run only and a regression in that tool passes `pnpm run check`. Give it a `Check:<Name>`
-  script and put that script in the `check` chain, then name the script in the skill's claim table
-  rather than the raw invocation; run it with `python3 -B` so the gate writes no `__pycache__`
-  beside the tool.
+- **A `Reference/` test that no root script runs never gates.** Nothing in this tree runs a test
+  suite, so a test written beside a tool is hand-run only and a regression in that tool passes
+  review unless someone runs it. Name the raw invocation in the skill's claim table, and run it with
+  `python3 -B` so the run writes no `__pycache__` beside the tool.
 
 ## Claim → test
 
-| Claim                                            | Test                                                                                        |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Every skill has a body and an index              | `node Documentation/Skill/Skill-Authoring/Reference/SkillContract.mjs` exits 0              |
-| The frontmatter name matches its directory       | the same command prints `name` for every skill                                              |
-| Every skill is cited from `AGENTS.md`            | the same command reports `cited: N/N`                                                       |
-| Every skill appears in `Documentation/README.md` | the same command reports `named: N/N`                                                       |
-| Every reference file is listed in its `Index.md` | the same command reports `listed: N/N`                                                      |
-| Every skill states a testable claim              | the same command reports `claims: N/N`                                                      |
-| The skill tree names no machine path             | `python3 Documentation/Skill/Tool-Archive/Reference/archive_tool.py --audit` prints `clean` |
-| The tracked tree carries no identifier           | `Scripts/AuditLeaks.sh` names every tracked file that carries one                           |
-| The repository's skills load for a session       | `hermes skills trust <absolute repository root>` prints `N project skill(s) will load`      |
+| Claim                                            | Test                                                                                   |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| Every skill has a body and an index              | the directory holds `SKILL.md` and `Reference/Index.md`                                |
+| The frontmatter name matches its directory       | the directory name lowercased is the header's `name`                                   |
+| Every skill is cited from `AGENTS.md`            | `grep -c '<Name>/' AGENTS.md` returns at least one                                     |
+| Every skill appears in `Documentation/README.md` | `grep -c '<Name>/' Documentation/README.md` returns at least one                       |
+| Every reference file is listed in its `Index.md` | `ls Reference/` and the index table name the same set                                  |
+| Every skill states a testable claim              | the body carries a claim table or a `## Verification` table                            |
+| The skill tree names no machine path             | `python3 .../archive_tool.py --audit` prints `clean: no home paths`                    |
+| The tracked tree carries no identifier           | review the diff: no tracked file names a person, a handle or a home path               |
+| The repository's skills load for a session       | `hermes skills trust <absolute repository root>` prints `N project skill(s) will load` |

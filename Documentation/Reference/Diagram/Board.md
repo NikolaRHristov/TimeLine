@@ -48,22 +48,18 @@ flowchart LR
 
 ## What holds the record's shape
 
-Three checks hold the record's shape, and one command reads the board. `Check:RFC`
-(`Scripts/RFC-Frontmatter.mjs`) refuses a record with a missing axis, a value outside a vocabulary,
-or a value that disagrees with the assignment table. The frontmatter is written to the shape
-Prettier keeps, so `prettier --check Documentation/RFC` is clean without a second pass.
-`Check:RFC-Board` runs the read/write split tests with `subprocess.run` patched, so it proves the
-seam and not the board. `verify` is the only thing that reads the published board, and it is run by
-hand.
+`rfc_board.py` parses every record before it renders one: a missing axis, a value outside a
+vocabulary, or a `category` that is not `<Kind>/<Subject>` is refused by name. The frontmatter is
+written to the shape Prettier keeps, so `prettier --check Documentation/RFC` is clean without a
+second pass. `verify` is the only thing that reads the published board, and it is run by hand.
 
 legend: solid arrow = a transition a file performs; dotted arrow = a transition nothing performs;
 box = a state a file names; hexagon = a state no file names.
 
 ```mermaid
 flowchart TD
-  RFC["RFC-Frontmatter.mjs"] -->|"Check:RFC"| AX["three axes present and in vocabulary"]
+  PARSE["rfc_board.py"] --> AX["three axes present and in vocabulary"]
   PRET["prettier --check Documentation/RFC"] --> SH["frontmatter shape"]
-  TESTS["Check:RFC-Board"] -->|"subprocess.run patched"| SEAM["the read/write seam"]
   VER["rfc_board.py verify"] -.->|"run by hand"| LIVE["the published board"]
 ```
 
@@ -72,8 +68,8 @@ flowchart TD
 ## The missing states
 
 Four conditions the corpus and the board can be in with nothing to name them. Each is stated by a
-file and unreachable from the gate, so it is drawn as a gap rather than as a state the tool would
-report.
+file and unreachable from any command that runs on its own, so it is drawn as a gap rather than as a
+state the tool would report.
 
 - `superseded` has no option on the board. The record renders its own word in the issue and leaves
   the field alone, so a superseded record and a proposed one are indistinguishable in `Status`.
@@ -83,8 +79,7 @@ report.
 - A record edited after its commit publishes the committed bytes. The tree holds newer text, the
   board holds the old body, and the run reports it as a warning rather than as a state.
 - An issue with no record, or a record with no issue, is called a defect of the same kind as an
-  unlisted file, but `Check:RFC-Board` patches `subprocess.run`, so only a manual `verify` reads the
-  live board.
+  unlisted file, and only a manual `verify` reads the live board.
 
 legend: solid arrow = a transition a file performs; dotted arrow = a transition nothing performs;
 box = a state a file names; hexagon = a state no file names.

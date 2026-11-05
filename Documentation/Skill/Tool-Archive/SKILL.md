@@ -121,7 +121,6 @@ tried to hold a script's flags would go stale the first time the script changed.
 
 ## References
 
-| File                | Covers                                              |
-| ------------------- | --------------------------------------------------- |
-| `archive_tool.py`   | The archiver: flags, header stamping, scrub, audit  |
-| `TokenContract.mjs` | The token contract check: five rules, one exit code |
+| File              | Covers                                             |
+| ----------------- | -------------------------------------------------- |
+| `archive_tool.py` | The archiver: flags, header stamping, scrub, audit |

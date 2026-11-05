@@ -203,8 +203,9 @@ record.
 The 20px rhythm is the canvas's own, so the bands continue it; the 28px lane pitch is deliberately
 larger, because air is what separates a flow from a grid.
 
-`Skill/Design-Verification/Reference/verify-composition.mjs` asserts the order, the 20px steps, the
-lane pitch, and the cluster's two alignments.
+The order, the 20px steps, the lane pitch and the cluster's two alignments are the check a person
+makes against the built page; `Documentation/Skill/Design-Verification/SKILL.md` states the
+procedure and the numbers each reading is compared against.
 
 ---
 

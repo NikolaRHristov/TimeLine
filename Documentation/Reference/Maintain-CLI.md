@@ -464,27 +464,17 @@ Known codes: `no-config`, `config-exists`, `unknown-list`, `no-list-menu`, `no-l
 `--help` and `--schema` are rendered from the same table the parser matches against, so a command
 cannot drift from its own documentation.
 
-## Tests
-
-The parser, the target selector and both stores run without a browser:
+## Type-check
 
 ```bash
-pnpm --filter timeline-maintain test
-# node --test "Maintain/Target/Test/*.test.js", after `pnpm run Build`
+tsc --noEmit -p Maintain/tsconfig.json
 ```
 
-`check` is the gate, and it runs the same suite with no build behind it: `node Script/Test.ts` reads
-the `Configuration/Content.ts` the build reads and hands those values to the test process, so every
-file under `Maintain/Source/Test` runs on a fresh clone. The command above stays the post-build run,
-which is what proves the bundle behaves the same.
-
-```bash
-pnpm --filter timeline-maintain run check
-# tsc --noEmit -p tsconfig.json && node Script/Test.ts
-```
-
-Everything else is verified against the live endpoint - the claim-to-test table in
-`Documentation/Plan/Bookmark-Pipeline.md` is the checklist.
+The tool layer ships no test suite. The parser, the selector and both stores are exercised through
+the CLI against a live endpoint, and the claim-to-test table in
+`Documentation/Plan/Bookmark-Pipeline.md` is the checklist. The type-check is a backlog, not a build
+gate: the tool layer predates the strict base `tsconfig`, so `tsc --noEmit` reports errors that
+`@playform/build` logs and continues past.
 
 ## Why one file per command
 

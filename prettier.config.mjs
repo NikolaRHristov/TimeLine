@@ -1,7 +1,7 @@
 /** @type {import('prettier').Config} */
 
 /**
- * Mirrors the PlayForm sibling sites so this repository formats identically:
+ * Mirrors the sibling sites so this repository formats identically:
  * tabs for indentation, 100 columns, double quotes, semicolons, trailing commas.
  *
  * Two decisions that look cosmetic but are not:

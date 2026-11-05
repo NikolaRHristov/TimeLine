@@ -4,7 +4,7 @@ This skill archives no tools. Its checks are the package scripts and one-line co
 `../SKILL.md`, and a wrapper around them would duplicate the scripts it calls - the boundary pass is
 the sequence there, not a program. The rule that a script belongs to a skill when the next session
 would write it again (`Documentation/Skill/Tool-Archive/SKILL.md`) is why this directory is empty of
-one: nobody rewrites `pnpm run check`.
+one: nobody rewrites `tsc --noEmit`.
 
 | File       | What it does                                                                    | Notes             |
 | ---------- | ------------------------------------------------------------------------------- | ----------------- |

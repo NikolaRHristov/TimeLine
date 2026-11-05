@@ -6,9 +6,8 @@
  *
  * RFC-0050 fixes the set - `pending`, `ready`, `empty`, `partial`, `stale`,
  * `failed` - and the object it arrives in: `{ State, Count, Total, At, Code,
- * Remedy }`. This module is the only place either is declared, and
- * `Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs` fails the
- * build when a surface invents a seventh or reaches for a boolean instead.
+ * Remedy }`. This module is the only place either is declared: a surface does
+ * not invent a seventh state, and it does not reach for a boolean instead.
  *
  * The reason the state is an object rather than a flag: a boolean cannot carry
  * the ratio, the timestamp or the error code, so every surface that took one
@@ -20,8 +19,8 @@
  * A caller that has to test for a missing key has been handed a second state
  * model, and the point of this one is that there is a single shape to read.
  *
- * The module is dependency-free and renders nothing, so a page, an island and
- * `Scripts/StateContract.mjs` all read the same derivation.
+ * The module is dependency-free and renders nothing, so a page and an island
+ * read the same derivation.
  */
 
 /**

@@ -64,12 +64,13 @@ Documentation/       Reference/ (how it works), Skill/ (how to work)
 
 ## Verifying a change
 
-| Change                             | Check                                             |
-| ---------------------------------- | ------------------------------------------------- |
-| TypeScript under `Maintain/Source` | `pnpm run check`                                  |
-| SpacetimeDB module                 | `spacetime build` in `Maintain/Spacetime`         |
-| Documentation only                 | `pnpm exec prettier --check <file>`               |
-| A CLI command                      | run that command with `--dry-run` where it exists |
+| Change                             | Check                                           |
+| ---------------------------------- | ----------------------------------------------- |
+| TypeScript under `Maintain/Source` | `tsc --noEmit -p Maintain/tsconfig.json`        |
+| SpacetimeDB module                 | `spacetime build` in `Maintain/Spacetime`       |
+| The site under `Source`            | `pnpm run build`                                |
+| Documentation only                 | `pnpm exec prettier --check <file>`             |
+| A CLI command                      | run that command with `--dry-run` if it has one |
 
 ## Local setup, once per clone
 

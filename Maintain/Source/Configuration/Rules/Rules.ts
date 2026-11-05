@@ -1,11 +1,10 @@
 import { readFileSync } from "node:fs";
-import { isAbsolute, join, resolve } from "node:path";
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
 import type { Rules } from "../../Model/Author/Decision.ts";
 import { buckets, type Vocabulary } from "../../Model/Author/Evidence.ts";
 import { Keyword } from "../Keyword/Keyword.ts";
 import { loadVocabulary } from "../Keyword/Load.ts";
-import { root } from "../Load/Load.ts";
+import { locate } from "../Load/Load.ts";
 import type { Configuration } from "../Schema/Schema.ts";
 
 /** Where the tracked weights live, relative to the repository root. */
@@ -18,9 +17,7 @@ export const DEFAULT_RULES = "Maintain/Configuration/Rules/Rules.json";
  * can point the classifier at another file without editing the tracked one.
  */
 export function rulesPath(): string {
-	const configured = process.env["MAINTAIN_RULES"];
-	if (configured === undefined || configured.length === 0) return join(root(), DEFAULT_RULES);
-	return isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
+	return locate(undefined, "MAINTAIN_RULES", DEFAULT_RULES);
 }
 
 function record(value: unknown): Record<string, unknown> | null {

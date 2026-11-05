@@ -1,8 +1,8 @@
 # Position - the carrier, the motion and the claim
 
 The product is a network. DELO is the company that carries it. The unit of action travelling through
-it is a **motion**. Those three sentences are the whole position, and the three rules that keep it
-from drifting are counted by `Scripts/Position.mjs`, which `pnpm run check` runs.
+it is a **motion**. Those three sentences are the whole position, and three rules keep it from
+drifting.
 
 The decision itself is RFC-0055. This page is the part a person needs at the keyboard: the word to
 use, the one place the company is named, and the form a claim has to take before it may be printed.
@@ -23,6 +23,9 @@ The rule binds the copy and not the tables. A record keeps the name it was creat
 `vote.cast`, `scrape.started`, the `event append` and `event tail` commands - because renaming a
 schema to match a brand is a migration with no product benefit, and RFC-0019 already defines `event`
 as one append-only fact about something that happened.
+
+It is a grep away: `grep -rniE "\b(requests?|jobs?|actions?)\b" Content/` matches nothing, because
+the words are matched whole and `redaction` is not `action`.
 
 Two words stay apart on purpose:
 
@@ -56,8 +59,8 @@ grep -rn "DELO" Source/ --exclude-dir=Generated             # no match
 ```
 
 `Source/Generated/Content.ts` is written from `Content/` on every config load, so the attribution
-appears there by construction. Counting it would make one mention look like two; the guard reports
-it as `INFO` and counts the copy.
+appears there by construction. Counting it would make one mention look like two, so the count is
+over the copy alone.
 
 A page that renders `Bare` has no shell and therefore no signature line. `/Workspace` is that page:
 the composition owns the viewport, and a footer under it would push every proportion the design
@@ -67,7 +70,9 @@ states in absolute pixels.
 
 A showcase claim is a capability the reader can check, not an adjective (RFC-0053, RFC-0046 rule 2).
 Every card body and pillar note on a showcase page names a record - `RFC-NNNN` - and a claim that
-talks about cryptography names its cipher suite as well.
+talks about cryptography names its cipher suite as well. A card title and the masthead are exempt: a
+heading is a heading, and a rule that demanded a cipher suite from one would be obeyed by making the
+headings worse.
 
 | Claim on the page      | Says                                                 | Names                                      |
 | ---------------------- | ---------------------------------------------------- | ------------------------------------------ |
@@ -90,8 +95,8 @@ The two forms are not interchangeable:
 Copy reaches the page through `@Library/Content.ts` like every other string: the cards are
 `Content.Page.Showcase.Card.<Name>.{Title,Body}`, the pillars
 `Content.Page.Showcase.Pillar.<Name>. {Name,Note}`. No sentence is written into a component, and the
-guard reads the copy where the page prints it - a claim kept in a file of its own would be a
-sentence the site ships without printing.
+copy is read where the page prints it - a claim kept in a file of its own would be a sentence the
+site ships without printing.
 
 ## The operator's side
 
@@ -105,53 +110,3 @@ The split RFC-0038 draws is the product's own (RFC-0055 rule 5). The operator ow
 It owes no opinion on what travels. A support question about content is answered by naming the peer
 who authored the motion, never by inspecting it, and the status surfaces are what make that answer
 credible: they show what the operator can see, which is the connection and not the payload.
-
-## The guard
-
-`Scripts/Position.mjs` is plain JavaScript with no dependencies, because it runs before anything is
-compiled. Three checks, each of which can fail:
-
-1. **The brand appears once.** One mention, in the attribution file; `Source/` names it zero times.
-2. **One word for the unit of action.** No `request`, `job` or `action` anywhere under `Content/`,
-   matched as whole words, so `redaction` is not `action`.
-3. **A claim names its protocol or its record.** Every `Card/*/Body.md` and `Pillar/*/Note.md` under
-   `Content/String/Page/Showcase/` names a record, and a claim about cryptography names a cipher
-   suite. A card title and the masthead do not: a heading is a heading, and a rule that demanded a
-   cipher suite from one would be obeyed by making the headings worse.
-
-```
-$ node Scripts/Position.mjs
-== brand
-INFO Source/Generated/Content.ts carries it 1 time(s) - the same string, compiled; the count above is the copy
-PASS Content/String/Brand/Attribution.md names it once, and Source/ names it 0 times
-== vocabulary
-PASS no copy calls a motion a request, a job or an action
-== showcase
-PASS Card/Canvas/Body
-PASS Card/Drawer/Body
-PASS Card/Motion/Body
-PASS Card/Network/Body
-PASS Card/Provenance/Body
-PASS Card/Seam/Body
-PASS Pillar/Authenticated/Note
-PASS Pillar/Authorised/Note
-PASS Pillar/Encrypted/Note
----
-RESULT positioned
-```
-
-It degrades rather than crashes: a tree with no showcase copy reports `INFO` and passes, and
-`--root <path>` points the guard at a fixture so a failure path can be tested without breaking the
-real tree. Exit 0 means the position holds, exit 1 means it does not.
-
-## Claim → test
-
-| Claim                           | Test                                                                            |
-| ------------------------------- | ------------------------------------------------------------------------------- |
-| The brand appears once          | `node Scripts/Position.mjs` → `PASS`, one mention, in the attribution file      |
-| A second mention fails          | a `DELO` in any `Source/` file → `FAIL`, exit 1                                 |
-| The vocabulary is used          | `grep -rniE "\b(requests?\|jobs?\|actions?)\b" Content/` → no match             |
-| A banned word fails             | an `action` in a content file → `FAIL` naming the file and the line             |
-| A showcase claim names a record | every `Card/*/Body.md` and `Pillar/*/Note.md` prints `PASS` under `== showcase` |
-| A cipher claim names its suite  | a claim about encryption with no suite → `FAIL`, exit 1                         |
-| The guard runs in the check     | `pnpm run check` ends with `RESULT positioned`                                  |

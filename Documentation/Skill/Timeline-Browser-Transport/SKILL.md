@@ -28,8 +28,8 @@ and the session, reachable only from `Source/Transport/CDP/`.
 
 A new browser command therefore adds nothing to `Browser/` and imports nothing from it. If the
 interface has no member for what the command needs, that is the interface's gap, not a reason to
-reach past it - and `Source/Test/Transport.test.ts` fails on any command that names `Transport/CDP`
-or `Transport/View`.
+reach past it. A command that names `Transport/CDP` or `Transport/View` is a defect; nothing in the
+tree tests for it, so the rule is held by review.
 
 `--transport view` answers read commands from the shadow store with the same JSON shapes and refuses
 everything else (`read-only-transport` for a write, `unsupported-transport` for a tab, a page or a

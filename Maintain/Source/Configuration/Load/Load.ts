@@ -45,10 +45,40 @@ export function root(): string {
 }
 
 export function configurationPath(): string {
-	const configured = process.env["MAINTAIN_CONFIG"];
-	if (configured === undefined || configured.length === 0)
-		return join(root(), DEFAULT_CONFIGURATION);
-	return isAbsolute(configured) ? configured : resolve(process.cwd(), configured);
+	return locate(undefined, "MAINTAIN_CONFIG", DEFAULT_CONFIGURATION);
+}
+
+/**
+ * One path, resolved in one order: the declaration first, relative to this
+ * module's own location; then the environment variable; then the absolute
+ * default.
+ *
+ * A relative path is never resolved against the working directory. The CLI runs
+ * from wherever the shell is, and a tree that moves with the caller reads a
+ * different identifier map, a different shadow store and a different content
+ * collection depending on which directory the command was typed in.
+ *
+ * A declaration that only repeats the built-in default is not a declaration, so
+ * the environment still gets its turn - which is what keeps `MAINTAIN_STORAGE`
+ * and its siblings usable on a tree whose map was written by `config init`.
+ */
+export function locate(
+	declared: string | undefined,
+	environment: string,
+	fallback: string,
+): string {
+	if (declared !== undefined && declared.length > 0 && declared !== fallback)
+		return anchored(declared);
+
+	const configured = process.env[environment];
+	if (configured !== undefined && configured.length > 0) return anchored(configured);
+
+	return anchored(fallback);
+}
+
+/** A relative path is anchored to the repository root, never to the working directory. */
+export function anchored(path: string): string {
+	return isAbsolute(path) ? path : resolve(root(), path);
 }
 
 /** Read and validate the map; a missing file is `no-config`, never a crash. */

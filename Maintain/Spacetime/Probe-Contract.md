@@ -268,10 +268,9 @@ module is opened.
 
 **The `observation` table is not reused and not modified.** It keeps its own meaning - one channel
 showing one post - its own key `<postId>:<source>:<at>:<action>`, its own five columns (`at`,
-`source`, `postId`, `action`, `id`), and its own single writer, `observe`.
-`Maintain/Source/Test/Schema.test.ts` already asserts both column sets and the full table order, so
-a `probe` column appearing in `observation`, or a rename in either direction, fails the gate rather
-than passing silently.
+`source`, `postId`, `action`, `id`), and its own single writer, `observe`. `observation` keeps its
+five columns, and `probe` is a table of its own, so a `probe` column appearing in `observation`, or
+a rename in either direction, is an `Entities.ts` edit and a regeneration, never a local one.
 
 `reveal` reads no archive table. It does not read `observation`, `post`, `author`, `media`, `event`
 or `membership`, and it writes none of them. The archive and the catalog meet at exactly one place -
@@ -304,28 +303,25 @@ the code rather than a hope about it.
 
 ---
 
-## Claim → test
+## Claim → evidence
 
 Exercised on a local server (`spacetime start --listen-addr 127.0.0.1:3010`) against a throwaway
-database, with declarations inserted by `spacetime sql` - which does write private tables - and
-against the module test harness (`node --import ./Test/Support/Register.mjs --test Test/*.test.ts`
-in `Maintain/Spacetime/spacetimedb`), which runs the real reducer in a real transaction over an
-in-memory datastore with a controllable clock.
+database, with declarations inserted by `spacetime sql` - which does write private tables. A claim
+with no command beside it is one the reducer's structure makes true rather than one a test reported.
 
-| Claim                                             | Test                                                                                                                                                                                                   |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| The module compiles                               | `spacetime build` in `Maintain/Spacetime/spacetimedb` → `Build finished successfully.`                                                                                                                 |
-| A table and a reducer cannot share a name         | name the reducer `probe` and publish → `name 'Probe' is used for multiple types`                                                                                                                       |
-| The receipt's columns and indexes are as declared | `spacetime describe <db> tables probe` → 9 columns, four `_idx_btree` indexes                                                                                                                          |
-| An unentitled sender is refused, writes nothing   | `spacetime call <db> reveal '"demo@1"' '"latency"' 1 '"…"'` → `admission-refused`; `select count(*) from probe` → `0`                                                                                  |
-| An entitled sender writes exactly one row         | insert a live `lease` for the caller, call again; `select * from probe` → 1 row, `value` = the disclosure                                                                                              |
-| The audience cannot be spoofed                    | the same call with `--anonymous` → `admission-refused`, and the anonymous `my_probe` view returns `0` rows                                                                                             |
-| A replay charges nothing                          | call again at a later `at` → `budget-exhausted`; `select count(*) from probe` → still `1`                                                                                                              |
-| Raw evidence never crosses                        | put a canary in `property.evidence`; grep every `probe`, `belief` and `my_probe` row → no match                                                                                                        |
-| Belief is derived and replaceable                 | `spacetime call <db> recompute_belief '"demo@1"'` twice → one row, `confidence` `0.5` for one receipt                                                                                                  |
-| A replay on unchanged receipts rewrites nothing   | `Test/Belief.test.ts` → "criterion 5a: two back-to-back passes over three scopes leave a byte-identical dump"                                                                                          |
-| A failure partway through leaves beliefs intact   | `Test/Belief.test.ts` → "criterion 5b: a throw after the first belief write leaves every prior row intact" and "criterion 5c: a throw between the delete and the insert leaves every prior row intact" |
-| The archive is untouched                          | `namesFor(entity("observation"), "module")` in `Maintain/Source/Test/Schema.test.ts` → `["at","source","postId","action","id"]`                                                                        |
-| One entitled reveal writes exactly one row        | `Test/Reveal.test.ts` → "an entitled sender writes exactly one probe row, scoped to its server-resolved audience"                                                                                      |
-| A failure after the read charges nothing          | `Test/Reveal.test.ts` → "a failure after the private read and before the insert leaves no receipt and no charge"                                                                                       |
-| An unentitled reveal charges nothing              | `Test/Reveal.test.ts` → "an unentitled sender is refused, writes no probe row and deducts no charge"                                                                                                   |
+| Claim                                                 | Evidence                                                                                                              |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| The module compiles                                   | `spacetime build` in `Maintain/Spacetime/spacetimedb` → `Build finished successfully.`                                |
+| A table and a reducer cannot share a name             | name the reducer `probe` and publish → `name 'Probe' is used for multiple types`                                      |
+| The receipt's columns and indexes are as declared     | `spacetime describe <db> tables probe` → 9 columns, four `_idx_btree` indexes                                         |
+| An unentitled sender is refused, writes nothing       | `spacetime call <db> reveal '"demo@1"' '"latency"' 1 '"…"'` → `admission-refused`; `select count(*) from probe` → `0` |
+| An entitled sender writes exactly one row             | insert a live `lease` for the caller, call again; `select * from probe` → 1 row, `value` = the disclosure             |
+| The audience cannot be spoofed                        | the same call with `--anonymous` → `admission-refused`, and the anonymous `my_probe` view returns `0` rows            |
+| A replay charges nothing                              | call again at a later `at` → `budget-exhausted`; `select count(*) from probe` → still `1`                             |
+| Raw evidence never crosses                            | put a canary in `property.evidence`; grep every `probe`, `belief` and `my_probe` row → no match                       |
+| Belief is derived and replaceable                     | `spacetime call <db> recompute_belief '"demo@1"'` twice → one row, `confidence` `0.5` for one receipt                 |
+| A replay on unchanged receipts rewrites nothing       | the second call leaves `value` and `at` byte-identical, because the derivation reads the same receipts                |
+| A failure partway through leaves beliefs intact       | one `belief` row is in scope, so the delete and the insert are one transaction and a throw rolls both back            |
+| The archive is untouched                              | `spacetime describe <db> tables observation` → 5 columns `at`, `source`, `postId`, `action`, `id`                     |
+| The receipt is scoped to the server-resolved audience | `select * from probe` → the row's `audience` is `ctx.sender.toHexString()`, never an argument                         |
+| A failure after the read charges nothing              | the insert is the only write on the success path, so a throw before it leaves `probe` unchanged                       |

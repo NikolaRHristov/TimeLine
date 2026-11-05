@@ -148,36 +148,27 @@ stdout is not a TTY.
   and both gitignored. A committed build publishes every post id the archive held.
 - **Never write identifiers into a tracked file.** Handles, list ids and post ids belong in
   `Maintain/Configuration/Local/`. Docs use `<handle>`, `<slug>`, `<list-id>`.
-- **The leak audit subtracts public namespaces; it does not narrow paths.** `Scripts/AuditLeaks.sh`
-  greps every tracked file for `Maintain/Configuration/Local/Origin.txt` minus `Origin.public.txt`,
-  which lists the entries that are also public namespaces - the `@playform/*` npm scope and the
-  maintainer's funding/conduct address. A hit there is not a leak: a published dependency scope and
-  the maintainer's own identity are not account data. Narrowing the sweep to `Source/`,
-  `Documentation/` and `README.md` would be the wrong fix, because it stops auditing `Maintain/` and
-  `.github/` - exactly where the hits occur. `Documentation/README.md` records the decision.
-- **Tests read the real identifier map unless you unset `MAINTAIN_CONFIG`.** The suite points
-  storage, content and rules at temporary directories but resolves the map normally, so an exported
-  `MAINTAIN_CONFIG` left over from a probe narrows the taxonomy under the tests and eight
-  classification tests fail with an empty decision set. `unset MAINTAIN_CONFIG` before
-  `pnpm --filter timeline-maintain test`.
+- **The identifier rule covers the whole tree.** No tracked file names a person, a handle, a list id
+  or a machine path. A published dependency scope is public rather than account data, so a hit on
+  one is not a leak; narrowing the review to `Source/`, `Documentation/` and `README.md` would be
+  the wrong fix, because it stops covering `Maintain/` and `.github/`, exactly where a stray
+  identifier lands. `Documentation/README.md` records the decision.
 
 ## Claim → test
 
-| Claim                         | Test                                                                          |
-| ----------------------------- | ----------------------------------------------------------------------------- |
-| Browser exposes CDP           | `curl -s http://127.0.0.1:9222/json/version`                                  |
-| The CLI is built              | `pnpm run Build` → `Maintain/Target/Index.js` exists                          |
-| Command surface is described  | `pnpm maintain store publish --schema`                                        |
-| Onboarding is non-interactive | `pnpm maintain config init` writes a map with no prompt                       |
-| An existing map is protected  | second `config init` without `--force` → `config-exists`, exit 2              |
-| Ids are masked by default     | `config show` → `"id": "*…"`; `--reveal` prints the id                        |
-| Slugs come from the map       | `config init --force --list alpha=1`, then `config show` lists `alpha`        |
-| An unknown slug is named      | `page list open --name nope` → `unknown-list` with `configured`               |
-| Scrape is idempotent          | run twice; second prints `new: 0`                                             |
-| Scrape publishes nothing      | after `store scrape`, `git status --short Source/Content` is empty            |
-| Shadow store is untracked     | `git check-ignore -v Maintain/Storage/Shadow/Post/<id>.json`                  |
-| Site builds                   | `pnpm run build` → `Target/index.html`, `Target/Bookmark/index.html`          |
-| Save time is not fabricated   | the detail page says "Saved at or after"; no `bookmarkedAt` field             |
-| The leak audit is clean       | `Scripts/AuditLeaks.sh .` → `RESULT clean`, exit 0                            |
-| A private origin still fails  | canary naming a word from `Origin.txt` alone → `RESULT leaks present`, exit 1 |
-| Public names are subtracted   | canary with `@playform/build` only → `RESULT clean`, exit 0                   |
+| Claim                         | Test                                                                        |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| Browser exposes CDP           | `curl -s http://127.0.0.1:9222/json/version`                                |
+| The CLI is built              | `pnpm run Build` → `Maintain/Target/Index.js` exists                        |
+| Command surface is described  | `pnpm maintain store publish --schema`                                      |
+| Onboarding is non-interactive | `pnpm maintain config init` writes a map with no prompt                     |
+| An existing map is protected  | second `config init` without `--force` → `config-exists`, exit 2            |
+| Ids are masked by default     | `config show` → `"id": "*…"`; `--reveal` prints the id                      |
+| Slugs come from the map       | `config init --force --list alpha=1`, then `config show` lists `alpha`      |
+| An unknown slug is named      | `page list open --name nope` → `unknown-list` with `configured`             |
+| Scrape is idempotent          | run twice; second prints `new: 0`                                           |
+| Scrape publishes nothing      | after `store scrape`, `git status --short Source/Content` is empty          |
+| Shadow store is untracked     | `git check-ignore -v Maintain/Storage/Shadow/Post/<id>.json`                |
+| Site builds                   | `pnpm run build` → `Target/index.html`, `Target/Bookmark/index.html`        |
+| Save time is not fabricated   | the detail page says "Saved at or after"; no `bookmarkedAt` field           |
+| No tracked file names an id   | review the diff: no handle, list id, post id or home path in a tracked file |

@@ -9,22 +9,9 @@
 		"name": "Timeline contributors"
 	},
 	"scripts": {
-		"Build": "pnpm --filter @nikolarhristov/timeline-maintain run Build",
+		"Build": "pnpm --filter @timeline/maintain run Build",
 		"Run": "astro dev --host",
 		"build": "astro build",
-		"check": "pnpm run Check:RFC && pnpm run Check:Skills && pnpm run Check:RFC-Board && pnpm run Check:Compatibility && pnpm --filter @nikolarhristov/timeline-maintain run check && pnpm run Check:State && pnpm run Check:Tokens && pnpm run Check:Position && pnpm run Check:Spacetime && pnpm run Test",
-		"Check:RFC": "node Scripts/RFC-Frontmatter.mjs",
-		"Check:Skills": "node Documentation/Skill/Skill-Authoring/Reference/SkillContract.mjs",
-		"Check:RFC-Board": "python3 -B -m unittest discover -s Documentation/Skill/RFC-Board/Reference -p 'test_*.py'",
-		"Check:Compatibility": "node Scripts/Compatibility.mjs",
-		"Check:Position": "node Scripts/Position.mjs",
-		"Check:State": "node Scripts/StateContract.mjs",
-		"Check:Tokens": "node Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs",
-		"Check:Spacetime": "node Scripts/Spacetime.mjs",
-		"Test": "node --test \"Source/Test/*.test.ts\"",
-		"Audit": "node Documentation/Skill/Progressive-Enhancement/Reference/no-js-audit.mjs",
-		"Audit:Session": "node Documentation/Skill/Tool-Archive/Reference/session-audit.mjs",
-		"Audit:Store": "node Documentation/Skill/Progressive-Enhancement/Reference/workspace-store-audit.mjs",
 		"Format": "prettier --write .",
 		"Format:Check": "prettier --check .",
 		"maintain": "node Maintain/Target/Index.js",
@@ -34,7 +21,7 @@
 		"Deploy:Rules": "firebase deploy --only firestore:rules,firestore:indexes,storage",
 		"Emulators": "firebase emulators:start",
 		"prepublishOnly": "pnpm run build",
-		"tool": "pnpm --filter @nikolarhristov/timeline-maintain run tool"
+		"tool": "pnpm --filter @timeline/maintain run tool"
 	},
 	"dependencies": {
 		"@astrojs/sitemap": "3.7.4",

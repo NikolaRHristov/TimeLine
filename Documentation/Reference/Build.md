@@ -7,10 +7,10 @@ builds, and a local-only tool layer that must never run in CI.
 
 ```
 pnpm-workspace.yaml          # packages: "." and "Maintain"
-turbo.json                   # build / Build / check / tool
+turbo.json                   # build / Build / tool
 package.json                 # root: the site (Astro) + workspace scripts
 Maintain/
-  package.json               # @nikolarhristov/timeline-maintain
+  package.json               # @timeline/maintain
   Source/**/*.ts             # tool layer sources; the CLI entry is Source/Index.ts
   Target/**/*.js             # compiled output (gitignored); Index.js is the bin
   Configuration/ESBuild.ts   # esbuild options for @playform/build
@@ -19,14 +19,14 @@ Maintain/
 
 ## Commands
 
-| From the root                 | What it does                                                                                                                          |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm build`                  | `astro build` - the site, nothing else                                                                                                |
-| `pnpm Build`                  | compiles the tool layer into `Maintain/Target/**`                                                                                     |
-| `pnpm maintain <group> <cmd>` | runs the compiled CLI                                                                                                                 |
-| `pnpm tool <group> <cmd>`     | the same, through the Maintain package's `tool`                                                                                       |
-| `pnpm Run`                    | `astro dev --host`                                                                                                                    |
-| `pnpm check`                  | the gate: the contract stages, the floor guard, the tool layer's type-check, the SpacetimeDB module's suite and the site's unit tests |
+| From the root                            | What it does                                               |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| `pnpm build`                             | `astro build` - the site, nothing else                     |
+| `pnpm Build`                             | compiles the tool layer into `Maintain/Target/**`          |
+| `pnpm maintain <group> <cmd>`            | runs the compiled CLI                                      |
+| `pnpm tool <group> <cmd>`                | the same, through the Maintain package's `tool`            |
+| `pnpm Run`                               | `astro dev --host`                                         |
+| `tsc --noEmit -p Maintain/tsconfig.json` | type-checks the tool layer; the only gate over `Maintain/` |
 
 `Maintain/package.json`:
 
@@ -36,7 +36,6 @@ Maintain/
 		"Prepare": "esbuild Configuration/ESBuild.ts --format=esm --platform=node --target=esnext --outfile=Configuration/ESBuild.js",
 		"Build": "pnpm run Prepare && Build 'Source/**/*.ts' --ESBuild Configuration/ESBuild.ts",
 		"Watch": "pnpm run Prepare && Build 'Source/**/*.ts' --Watch --ESBuild Configuration/ESBuild.ts",
-		"check": "tsc --noEmit -p tsconfig.json",
 		"tool": "node Target/Index.js"
 	}
 }
@@ -97,8 +96,6 @@ The mapping is one-to-one: `Source/**` is the entry base, so `Source/Index.ts` b
 
 		"Build": { "outputs": ["Target/**"] },
 
-		"check": { "outputs": [] },
-
 		"tool": { "cache": false, "dependsOn": ["Build"] }
 	},
 
@@ -109,7 +106,7 @@ The mapping is one-to-one: `Source/**` is the entry base, so `Source/Index.ts` b
 The rule is structural, not a promise. Task names are case-sensitive, and that is the guard: the
 site's task is `build`, the tool layer's is `Build`. `turbo run build` therefore matches one
 package - the root - and cannot reach `Maintain`, which has no `build` script at all.
-`turbo run build --dry=json` still prints a `timeline-maintain#build` slot marked `<NONEXISTENT>`
+`turbo run build --dry=json` still prints an `@timeline/maintain#build` slot marked `<NONEXISTENT>`
 with no dependencies and no dependents: that is turbo reporting the task does not exist there, not
 an edge. `turbo run build --filter=timeline-bookmarks --dry=json` is the site graph on its own, a
 single node.
@@ -141,24 +138,21 @@ from the environment, so no `MAINTAIN_*` value can reach a build.
   hand-edited.
 - A path stays tracked after it is added to `.gitignore`; `git rm -r --cached Target` is what makes
   the rule apply to site output committed before the rule existed.
-- `pnpm check` runs the contract stages, then the compatibility guard (`Scripts/Compatibility.mjs`),
-  then the tool layer's type-check, then the SpacetimeDB module's suite (`Check:Spacetime`), then
-  the site's unit tests. The guard is the only stage that can fail on a wrong interpreter; the
-  type-check is still the backlog, not a build gate: the tool layer predates the strict base
-  `tsconfig`, so `tsc --noEmit` reports errors that `@playform/build` logs and continues past. The
-  build does not depend on either. The floor the guard enforces is recorded once, in
-  `Documentation/Reference/Compatibility.md` and `package.json` `engines.node`.
+- `tsc --noEmit -p Maintain/tsconfig.json` is the only gate over the tool layer, and it is still the
+  backlog, not a build gate: the tool layer predates the strict base `tsconfig`, so `tsc --noEmit`
+  reports errors that `@playform/build` logs and continues past. The build does not depend on it.
+  The Node floor the build needs is recorded once, in `Documentation/Reference/Compatibility.md` and
+  `package.json` `engines.node`.
 - `-w` narrows `pnpm ls` to the root project; without it both workspace projects are listed.
 
 ## Claim → test
 
-| Claim                    | Test                                                                                    |
-| ------------------------ | --------------------------------------------------------------------------------------- |
-| Maintain compiles        | `pnpm run Build` then `ls Maintain/Target/*.js`                                         |
-| Output is clean          | `touch Maintain/Target/STALE.txt`, rebuild, it is gone                                  |
-| The compiled CLI runs    | `node Maintain/Target/Index.js --help`                                                  |
-| Site build cannot scrape | `turbo run build --filter=timeline-bookmarks --dry=json` lists one task                 |
-| CI is static             | `.github/workflows/Node.yml` runs `pnpm run prepublishOnly` → `astro build`             |
-| Workspace resolves       | `pnpm ls --depth -1` shows `timeline-bookmarks` and `@nikolarhristov/timeline-maintain` |
-| No build-time env        | `grep -r MAINTAIN_ turbo.json pnpm-workspace.yaml Maintain/Configuration/ESBuild.ts`    |
-| The floor is enforced    | `pnpm run check` under Node 22.22.1 prints the guard's `FAIL` before any `tsc` output   |
+| Claim                    | Test                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| Maintain compiles        | `pnpm run Build` then `ls Maintain/Target/*.js`                                      |
+| Output is clean          | `touch Maintain/Target/STALE.txt`, rebuild, it is gone                               |
+| The compiled CLI runs    | `node Maintain/Target/Index.js --help`                                               |
+| Site build cannot scrape | `turbo run build --filter=timeline-bookmarks --dry=json` lists one task              |
+| CI is static             | `.github/workflows/Node.yml` runs `pnpm run prepublishOnly` → `astro build`          |
+| Workspace resolves       | `pnpm ls --depth -1` shows `timeline-bookmarks` and `@timeline/maintain`             |
+| No build-time env        | `grep -r MAINTAIN_ turbo.json pnpm-workspace.yaml Maintain/Configuration/ESBuild.ts` |

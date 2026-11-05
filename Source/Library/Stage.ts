@@ -13,10 +13,9 @@
  * a component as a custom property (`--band-tone`, `--ghost-tone`,
  * `--tile-stage`), so the colour still resolves at paint time.
  *
- * `Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs` enforces the
- * arrangement: it fails the build when another module names a stage accent, or
- * when a stage token is declared in `Global.css` and left out of this table.
- * A sheet may read a stage token directly - that is a use, not a map.
+ * The arrangement is the rule: no other module names a stage accent, and a
+ * stage token declared in `Global.css` is in this table. A sheet may read a
+ * stage token directly - that is a use, not a map.
  */
 
 /** The pipeline stages, in the order an event moves through them. */

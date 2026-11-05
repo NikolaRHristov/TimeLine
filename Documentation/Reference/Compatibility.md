@@ -1,9 +1,8 @@
 # Compatibility - the toolchain floor and the browser baseline
 
 Two floors hold the site up: the runtime that builds it, and the browser that reads it. Both are
-written down here, and the first one is enforced rather than described - `pnpm run check` runs
-`Scripts/Compatibility.mjs` before it type-checks anything, and that script reads the floor from the
-root `package.json`.
+written down here. The first is recorded once, in the root `package.json` as `engines.node`, and
+stated nowhere else; the second is derived from the stylesheets.
 
 ## The floor
 
@@ -26,10 +25,10 @@ Please upgrade Node.js to a supported version: ">=22.23.4"
 ```
 
 That message is clear, but it comes from the only tool in the chain that has the check.
-`pnpm run Build` (esbuild) and `pnpm --filter @nikolarhristov/timeline-maintain run check` (tsc and
-the schema tests) both exit 0 on the same interpreter - measured, not assumed - so the check path
-states the floor nowhere. The repository records the number once, in `engines.node`, and the guard
-restates it in one line before anything else runs. The commands that print it:
+`pnpm run Build` (esbuild) and `tsc --noEmit -p Maintain/tsconfig.json` both exit 0 on the same
+interpreter - measured, not assumed - so nothing else in the tree states the floor. The repository
+records the number once, in `engines.node`, and `astro build` is what a wrong interpreter runs into.
+The commands that print it:
 
 ```sh
 node -p "require('./package.json').engines.node"              # >=22.23.4
@@ -42,42 +41,15 @@ ignore), so a clean clone resolves every range from the registry at install time
 is what keeps a clean install from being a different install. The consequence is recorded under
 _Known gaps_ below.
 
-The floor is a floor, not a pin. Patch releases above it are taken; the guard compares against the
-minimum, not for equality. Only the LTS lines - 22 from 22.23.4, 24, 26 - are tested. An odd major
-satisfies the range and is not supported.
+The floor is a floor, not a pin. Patch releases above it are taken, and an odd major satisfies the
+range without being supported. Only the LTS lines - 22 from 22.23.4, 24, 26 - are supported.
 
-## The guard
+## Enforcement
 
-`Scripts/Compatibility.mjs` is plain JavaScript with no dependencies, because it has to run and
-speak on a Node old enough to be the thing it complains about. It does two things:
-
-- **Fails** when the running Node is below the recorded floor, naming the version, the floor and the
-  file the floor came from.
-- **Reports** what is behind, from `pnpm outdated --format json --silent`, and never fails on it. A
-  major that is available but not taken is printed as `INFO`, because taking one is a decision with
-  its own record (RFC-0044), and a guard that turned every upstream release into a red build would
-  force that decision on the day of the release instead of the day of the review.
-
-It degrades rather than crashes: a `pnpm` missing from `PATH`, a registry that does not answer, or
-output that is not JSON each produce a `SKIP` line and leave the exit code alone. Exit 0 means
-compatible, exit 1 means the Node floor is not met or is not recorded.
-
-```
-$ node Scripts/Compatibility.mjs
-== record
-PASS floor ">=22.23.4" read from package.json engines.node
-== node
-PASS v26.5.1 satisfies >=22.23.4 (package.json engines.node)
-== dependencies behind
-INFO 1 behind a major - reported, not failed; taking one is RFC-0044:
-       tailwindcss 3.4.19 -> 4.3.3 (dependencies)
----
-RESULT compatible
-```
-
-The `.npmrc` in this repository does not set `engine-strict`, so `pnpm install` still succeeds on a
-Node below the floor. The guard in `pnpm run check` is the enforcement point, and it is deliberately
-the first thing that runs: the sentence arrives before the type-checker's output, not after it.
+`.npmrc` does not set `engine-strict`, so `pnpm install` succeeds on a Node below the floor, and
+neither `pnpm run Build` nor `tsc` reads `engines.node`. `astro build` is the one step that refuses:
+it prints the message above, names the version and the floor, and stops. The floor is therefore a
+statement about the build, not about the install.
 
 ## The browser baseline
 
@@ -128,7 +100,7 @@ half of the site is the half that must always work.
 Stated in full in RFC-0044; the rule a person needs at the keyboard is here.
 
 - **Patch and minor, within a recorded major** - taken as they ship. A bump is one edit to
-  `package.json`, and the guard reports the majors that are left.
+  `package.json`.
 - **A major** - waits until the ecosystem in `package.json` publishes against it, then it is taken
   in one commit with the RFC amended. Astro is the case that matters: `@astrojs/solid-js`,
   `@astrojs/sitemap`, `astrojs-service-worker`, `@astrojs/ts-plugin` and the three `@playform/*`
@@ -137,7 +109,7 @@ Stated in full in RFC-0044; the rule a person needs at the keyboard is here.
 - **Tailwind is deliberately deferred at 3.4.19 against 4.3.3.** Version 4 removes the
   `tailwindcss/nesting` entry `postcss.config.js` imports and moves the theme from
   `tailwind.config.js` into CSS, so taking it is a stylesheet migration, not a version bump. The
-  deferral is recorded in RFC-0044 and reported by the guard on every run.
+  deferral is recorded in RFC-0044.
 - **Sass is deferred at 1.107.1 against 3.0.** Every build prints `DEPRECATION WARNING [import]` for
   `Source/Layout/Base.astro:80` and `:81`, which pull the two `.scss` sheets in with `@import`. Dart
   Sass 3.0 removes `@import` outright, so a Sass major is a migration to `@use` (or to the component
@@ -160,20 +132,15 @@ policy supersedes that record; it does not edit this page into disagreement with
   interpreter as the site. It has no build-time runtime requirement beyond Node's own ESM support,
   and `@types/node` 26.6.6 is a type package, not a runtime.
 - **No version-manager file.** No `.nvmrc` or `.node-version` is tracked; `engines.node` is the
-  record and the guard is what a wrong interpreter runs into.
+  record, and `astro build` is what a wrong interpreter runs into.
 
 ## Claim → test
 
-| Claim                                  | Test                                                                                          |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- |
-| The floor is recorded once             | `node -p "require('./package.json').engines.node"` → `>=22.23.4`                              |
-| The guard enforces it                  | `node Scripts/Compatibility.mjs` under Node 22.22.1 → `FAIL`, exit 1                          |
-| A supported Node passes                | `node Scripts/Compatibility.mjs` under Node 26.5.1 → `PASS`, exit 0                           |
-| Behind a major is reported, not failed | the same run prints `INFO tailwindcss 3.4.19 -> 4.3.3` and exits 0                            |
-| A missing pnpm does not fail the check | `env -i PATH=/usr/bin:/bin node Scripts/Compatibility.mjs` → `SKIP`, exit 0                   |
-| `pnpm run check` runs the guard first  | `pnpm run check` prints the `== record` section before `tsc` output                           |
-| Nesting is compiled, not shipped       | `grep -c '&' Target/_astro/*.css` → `0` for every file                                        |
-| Container queries are unused           | `grep -rn "@container\|container-type" Source/` → no match                                    |
-| The baseline matches the sheets        | the `caniuse-lite` query above reproduces the three caniuse rows; MDN BCD gives `color-mix()` |
-| A clean clone builds                   | `rm -rf node_modules Target && pnpm install && pnpm run build` → both exit 0                  |
-| Sass `@import` is still in use         | `pnpm run build` prints `DEPRECATION WARNING [import]` for `Source/Layout/Base.astro:80`      |
+| Claim                            | Test                                                                                          |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| The floor is recorded once       | `node -p "require('./package.json').engines.node"` → `>=22.23.4`                              |
+| Nesting is compiled, not shipped | `grep -c '&' Target/_astro/*.css` → `0` for every file                                        |
+| Container queries are unused     | `grep -rn "@container\|container-type" Source/` → no match                                    |
+| The baseline matches the sheets  | the `caniuse-lite` query above reproduces the three caniuse rows; MDN BCD gives `color-mix()` |
+| A clean clone builds             | `rm -rf node_modules Target && pnpm install && pnpm run build` → both exit 0                  |
+| Sass `@import` is still in use   | `pnpm run build` prints `DEPRECATION WARNING [import]` for `Source/Layout/Base.astro:80`      |

@@ -10,7 +10,7 @@ registry: Documentation/RFC/README.md
 index: Documentation/RFC/README.md
 owner: operator
 applies_to: |-
-    `Global.css`, the material mixins, every component's public props, the token contract check
+    `Global.css`, the material mixins, every component's public props
 supersedes: none
 superseded_by: none
 depends:
@@ -49,8 +49,8 @@ Five rules make that enforceable.
 ### 1. A token arrives with a reader
 
 A token is added in the same change as the sheet or component that reads it. A token nobody reads is
-a defect the contract check already refuses, and the reason is not tidiness: an unread token is a
-name someone will guess the meaning of later, and guess wrong.
+a defect, and the reason is not tidiness: an unread token is a name someone will guess the meaning
+of later, and guess wrong.
 
 ### 2. A rename is an alias, not a rewrite
 
@@ -95,6 +95,9 @@ door the check does not guard.
 RFC-0044 sets the same posture for the toolchain: a floor, a policy, and a report rather than a
 surprise. This record is that posture applied to the design system.
 
+The contract check this record leans on is no longer in the tree. Where a rule below says the check
+proves something, it names the proof the rule requires, not a command that runs today.
+
 ## Alternatives considered
 
 **No version, only a changelog.** Rejected: a changelog records what happened; a version states what
@@ -112,16 +115,16 @@ reader the check cannot see.
 - The alias table becomes a real artifact with a removal schedule, not a comment.
 - A major design-system change is a deliberate, listed event rather than an accumulation of small
   renames.
-- The contract check grows two duties: refusing an unread token, and reporting a deprecated one.
+- The token contract grows two duties: refusing an unread token, and reporting a deprecated one.
 
 ## Verification
 
-| Claim                       | Test                                                                       |
-| --------------------------- | -------------------------------------------------------------------------- |
-| No unread token             | `TokenContract.mjs` fails on an orphan token (already enforced)            |
-| A rename keeps the old name | the check reports the alias as deprecated and names its removal version    |
-| A removal is proved         | the check reports zero reads before the name is deleted                    |
-| Deprecation is build-time   | the warning appears in `pnpm run check` output, not in the browser console |
+| Claim                       | Test                                                                    |
+| --------------------------- | ----------------------------------------------------------------------- |
+| No unread token             | every token declared in `Global.css` has a `var()` reader (review rule) |
+| A rename keeps the old name | a report names the alias as deprecated and its removal version (intent) |
+| A removal is proved         | a report of zero reads precedes the deletion (intent)                   |
+| Deprecation is build-time   | a deprecation is reported before the build, not in the console (intent) |
 
 ## Open questions
 

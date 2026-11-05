@@ -13,8 +13,14 @@ defaults and placeholders only: empty `profile`, empty `lists`, no ids.
 Maintain/Configuration/Local/Configuration.local.json
 ```
 
-Override the location with `MAINTAIN_CONFIG` (absolute, or relative to the working directory).
-`config show` always prints the path it resolved.
+Override the location with `MAINTAIN_CONFIG`; `config show` always prints the path it resolved.
+
+Every path in the tool layer resolves in one order: the map's own relative declaration, then the
+`MAINTAIN_*` variable, then the built-in absolute default. A relative path is anchored to the
+repository root - the directory holding `pnpm-workspace.yaml`, found by walking up from the module -
+and never to the working directory, so a command reads the same map, the same store and the same
+collection whichever shell it is typed in. A declaration that only repeats the built-in default is
+not a declaration, so the variable still gets its turn.
 
 A missing map is `no-config`, and the failure carries both the absolute path it expected and the
 exact copy command:
@@ -120,17 +126,19 @@ pnpm maintain config show --list nope  # {"error":"unknown-list","configured":["
 
 | Variable                | Overrides              | Notes                                                             |
 | ----------------------- | ---------------------- | ----------------------------------------------------------------- |
-| `MAINTAIN_CONFIG`       | the map's path         | Absolute, or relative to the working directory                    |
+| `MAINTAIN_CONFIG`       | the map's path         | A relative path is anchored to the repository root                |
 | `MAINTAIN_CDP_PORT`     | `cdp.port`             | Wins over the map; non-numeric values are ignored with a warning  |
-| `MAINTAIN_STORAGE`      | `storage.shadow`       | Points the whole store at a temporary directory for a test        |
+| `MAINTAIN_STORAGE`      | `storage.shadow`       | A relative path is anchored to the repository root                |
 | `MAINTAIN_VOTE_STORAGE` | `storage.vote`         | The same, for the pulled vote counts                              |
+| `MAINTAIN_CONTENT`      | `content.root`         | A relative path is anchored to the repository root                |
 | `MAINTAIN_VOCABULARY`   | the keyword vocabulary | A JSON file of `{ "<slug>": ["term", …] }`; unreadable falls back |
-| `MAINTAIN_RULES`        | the weights file       | Absolute, or relative to the working directory                    |
+| `MAINTAIN_RULES`        | the weights file       | A relative path is anchored to the repository root                |
 | `MAINTAIN_DEBUG`        | -                      | Prints the stack trace of a failure to stderr                     |
 
-Environment beats the file, and the file beats the default. A command that only touches the browser
-(`tab list`, `post extract`) works with no map at all: it warns on stderr and falls back to
-`127.0.0.1:9222`.
+The map's declaration wins, then the variable, then the default - which is why `config init` writing
+the example's own paths leaves `MAINTAIN_STORAGE` and its siblings in charge. A command that only
+touches the browser (`tab list`, `post extract`) works with no map at all: it warns on stderr and
+falls back to `127.0.0.1:9222`.
 
 ### Vocabulary
 
@@ -195,25 +203,19 @@ string is not.
 
 ## Leak audit
 
-The repository is public, so two questions are asked of the tracked tree whenever it changes.
-`Scripts/AuditLeaks.sh` asks both and exits non-zero on any hit:
-
-```bash
-Scripts/AuditLeaks.sh            # the repo this script lives in
-Scripts/AuditLeaks.sh . '^Update\.sh$'
-```
+The repository is public, so two questions are asked of the tracked tree whenever it changes:
 
 1. **No absolute machine paths.** No `file:///` URL, and no `/Users`, `/Volumes` or `/home` prefix
    followed by a name, in a tracked file. Anchored to a letter so documentation that _quotes_ the
-   forbidden form does not fail the check.
+   forbidden form does not trip the question.
 2. **No private origin names.** The wordlist lives in `Maintain/Configuration/Local/Origin.txt` -
    gitignored, because a tracked list of the names you are hiding would itself be the leak. Beside
    it, `Origin.public.txt` names the entries that are _also_ public namespaces (the build
-   toolchain's `@playform/*` npm scope, the conduct contact address); the script subtracts one from
-   the other and greps the difference.
+   toolchain's `@playform/*` npm scope, the conduct contact address); the difference is what gets
+   searched for.
 
-Both files are yours to write; a clone has neither, and the origin half of the audit reports `SKIP`
-rather than pretending to pass.
+Both files are yours to write; a clone has neither, and with no wordlist there is no second question
+to ask.
 
 The same two rules are why the map, the shadow store, the compiled tool layer (`Maintain/Target/`)
 and the compiled site (`/Target/`) are gitignored: each one records something machine-specific or

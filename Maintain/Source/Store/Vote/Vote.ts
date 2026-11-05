@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { fail } from "../../CLI/Parser/Output/Failure.ts";
-import { optional, root } from "../../Configuration/Load/Load.ts";
+import { locate, optional } from "../../Configuration/Load/Load.ts";
 import { DEFAULT_VOTE } from "../../Configuration/Schema/Schema.ts";
 import type { EventKind } from "../../Model/Event/Event.ts";
 import {
@@ -280,14 +280,15 @@ export function open(content: string): VoteStore {
 /**
  * Where `vote sync` parks the counts it pulled.
  *
- * `MAINTAIN_VOTE_STORAGE` exists for the same reason `MAINTAIN_STORAGE` does:
- * a test points the whole store at a temporary directory and proves that a
- * failed sync wrote nothing, without touching the real archive.
+ * `MAINTAIN_VOTE_STORAGE` exists for the same reason `MAINTAIN_STORAGE` does: a
+ * run points the whole store at a temporary directory and proves that a failed
+ * sync wrote nothing, without touching the real archive. The order is the one
+ * `locate` documents - the map's relative declaration, then the variable, then
+ * the absolute default - and a relative path is anchored to this module's own
+ * location, never to the working directory.
  */
 export function voteDirectory(): string {
-	const configured = process.env["MAINTAIN_VOTE_STORAGE"];
-	if (configured !== undefined && configured.length > 0) return resolve(root(), configured);
-	return resolve(root(), optional()?.storage.vote ?? DEFAULT_VOTE_STORAGE);
+	return locate(optional()?.storage.vote, "MAINTAIN_VOTE_STORAGE", DEFAULT_VOTE_STORAGE);
 }
 
 /** One pulled count, written where the site cannot read it. */
