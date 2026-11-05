@@ -17,6 +17,9 @@ import {
 	writeGrant,
 	type Lease,
 } from "./Catalog";
+// The declared set and its one write path. `init` calls the seed and no reducer
+// does, which is why the import is here rather than inside a reducer body.
+import { seedCapabilities } from "./Declarations";
 // This sub-package resolves imports the way the SpacetimeDB module bundler
 // does - without an extension - which is why it is the one place in the
 // repository that does not spell `.ts`.
@@ -40,16 +43,32 @@ import { spacetimedb } from "./Schema";
  * `store publish`, `store hide` and the backfill all go through it.
  *
  * The catalog tables - `capability`, `generation`, `lease`, `probe`, `belief`,
- * `trace` - are written by the reducers at the foot of this file. They keep the
- * archive's rule, an id built from the row's content, and add one of their own:
- * a row that names a generation was written under the generation that is bound
- * now, never under the one the caller still remembers.
+ * `trace` - are written by the reducers at the foot of this file, except
+ * `capability`, which `init` seeds from `Declarations.ts`: a declaration is a
+ * deployment, so it has no reducer a caller could reach. They keep the archive's
+ * rule, an id built from the row's content, and add one of their own: a row that
+ * names a generation was written under the generation that is bound now, never
+ * under the one the caller still remembers.
  */
 
 export default spacetimedb;
 
-export const init = spacetimedb.init((_ctx) => {
-	// Nothing to seed: the archive arrives through `observe`.
+/**
+ * The deployment hook: the one path a `capability` row is written through.
+ *
+ * A declaration is a deployment fact, and `init` is the hook the host runs when
+ * a module is published. It is not a reducer a client can call, so the widening
+ * path - a caller adding the capability its own manifest is then checked
+ * against - does not exist here rather than being guarded somewhere. `bind`
+ * stays a reader of `capability`, and no reducer declares one.
+ *
+ * A republish that keeps its data does not re-run this, so an id added to
+ * `Declarations.ts` after the first publish arrives with `publish
+ * --delete-data` and not with a plain republish: the declarations in the
+ * database are the ones the rows already written were checked against.
+ */
+export const init = spacetimedb.init((ctx) => {
+	seedCapabilities(ctx);
 });
 
 export const onConnect = spacetimedb.clientConnected((_ctx) => {});

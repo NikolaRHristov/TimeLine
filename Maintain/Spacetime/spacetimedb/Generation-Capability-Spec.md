@@ -122,9 +122,15 @@ refuses anything else at registration. `claim` and `renew` reach it through `wri
 `recordTrace` and `reveal` - the reducer the brief called `probe` - call it directly. No reducer
 compares generation ids itself, and no second name for this check exists.
 
-`reveal` takes the generation as a guard rather than a stamp: `probe` has no generation column, so a
-superseded claim is refused before the private value is read, while the receipt records what was
-disclosed and not which interpreter allowed it.
+`reveal` takes the generation as a guard and keeps the helper's answer as a stamp: the caller's
+string is the claim, checked before the private value is read, and the id the helper returns is what
+the `probe` row carries. `probe` is therefore stamped like `trace` and unlike `lease` - the two
+catalog rows whose generation is recorded rather than merely checked - and the two are stamped from
+the same answer, so a receipt and the trace of the act it records cannot disagree about which
+interpreter allowed it. A module with nothing bound writes no receipt at all: `reveal` refuses with
+`unbound-generation`, the refusal `recordTrace` already makes, because a receipt that names a policy
+cannot be written under none. `belief` is the one catalog table with no generation column, and that
+is its own decision: a belief is derived from receipts that already carry theirs.
 
 ## 4. No reducer executes DDL
 
@@ -194,6 +200,9 @@ with `TestClock` for the timestamps. The cases that matter:
 - a bind naming a superseded predecessor is refused.
 - `requireCoherentGeneration` throws for `"1"` once `"2"` exists and returns `"2"` for `"2"`.
 - a write carrying a generation id that was never bound is refused.
+- a reveal writes a receipt whose `generation` is the helper's answer - the same id whether the
+  caller named the latest generation or named none.
+- a reveal in a module with nothing bound writes no receipt and is refused `unbound-generation`.
 
 The coherence cases are written in `Test/Coherence.test.ts`; the bind cases are the ones still to
 write.

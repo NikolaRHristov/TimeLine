@@ -11,12 +11,12 @@ way the host calls them.
 
 ```sh
 cd Maintain/Spacetime/spacetimedb
-node --import ./Test/Support/Register.mjs --test Test/Audience.test.ts   # 22 tests
-npm test                                                                 # 121 tests, whole module
+node --import ./Test/Support/Register.mjs --test Test/Audience.test.ts   # 23 tests
+npm test                                                                 # 123 tests, whole module
 ```
 
 The audited revision is `src/index.ts` at sha256
-`03868332ef692251ed06617fae96b24a91c480e3b492704e73c6ac3e85003625`.
+`8b023c8951d816cf12520f7fdd4b759b3e4bd1ddb3864ed35da904c8e794ce91`.
 
 ---
 
@@ -25,18 +25,19 @@ The audited revision is `src/index.ts` at sha256
 **Criterion 3 - PASS.** Command:
 `node --import ./Test/Support/Register.mjs --test Test/Audience.test.ts`, tests
 `criterion 3: no registered reducer declares an audience-like argument` through
-`criterion 3: no reducer call persists a caller-supplied audience in any table` (14 tests). No
-reducer declares an audience-like parameter, eleven separate spoofing attempts are ignored - seven
+`criterion 3: no reducer call persists a caller-supplied audience in any table` (15 tests). No
+reducer declares an audience-like parameter, twelve separate spoofing attempts are ignored - seven
 argument shapes, a field carried on the prototype chain, a `__proto__` payload, a second identity
-presenting the first one's hex, and the two reducers that write an audience column - and a scan of
-every table after a call through every client-callable reducer finds the spoofed value nowhere.
+presenting the first one's hex, a superseded generation claim, and the two reducers that write an
+audience column - and a scan of every table after a call through every client-callable reducer finds
+the spoofed value nowhere.
 
 **Criterion 4 - PASS** on the stated criterion. Command: the same run, tests
 `criterion 4: every registered reducer declares a unit return type` through
 `criterion 4: a refusal does not name the private lease resource` (8 tests). All thirteen registered
 functions declare a unit return type, all return `undefined` when called, no registration in the
 source contains a value-returning `return`, the catalog tables are private, `my_probe` is the only
-view and is sender-scoped, and a receipt carries the eight receipt columns and neither the evidence
+view and is sender-scoped, and a receipt carries the nine receipt columns and neither the evidence
 nor the lease resource.
 
 Two error-message disclosures were found while auditing; the one in `reveal` is fixed here, the one
@@ -73,6 +74,8 @@ field. The stored row is printed by the test (`[audit] reveal with …`) and ass
 | second identity presenting the first's hex | `audience: <first identity>`                     | the second identity's hex             |
 | `claim` with a holder                      | `holder: "f"×64`                                 | `lease.holder` is the caller's hex    |
 | `recomputeBelief` with an audience         | `audience: "f"×64`                               | `belief.audience` is the caller's hex |
+| `reveal` naming a superseded generation    | `generation: "1"` under `1`, `2` bound           | refused `stale-generation`, no row    |
+| `reveal` naming the latest generation      | `generation: "2"` under `1`, `2` bound           | `probe.generation` is `2`             |
 
 The caller's hex is the module identity (`00…00`, 32 zero bytes) because `TestAuth.internal()`
 resolves to it; the second identity is a JWT-derived one, `c2 00 c1 11 …`, and the spoof is `"f"`
@@ -132,8 +135,11 @@ The checks behind the table:
   procedure, HTTP handler, HTTP route, outbox or row-level security filter is registered, so there
   is no second way into the catalog.
 - **What a probe returns.** The receipt carries `id`, `capability`, `property`, `propertyVersion`,
-  `audience`, `value`, `at` and `ingestedAt`, and nothing else; the private row's `evidence` and
-  `resource` appear in neither the receipt nor the view, both checked against a canary string.
+  `audience`, `value`, `at`, `ingestedAt` and `generation`, and nothing else; the private row's
+  `evidence` and `resource` appear in neither the receipt nor the view, both checked against a
+  canary string. `generation` is the coherence helper's answer rather than the caller's string: a
+  reveal naming a superseded generation is refused before anything is read, and one naming the
+  latest stores what was bound.
 
 ---
 

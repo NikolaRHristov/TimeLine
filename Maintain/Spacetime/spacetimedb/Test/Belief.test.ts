@@ -112,9 +112,9 @@ function Declare(harness: Harness, capability: string = CAPABILITY): void {
  * cares about the copy changes it: a belief that recomputed the truth instead of
  * copying the receipt would then disagree with the fixture on purpose.
  *
- * `generation` is the one a fixture module binds before it discloses. Belief is
- * derived from receipts and never reads it; the column is here because a receipt
- * cannot be written without one.
+ * `generation` is the id the receipt carries in a module that has bound one.
+ * Belief is derived from receipts and never reads it - the column is here
+ * because a receipt cannot be written without it.
  */
 function Receipt(
 	harness: Harness,

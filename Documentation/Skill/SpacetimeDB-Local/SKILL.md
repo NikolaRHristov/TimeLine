@@ -320,8 +320,17 @@ build must never connect to the database, or a static/CI build acquires a live s
   `spacetime sql <db> -s <URL> "select count(*) as n from <table>" --format json` against
   `ls <store>/<Entity> | wc -l` - instead of answering from the schema. A push command's own
   `--dry-run` count is the third number worth quoting.
-- **A publish is an upload, not a migration.** Breaking schema changes need `--delete-data` and
-  destroy rows; publish to a fresh database name while iterating instead.
+- **A publish is an upload, not a migration.** Adding a column to an existing table is refused
+  without a default annotation:
+  `Adding a column <name> to table <table> requires a default value annotation`, then
+  `Aborting because publishing would require manual migration or deletion of data and --delete-data was not specified`.
+  The refusal is structural rather than a backfill question - `t.string().optional()` is refused
+  exactly like `t.string()`, and a table holding zero rows is refused the same way, so an empty
+  table is not a way around it. Two honest routes: `--delete-data` on a database whose rows are
+  rebuildable, or `t.string().default(<value>)` when some value really is the default for rows
+  written before the column existed. A default chosen only to dodge the flag writes a fact that
+  never happened - a receipt stamped with a generation nobody bound - so prefer `--delete-data` and
+  say so. Either way, publish to a fresh database name while iterating.
 - **Do not run the server as a long foreground command.** It never exits; start it in the background
   and health-check with `lsof` or a `spacetime list` call.
 
@@ -351,5 +360,6 @@ build must never connect to the database, or a static/CI build acquires a live s
 | A guard is really guarded                  | negating the guard in a scratch copy fails exactly the tests that name it, and no others                                                                                                           |
 | A refusal precedes the write               | a counted context reports 0 inserts for the refused call and 1 for the accepted one (`Test/Bind.test.ts`)                                                                                          |
 | A stamp round-trips                        | `stampOf(microsOf(s)) === s` for a `ctx.timestamp.toISOString()` value                                                                                                                             |
+| An added column is publishable             | publishing a module whose table gains a column over the previous database either succeeds, or fails with `requires a default value annotation` - it never drops rows silently                      |
 | A deadline past year 9999 is refused       | a reducer given a duration that would cross `STAMP_CEILING` throws; no row holds a `+NNNNNN-…` deadline                                                                                            |
 | A grant is live the moment it is made      | every granted claim satisfies `state === held && expiresAt > acquiredAt` at the claim's own clock, for a one-microsecond lease and a year-long one                                                 |

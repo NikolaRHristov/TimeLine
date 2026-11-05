@@ -983,10 +983,7 @@ test("criterion 3: the receipt carries the bound generation, never the caller's 
 
 	// A claim naming a superseded generation is refused before anything is read,
 	// so the stored column can only ever be the helper's answer.
-	assert.throws(
-		() => Reveal(harness, Request({ generation: "1" })),
-		/stale-generation/,
-	);
+	assert.throws(() => Reveal(harness, Request({ generation: "1" })), /stale-generation/);
 	assert.deepEqual(Receipts(harness), []);
 
 	Reveal(harness, Request({ generation: "2" }));

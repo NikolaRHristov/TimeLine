@@ -257,6 +257,7 @@ test("the catalog tables are declared, and the archive keeps its own names", () 
 			"value",
 			"at",
 			"ingestedAt",
+			"generation",
 		],
 		"the disclosure table is `probe`, and it declares the columns the catalog names",
 	);
