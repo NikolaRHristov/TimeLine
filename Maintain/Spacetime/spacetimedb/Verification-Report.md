@@ -270,3 +270,18 @@ that returned early cannot make the assertion vacuous.
 the criterion passes; the message is still a disclosure that hands one caller another caller's
 identity. It is queued as follow-up work against `claim` alone; the fence and generation logic is
 not in question.
+
+## Superseded revision
+
+The schema has since gained a column. `probe.generation` records the generation a receipt was
+written under, so a receipt now carries nine columns rather than the eight asserted above, and the
+criterion-4 column assertion has to move with it. `reveal` also requires a bound generation, so a
+fixture that binds none is refused at
+`unbound-generation: a receipt names the generation it was allowed under, and none has been bound`
+before the entitlement check is reached - which is a property of the newer revision, not a return of
+the leak.
+
+Neither change touches the F1 fix, which still reads
+`admission-refused: ${audience} holds no live lease on the resource ${args.property} requires`
+(`src/index.ts:911`). Every verdict above was measured at `03868332`; a re-run against the newer
+revision is the epic-boundary pass, not a correction to this record.
