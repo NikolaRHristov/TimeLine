@@ -1,5 +1,6 @@
 // Builders, module exports and the refusal type all live in `spacetimedb/server`.
 import { SenderError, t } from "spacetimedb/server";
+import type { InferSchema, ReducerCtx } from "spacetimedb/server";
 import {
 	currentGrant,
 	extendDeadline,
@@ -558,5 +559,375 @@ export const renew = spacetimedb.reducer(
 			{ ...lease, expiresAt: extendDeadline(base, args.extensionMicros) },
 			{ fence: args.fence, generation: args.generation },
 		);
+	},
+);
+
+/**
+ * The disclosure path.
+ *
+ * A reveal is the one place a private property leaves its table, so the order of
+ * its steps is the security property rather than an implementation detail: a
+ * refusal decided before the private value is read cannot vary with that value,
+ * and the audience is authenticated rather than stated.
+ *
+ * `probe` is both the receipt and the charge. There is no meter table and no
+ * second write - one reveal inserts one row, a replay finds that row and is
+ * refused, and a throw anywhere in the reducer rolls the whole call back, so
+ * there is no state in which a receipt exists and its price was not paid.
+ *
+ * Nothing here is exported except the reducer and the view: the entry file's
+ * named exports are reserved for values registered with SpacetimeDB, so the
+ * helpers below are ordinary functions in the module rather than exports. The
+ * two shared primitives they need - the deadline comparison and the reducer
+ * clock - come from `Catalog`, because a second definition of "live" is a second
+ * answer to the same question.
+ */
+
+/** The module's reducer context, typed by the generated schema. */
+type Ctx = ReducerCtx<InferSchema<typeof spacetimedb>>;
+
+/**
+ * The audience a call is made as: the authenticated identity, in hex.
+ *
+ * Never a role and never an argument. A role is a permission, and a permission
+ * is not a recipient: two senders holding the same role would share a receipt
+ * key, so the second would either be refused having paid nothing or be handed a
+ * disclosure written for someone else. An argument would be worse than a role -
+ * it is a claim, and `ctx.sender` is the only authenticated fact here.
+ */
+function audienceOf(ctx: Ctx): string {
+	return ctx.sender.toHexString();
+}
+
+/**
+ * The standing `audience` holds on `resource` at the reducer's instant: the
+ * highest fence among its live leases, or null when it holds none.
+ *
+ * Liveness is `isLive` from `Catalog` - the same comparison the fenced-write
+ * path uses - rather than a second one that could disagree with it about the
+ * same deadline. The resource is the one the property row declares, so a caller
+ * cannot present a lease on something it happens to hold and read a property it
+ * was never granted.
+ *
+ * A null answer is the role `none`; anything else is `prober`. The role is
+ * computed here and never stored, because it is a permission rather than a
+ * recipient.
+ */
+function standingOf(ctx: Ctx, audience: string, resource: string): bigint | null {
+	const now = nowOf(ctx);
+	let standing: bigint | null = null;
+
+	for (const grant of ctx.db.lease.resource.filter(resource)) {
+		if (grant.holder !== audience || !isLive(grant, now)) continue;
+		if (standing === null || grant.fence > standing) standing = grant.fence;
+	}
+
+	return standing;
+}
+
+/**
+ * The permitted projection of a property row: its name, its version and its
+ * value, as one JSON text.
+ *
+ * `evidence` is deliberately absent, and that absence is the whole function's
+ * purpose: the evidence column exists so that a disclosure computed from the row
+ * has something it must not copy. This is the only place the private value is
+ * read, so what is left out here is left out everywhere.
+ */
+function discloseOf(row: { name: string; version: number; value: string }): string {
+	return JSON.stringify({ name: row.name, version: row.version, value: row.value });
+}
+
+/**
+ * Reveal one property to the caller, at the version it names.
+ *
+ * The reducer is called `reveal`, not `probe`: the `probe` table already owns
+ * that name, and a reducer named `probe` declares an argument object whose type
+ * is also called `Probe`, which the module registry refuses as a duplicate.
+ *
+ * Steps, in this order and no other:
+ *
+ * 1. Reject a malformed request - an empty capability, an empty property, or a
+ *    version below one.
+ * 2. Resolve the audience from `ctx.sender`. There is no audience argument, and
+ *    none may be added: a receipt written in another identity's name is a
+ *    disclosure injected into that identity's belief.
+ * 3. Require the capability declaration, by primary key.
+ * 4. Load the property row and require the version the caller named. A newer
+ *    truth is a different fact and a separate entitlement.
+ * 5. Require a live lease held by the audience on the resource the property row
+ *    declares. This is the entitlement check, and it runs before the private
+ *    value is read.
+ * 6. Refuse a replay, before the private value is read as well: the allowance
+ *    is one reveal per capability, property, version and audience.
+ * 7. Compute the disclosure.
+ * 8. Insert the receipt - and that insert is the charge.
+ *
+ * A refusal at any of steps 1-6 writes nothing and charges nothing, and a throw
+ * anywhere rolls back the call, so pay-and-reveal is all-or-nothing by
+ * construction rather than by discipline.
+ *
+ * The reducer returns nothing. The caller reads what it was told through
+ * `myProbe`, so there is no return value a private value could travel in.
+ */
+export const reveal = spacetimedb.reducer(
+	{
+		/** The capability's id, `<name>@<version>`, not its bare name. */
+		capability: t.string(),
+		/** The property's name, without a version. */
+		property: t.string(),
+		/** The property's own version, which the receipt pins. */
+		propertyVersion: t.u32(),
+		/** `T_event` - when the reading was taken, as the caller states it. */
+		at: t.string(),
+	},
+	(ctx, args) => {
+		if (args.capability.length === 0) {
+			throw new SenderError("admission-refused: a reveal needs a capability id");
+		}
+
+		if (args.property.length === 0) {
+			throw new SenderError("admission-refused: a reveal needs a property name");
+		}
+
+		if (args.propertyVersion < 1) {
+			throw new SenderError(
+				`admission-refused: a property version starts at 1, not ${args.propertyVersion}`,
+			);
+		}
+
+		// The audience is the caller's identity and nothing the caller said.
+		const audience = audienceOf(ctx);
+
+		if (ctx.db.capability.id.find(args.capability) === null) {
+			throw new SenderError(
+				`admission-refused: ${args.capability} is not a declared capability`,
+			);
+		}
+
+		const row = ctx.db.property.id.find(`${args.capability}:${args.property}`);
+
+		if (row === null) {
+			throw new SenderError(
+				`admission-refused: ${args.capability} declares no property ${args.property}`,
+			);
+		}
+
+		if (row.version !== args.propertyVersion) {
+			throw new SenderError(
+				`admission-refused: ${args.property} is at version ${row.version}, not ${args.propertyVersion}`,
+			);
+		}
+
+		// The entitlement check, and the last step before anything private is
+		// read. A caller with no live lease on the resource the property
+		// declares is refused here, so two worlds differing only in a protected
+		// value produce the same transcript for that caller.
+		if (standingOf(ctx, audience, row.resource) === null) {
+			throw new SenderError(
+				`admission-refused: ${audience} holds no live lease on ${row.resource}, which ${args.property} requires`,
+			);
+		}
+
+		// The allowance. The primary key is the guarantee - it serialises two
+		// racing reveals, so the loser's transaction aborts - and this find only
+		// turns that abort into a clean refusal.
+		const id = `${args.capability}:${args.property}:${args.propertyVersion}:${audience}`;
+
+		if (ctx.db.probe.id.find(id) !== null) {
+			throw new SenderError(
+				`budget-exhausted: ${args.property} at version ${args.propertyVersion} was already revealed to ${audience}`,
+			);
+		}
+
+		// The private value is read here, after every refusal has been decided.
+		const value = discloseOf(row);
+
+		// One write, and it is the charge. There is nothing after it that can
+		// fail independently of it.
+		ctx.db.probe.insert({
+			id,
+			capability: args.capability,
+			property: args.property,
+			propertyVersion: args.propertyVersion,
+			audience,
+			value,
+			at: args.at,
+			ingestedAt: nowOf(ctx),
+		});
+	},
+);
+
+/**
+ * The row a caller reads its own receipts as.
+ *
+ * Named for the disclosure rather than for the view: a named output type must
+ * not reuse the generated PascalCase name of its accessor, which is `MyProbe`.
+ */
+const ProbeDisclosure = t.object("ProbeDisclosure", {
+	id: t.string(),
+	capability: t.string(),
+	property: t.string(),
+	propertyVersion: t.u32(),
+	audience: t.string(),
+	value: t.string(),
+	at: t.string(),
+	ingestedAt: t.string(),
+});
+
+/**
+ * What the caller itself was told.
+ *
+ * `probe` is private, and a reducer returns nothing, so this view is the read
+ * path - and being keyed on `ctx.sender` it is also the only one: a caller sees
+ * the receipts written for its own identity and no others. Nothing here joins a
+ * receipt to the property table, because that join would silently authorize
+ * every future change of the truth; a receipt states what was learned at the
+ * version it names.
+ */
+export const myProbe = spacetimedb.view(
+	{ name: "my_probe", public: true },
+	t.array(ProbeDisclosure),
+	(ctx) => [...ctx.db.probe.audience.filter(ctx.sender.toHexString())],
+);
+
+/**
+ * The order two receipts are compared in when a belief has to choose one.
+ *
+ * Highest `propertyVersion` first, then `property` by code unit, then `id`. Every
+ * key here is written by the module: `at` is excluded because it is the caller's
+ * claim about when the reading was taken, and `localeCompare` is excluded because
+ * its answer depends on the host's collation - a replay on another host has to
+ * choose the same receipt as the first run.
+ *
+ * `id` is the last key so the comparison is total by construction rather than by
+ * an argument about uniqueness, even though two receipts inside one scope cannot
+ * share a property and a version.
+ */
+function compareReceipts(
+	a: { id: string; property: string; propertyVersion: number },
+	b: { id: string; property: string; propertyVersion: number },
+): number {
+	if (a.propertyVersion !== b.propertyVersion) return b.propertyVersion - a.propertyVersion;
+	if (a.property !== b.property) return a.property < b.property ? -1 : 1;
+	if (a.id === b.id) return 0;
+	return a.id < b.id ? -1 : 1;
+}
+
+/**
+ * Recompute the caller's own belief about one capability.
+ *
+ * A belief is derived state: one row `<audience>:<capability>`, computed from that
+ * audience's own receipts and from no other table. It is disposable - deleting the
+ * row loses nothing a recompute cannot restore - which is what makes it a cache
+ * rather than a fact. Nothing else in the module writes `belief`: `reveal` records
+ * a receipt and leaves the derivation here, because two writers for one derived row
+ * is the drift the single-writer rule exists to prevent.
+ *
+ * The audience is `ctx.sender`, exactly as in `reveal`, and there is no audience
+ * argument for the same reason: a caller-supplied audience would let one actor
+ * recompute a belief in another identity's name. The scope is one row, so the only
+ * rows this reducer touches are that row and the receipts that feed it.
+ *
+ * Determinism. Every derived column is a function of the receipts, so two runs on
+ * unchanged receipts leave one identical row:
+ *
+ * - `id` is `<audience>:<capability>` - the scope itself, not a counter, a clock
+ *   reading or an auto-increment, so the same scope is always the same key.
+ * - `value` is the `value` of the receipt `compareReceipts` puts first: highest
+ *   `propertyVersion`, then `property`, then `id`. It is copied, never recomputed
+ *   from `property`, so a belief can only ever restate a disclosure that already
+ *   left the private table through `reveal`.
+ * - `confidence` is `n / (n + 1)` for the `n` receipts in scope, rounded once
+ *   through `Math.fround` to the width the `f32` column stores. Without that
+ *   rounding the value read back would differ from the value computed here for
+ *   almost every `n`, and the equality test below would rewrite the row on every
+ *   call - an idempotent reducer that looks like a failing one.
+ * - `at` is the derivation stamp, `ctx.timestamp.toISOString()`. The row is
+ *   written only when the derivation differs from the row already stored, so a
+ *   replay on unchanged receipts rewrites nothing and leaves `at` where the
+ *   content last changed - the rule `recordTrace` follows for a restated act. A
+ *   delete followed by a recompute restores every derived column and restamps
+ *   `at` to the instant of that recompute, because `at` is `T_ingest`: the moment
+ *   the row was computed, not the moment the evidence was.
+ *
+ * Atomicity. SpacetimeDB runs a reducer as one transaction, and this reducer's
+ * writes all sit inside that boundary: the delete and the insert are never
+ * observable apart, because committed state is the only state any reader sees.
+ * A throw anywhere - including after the delete - rolls the whole call back, so
+ * there is no state in which the old belief is gone and the new one was never
+ * written. `belief` is private as well, so no subscriber can be watching the row
+ * while it is rebuilt.
+ *
+ * Disclosure. The reducer returns nothing, so no return value can carry a private
+ * value, and the helper it calls answers with a comparison and nothing else. The
+ * only private table it opens is `capability`, by primary key, to refuse a belief
+ * about a capability that was never declared; it never opens `property`, because
+ * a belief computed from the truth table would be a second disclosure path and
+ * the receipt is the one that was paid for.
+ *
+ * With no receipts in scope there is no belief: the row is deleted and nothing is
+ * written, because a belief with no observation behind it is a guess this module
+ * did not make.
+ */
+export const recomputeBelief = spacetimedb.reducer(
+	{
+		/** The capability's id, `<name>@<version>`, not its bare name. */
+		capability: t.string(),
+	},
+	(ctx, args) => {
+		if (args.capability.length === 0) {
+			throw new SenderError("admission-refused: a belief recompute needs a capability id");
+		}
+
+		const audience = audienceOf(ctx);
+
+		if (ctx.db.capability.id.find(args.capability) === null) {
+			throw new SenderError(
+				`admission-refused: ${args.capability} is not a declared capability`,
+			);
+		}
+
+		// The scope: this audience's receipts for this capability, and nothing
+		// else. The audience index is the narrower of the two single-column
+		// scans - a caller's own receipts are a handful - and the capability
+		// predicate narrows inside it.
+		const receipts = [...ctx.db.probe.audience.filter(audience)].filter(
+			(receipt) => receipt.capability === args.capability,
+		);
+
+		const id = `${audience}:${args.capability}`;
+		const known = ctx.db.belief.id.find(id);
+
+		// No receipts, no belief. A stale row is removed rather than left to
+		// describe evidence that is no longer there.
+		if (receipts.length === 0) {
+			if (known !== null) ctx.db.belief.id.delete(id);
+			return;
+		}
+
+		receipts.sort(compareReceipts);
+
+		const value = receipts[0].value;
+		const confidence = Math.fround(receipts.length / (receipts.length + 1));
+
+		// Unchanged derivation: the stored row already states it, and rewriting
+		// it would only move `at`. That is what makes a second run a no-op
+		// rather than a re-stamp.
+		if (known !== null && known.value === value && known.confidence === confidence) return;
+
+		// The rebuild. One scope, so the delete cannot expose a set of rows
+		// half-replaced; one transaction, so the delete and the insert below
+		// commit together or not at all.
+		if (known !== null) ctx.db.belief.id.delete(id);
+
+		ctx.db.belief.insert({
+			id,
+			audience,
+			capability: args.capability,
+			value,
+			confidence,
+			at: ctx.timestamp.toISOString(),
+		});
 	},
 );

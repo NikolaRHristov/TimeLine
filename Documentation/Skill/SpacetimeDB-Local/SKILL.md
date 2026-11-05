@@ -250,6 +250,17 @@ build must never connect to the database, or a static/CI build acquires a live s
   `null` is accepted but means _none_ - so a value sent as `null` succeeds with the field silently
   dropped. The wire shape is `{"some":"<value>"}` for a value and `null` for none; check the
   parameter index the error names.
+- **A reducer's argument list is positional on the CLI, optional arguments included.** Omitting an
+  optional one fails with `invalid length <n>, expected reducer args for <name> with <m> elements`,
+  so it has to be passed explicitly as `null`. `spacetime describe <db> reducers --server <URL>`
+  prints the wire signature with the optional argument still in place - read the arity there rather
+  than from the TypeScript, where `optional()` reads like a shorter call.
+- **A reducer cannot share a table's name.** A reducer named `probe` declares an argument object
+  typed `Probe`, and a module holding both fails to publish with
+  `name 'Probe' is used for multiple types`. `spacetime build` passes regardless, because the
+  collision is in the module registry rather than the TypeScript. Name the reducer for the act
+  (`reveal`, not `probe`) and prove registration with `spacetime describe <db> reducers` and
+  `... views`, which is also the only check that a view's name and return type reached the engine.
 - **A result's option column is a tagged pair, and the tags run the other way.** `select` returns
   `[0, "<value>"]` for a value and `[1, []]` for none. Decoding `0` as none turns every optional
   column into `null` with no error anywhere: the rows still arrive, the counts still match, and the

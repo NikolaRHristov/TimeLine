@@ -112,10 +112,9 @@ another reducer would refuse to stamp.
 ## 2. The digest, and the capability list
 
 - **The digest is opaque.** It is the composition root's own name for the manifest it bound. The
-  module never parses, recomputes, normalises or compares it
-  (`Generation-Capability-Spec.md` §2; `Agentic/Crate/SpacetimeCatalog/Source/Struct/Bind.rs`
-  documents `Digest` as opaque for the same reason: a canonical form would be a second convention to
-  keep).
+  module never parses, recomputes, normalises or compares it (`Generation-Capability-Spec.md` §2;
+  `Agentic/Crate/SpacetimeCatalog/Source/Struct/Bind.rs` documents `Digest` as opaque for the same
+  reason: a canonical form would be a second convention to keep).
 - **It carries no mapping to capability rows.** A digest names a manifest, not its parts, so
   `capabilities` is an argument. A reducer that "resolved which capabilities the digest names" would
   be inventing a format for a value the caller defined; there is no such resolver in this module and
@@ -130,14 +129,15 @@ another reducer would refuse to stamp.
   capability is declared, which is a lookup; comparing a port's contract digest is a reader's
   question (`Generation-Capability-Spec.md` §2).
 - **Duplicates are refused, not collapsed.** Sorting and deduplicating first and refusing when the
-  length changed is the reference rule
-  (`Agentic/Crate/SpacetimeCatalog/Source/Fn/Bind.rs:30-36`): a manifest that names one capability
-  twice is not a manifest this module can read, and silently collapsing it would hide that.
+  length changed is the reference rule (`Agentic/Crate/SpacetimeCatalog/Source/Fn/Bind.rs:30-36`): a
+  manifest that names one capability twice is not a manifest this module can read, and silently
+  collapsing it would hide that.
 - **The validated list is not stored.** `generation` has four columns and no `capabilities`
   (`src/Schema.ts:155-167`). Writing a `trace` row under kind `generation.bound` is the option that
   needs no schema change, and it is deliberately not taken: this reducer's contract is one insert,
   and a second write would make "appends exactly one row" untrue. A `capabilities` column is an
-  `Maintain/Source/Model/Schema/Entities.ts` edit plus a regeneration, and belongs in its own change.
+  `Maintain/Source/Model/Schema/Entities.ts` edit plus a regeneration, and belongs in its own
+  change.
 
 ---
 
@@ -147,17 +147,15 @@ Two exports, both from `Maintain/Spacetime/spacetimedb/src/Catalog.ts`:
 
 ```ts
 export function latestGeneration(ctx: Context): string | null;
-export function requireCoherentGeneration(
-	ctx: Context,
-	generation?: string | null,
-): string | null;
+export function requireCoherentGeneration(ctx: Context, generation?: string | null): string | null;
 ```
 
 - **Declarations** - `src/Catalog.ts:280` and `src/Catalog.ts:325`.
 - **Return** - the latest bound generation id, or `null` when nothing is bound.
 - **Throws** - `stale-generation: the write names generation X, the latest bound generation is Y`
-  (`src/Catalog.ts:336-340`), and `unbound-generation: nothing has been bound, so X cannot be the
-  latest generation` (`src/Catalog.ts:330-334`).
+  (`src/Catalog.ts:336-340`), and
+  `unbound-generation: nothing has been bound, so X cannot be the latest generation`
+  (`src/Catalog.ts:330-334`).
 - **Read-only** - `latestGeneration` only iterates `generation` (`src/Catalog.ts:284-295`); the
   check performs no insert, update, delete or DDL.
 - **Not in `index.ts`** - the entry file's named exports are reserved for values SpacetimeDB
@@ -169,8 +167,8 @@ export function requireCoherentGeneration(
 - **Before the insert, on the predecessor.** A named predecessor must be the latest bound
   generation, or the bind is a fork of a history that has already moved on. That call is what makes
   two binds naming the same predecessor a compare-and-swap rather than a fork: the database
-  serialises them and the second finds the first one's successor
-  (`Generation-Capability-Spec.md` §3; `Source/Fn/Bind.rs:42-66`).
+  serialises them and the second finds the first one's successor (`Generation-Capability-Spec.md`
+  §3; `Source/Fn/Bind.rs:42-66`).
 - **After the insert, on the id just written.** `requireCoherentGeneration(ctx, id)` must answer
   `id`. It cannot fail in a correct reducer, and it is kept because it asserts the row this reducer
   appended is the generation every other reducer will now accept; a throw here rolls the insert back
@@ -213,10 +211,11 @@ Each is a fact about the code above, and each changes what the implementing chan
   There is no auto-increment: `id` is `t.string().primaryKey()` with no `.autoInc()`
   (`src/Schema.ts:159`), and the id is computed from the predecessor (`src/Schema.ts:158`).
 - **"Compute `policyChanged` by comparing against the previous generation."** There is nothing to
-  compare against: the table carries no policy column, and `Maintain/Source/Model/Schema/Entities.ts:599-601`
-  states that the column is carried rather than derived by diffing two manifests, because "the
-  successor is the only place that knows whether the admission policy moved". It is an argument
-  (`policyChanged: t.bool()`) and the reducer stores it verbatim.
+  compare against: the table carries no policy column, and
+  `Maintain/Source/Model/Schema/Entities.ts:599-601` states that the column is carried rather than
+  derived by diffing two manifests, because "the successor is the only place that knows whether the
+  admission policy moved". It is an argument (`policyChanged: t.bool()`) and the reducer stores it
+  verbatim.
 - **"Refuse with a silent early return."** The archive reducers return early on a replay
   (`src/index.ts:150`, `src/index.ts:172`), which is right for a replay and wrong here: a caller
   that sent an undeclared capability would be told it succeeded. Every refusal in `bind` is a
@@ -237,11 +236,11 @@ One gap decides whether any bind can succeed at all:
 ## 6. What a test has to prove
 
 Harness: `createModuleTestHarness(schema, moduleExports)` and `TestAuth.internal()` from
-`spacetimedb/server/test-utils`, `Timestamp` from `spacetimedb`
-(`Test/Lease.test.ts:20-22`, `Test/Lease.test.ts:57`, `Test/Lease.test.ts:61`).
+`spacetimedb/server/test-utils`, `Timestamp` from `spacetimedb` (`Test/Lease.test.ts:20-22`,
+`Test/Lease.test.ts:57`, `Test/Lease.test.ts:61`).
 
-- **Call a reducer the way the host does** - `harness.withReducerTx(Caller, (ctx) => Catalog.bind(ctx, args))`
-  (`Test/Lease.test.ts:72-74`).
+- **Call a reducer the way the host does** -
+  `harness.withReducerTx(Caller, (ctx) => Catalog.bind(ctx, args))` (`Test/Lease.test.ts:72-74`).
 - **Seed capability rows the same way** - through a reducer transaction, exactly as
   `Test/Coherence.test.ts:44-59` seeds `generation` rows.
 - **Move time only with `harness.clock.set(new Timestamp(...))`**, and assert `boundAt` against it
@@ -254,8 +253,8 @@ Harness: `createModuleTestHarness(schema, moduleExports)` and `TestAuth.internal
 
 Cases, restated from `Agentic/Crate/SpacetimeCatalog/Test/Rules.rs`:
 
-- A first bind appends `"1"` at the module's clock: one row, the digest recorded, `policyChanged`
-  as sent (`Rules.rs:129-155`).
+- A first bind appends `"1"` at the module's clock: one row, the digest recorded, `policyChanged` as
+  sent (`Rules.rs:129-155`).
 - A manifest naming an undeclared capability is refused, the message names the capability, and
   `generation` is deep-equal before and after (`Rules.rs:158-176`).
 - A successor appends `"2"` and leaves `"1"` byte-identical (`Rules.rs:179-222`).
