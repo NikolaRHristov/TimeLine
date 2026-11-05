@@ -27,8 +27,8 @@
  * translates both, and is passed with `--import` exactly as the module's own
  * `test` script passes it.
  *
- * Exit 0 every test passed, 1 a test failed, the module is not installed, or
- * the module carries no test file.
+ * Exit 0 every test passed, 1 a test failed, the module is not installed, the
+ * module carries no test file, or the suite never finishes.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
@@ -165,13 +165,39 @@ const Run = spawnSync(
 	},
 );
 
+/**
+ * A wedged suite must read as a wedged suite. `spawnSync` reports its own
+ * timeout as an error (`ETIMEDOUT`) rather than as a signal, so the two are
+ * told apart here instead of one being reported as a failure to start.
+ */
 if (Run.error !== undefined) {
-	Line("FAIL", `the suite could not be started: ${Run.error.message}`);
+	const Wedged = Run.error.code === "ETIMEDOUT";
+
+	Line(
+		"FAIL",
+		Wedged
+			? `the suite did not finish within ${SuiteTimeout}ms`
+			: `the suite could not be started: ${Run.error.message}`,
+	);
+
+	if (Wedged) {
+		Detail([
+			"A synchronous loop or a live handle in one of the files above keeps the run from",
+			"ending; the whole file is then killed, so its assertions are never reported.",
+			"Run it alone to see it: `cd Maintain/Spacetime/spacetimedb &&",
+			"node --import ./Test/Support/Register.mjs Test/<Name>.test.ts`.",
+		]);
+	}
+
+	process.stdout.write("---\n");
+	process.stdout.write("RESULT module wedged\n");
 	process.exit(1);
 }
 
 if (Run.signal !== null) {
 	Line("FAIL", `the suite was killed by ${Run.signal} after ${SuiteTimeout}ms`);
+	process.stdout.write("---\n");
+	process.stdout.write("RESULT module wedged\n");
 	process.exit(1);
 }
 

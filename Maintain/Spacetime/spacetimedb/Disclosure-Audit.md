@@ -26,8 +26,10 @@ The audited revision is `src/index.ts` at sha256
 `node --import ./Test/Support/Register.mjs --test Test/Audience.test.ts`, tests
 `criterion 3: no registered reducer declares an audience-like argument` through
 `criterion 3: no reducer call persists a caller-supplied audience in any table` (14 tests). No
-reducer declares an audience-like parameter, nine separate spoofing shapes are ignored, and a scan
-of every table after a call through every client-callable reducer finds the spoofed value nowhere.
+reducer declares an audience-like parameter, eleven separate spoofing attempts are ignored - seven
+argument shapes, a field carried on the prototype chain, a `__proto__` payload, a second identity
+presenting the first one's hex, and the two reducers that write an audience column - and a scan of
+every table after a call through every client-callable reducer finds the spoofed value nowhere.
 
 **Criterion 4 - PASS** on the stated criterion. Command: the same run, tests
 `criterion 4: every registered reducer declares a unit return type` through
