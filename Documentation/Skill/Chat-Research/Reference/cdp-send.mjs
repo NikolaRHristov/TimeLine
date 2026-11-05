@@ -1,16 +1,11 @@
-#!/usr/bin/env node
 /**
  * Type into the composer of a tab this process was given, then press Submit.
  *
- * Input goes through the CDP Input domain rather than `el.click()`: the composer
- * is a contenteditable that only accepts real input events, and the submit
- * control is a real <button> that the page enables once text lands.
+ * Input goes through the CDP Input domain rather than `el.click()`: the
+ * composer is a contenteditable that only accepts real input events, and the
+ * submit control is a real <button> that the page enables once text lands.
  *
  *   node cdp-send.mjs <ws-url> "<text>"
- *
- * Exit 0 only when the composer is empty afterwards - `sent: true` is the check,
- * not the click. Exit 1 when the composer still holds text, 2 when the driver
- * could not run.
  */
 const [WsUrl, Text] = process.argv.slice(2);
 
@@ -120,6 +115,50 @@ if (!Before.composer) {
 	process.exit(2);
 }
 
+// Search mode is mandatory. A composer that cannot be put into Search is a
+// composer this driver does not understand, and an answer from the agent mode is
+// a different answer that looks exactly like a right one - so refuse, don't send.
+const Mode = () =>
+	Evaluate(`(() => {
+		const Toggles = [...document.querySelectorAll("[data-command-menu-control] button")].map((Button) => {
+			const Box = Button.getBoundingClientRect();
+			return {
+				label: (Button.getAttribute("aria-label") ?? "").toLowerCase(),
+				pressed: Button.getAttribute("aria-pressed") === "true",
+				at: { x: Math.round(Box.x + Box.width / 2), y: Math.round(Box.y + Box.height / 2) },
+			};
+		});
+		return JSON.stringify({ toggles: Toggles });
+	})()`);
+
+const Pressed = (Toggles, Label) =>
+	Toggles.find((Toggle) => Toggle.label === Label)?.pressed === true;
+
+let Toggles = JSON.parse(await Mode()).toggles;
+if (Toggles.length === 0) {
+	console.error(
+		"blocker: no Search/Computer toggle in this composer; an unknown mode is not sent from",
+	);
+	process.exit(2);
+}
+const Search = Toggles.find((Toggle) => Toggle.label === "search");
+if (Search === undefined) {
+	console.error("blocker: the composer has a toggle group but no Search control; not sending");
+	process.exit(2);
+}
+if (!Pressed(Toggles, "search") || Pressed(Toggles, "computer")) {
+	await Click(Search.at);
+	await sleep(700);
+	Toggles = JSON.parse(await Mode()).toggles;
+	if (!Pressed(Toggles, "search") || Pressed(Toggles, "computer")) {
+		console.error(
+			`blocker: Search mode did not take (search=${Pressed(Toggles, "search")}, computer=${Pressed(Toggles, "computer")}); not sending from Computer mode`,
+		);
+		process.exit(2);
+	}
+}
+console.log(`mode: search`);
+
 await Click(Before.composer);
 // Replace whatever is already in the composer rather than appending to it:
 // `insertText` types at the caret, so a leftover draft would be concatenated.
@@ -144,7 +183,7 @@ if (Typed.submit === null || Typed.submit.disabled) {
 	console.error(
 		"blocker: the submit control did not enable after typing; not clicking a dead button",
 	);
-	process.exit(2);
+	process.exit(1);
 }
 
 await Click(Typed.submit.at);

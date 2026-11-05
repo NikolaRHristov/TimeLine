@@ -294,14 +294,19 @@ export function latestGeneration(ctx: Context): string | null {
  * answer with the latest so the caller can record which generation it wrote
  * under.
  *
- * This is the single implementation of invariant 1. `bind` calls it after its
- * own append, and `claim`, `renew`, `probe` and `recordTrace` call it before
- * theirs; none of them compares generation ids itself.
+ * This is the single implementation of invariant 1. `recordTrace` calls it
+ * before its insert, and `claim` and `renew` reach it through `writeGrant`;
+ * every reducer that writes a row naming a generation must call it before that
+ * write, and none of them may compare generation ids itself. Two definitions of
+ * "latest" are two answers that will eventually differ.
  *
- * `index.ts` still carries a second copy of this check,
- * `assertLatestBoundGeneration`, written before this module existed. It must be
- * deleted in favour of a call to this function, not kept beside it: two
- * definitions of "latest" are two answers that will eventually differ.
+ * It lives here rather than in `index.ts` because the entry file's named exports
+ * are reserved for values registered with SpacetimeDB: the runtime walks every
+ * named export and throws `TypeError: exporting something that is not a
+ * spacetime export` for anything else, so a helper exported from there fails the
+ * module at registration rather than merely reading badly. A helper no test can
+ * import is a refusal that can only be argued, never shown, so the check belongs
+ * in a module that both `index.ts` and `Test/` import.
  *
  * A write that names **no** generation is not stale. It is evaluated inside one
  * transaction, so the latest at that instant is the generation it is made under
