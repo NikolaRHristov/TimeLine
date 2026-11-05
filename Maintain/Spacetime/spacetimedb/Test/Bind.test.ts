@@ -15,6 +15,11 @@
 // passes because `bind` writes nothing on any input proves nothing about the
 // validation, so the same file shows a declared manifest appending exactly one
 // row.
+//
+// The second half of the contract is about the pointer rather than the
+// manifest: `bind` is itself a write that names the generation it was made
+// under, so a bind whose predecessor is no longer the latest is refused by the
+// shared coherence helper instead of forking the history beside it.
 
 // The module's tsconfig carries no node types: this file is run by node with its
 // own loader (`Test/Support/Register.mjs`), not bundled into the module. The
@@ -340,6 +345,115 @@ test("a successor appends one row and leaves its predecessor untouched", () => {
 		policyChanged: false,
 	});
 	assert.equal(Latest(harness), "2");
+});
+
+// ---------------------------------------------------------- stale generations
+//
+// `bind` is the one reducer that moves the pointer, and it is also a write that
+// names the generation it was made under. A composition root bound with
+// generation 1 that comes back after generation 2 was bound is the case the
+// helper exists for: the row it would append is a fork beside the history
+// already there. The refusal is the helper's own, which is why the message
+// names both ids rather than saying "not the latest".
+//
+// The control for this section is the successor case above: the same call with
+// `previous: "1"` is accepted while 1 is the latest, so a refusal that fired on
+// every predecessor would fail there instead of passing here.
+
+test("a bind naming a superseded predecessor is refused, names both ids, and writes nothing", () => {
+	const harness = Setup();
+
+	Bind(harness, Manifest());
+	Bind(harness, Manifest({ previous: "1", manifestDigest: "sha256:second" }));
+
+	const before = Snapshot(harness);
+
+	assert.equal(Latest(harness), "2");
+
+	// Generation 1 is a real generation and is no longer the latest one, so the
+	// refusal is staleness rather than an unknown predecessor.
+	assert.throws(
+		() => Bind(harness, Manifest({ previous: "1", manifestDigest: "sha256:third" })),
+		/stale-generation: the write names generation 1, the latest bound generation is 2/,
+	);
+
+	assert.equal(Snapshot(harness), before);
+	assert.equal(Latest(harness), "2");
+
+	const rows = [...harness.db.generation.iter()].sort((left, right) =>
+		left.id.localeCompare(right.id),
+	);
+
+	assert.deepEqual(
+		rows.map((row) => row.id),
+		["1", "2"],
+	);
+});
+
+test("a bind naming a predecessor that was never bound is refused as stale, not accepted", () => {
+	const harness = Setup();
+
+	Bind(harness, Manifest());
+
+	const before = Snapshot(harness);
+
+	assert.throws(
+		() => Bind(harness, Manifest({ previous: "9" })),
+		/stale-generation: the write names generation 9, the latest bound generation is 1/,
+	);
+
+	assert.equal(Snapshot(harness), before);
+	assert.equal(Latest(harness), "1");
+});
+
+test("a second bind naming no predecessor cannot open a second history", () => {
+	const harness = Setup();
+
+	Bind(harness, Manifest());
+
+	const before = Snapshot(harness);
+
+	// Naming no predecessor is the opening bind. The history is already open,
+	// so the call is refused before an id is computed: a second "1" would
+	// collide with the row already there, and any other id would start a
+	// parallel sequence the latest-generation derivation would have to choose
+	// between.
+	assert.throws(
+		() => Bind(harness, Manifest()),
+		/admission-refused: generation 1 is already bound, so a bind naming no predecessor cannot open a second history/,
+	);
+
+	assert.equal(Snapshot(harness), before);
+	assert.equal(Latest(harness), "1");
+});
+
+test("a stale predecessor is refused before the append, not rolled back after it", () => {
+	const harness = Setup();
+
+	Bind(harness, Manifest());
+	Bind(harness, Manifest({ previous: "1" }));
+
+	let inserts = 0;
+
+	// The snapshot cases above cannot see ordering: `withReducerTx` aborts the
+	// transaction, so a reducer that appended first and compared second would
+	// leave the same rows. This counts the writes that reached the datastore,
+	// and a stale bind must reach none of them.
+	assert.throws(
+		() =>
+			harness.withReducerTx(Caller, (ctx) => {
+				const counted = CountedContext(ctx);
+
+				try {
+					return Catalog.bind(counted.ctx, Manifest({ previous: "1" }));
+				} finally {
+					inserts = counted.inserts();
+				}
+			}),
+		/stale-generation: the write names generation 1, the latest bound generation is 2/,
+	);
+
+	assert.equal(inserts, 0);
 });
 
 test("boundAt is the module's clock, not a value the caller supplies", () => {
