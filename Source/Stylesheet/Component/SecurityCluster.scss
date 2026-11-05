@@ -87,7 +87,7 @@
 
 	// The open states are square and stay at the muted ink: on the void ground a
 	// line token is 1.4:1, which is the same failure the paper ramp has with
-	// #d4d4d4 - a mark that is not there.
+	// `--color-line-strong` - a mark that is not there.
 	&__mark[data-state="absent"] &__mark-shape {
 		border-style: dashed;
 		border-radius: 0;

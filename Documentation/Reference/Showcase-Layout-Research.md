@@ -26,10 +26,9 @@ dispersion was designed against the composition's own rhythm instead.
 
 ## What each page does
 
-**`deepseek.com/en/harness`** - three sections, six blocks. One hero claim
-(`Ready to use. Right now.`), then a single section heading (_Expanding capabilities. Work on your
-terms._) over four feature blocks, then a developer-experience section over two, then an ecosystem
-close.
+**`[vendor]/en/harness`** - three sections, six blocks. One hero claim (`Ready to use. Right now.`),
+then a single section heading (_Expanding capabilities. Work on your terms._) over four feature
+blocks, then a developer-experience section over two, then an ecosystem close.
 
 The pattern: **one claim, one heading, four blocks.** The section heading carries the argument and
 the blocks are evidence, so no block needs a sentence of context above it.
@@ -62,7 +61,7 @@ one is read rather than scanned.
 The composition's showcase surface (`Source/Component/Showcase/Spread.astro`, RFC-0053) is the four
 patterns combined:
 
-- **one hero claim** from the DeepSeek page, with nothing under it but air;
+- **one hero claim** from the [vendor] page, with nothing under it but air;
 - **six boxes**, one per capability - the rail, the drawer, the seam, the canvas, the network, a
   motion - each an eyebrow, a heading and one sentence;
 - **three closing pillars** - Authenticated, Encrypted, Authorised - which are the swimlane steps

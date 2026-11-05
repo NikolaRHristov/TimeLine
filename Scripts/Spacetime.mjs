@@ -78,9 +78,9 @@ function Preflight() {
 		};
 	}
 
-	const Sdk = join(Module, "node_modules", "spacetimedb", "package.json");
+	const SDK = join(Module, "node_modules", "spacetimedb", "package.json");
 
-	if (!existsSync(Sdk)) {
+	if (!existsSync(SDK)) {
 		return {
 			Failure: `${Shown(join(Module, "node_modules", "spacetimedb"))} is missing: the module's own dependencies are not installed.`,
 			Detail: [

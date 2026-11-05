@@ -250,7 +250,7 @@
 
 	// A dashed or dotted border cannot hold a corner radius - the radius eats the
 	// corner mark - so the two open states are square. The stroke stays at the
-	// muted ink rather than a line token: a 1px line at #d4d4d4 is 1.5:1 on the
+	// muted ink rather than a line token: a 1px line at `--color-line-strong` is 1.5:1 on the
 	// paper and reads as no mark at all, which is the failure the shape exists to
 	// avoid.
 	&__step[data-state="absent"] &__mark {

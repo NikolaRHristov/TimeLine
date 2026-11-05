@@ -52,8 +52,12 @@ Declared private. Columns, as `spacetime describe … tables probe` reports them
   row the private value was read from.
 - **`at`** - `String`. `T_event` - when the reading was taken, as the caller states it.
 - **`ingestedAt`** - `String`. `T_ingest` - `ctx.timestamp.toISOString()`. The card that
-  commissioned this note listed seven columns; the declared table has eight, and the eighth is the
+  commissioned this note listed seven columns; the declared table has nine, and the eighth is the
   receipt for the caller's own clock claim. Its difference from `at` is the ingestion lag.
+- **`generation`** - `String`. The generation the disclosure was allowed under, as the coherence
+  helper answered - never the caller's string. A receipt that says what was disclosed but not which
+  interpreter permitted it is not evidence of a policy, so a module with nothing bound has nothing
+  to write here.
 
 There is no `cost` column, no `price` column and no `grant` column. Nothing about who paid or why
 they were allowed belongs on a receipt.
@@ -312,7 +316,7 @@ in-memory datastore with a controllable clock.
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | The module compiles                               | `spacetime build` in `Maintain/Spacetime/spacetimedb` → `Build finished successfully.`                                                                                                                 |
 | A table and a reducer cannot share a name         | name the reducer `probe` and publish → `name 'Probe' is used for multiple types`                                                                                                                       |
-| The receipt's columns and indexes are as declared | `spacetime describe <db> tables probe` → 8 columns, four `_idx_btree` indexes                                                                                                                          |
+| The receipt's columns and indexes are as declared | `spacetime describe <db> tables probe` → 9 columns, four `_idx_btree` indexes                                                                                                                          |
 | An unentitled sender is refused, writes nothing   | `spacetime call <db> reveal '"demo@1"' '"latency"' 1 '"…"'` → `admission-refused`; `select count(*) from probe` → `0`                                                                                  |
 | An entitled sender writes exactly one row         | insert a live `lease` for the caller, call again; `select * from probe` → 1 row, `value` = the disclosure                                                                                              |
 | The audience cannot be spoofed                    | the same call with `--anonymous` → `admission-refused`, and the anonymous `my_probe` view returns `0` rows                                                                                             |

@@ -9,7 +9,7 @@ horizon: now
 registry: Documentation/RFC/README.md
 index: Documentation/RFC/README.md
 owner: operator
-applies_to: "`pnpm run check`, the six scripts it chains, and CI"
+applies_to: "`pnpm run check`, the ten scripts it chains, and CI"
 supersedes: none
 superseded_by: none
 depends:
@@ -55,16 +55,18 @@ statuses:
 
 ## Decision
 
-`pnpm run check` is a chain of six contracts - the interpreter floor, the tool layer's types and
-tests, the state contract, the token contract, the position contract, the site's unit tests - and it
-is neither a build nor a rendered check. A green gate means every contract held. It does not mean
-the tree is correct, and the boundary is stated rather than implied.
+`pnpm run check` is a chain of ten stages - the RFC frontmatter contract, the skill contract, the
+RFC board's own tests, the interpreter floor, the tool layer's types and tests, the state contract,
+the token contract, the position contract, the SpacetimeDB module contract, the site's unit tests -
+and it is neither a build nor a rendered check. A green gate means every contract held. It does not
+mean the tree is correct, and the boundary is stated rather than implied.
 
 1. **The chain is ordered so the most fundamental failure speaks first.** `package.json:15` runs
-   `Check:Compatibility`, then the tool layer's `check`, then `Check:State`, `Check:Tokens`,
-   `Check:Position`, then `Test`. A wrong interpreter makes every later step report a syntax error
-   that names neither the version nor the file, so the floor is asserted before anything that would
-   be confused by it (`Compatibility.mjs:11-14`).
+   `Check:RFC`, `Check:Skills`, `Check:RFC-Board`, `Check:Compatibility`, then the tool layer's
+   `check`, then `Check:State`, `Check:Tokens`, `Check:Position`, `Check:Spacetime`, then `Test`. A
+   wrong interpreter makes every later step report a syntax error that names neither the version nor
+   the file, so the floor is asserted before anything that would be confused by it
+   (`Compatibility.mjs:11-14`).
 2. **The floor is recorded once and read from the record.** `Scripts/Compatibility.mjs:104-126`
    reads `engines.node` out of `package.json` and compares the running version against the lowest
    version that range admits. The number is not restated in the guard, so the recorded floor and the
@@ -100,7 +102,7 @@ the tree is correct, and the boundary is stated rather than implied.
    obeys the brand and vocabulary rules. Nothing about the composition, the rendered page, the
    shadow store, the SpacetimeDB module, or whether a route exists.
 9. **A red gate is not a red tree either.** The gate fails at step one on an interpreter below the
-   floor, and steps two to six never execute. The tree can be entirely healthy behind a red gate,
+   floor, and steps two to ten never execute. The tree can be entirely healthy behind a red gate,
    and the message names the interpreter and the command that fixes it rather than implying a defect
    (`Compatibility.mjs:154-172`).
 10. **The gate's inventory of checks is the checks themselves, not a summary beside them.**
@@ -152,7 +154,7 @@ the `TokenContract.mjs` row); checks six, seven and eight were added to the code
 summary. `grep -n CHECK_TITLES` settles it.
 
 `Documentation/Reference/Build.md:29` and `:144` describe `pnpm run check` as "the compatibility
-guard, then the tool layer's type-check and tests", which is three steps of six. The manifest is the
+guard, then the tool layer's type-check and tests", which is three steps of ten. The manifest is the
 authority; the prose is a description that fell behind it.
 
 CI is narrower than the gate. `.github/workflows/Node.yml:98` runs `pnpm run Check:Compatibility`
@@ -187,7 +189,7 @@ holds only in a comment fails there.
   contradiction: a sheet can satisfy every token rule and fail to compile.
 - Because the gate never renders, a page can pass every contract and still not be the composition -
   that is RFC-0072's problem, and the two records exist so neither has to cover for the other.
-- The floor check means a contributor on an old interpreter gets one clear message instead of six
+- The floor check means a contributor on an old interpreter gets one clear message instead of ten
   confusing ones, at the cost of the gate being red for a reason that is not about their change.
 - A check count written in a summary beside the code will drift; the only durable count is the one
   the code prints about itself.
@@ -198,7 +200,7 @@ holds only in a comment fails there.
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | The gate passes on a supported node  | `PATH=<a supported node>/bin:$PATH pnpm run check` → `RESULT compatible`, `8 checks`, `RESULT positioned`, exit 0                  |
 | It fails on an old node              | `node Scripts/Compatibility.mjs` → `FAIL Node v22.23.0 is below the floor 22.23.4`, exit 1                                         |
-| The chain is six steps               | `node -e 'console.log(require("./package.json").scripts.check.split("&&").length)'` → `6`                                          |
+| The chain is ten steps               | `node -e 'console.log(require("./package.json").scripts.check.split("&&").length)'` → `10`                                         |
 | The floor is read, not restated      | `grep -n "engines" Scripts/Compatibility.mjs` → the manifest read at `:114`                                                        |
 | The token contract has eight checks  | `node Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs` → `... 8 checks`                                               |
 | The check list is the code           | `grep -n "CHECK_TITLES" Documentation/Skill/Tool-Archive/Reference/TokenContract.mjs` → the array at `:86` and the count at `:882` |
@@ -208,7 +210,7 @@ holds only in a comment fails there.
 | The gate never builds                | `grep -c "astro build" package.json` → `1`, and it is the `build` script, not part of `check`                                      |
 | The gate never type-checks the site  | `grep -n "include" Maintain/tsconfig.json` → `"include": ["Source"]`, relative to `Maintain/`                                      |
 | No `astro check` runs                | `grep -rn "astro check" .github package.json` → no match in a workflow or a script                                                 |
-| CI runs one step of six              | `grep -n "pnpm run" .github/workflows/Node.yml` → `Check:Compatibility` at `:98`, `prepublishOnly` at `:101`                       |
+| CI runs one step of ten              | `grep -n "pnpm run" .github/workflows/Node.yml` → `Check:Compatibility` at `:98`, `prepublishOnly` at `:101`                       |
 | A major is reported, not failed      | `grep -n "RFC-0044" Scripts/Compatibility.mjs` → the `INFO` branch at `:288`                                                       |
 
 ## Open questions

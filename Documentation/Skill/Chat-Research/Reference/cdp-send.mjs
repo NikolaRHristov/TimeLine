@@ -57,7 +57,11 @@ try {
 }
 
 const Evaluate = async (Expression) => {
-	const Result = await Send("Runtime.evaluate", { expression: Expression, returnByValue: true, awaitPromise: true });
+	const Result = await Send("Runtime.evaluate", {
+		expression: Expression,
+		returnByValue: true,
+		awaitPromise: true,
+	});
 	if (Result.exceptionDetails) throw new Error(Result.exceptionDetails.text);
 	return Result.result.value;
 };
@@ -89,8 +93,20 @@ const State = () =>
 
 const Click = async (Point) => {
 	await Send("Input.dispatchMouseEvent", { type: "mouseMoved", x: Point.x, y: Point.y });
-	await Send("Input.dispatchMouseEvent", { type: "mousePressed", x: Point.x, y: Point.y, button: "left", clickCount: 1 });
-	await Send("Input.dispatchMouseEvent", { type: "mouseReleased", x: Point.x, y: Point.y, button: "left", clickCount: 1 });
+	await Send("Input.dispatchMouseEvent", {
+		type: "mousePressed",
+		x: Point.x,
+		y: Point.y,
+		button: "left",
+		clickCount: 1,
+	});
+	await Send("Input.dispatchMouseEvent", {
+		type: "mouseReleased",
+		x: Point.x,
+		y: Point.y,
+		button: "left",
+		clickCount: 1,
+	});
 };
 
 const Before = JSON.parse(await State());
@@ -115,7 +131,8 @@ const Mode = () =>
 		return JSON.stringify({ toggles: Toggles });
 	})()`);
 
-const Pressed = (Toggles, Label) => Toggles.find((Toggle) => Toggle.label === Label)?.pressed === true;
+const Pressed = (Toggles, Label) =>
+	Toggles.find((Toggle) => Toggle.label === Label)?.pressed === true;
 
 // A refusal leaves the tab alone, so it closes its own socket first: a client
 // that vanishes mid-conversation can make the caller's own close of that tab
@@ -169,7 +186,9 @@ console.log(`typed: ${JSON.stringify(Typed.text)}`);
 console.log(`submit after typing: ${JSON.stringify(Typed.submit)}`);
 
 if (Typed.submit === null || Typed.submit.disabled) {
-	console.error("blocker: the submit control did not enable after typing; not clicking a dead button");
+	console.error(
+		"blocker: the submit control did not enable after typing; not clicking a dead button",
+	);
 	process.exit(1);
 }
 
