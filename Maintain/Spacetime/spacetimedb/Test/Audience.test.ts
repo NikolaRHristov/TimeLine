@@ -343,6 +343,7 @@ for (const [description, spoof] of SPOOFS) {
 	test(`criterion 3: reveal ignores ${description} and stores ctx.sender`, () => {
 		const harness = Setup();
 		Declare(harness);
+		Bound(harness, "1");
 		Grant(harness);
 
 		Reveal(harness, Request(spoof));
@@ -359,6 +360,7 @@ for (const [description, spoof] of SPOOFS) {
 test("criterion 3: reveal ignores an audience carried on the prototype chain", () => {
 	const harness = Setup();
 	Declare(harness);
+	Bound(harness, "1");
 	Grant(harness);
 
 	// The strongest form of the attack: `args.audience` *resolves* - through the
@@ -377,6 +379,7 @@ test("criterion 3: reveal ignores an audience carried on the prototype chain", (
 test("criterion 3: reveal ignores a __proto__ payload", () => {
 	const harness = Setup();
 	Declare(harness);
+	Bound(harness, "1");
 	Grant(harness);
 
 	const payload = JSON.parse(
@@ -393,6 +396,7 @@ test("criterion 3: reveal ignores a __proto__ payload", () => {
 test("criterion 3: a second identity cannot write a receipt in the first identity's name", () => {
 	const harness = Setup();
 	Declare(harness);
+	Bound(harness, "1");
 	// The lease belongs to the caller, so the second identity has no entitlement
 	// of its own and would be refused on the plain path.
 	Grant(harness);
@@ -448,6 +452,7 @@ test("criterion 3: claim writes the sender as the holder, never a caller-supplie
 test("criterion 3: recomputeBelief writes the sender as the audience, never a caller-supplied one", () => {
 	const harness = Setup();
 	Declare(harness);
+	Bound(harness, "1");
 	Grant(harness);
 	Reveal(harness, Request());
 
@@ -939,6 +944,7 @@ test("criterion 4: the only view is my_probe, it is not anonymous, and it is sen
 	assert.equal(views[0].isAnonymous, false);
 
 	Declare(harness);
+	Bound(harness, "1");
 	Grant(harness);
 	Reveal(harness, Request());
 
@@ -972,6 +978,7 @@ test("criterion 4: the only view is my_probe, it is not anonymous, and it is sen
 test("criterion 4: a probe's receipt carries exactly the receipt columns and no private row", () => {
 	const harness = Setup();
 	Declare(harness);
+	Bound(harness, "1");
 	Grant(harness);
 	Reveal(harness, Request());
 
