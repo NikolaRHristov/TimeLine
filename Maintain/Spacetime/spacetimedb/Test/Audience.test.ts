@@ -202,7 +202,8 @@ function MyProbe(harness: Harness, auth = Caller) {
  * in the test log goes through `process.stdout`.
  */
 function Diagnostic(label: string, row: unknown): void {
-	process.stdout.write(`[audit] ${label}: ${JSON.stringify(row)}\n`);
+	const text = JSON.stringify(row, (_key, value) => (typeof value === "bigint" ? value.toString() : value));
+	process.stdout.write(`[audit] ${label}: ${text}\n`);
 }
 
 /** Every row of every table, as one text, for a value that must appear nowhere. */
@@ -213,7 +214,8 @@ function AllRows(harness: Harness): string {
 		tables[name] = [...harness.db[name].iter()];
 	}
 
-	return JSON.stringify(tables);
+	// `fence` is a `t.u64()` and arrives as a bigint, which JSON cannot encode.
+	return JSON.stringify(tables, (_key, value) => (typeof value === "bigint" ? value.toString() : value));
 }
 
 // --------------------------------------------------------------- criterion 3
@@ -234,9 +236,11 @@ test("criterion 3: no registered reducer declares an audience-like argument", ()
 
 	for (const reducer of Catalog.default.moduleDef.reducers) {
 		for (const parameter of reducer.params.elements) {
+			const name = parameter.name ?? "";
+
 			assert.ok(
-				!AUDIENCE_LIKE.test(parameter.name),
-				`${reducer.sourceName} declares an audience-like argument ${JSON.stringify(parameter.name)}`,
+				!AUDIENCE_LIKE.test(name),
+				`${reducer.sourceName} declares an audience-like argument ${JSON.stringify(name)}`,
 			);
 		}
 
@@ -763,8 +767,12 @@ function Registered(source: string): { name: string; body: string }[] {
 
 		while (index !== -1) {
 			const name = /export const (\w+) = $/.exec(masked.slice(0, index));
-			const close = Closing(masked, index + marker.length - 1, "(", ")");
-			const bodyOpen = masked.indexOf("{", close);
+
+			// The body is the arrow function's block, found from the `=>` rather
+			// than from the call's closing paren: the body sits inside the call,
+			// so a paren-first search walks past it.
+			const arrow = masked.indexOf("=>", index);
+			const bodyOpen = masked.indexOf("{", arrow);
 			const bodyClose = Closing(masked, bodyOpen, "{", "}");
 
 			found.push({
@@ -837,7 +845,9 @@ test("criterion 4: the only view is my_probe, it is not anonymous, and it is sen
 	const views = Catalog.default.moduleDef.views;
 
 	assert.equal(views.length, 1);
-	assert.equal(views[0].sourceName, "my_probe");
+	// The registry keys a view by its export name; its published name is the
+	// `name: "my_probe"` option beside it.
+	assert.equal(views[0].sourceName, "myProbe");
 	assert.equal(views[0].isPublic, true);
 	assert.equal(views[0].isAnonymous, false);
 

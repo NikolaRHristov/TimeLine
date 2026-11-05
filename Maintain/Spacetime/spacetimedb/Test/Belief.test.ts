@@ -170,16 +170,14 @@ function Beliefs(harness: Harness) {
  */
 function Dump(harness: Harness): string {
 	const rows = Beliefs(harness)
-		.map(
-			(row): [string, string, string, string, number, string] => [
-				row.id,
-				row.audience,
-				row.capability,
-				row.value,
-				row.confidence,
-				row.at,
-			],
-		)
+		.map((row): [string, string, string, string, number, string] => [
+			row.id,
+			row.audience,
+			row.capability,
+			row.value,
+			row.confidence,
+			row.at,
+		])
 		.sort((left, right) => (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0));
 
 	return JSON.stringify(rows);

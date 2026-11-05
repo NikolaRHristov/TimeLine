@@ -40,7 +40,7 @@ const Root = resolve(Here, "..");
 const Module = join(Root, "Maintain", "Spacetime", "spacetimedb");
 
 /** The suite is local and fast; the timeout only bounds a wedged loader. */
-const SuiteTimeout = 600_000;
+const SuiteTimeout = 300_000;
 
 function Section(Name) {
 	process.stdout.write(`== ${Name}\n`);
